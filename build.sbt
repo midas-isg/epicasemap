@@ -1,6 +1,10 @@
-name := """play_java_base"""
+import com.typesafe.config._
 
-version := "1.0-SNAPSHOT"
+val conf = ConfigFactory.parseFile(new File("conf/application.conf")).resolve()
+
+name := conf.getString("app.name")
+
+version := conf.getString("app.version")
 
 lazy val root = (project in file(".")).enablePlugins(PlayJava)
 
