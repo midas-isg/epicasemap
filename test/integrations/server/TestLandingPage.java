@@ -3,6 +3,8 @@ import static org.fest.assertions.Assertions.assertThat;
 import static play.test.Helpers.HTMLUNIT;
 import static play.test.Helpers.running;
 import static play.test.Helpers.testServer;
+import impl.Factory;
+import interactors.ConfRule;
 
 import org.junit.Test;
 
@@ -12,7 +14,9 @@ public class TestLandingPage {
     @Test
     public void landingPageShown() {
         Callback<TestBrowser> block = browser -> {
-            browser.goTo("http://localhost:3333");
+        	ConfRule conf = Factory.makeConfRule();
+        	String context = conf.readString("application.context");
+            browser.goTo("http://localhost:3333" + context);
             String expected = "Your new application is ready.";
 			assertThat(browser.pageSource()).contains(expected);
         };
