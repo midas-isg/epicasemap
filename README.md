@@ -65,7 +65,7 @@ Then the proejct should be selectable in the Projects area.
 2. If the port needs to change, 
 create an executable script file named `start.sh` with the below content:
 
-> export PORT=9000 # default is 9000. Change to another port number.
+> export PORT=9000 # default is 9000. Change to another port number.  
 > ./do start
 
 
