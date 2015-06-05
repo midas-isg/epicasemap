@@ -1,6 +1,6 @@
 #!/bin/bash
 
-NAME=play_java_base
+NAME=epidemap
 echo $@
 echo using following env variables: PORT=$PORT NAME=$NAME 
 
