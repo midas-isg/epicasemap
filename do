@@ -1,5 +1,8 @@
 #!/bin/bash
+
+NAME=play_java_base
 echo $@
+echo using following env variables: PORT=$PORT NAME=$NAME 
 
 ##############################################################################
 
@@ -21,7 +24,6 @@ fi
 ##############################################################################
 
 if [ "$1" = "update" ]; then
-	NAME=play_java_base
 	git fetch --tags
 	TAG=$NAME-$2
 	git checkout tags/$TAG
