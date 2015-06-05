@@ -1,3 +1,4 @@
+conf/application_overrides.conf
 logs
 project/project
 project/target
@@ -14,3 +15,6 @@ dist
 /RUNNING_PID
 /.settings
 bin
+/.sbtserver
+project/.*
+project/*-*
