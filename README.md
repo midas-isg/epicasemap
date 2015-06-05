@@ -95,4 +95,4 @@ It will checkout all the files tagged with the `NAME-VERSION` format.
 $ ./do update <VERSION>
 ```
 
-3. Restart the application. See Starting Application.
+3. Restart the application. See [Starting Application]:#starting-application.
