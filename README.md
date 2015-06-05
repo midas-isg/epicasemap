@@ -64,7 +64,7 @@ Then the proejct should be selectable in the Projects area.
   2. Edit the conf file to fit the project
 2. If the port needs to change, 
 create an executable script file named `start.sh` with the below content:
-```bash
+```
 export PORT=9000 # default is 9000. Change to another port number.
 ./do start
 ```
@@ -95,4 +95,4 @@ It will checkout all the files tagged with the `NAME-VERSION` format.
 $ ./do update <VERSION>
 ```
 
-3. Restart the application. See #starting-application.
+3. Restart the application. See Starting Application.
