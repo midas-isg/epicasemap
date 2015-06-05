@@ -1,7 +1,10 @@
 #!/bin/bash
-echo $@
 
-##############################################################################FILE=target/universal/stage/RUNNING_PID
+NAME=play_java_base
+echo $@
+echo using following env variables: PORT=$PORT NAME=$NAME 
+
+##############################################################################
 
 if [ "$1" = "start" ]; then
 	if [ "$PORT" = "" ]; then
@@ -21,10 +24,9 @@ fi
 ##############################################################################
 
 if [ "$1" = "update" ]; then
-	NAME=play_java_base
 	git fetch --tags
 	TAG=$NAME-$2
 	git checkout tags/$TAG
 	echo checkout form tags/$TAG
 fi
-##############################################################################FILE=target/universal/stage/RUNNING_PID
+##############################################################################
