@@ -14,7 +14,7 @@ public class TestConf {
     public void appNameAndVersionAreNotOverridden() {
         Runnable block = () -> {
         	ConfRule conf = Factory.makeConfRule();
-    		String expectedName = "play_java_base";
+    		String expectedName = "epidemap";
 			String keyName = AppKey.NAME.key();
 			assertThat(conf.readString(keyName)).isEqualTo(expectedName);
 			
