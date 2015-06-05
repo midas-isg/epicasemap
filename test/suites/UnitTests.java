@@ -1,4 +1,4 @@
-package unit;
+package suites;
 
 import interactors.TestConfRule;
 
