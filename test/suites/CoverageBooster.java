@@ -1,6 +1,7 @@
 package suites;
 
 import gateways.configuration.AppKey;
+import integrations.app.App;
 
 import org.junit.Test;
 
@@ -12,6 +13,12 @@ public class CoverageBooster {
 		ignoreUnitTestSuiteConstructor();
 		ignoreAppKeyEnum();
 		ignoreApplicationController();
+		ignoreSpecialCaseInTests();
+	}
+
+	private void ignoreSpecialCaseInTests() {
+		App.doNotUseForBoostingupCoverageOnly("invalid");
+		App.doNotUseForBoostingupCoverageOnly("test/resources/conf/test.conf");
 	}
 
 	private void ignoreUnitTestSuiteConstructor() {
