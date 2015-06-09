@@ -1,8 +1,6 @@
 package integrations.app;
 
 import static org.fest.assertions.Assertions.assertThat;
-import static play.test.Helpers.fakeApplication;
-import static play.test.Helpers.running;
 
 import javax.persistence.EntityManager;
 
@@ -15,23 +13,33 @@ import play.libs.F.Callback0;
 
 public class TestWithDatabase {
     @Test
-    public void readEntitiesFromDatabase() {
+    public void readEntitiesFromTestDatabase() {
     	Callback0 callback = () -> {
     		EntityManager em = JPA.em();
-    		testReadCoordinate(em);
+    		testReadCoordinate(em, 1L);
     	};
-        running(fakeApplication(), withTransaction(callback));
+    	App.newWithTestDb().runWithTransaction(callback);
     }
 
-	private void testReadCoordinate(EntityManager em) {
-		long id = 1L;
-		Coordinate b = em.find(Coordinate.class, id);
-		assertThat(b.getId()).isEqualTo(id);
+	private void testReadCoordinate(EntityManager em, long id) {
+		Coordinate c = em.find(Coordinate.class, id);
+		assertThat(c.getId()).isEqualTo(id);
 	}
+	
+    @Test
+    public void readEntitiesFromInMemoryDatabase() {
+    	Callback0 callback = () -> {
+    		EntityManager em = JPA.em();
+    		Coordinate original = persistNewCoordinate(em);
+    		testReadCoordinate(em, original.getId());
+    	};
+    	App.newWithInMemoryDb().runWithTransaction(callback);
+    }
 
-	private Runnable withTransaction(Callback0 callback) {
-		return () -> {
-			JPA.withTransaction(callback);
-        };
+	private Coordinate persistNewCoordinate(EntityManager em) {
+		Coordinate original = new Coordinate();
+		original.setId(1L);
+		em.persist(original);
+		return original;
 	}
 }
