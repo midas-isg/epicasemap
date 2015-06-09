@@ -40,4 +40,9 @@ public class TestGeotag {
 		geotag.setTimestamp(now);
 		assertThat(geotag.getTimestamp()).isEqualTo(now);
 	}
+	
+	@Test
+	public void ignoreToString() throws Exception {
+		geotag.toString();
+	}
 }
