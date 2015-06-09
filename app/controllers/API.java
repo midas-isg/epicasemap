@@ -1,6 +1,5 @@
 package controllers;
 
-import impl.Factory;
 import interactors.GeotagRule;
 import play.db.jpa.JPA;
 import play.db.jpa.Transactional;

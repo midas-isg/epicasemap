@@ -2,7 +2,6 @@ package integrations.app;
 
 import static org.fest.assertions.Assertions.assertThat;
 import static play.test.Helpers.contentAsString;
-import impl.Factory;
 
 import javax.persistence.EntityManager;
 
@@ -19,6 +18,7 @@ import play.mvc.Result;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import controllers.API;
+import controllers.Factory;
 
 public class TestWithDatabase {
     @Test
