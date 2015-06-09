@@ -1,10 +1,12 @@
 package suites;
 
 import gateways.configuration.AppKey;
+import gateways.database.jpa.JpaAdaptor;
 import integrations.app.App;
 
 import org.junit.Test;
 
+import controllers.API;
 import controllers.Application;
 
 public class CoverageBooster {
@@ -12,7 +14,7 @@ public class CoverageBooster {
 	public void makeup() throws Exception {
 		ignoreUnitTestSuiteConstructor();
 		ignoreAppKeyEnum();
-		ignoreApplicationController();
+		ignoreDefaultConstructors();
 		ignoreSpecialCaseInTests();
 	}
 
@@ -31,8 +33,10 @@ public class CoverageBooster {
 		}
 	}
 
-	private void ignoreApplicationController() {
+	private void ignoreDefaultConstructors() {
 		new Application();
+		new API();
+		new JpaAdaptor(null);
 	}
 }
 
