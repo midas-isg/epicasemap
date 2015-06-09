@@ -7,9 +7,10 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Table;
 
 @Entity
-//@Table(name = "ebola_geo")
+@Table(name = "ebola_geo")
 public class Geotag {
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)

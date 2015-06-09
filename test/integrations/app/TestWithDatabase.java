@@ -1,6 +1,8 @@
 package integrations.app;
 
 import static org.fest.assertions.Assertions.assertThat;
+import static play.test.Helpers.contentAsString;
+import impl.Factory;
 
 import javax.persistence.EntityManager;
 
@@ -11,16 +13,38 @@ import org.junit.Test;
 
 import play.db.jpa.JPA;
 import play.libs.F.Callback0;
+import play.libs.Json;
+import play.mvc.Result;
+
+import com.fasterxml.jackson.databind.JsonNode;
+
+import controllers.API;
 
 public class TestWithDatabase {
     @Test
     public void readEntitiesFromTestDatabase() {
     	Callback0 callback = () -> {
     		EntityManager em = JPA.em();
+    		testReadAllGeotagsViaAPI(em);
     		testReadCoordinate(em, 1L);
     	};
     	App.newWithTestDb().runWithTransaction(callback);
     }
+
+	private void testReadAllGeotagsViaAPI(EntityManager em) {
+		Result result = API.getGeotags();
+		JsonNode root = toJsonNode(result);
+		assertThat(root.size()).isGreaterThan(0);
+		JsonNode node = root.get(0);
+		long id = node.get("id").asLong();
+		testReadGeotag(em, id);
+	}
+
+	private JsonNode toJsonNode(Result result) {
+		String content = contentAsString(result);
+		JsonNode root = Json.parse(content);
+		return root;
+	}
 
 	private void testReadCoordinate(EntityManager em, long id) {
 		Coordinate data = em.find(Coordinate.class, id);
@@ -40,10 +64,11 @@ public class TestWithDatabase {
 	private void testCreateGeotag(EntityManager em) {
 		long id = persistNewGeotag(em);
 		testReadGeotag(em, id);
+		testReadAllGeotagsViaAPI(em);
 	}
 
 	private void testReadGeotag(EntityManager em, long id) {
-		Geotag data = em.find(Geotag.class, id);
+		Geotag data = Factory.makeGeotagDao(em).find(id);
 		assertThat(data.getId()).isEqualTo(id);
 	}
 
