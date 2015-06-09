@@ -49,10 +49,8 @@ public class TestWithDatabase {
 
 	private long persistNewGeotag(EntityManager em) {
 		Geotag original = new Geotag();
-		long id = 1L;
-		original.setId(id);
 		em.persist(original);
-		return id;
+		return original.getId();
 	}
 
 	private void testCreateCoordinate(EntityManager em) {
