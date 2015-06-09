@@ -5,6 +5,7 @@ import static org.fest.assertions.Assertions.assertThat;
 import javax.persistence.EntityManager;
 
 import models.entities.Coordinate;
+import models.entities.Geotag;
 
 import org.junit.Test;
 
@@ -22,19 +23,42 @@ public class TestWithDatabase {
     }
 
 	private void testReadCoordinate(EntityManager em, long id) {
-		Coordinate c = em.find(Coordinate.class, id);
-		assertThat(c.getId()).isEqualTo(id);
+		Coordinate data = em.find(Coordinate.class, id);
+		assertThat(data.getId()).isEqualTo(id);
 	}
 	
     @Test
-    public void readEntitiesFromInMemoryDatabase() {
+    public void createEntitiesIntoInMemoryDatabase() {
     	Callback0 callback = () -> {
     		EntityManager em = JPA.em();
-    		Coordinate original = persistNewCoordinate(em);
-    		testReadCoordinate(em, original.getId());
+    		testCreateCoordinate(em);
+    		testCreateGeotag(em);
     	};
     	App.newWithInMemoryDb().runWithTransaction(callback);
     }
+
+	private void testCreateGeotag(EntityManager em) {
+		long id = persistNewGeotag(em);
+		testReadGeotag(em, id);
+	}
+
+	private void testReadGeotag(EntityManager em, long id) {
+		Geotag data = em.find(Geotag.class, id);
+		assertThat(data.getId()).isEqualTo(id);
+	}
+
+	private long persistNewGeotag(EntityManager em) {
+		Geotag original = new Geotag();
+		long id = 1L;
+		original.setId(id);
+		em.persist(original);
+		return id;
+	}
+
+	private void testCreateCoordinate(EntityManager em) {
+		Coordinate original = persistNewCoordinate(em);
+		testReadCoordinate(em, original.getId());
+	}
 
 	private Coordinate persistNewCoordinate(EntityManager em) {
 		Coordinate original = new Coordinate();
