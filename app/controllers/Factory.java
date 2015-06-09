@@ -1,4 +1,4 @@
-package impl;
+package controllers;
 
 import gateways.configuration.ConfReader;
 import gateways.database.GeotagDao;

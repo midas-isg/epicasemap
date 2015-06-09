@@ -4,10 +4,11 @@ import static org.fest.assertions.Assertions.assertThat;
 import static play.test.Helpers.fakeApplication;
 import static play.test.Helpers.running;
 import gateways.configuration.AppKey;
-import impl.Factory;
 import interactors.ConfRule;
 
 import org.junit.Test;
+
+import controllers.Factory;
 
 public class TestConf {
     @Test

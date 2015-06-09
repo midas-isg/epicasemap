@@ -1,7 +1,8 @@
-package impl;
+package controllers;
 
 import org.junit.Test;
 
+import controllers.Factory;
 import suites.TestCase;
 
 public class TestFactory extends TestCase {
