@@ -38,8 +38,12 @@ public class App {
 		fakeApp = fakeApplication(configurationMap);
 	}
 
+	public FakeApplication getFakeApplication(){
+		return fakeApp;
+	}
+	
 	public void runWithTransaction(Callback0 callback) {
-		running(fakeApp, withTransaction(callback));
+		running(fakeApp, () -> JPA.withTransaction(callback));
 	}
 
 	private Map<String, Object> readConf(String pathname) {
@@ -49,11 +53,5 @@ public class App {
 		Config config = ConfigFactory.parseFile(file);
 		Configuration configuration = new Configuration(config);
 		return configuration.asMap();
-	}
-
-	private Runnable withTransaction(Callback0 callback) {
-		return () -> {
-			JPA.withTransaction(callback);
-		};
 	}
 }
