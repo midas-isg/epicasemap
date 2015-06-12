@@ -25,14 +25,14 @@ public class TestWithDatabase {
     public void readEntitiesFromTestDatabase() {
     	Callback0 callback = () -> {
     		EntityManager em = JPA.em();
-    		testReadAllGeotagsViaAPI(em);
+    		testRead1GeotagViaAPI(em);
     		testReadCoordinate(em, 1L);
     	};
     	App.newWithTestDb().runWithTransaction(callback);
     }
 
-	private void testReadAllGeotagsViaAPI(EntityManager em) {
-		Result result = API.getGeotags();
+	private void testRead1GeotagViaAPI(EntityManager em) {
+		Result result = API.getGeotags(1, 0);
 		JsonNode results = toJsonNode(result).get("results");
 		assertThat(results.size()).isGreaterThan(0);
 		JsonNode node = results.get(0);
@@ -64,7 +64,7 @@ public class TestWithDatabase {
 	private void testCreateGeotag(EntityManager em) {
 		long id = persistNewGeotag(em);
 		testReadGeotag(em, id);
-		testReadAllGeotagsViaAPI(em);
+		testRead1GeotagViaAPI(em);
 	}
 
 	private void testReadGeotag(EntityManager em, long id) {

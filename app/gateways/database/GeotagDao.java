@@ -1,11 +1,14 @@
 package gateways.database;
 
+import java.util.List;
+
 import gateways.database.jpa.DataAccessObject;
 import gateways.database.jpa.JpaAdaptor;
 
 import javax.persistence.EntityManager;
 
 import models.entities.Geotag;
+import models.entities.GeotagFilter;
 
 public class GeotagDao extends DataAccessObject<Geotag> {
 	public GeotagDao(EntityManager em){
@@ -14,5 +17,12 @@ public class GeotagDao extends DataAccessObject<Geotag> {
 
 	public GeotagDao(JpaAdaptor helper){
 		super(Geotag.class, helper);
+	}
+
+	public List<Geotag> query(GeotagFilter filter) {
+		Integer limit = filter.getLimit();
+		if (limit == null)
+			return super.findAll();
+		return super.query(limit, filter.getOffset());
 	}
 }

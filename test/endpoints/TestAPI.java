@@ -23,65 +23,92 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeType;
 
 public class TestAPI {
+	private static int numberGeotags = 6;
+
+	@Test
+	public void testLimitGeotags() {
+		testGeotags(() -> actThenAssertLimitGeotags());
+	}
+	
+	private void actThenAssertLimitGeotags() {
+		int limit = 5;
+		String url = makeGeotagsUrl();
+		assertLimit(url + "?limit=" + limit, limit);
+		String offsetWithLimitUrl = url + "?offset=" + limit + "&limit=" + limit;
+		assertLimit(offsetWithLimitUrl, numberGeotags - limit);
+	}
+
+	private void assertLimit(String url, int limit) {
+		JsonNode root = Helper.get(url).asJson();
+		JsonNode results = root.get("results");
+		assertThat(results.size()).isEqualTo(limit);
+	}
+
 	@Test
 	public void testGeotags() {
+		testGeotags(() -> actThenAssertGeotags());
+	}
+
+	private void testGeotags(Runnable actThenAssert) {
 		FakeApplication app = App.newWithInMemoryDb().getFakeApplication();
-		running(testServer(3333, app), () -> testGeotags1());
-		makeupCoverage();
+		running(testServer(3333, app), () -> testGeotags1(actThenAssert));
 	}
 
-	private void makeupCoverage() {
-		deleteGeotag1(null);
-	}
-
-	private void testGeotags1() {
-		Function0<Long> tryBlock = () -> testGeotags1_1();
-		Callback<Long> finallyBlock = (x) -> deleteGeotag(x);
+	private void testGeotags1(Runnable actThenAssert) {
+		Function0<Long> tryBlock = () -> testGeotags1_1(actThenAssert);
+		Callback<Long> finallyBlock = (x) -> {};
 		Helper.wrapTry(tryBlock, finallyBlock);
 	}
 
-	private Long testGeotags1_1() {
-		Geotag data = create1Geotag();
-		Long id = data.getId();
-
-		String context = Helper.readContext();
-		String url = "http://localhost:3333" + context + "/api/geotags";
-		JsonNode root = Helper.get(url).asJson();
-		assertThat(root.getNodeType()).isSameAs(JsonNodeType.OBJECT);
-		assertThat(root.get("filter").getNodeType()).isSameAs(JsonNodeType.NULL);
-		assertGeotags(root.get("results"));
+	private Long testGeotags1_1(Runnable actThenAssert) {
+		Long id = createGeotags();
+		actThenAssert.run();
 		return id;
 	}
 
-	private void assertGeotags(JsonNode result) {
-		assertThat(result.getNodeType()).isSameAs(JsonNodeType.ARRAY);
-		assertThat(result).isNotEmpty();
-		JsonNode node = result.get(0);
+	private void actThenAssertGeotags() {
+		String url = makeGeotagsUrl();
+		JsonNode root = Helper.get(url).asJson();
+		assertThat(root.getNodeType()).isSameAs(JsonNodeType.OBJECT);
+		JsonNode filter = root.get("filter");
+		assertDefaultFilter(filter);
+		assertGeotags(root.get("results"));
+	}
+
+	private void assertDefaultFilter(JsonNode filter) {
+		assertThat(filter.getNodeType()).isSameAs(JsonNodeType.OBJECT);
+		assertThat(filter.get("limit").getNodeType()).isSameAs(JsonNodeType.NULL);
+		assertThat(filter.get("offset").asInt()).isEqualTo(0);
+	}
+
+	private String makeGeotagsUrl() {
+		String context = Helper.readContext();
+		return "http://localhost:3333" + context + "/api/geotags";
+	}
+
+	private void assertGeotags(JsonNode results) {
+		assertThat(results.getNodeType()).isSameAs(JsonNodeType.ARRAY);
+		assertThat(results).isNotEmpty();
+		assertThat(results.size()).isEqualTo(numberGeotags);
+		JsonNode node = results.get(0);
 		Iterator<String> fieldNames = node.fieldNames();
 		String idName = "id";
 		assertThat(fieldNames).contains(idName, "timestamp", "latitude", "longitude");
 		assertThat(node.get(idName).asLong()).isPositive();
 	}
 
-	private Geotag create1Geotag() {
-		return Helper.wrapTransaction(() -> create1Geotag1());
+	private Long createGeotags() {
+		Geotag geotag = Helper.wrapTransaction(() -> createGeotags1());
+		return geotag.getId();
 	}
 
-	private Geotag create1Geotag1() {
+	private Geotag createGeotags1() {
 		EntityManager em = JPA.em();
-		Geotag data = new Geotag();
-		em.persist(data);
+		Geotag data = null;
+		for (int i = 0; i < numberGeotags; i++){
+			data = new Geotag();
+			em.persist(data);
+		}
 		return data;
-	}
-
-	private void deleteGeotag(Long id) {
-		JPA.withTransaction(() -> deleteGeotag1(id));
-	}
-
-	private void deleteGeotag1(Long id) {
-		if (id == null)
-			return;
-		EntityManager em = JPA.em();
-		em.remove(em.find(Geotag.class, id));
 	}
 }

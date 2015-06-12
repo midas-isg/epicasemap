@@ -11,6 +11,10 @@ public class DataAccessObject<T> {
 		this.adaptor = adaptor;
 	}
 
+	public List<T> query(int limit, int offset) {
+		return adaptor.query(clazz, limit, offset);		
+	}
+	
 	public List<T> findAll() {
 		return adaptor.findAll(clazz);		
 	}
