@@ -14,7 +14,8 @@ public class Helper {
 
 	public static WSResponse get(String url) {
 		long timeout = 1000000;
-		return WS.url(url).get().get(timeout);
+		WSResponse response = WS.url(url).get().get(timeout);
+		return response;
 	}
 
 	public static String readContext() {

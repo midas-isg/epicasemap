@@ -11,7 +11,7 @@ import javax.persistence.Table;
 
 @Entity
 @Table(name = "ebola_geo")
-public class Geotag {
+public class CoordinateTime {
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;

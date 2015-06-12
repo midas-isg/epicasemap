@@ -5,7 +5,7 @@
 # Home page
 GET     /                           controllers.Application.index()
 
-GET		/api/geotags				controllers.API.getGeotags(limit:java.lang.Integer?=null, offset:Int?=0)
+GET		/api/coordinate-times		controllers.API.getCoordinateTimes(limit:java.lang.Integer?=null, offset:Int?=0)
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.at(path="/public", file)

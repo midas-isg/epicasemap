@@ -6,7 +6,7 @@ import static play.test.Helpers.contentAsString;
 import javax.persistence.EntityManager;
 
 import models.entities.Coordinate;
-import models.entities.Geotag;
+import models.entities.CoordinateTime;
 
 import org.junit.Test;
 
@@ -25,19 +25,19 @@ public class TestWithDatabase {
     public void readEntitiesFromTestDatabase() {
     	Callback0 callback = () -> {
     		EntityManager em = JPA.em();
-    		testRead1GeotagViaAPI(em);
+    		testRead1CoordinateTimeViaAPI(em);
     		testReadCoordinate(em, 1L);
     	};
     	App.newWithTestDb().runWithTransaction(callback);
     }
 
-	private void testRead1GeotagViaAPI(EntityManager em) {
-		Result result = API.getGeotags(1, 0);
+	private void testRead1CoordinateTimeViaAPI(EntityManager em) {
+		Result result = API.getCoordinateTimes(1, 0);
 		JsonNode results = toJsonNode(result).get("results");
 		assertThat(results.size()).isGreaterThan(0);
 		JsonNode node = results.get(0);
 		long id = node.get("id").asLong();
-		testReadGeotag(em, id);
+		testReadCoordinateTime(em, id);
 	}
 
 	private JsonNode toJsonNode(Result result) {
@@ -56,26 +56,26 @@ public class TestWithDatabase {
     	Callback0 callback = () -> {
     		EntityManager em = JPA.em();
     		testCreateCoordinate(em);
-    		testCreateGeotag(em);
+    		testCreateCoordinateTime(em);
     	};
     	App.newWithInMemoryDb().runWithTransaction(callback);
     }
 
-	private void testCreateGeotag(EntityManager em) {
-		long id = persistNewGeotag(em);
-		testReadGeotag(em, id);
-		testRead1GeotagViaAPI(em);
+	private void testCreateCoordinateTime(EntityManager em) {
+		long id = persistNewCoordinateTime(em);
+		testReadCoordinateTime(em, id);
+		testRead1CoordinateTimeViaAPI(em);
 	}
 
-	private void testReadGeotag(EntityManager em, long id) {
-		Geotag data = Factory.makeGeotagDao(em).find(id);
+	private void testReadCoordinateTime(EntityManager em, long id) {
+		CoordinateTime data = Factory.makeCoordinateTimeDao(em).find(id);
 		assertThat(data.getId()).isEqualTo(id);
 	}
 
-	private long persistNewGeotag(EntityManager em) {
-		Geotag original = new Geotag();
-		em.persist(original);
-		return original.getId();
+	private long persistNewCoordinateTime(EntityManager em) {
+		CoordinateTime data = new CoordinateTime();
+		em.persist(data);
+		return data.getId();
 	}
 
 	private void testCreateCoordinate(EntityManager em) {

@@ -1,6 +1,6 @@
 package models.entities;
 
-public class GeotagFilter {
+public class CoordinateTimeFilter {
 	private Integer limit;
 	private Integer offset;
 
