@@ -29,7 +29,7 @@ public class Helper {
 	public static <T> T wrapNoThrowingCheckedExecption(Function0<T> block) {
 		try {
 			return block.apply();
-		} catch (RuntimeException e) {
+		} catch (RuntimeException|Error e) {
 			throw e;
 		} catch (Throwable e) {
 			throw new RuntimeException(e);
@@ -49,7 +49,7 @@ public class Helper {
 	public static <T> void wrapNoCheckedExecption(Callback<T> block, T t) {
 		try {
 			block.invoke(t);
-		} catch (RuntimeException e) {
+		} catch (RuntimeException|Error e) {
 			throw e;
 		} catch (Throwable e) {
 			throw new RuntimeException(e);
