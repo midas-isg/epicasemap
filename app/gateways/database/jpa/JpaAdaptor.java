@@ -14,16 +14,12 @@ public class JpaAdaptor {
 		this.em = em;
 	}
 
-	public <T> List<T> query(Class<T> clazz, int limit, int offset) {
+	public <T> List<T> query(Class<T> clazz, Integer limit, int offset) {
 		CriteriaQuery<T> criteriaQuery = createCriteriaQueryFrom(clazz);
 		TypedQuery<T> query = em.createQuery(criteriaQuery);
-		return query.setMaxResults(limit).setFirstResult(offset).getResultList();
-	}
-
-	public <T> List<T> findAll(Class<T> clazz) {
-		CriteriaQuery<T> criteriaQuery = createCriteriaQueryFrom(clazz);
-		TypedQuery<T> query = em.createQuery(criteriaQuery);
-		return query.getResultList();
+		if (limit != null)
+			query.setMaxResults(limit);
+		return query.setFirstResult(offset).getResultList();
 	}
 
 	private <T> CriteriaQuery<T> createCriteriaQueryFrom(Class<T> clazz) {

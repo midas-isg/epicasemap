@@ -1,4 +1,4 @@
-package endpoints;
+package integrations.endpoints;
 
 import static org.fest.assertions.Assertions.assertThat;
 import static play.test.Helpers.running;
@@ -70,8 +70,7 @@ public class TestAPI {
 		String url = makeGeotagsUrl();
 		JsonNode root = Helper.get(url).asJson();
 		assertThat(root.getNodeType()).isSameAs(JsonNodeType.OBJECT);
-		JsonNode filter = root.get("filter");
-		assertDefaultFilter(filter);
+		assertDefaultFilter(root.get("filter"));
 		assertGeotags(root.get("results"));
 	}
 

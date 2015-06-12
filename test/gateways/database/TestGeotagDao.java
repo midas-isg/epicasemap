@@ -22,7 +22,7 @@ public class TestGeotagDao {
 	@Test
 	public void findAll() throws Exception {
 		sut.findAll();
-		verify(mock).findAll(Geotag.class);
+		verify(mock).query(Geotag.class, null, 0);
 	}
 	
 	@Test
