@@ -5,6 +5,7 @@ import gateways.database.GeotagDao;
 import java.util.List;
 
 import models.entities.Geotag;
+import models.entities.GeotagFilter;
 
 public class GeotagRule {
 	private GeotagDao dao;
@@ -13,7 +14,7 @@ public class GeotagRule {
 		this.dao = dao;
 	}
 	
-	public List<Geotag> findAll() {
-		return dao.findAll();
+	public List<Geotag> query(GeotagFilter filter) {
+		return dao.query(filter);
 	}
 }

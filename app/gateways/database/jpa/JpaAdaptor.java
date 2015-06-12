@@ -13,7 +13,13 @@ public class JpaAdaptor {
 	public JpaAdaptor(EntityManager em){
 		this.em = em;
 	}
-	
+
+	public <T> List<T> query(Class<T> clazz, int limit, int offset) {
+		CriteriaQuery<T> criteriaQuery = createCriteriaQueryFrom(clazz);
+		TypedQuery<T> query = em.createQuery(criteriaQuery);
+		return query.setMaxResults(limit).setFirstResult(offset).getResultList();
+	}
+
 	public <T> List<T> findAll(Class<T> clazz) {
 		CriteriaQuery<T> criteriaQuery = createCriteriaQueryFrom(clazz);
 		TypedQuery<T> query = em.createQuery(criteriaQuery);
