@@ -16,12 +16,17 @@ public class API extends Controller {
 	@Transactional
     public static Result getGeotags(Integer limit, int offset) {
 		GeotagRule rule = Factory.makeGeotagRule(JPA.em());
-		GeotagFilter filter = new GeotagFilter();
-		filter.setLimit(limit);
-		filter.setOffset(offset);
+		GeotagFilter filter = buildGeotagFilter(limit, offset);
         List<Geotag> results = rule.query(filter);
 		Object response = ResponseWrapper.wrap(results, filter);
 		return ok(Json.toJson(response));
     }
+
+	private static GeotagFilter buildGeotagFilter(Integer limit, int offset) {
+		GeotagFilter filter = new GeotagFilter();
+		filter.setLimit(limit);
+		filter.setOffset(offset);
+		return filter;
+	}
 }
 

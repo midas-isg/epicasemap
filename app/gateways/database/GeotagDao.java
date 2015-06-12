@@ -21,8 +21,7 @@ public class GeotagDao extends DataAccessObject<Geotag> {
 
 	public List<Geotag> query(GeotagFilter filter) {
 		Integer limit = filter.getLimit();
-		if (limit == null)
-			return super.findAll();
-		return super.query(limit, filter.getOffset());
+		Integer offset = filter.getOffset();
+		return super.query(limit, offset);
 	}
 }
