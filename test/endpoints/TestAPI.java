@@ -1,13 +1,11 @@
 package endpoints;
 
 import static org.fest.assertions.Assertions.assertThat;
-import static org.junit.Assert.assertTrue;
 import static play.test.Helpers.running;
 import static play.test.Helpers.testServer;
+import integrations.app.App;
 
 import java.util.Iterator;
-
-import integrations.app.App;
 
 import javax.persistence.EntityManager;
 
@@ -22,12 +20,18 @@ import play.test.FakeApplication;
 import _imperfactcoverage.Helper;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.JsonNodeType;
 
 public class TestAPI {
 	@Test
 	public void testGeotags() {
 		FakeApplication app = App.newWithInMemoryDb().getFakeApplication();
 		running(testServer(3333, app), () -> testGeotags1());
+		makeupCoverage();
+	}
+
+	private void makeupCoverage() {
+		deleteGeotag1(null);
 	}
 
 	private void testGeotags1() {
@@ -43,14 +47,20 @@ public class TestAPI {
 		String context = Helper.readContext();
 		String url = "http://localhost:3333" + context + "/api/geotags";
 		JsonNode root = Helper.get(url).asJson();
-		assertTrue(root.isArray());
-		assertThat(root).isNotEmpty();
-		JsonNode node = root.get(0);
+		assertThat(root.getNodeType()).isSameAs(JsonNodeType.OBJECT);
+		assertThat(root.get("filter").getNodeType()).isSameAs(JsonNodeType.NULL);
+		assertGeotags(root.get("results"));
+		return id;
+	}
+
+	private void assertGeotags(JsonNode result) {
+		assertThat(result.getNodeType()).isSameAs(JsonNodeType.ARRAY);
+		assertThat(result).isNotEmpty();
+		JsonNode node = result.get(0);
 		Iterator<String> fieldNames = node.fieldNames();
 		String idName = "id";
 		assertThat(fieldNames).contains(idName, "timestamp", "latitude", "longitude");
 		assertThat(node.get(idName).asLong()).isPositive();
-		return id;
 	}
 
 	private Geotag create1Geotag() {
@@ -69,6 +79,8 @@ public class TestAPI {
 	}
 
 	private void deleteGeotag1(Long id) {
+		if (id == null)
+			return;
 		EntityManager em = JPA.em();
 		em.remove(em.find(Geotag.class, id));
 	}

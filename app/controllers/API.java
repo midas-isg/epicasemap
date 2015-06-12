@@ -1,6 +1,10 @@
 package controllers;
 
 import interactors.GeotagRule;
+
+import java.util.List;
+
+import models.entities.Geotag;
 import play.db.jpa.JPA;
 import play.db.jpa.Transactional;
 import play.libs.Json;
@@ -11,6 +15,8 @@ public class API extends Controller {
 	@Transactional
     public static Result getGeotags() {
 		GeotagRule rule = Factory.makeGeotagRule(JPA.em());
-        return ok(Json.toJson(rule.findAll()));
+        List<Geotag> results = rule.findAll();
+		Object response = ResponseWrapper.wrap(results, null);
+		return ok(Json.toJson(response));
     }
 }

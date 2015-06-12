@@ -33,9 +33,9 @@ public class TestWithDatabase {
 
 	private void testReadAllGeotagsViaAPI(EntityManager em) {
 		Result result = API.getGeotags();
-		JsonNode root = toJsonNode(result);
-		assertThat(root.size()).isGreaterThan(0);
-		JsonNode node = root.get(0);
+		JsonNode results = toJsonNode(result).get("results");
+		assertThat(results.size()).isGreaterThan(0);
+		JsonNode node = results.get(0);
 		long id = node.get("id").asLong();
 		testReadGeotag(em, id);
 	}
