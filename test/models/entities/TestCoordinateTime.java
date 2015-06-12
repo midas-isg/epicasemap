@@ -6,8 +6,8 @@ import java.util.Date;
 
 import org.junit.Test;
 
-public class TestGeotag {
-	private Geotag geotag = new Geotag();
+public class TestCoordinateTime {
+	private CoordinateTime sut = new CoordinateTime();
 	
 	@Test
 	public void testAccessors() throws Exception {
@@ -19,30 +19,30 @@ public class TestGeotag {
 
 	private void testId() {
 		long id = 2;
-		geotag.setId(id);
-		assertThat(geotag.getId()).isEqualTo(id);
+		sut.setId(id);
+		assertThat(sut.getId()).isEqualTo(id);
 	}
 	
 	private void testLatitude() {
 		double latitude = 2.0;
-		geotag.setLatitude(latitude);
-		assertThat(geotag.getLatitude()).isEqualTo(latitude);
+		sut.setLatitude(latitude);
+		assertThat(sut.getLatitude()).isEqualTo(latitude);
 	}
 	
 	private void testLongitude() {
 		double longtitude = 3.0;
-		geotag.setLongitude(longtitude);
-		assertThat(geotag.getLongitude()).isEqualTo(longtitude);
+		sut.setLongitude(longtitude);
+		assertThat(sut.getLongitude()).isEqualTo(longtitude);
 	}
 	
 	private void testTimestamp() {
 		Date now = new Date();
-		geotag.setTimestamp(now);
-		assertThat(geotag.getTimestamp()).isEqualTo(now);
+		sut.setTimestamp(now);
+		assertThat(sut.getTimestamp()).isEqualTo(now);
 	}
 	
 	@Test
 	public void ignoreToString() throws Exception {
-		geotag.toString();
+		sut.toString();
 	}
 }

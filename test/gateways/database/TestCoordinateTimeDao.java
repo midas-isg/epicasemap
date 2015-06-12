@@ -2,33 +2,33 @@ package gateways.database;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import gateways.database.GeotagDao;
+import gateways.database.CoordinateTimeDao;
 import gateways.database.jpa.JpaAdaptor;
-import models.entities.Geotag;
+import models.entities.CoordinateTime;
 
 import org.junit.Before;
 import org.junit.Test;
 
-public class TestGeotagDao {
-	private GeotagDao sut;
+public class TestCoordinateTimeDao {
+	private CoordinateTimeDao sut;
 	private JpaAdaptor mock;
 	
 	@Before
 	public void initDaoWithMocks() {
 		mock = mock(JpaAdaptor.class);
-		sut = new GeotagDao(mock);
+		sut = new CoordinateTimeDao(mock);
 	}
 
 	@Test
 	public void findAll() throws Exception {
 		sut.findAll();
-		verify(mock).query(Geotag.class, null, 0);
+		verify(mock).query(CoordinateTime.class, null, 0);
 	}
 	
 	@Test
 	public void find() throws Exception {
 		long id = 1L;
 		sut.find(id);
-		verify(mock).find(Geotag.class, id);
+		verify(mock).find(CoordinateTime.class, id);
 	}
 }
