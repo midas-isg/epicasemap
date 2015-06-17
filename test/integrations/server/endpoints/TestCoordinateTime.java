@@ -16,7 +16,7 @@ import suites.Helper;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-public class TestAPI {
+public class TestCoordinateTime {
 	@Test
 	public void testLimitCoordinateTimes() {
 		testCoordinateTimes(() -> actThenAssertLimitCoordinateTimes());
