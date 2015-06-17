@@ -6,7 +6,7 @@ import static play.test.Helpers.testServer;
 
 import org.junit.Test;
 
-import _imperfactcoverage.Helper;
+import suites.Helper;
 
 public class TestLandingPage {
     @Test

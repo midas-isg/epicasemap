@@ -1,5 +1,6 @@
-package _imperfactcoverage;
+package suites;
 
+import _imperfactcoverage.Detour;
 import interactors.ConfRule;
 import play.db.jpa.JPA;
 import play.libs.F.Callback0;
@@ -33,12 +34,6 @@ public class Helper {
 	}
 
 	public static <T> T wrapNoThrowingCheckedExecption(Function0<T> block) {
-		try {
-			return block.apply();
-		} catch (RuntimeException|Error e) {
-			throw e;
-		} catch (Throwable e) {
-			throw new RuntimeException(e);
-		}
+		return Detour.wrapNoThrowingCheckedExecption(block);
 	}
 }
