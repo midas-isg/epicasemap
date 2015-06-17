@@ -9,7 +9,7 @@ import java.util.Map;
 import play.Configuration;
 import play.libs.F.Callback0;
 import play.test.FakeApplication;
-import _imperfactcoverage.Helper;
+import suites.Helper;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;

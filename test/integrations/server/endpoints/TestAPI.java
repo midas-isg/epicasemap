@@ -12,7 +12,7 @@ import java.util.Iterator;
 import org.junit.Test;
 
 import play.libs.ws.WSResponse;
-import _imperfactcoverage.Helper;
+import suites.Helper;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
