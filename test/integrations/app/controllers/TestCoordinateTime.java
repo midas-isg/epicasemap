@@ -4,6 +4,10 @@ import static org.fest.assertions.Assertions.assertThat;
 import static play.test.Helpers.contentAsString;
 import integrations.app.App;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Date;
+
 import javax.persistence.EntityManager;
 
 import models.entities.CoordinateTime;
@@ -31,16 +35,31 @@ public class TestCoordinateTime {
 	
 	private static void createCoordinateTimes() {
 		EntityManager em = JPA.em();
+		Instant t = Instant.EPOCH;
 		for (int i = 0; i < numberCoordinateTimes; i++){
 			CoordinateTime data = new CoordinateTime();
+			t = t.plus(1, ChronoUnit.DAYS);
+			data.setTimestamp(Date.from(t));
 			em.persist(data);
 		}
+	}
+	
+	@Test
+	public void testDateRanges() throws Exception {
+		runWithTransaction(() -> {
+			Instant t = Instant.EPOCH;
+			String start = t.toString();
+			int n = 5;
+			String end = t.plus(n, ChronoUnit.DAYS).toString();
+    		Result result = API.getCoordinateTimes(start, end, null, 0);
+    		assertCoordinateTimes(result, n - 1);
+    	});
 	}
 
     @Test
     public void testDefaultParameters() {
     	runWithTransaction(() -> {
-    		Result result = API.getCoordinateTimes(null, 0);
+    		Result result = API.getCoordinateTimes(null, null, null, 0);
     		assertCoordinateTimes(result, numberCoordinateTimes);
     	});
     }
@@ -78,7 +97,7 @@ public class TestCoordinateTime {
 	}
 
 	private void testLimitAndOffset(Integer limit, int offset, int expected) {
-		Result result = API.getCoordinateTimes(limit, offset);
+		Result result = API.getCoordinateTimes(null, null, limit, offset);
 		assertCoordinateTimes(result, expected);
 	}
 

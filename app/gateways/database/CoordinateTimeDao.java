@@ -20,8 +20,7 @@ public class CoordinateTimeDao extends DataAccessObject<CoordinateTime> {
 	}
 
 	public List<CoordinateTime> query(CoordinateTimeFilter filter) {
-		Integer limit = filter.getLimit();
-		Integer offset = filter.getOffset();
-		return super.query(limit, offset);
+		filter.setDateAttribute("timestamp");
+		return super.query(filter);
 	}
 }

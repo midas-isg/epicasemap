@@ -32,7 +32,7 @@ public class TestWithDatabase {
     }
 
 	private void testRead1CoordinateTimeViaAPI(EntityManager em) {
-		Result result = API.getCoordinateTimes(1, 0);
+		Result result = API.getCoordinateTimes(null, null, 1, 0);
 		JsonNode results = toJsonNode(result).get("results");
 		assertThat(results.size()).isGreaterThan(0);
 		JsonNode node = results.get(0);
