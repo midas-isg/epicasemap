@@ -22,7 +22,7 @@ public class TestCoordinateTimeDao {
 	@Test
 	public void findAll() throws Exception {
 		sut.findAll();
-		verify(mock).query(CoordinateTime.class, null, 0);
+		verify(mock).query(CoordinateTime.class, null);
 	}
 	
 	@Test

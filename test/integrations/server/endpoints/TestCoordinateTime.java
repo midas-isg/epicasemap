@@ -3,6 +3,7 @@ package integrations.server.endpoints;
 import static com.fasterxml.jackson.databind.node.JsonNodeType.ARRAY;
 import static com.fasterxml.jackson.databind.node.JsonNodeType.NULL;
 import static com.fasterxml.jackson.databind.node.JsonNodeType.OBJECT;
+import static java.time.Instant.EPOCH;
 import static org.fest.assertions.Assertions.assertThat;
 import static play.test.Helpers.running;
 import static play.test.Helpers.testServer;
@@ -18,11 +19,23 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 public class TestCoordinateTime {
 	@Test
-	public void testLimitCoordinateTimes() {
-		testCoordinateTimes(() -> actThenAssertLimitCoordinateTimes());
+	public void dateRange() {
+		testInServer(() -> actThenAssertDateRange());
 	}
 	
-	private void actThenAssertLimitCoordinateTimes() {
+	private void actThenAssertDateRange() {
+		String time = EPOCH.toString();
+		String url = makeCoordinateTimesUrl() 
+		+ "?startInclusive=" + time + "&endExclusive=" + time;
+		assertLimit(url, 0);
+	}
+
+	@Test
+	public void pagination() {
+		testInServer(() -> actThenAssertPagination());
+	}
+	
+	private void actThenAssertPagination() {
 		int n = 5;
 		String url = makeCoordinateTimesUrl() + "?offset=" + n + "&limit=" + n;
 		assertLimit(url, n);
@@ -38,12 +51,13 @@ public class TestCoordinateTime {
 	
 	private JsonNode assertClosedInterval(String url, int min, Integer max) {
 		WSResponse response = Helper.get(url);
-		assertThat(response.getHeader("Content-Type")).contains("application/json");
 		JsonNode root = response.asJson();
 		assertThat(root.getNodeType()).isSameAs(OBJECT);
-		assertCoordinateTimes(root.get("results"));
 		JsonNode results = root.get("results");
+		assertThat(results.getNodeType()).isSameAs(ARRAY);
 		int size = results.size();
+		if (size > 0 )
+			assertCoordinateTimes(results);
 		assertThat(size).isGreaterThanOrEqualTo(min);
 		if (max != null)
 			assertThat(size).isLessThanOrEqualTo(max);
@@ -57,7 +71,6 @@ public class TestCoordinateTime {
 	}
 	
 	private void assertCoordinateTimes(JsonNode results) {
-		assertThat(results.getNodeType()).isSameAs(ARRAY);
 		assertThat(results).isNotEmpty();
 		JsonNode node = results.get(0);
 		Iterator<String> fields = node.fieldNames();
@@ -66,17 +79,16 @@ public class TestCoordinateTime {
 		assertThat(node.get(idName).asLong()).isPositive();
 	}
 
-
 	@Test
-	public void testCoordinateTimes() {
-		testCoordinateTimes(() -> actThenAssertCoordinateTimes());
+	public void defaultParameters() {
+		testInServer(() -> actThenAssertDefaultParameters());
 	}
 
-	private void testCoordinateTimes(Runnable actThenAssert) {
+	private void testInServer(Runnable actThenAssert) {
 		running(testServer(3333), actThenAssert);
 	}
 
-	private void actThenAssertCoordinateTimes() {
+	private void actThenAssertDefaultParameters() {
 		JsonNode root = assertMin(makeCoordinateTimesUrl(), 1);
 		assertDefaultFilter(root.get("filter"));
 	}
