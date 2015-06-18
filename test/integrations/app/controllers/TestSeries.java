@@ -30,7 +30,6 @@ public class TestSeries {
 		em.persist(theData);
 		return theData;
 	}
-
 	
     @Test
     public void createSeries() {
@@ -40,7 +39,6 @@ public class TestSeries {
 	private void testCreateSeries() {
     	EntityManager em = JPA.em();
 		testReadSeries(em, theData);
-		//testRead1SeriesViaAPI(em);
 	}
 
 	private void testReadSeries(EntityManager em, Series expected) {
