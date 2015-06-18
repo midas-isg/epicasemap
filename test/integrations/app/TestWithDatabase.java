@@ -7,6 +7,7 @@ import javax.persistence.EntityManager;
 
 import models.entities.Coordinate;
 import models.entities.CoordinateTime;
+import models.entities.Series;
 
 import org.junit.Test;
 
@@ -27,9 +28,15 @@ public class TestWithDatabase {
     		EntityManager em = JPA.em();
     		testRead1CoordinateTimeViaAPI(em);
     		testReadCoordinate(em, 1L);
+    		testReadSeries(em, 1L);
     	};
     	App.newWithTestDb().runWithTransaction(callback);
     }
+
+	private void testReadSeries(EntityManager em, long id) {
+		Series data = em.find(Series.class, id);
+		assertThat(data.getId()).isEqualTo(id);
+	}
 
 	private void testRead1CoordinateTimeViaAPI(EntityManager em) {
 		Result result = API.getCoordinateTimes(null, null, 1, 0);
