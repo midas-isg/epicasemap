@@ -9,6 +9,8 @@ import models.entities.Coordinate;
 import models.entities.CoordinateTime;
 import models.entities.Location;
 import models.entities.Series;
+import models.entities.SeriesData;
+import models.entities.CoordinateSeries;
 
 import org.junit.Test;
 
@@ -31,9 +33,17 @@ public class TestWithDatabase {
     		testReadCoordinate(em, 1L);
     		testReadSeries(em, 1L);
     		testReadLocation(em, 1L);
+    		testReadSeriesData(em, 2L);
     	};
     	App.newWithTestDb().runWithTransaction(callback);
     }
+
+	private void testReadSeriesData(EntityManager em, long id) {
+		SeriesData data = em.find(SeriesData.class, id);
+		assertThat(data.getId()).isEqualTo(id);
+		CoordinateSeries cs = em.find(CoordinateSeries.class, id);
+		assertThat(cs.getId()).isEqualTo(id);
+	}
 
 	private void testReadLocation(EntityManager em, long id) {
 		Location data = em.find(Location.class, id);
