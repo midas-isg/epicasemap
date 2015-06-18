@@ -55,7 +55,7 @@ public class App {
 	private void KeepDatabaseOpen(Map<String, Object> originalMap) {
 		Map<String, Object> map = getMap(getMap(originalMap, "db"), "default");
 		String url = (String) map.get("url");
-		map.put("url", url + ";DB_CLOSE_DELAY=-1");
+		map.put("url", url + "-keep;DB_CLOSE_DELAY=-1");
 	}
 
 	@SuppressWarnings("unchecked")
