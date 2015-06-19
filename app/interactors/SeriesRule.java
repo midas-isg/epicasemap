@@ -17,4 +17,8 @@ public class SeriesRule {
 	public List<Series> query(Filter filter) {
 		return dao.query(filter);
 	}
+
+	public Series read(long id, Filter filter) {
+		return dao.find(id);
+	}
 }

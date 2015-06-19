@@ -45,6 +45,15 @@ public class API extends Controller {
 		return ok(Json.toJson(response));
 	}
 	
+	@Transactional
+	public static Result readSeries(long id){
+		Filter filter = null;
+		SeriesRule rule = Factory.makeSeriesRule(JPA.em());
+		Series result = rule.read(id, filter);;
+		Object response = ResponseWrapper.wrap(result, filter);
+		return ok(Json.toJson(response));
+	}
+
 	private static CoordinateFilter buildCoordinateFilter(
 			Long seriesId,
 			String startInclusive, 
