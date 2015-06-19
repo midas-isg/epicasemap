@@ -7,6 +7,8 @@ import static java.time.Instant.EPOCH;
 import static org.fest.assertions.Assertions.assertThat;
 import static play.test.Helpers.running;
 import static play.test.Helpers.testServer;
+import static suites.Helper.assertEqualTo;
+import static suites.Helper.assertNodeType;
 
 import java.util.Iterator;
 
@@ -18,6 +20,8 @@ import suites.Helper;
 import com.fasterxml.jackson.databind.JsonNode;
 
 public class TestTimeCoordinate {
+	private final long seriesId = 2L;
+	
 	@Test
 	public void dateRange() {
 		testInServer(() -> actThenAssertDateRange());
@@ -52,9 +56,9 @@ public class TestTimeCoordinate {
 	private JsonNode testJsonResponseClosedInterval(String url, int min, Integer max) {
 		WSResponse response = Helper.get(url);
 		JsonNode root = response.asJson();
-		Helper.assertNodeType(root, OBJECT);
+		assertNodeType(root, OBJECT);
 		JsonNode results = root.get("results");
-		Helper.assertNodeType(results, ARRAY);
+		assertNodeType(results, ARRAY);
 		int size = results.size();
 		if (size > 0 )
 			assertCoordinates(results);
@@ -65,11 +69,17 @@ public class TestTimeCoordinate {
 	}
 
 	private void assertDefaultFilter(JsonNode filter) {
-		Helper.assertNodeType(filter, OBJECT);
-		Helper.assertNodeType(filter.get("limit"), NULL);
-		assertThat(filter.get("offset").asInt()).isEqualTo(0);
+		assertNodeType(filter, OBJECT);
+		assertNodeType(filter.get("limit"), NULL);
+		assertEqualTo(filter.get("offset").asInt(), 0);
+		assertNodeType(filter.get("startTimestampInclusive"), NULL);
+		assertNodeType(filter.get("endTimestampExclusive"), NULL);
+		assertEqualTo(filter.get("timestampAttribute").asText(), "timestamp");
+		final JsonNode equalities = filter.get("equalities");
+		assertNodeType(equalities, OBJECT);
+		assertEqualTo(equalities.get("seriesId").asLong(), seriesId);
 	}
-	
+
 	private void assertCoordinates(JsonNode results) {
 		assertThat(results).isNotEmpty();
 		JsonNode node = results.get(0);
@@ -95,6 +105,7 @@ public class TestTimeCoordinate {
 
 	private String makeTimeCoordinatesUrl() {
 		String context = Helper.readContext();
-		return "http://localhost:3333" + context + "/api/series/2/time-coordinate";
+		return "http://localhost:3333" + context 
+				+ "/api/series/" + seriesId + "/time-coordinate";
 	}
 }
