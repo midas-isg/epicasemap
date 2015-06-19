@@ -1,9 +1,9 @@
 package controllers;
 
 import gateways.configuration.ConfReader;
-import gateways.database.GeotagDao;
+import gateways.database.CoordinateDao;
 import interactors.ConfRule;
-import interactors.GeotagRule;
+import interactors.CoordinateRule;
 
 import javax.persistence.EntityManager;
 
@@ -11,9 +11,9 @@ public class Factory {
 	private Factory() {
 	}
 
-	public static GeotagRule makeGeotagRule(EntityManager em) {
-		GeotagDao dao = new GeotagDao(em);
-		return new GeotagRule(dao);
+	public static CoordinateRule makeCoordinateRule(EntityManager em) {
+		CoordinateDao dao = new CoordinateDao(em);
+		return new CoordinateRule(dao);
 	}
 
 	public static ConfRule makeConfRule() {
@@ -24,8 +24,8 @@ public class Factory {
 		return new ConfReader();
 	}
 
-	public static GeotagDao makeGeotagDao(EntityManager em) {
-		return new GeotagDao(em);
+	public static CoordinateDao makeCoordinateDao(EntityManager em) {
+		return new CoordinateDao(em);
 	}
 }
 

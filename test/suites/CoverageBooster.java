@@ -9,13 +9,14 @@ import org.junit.Test;
 import controllers.API;
 import controllers.Application;
 
-public class CoverageBooster {
+public class CoverageBooster extends TestCase {
 	@Test
 	public void makeup() throws Exception {
 		ignoreUnitTestSuiteConstructor();
 		ignoreAppKeyEnum();
 		ignoreDefaultConstructors();
 		ignoreSpecialCaseInTests();
+		testPrivateDefaultConstructor(Helper.class);
 	}
 
 	private void ignoreSpecialCaseInTests() {

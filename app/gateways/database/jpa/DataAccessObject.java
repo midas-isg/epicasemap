@@ -2,6 +2,8 @@ package gateways.database.jpa;
 
 import java.util.List;
 
+import models.entities.filters.Filter;
+
 public class DataAccessObject<T> {
 	private Class<T> clazz;
 	private JpaAdaptor adaptor;
@@ -11,8 +13,12 @@ public class DataAccessObject<T> {
 		this.adaptor = adaptor;
 	}
 
+	public List<T> query(Filter filter){
+		return adaptor.query(clazz, filter);
+	}
+	
 	public List<T> findAll() {
-		return adaptor.findAll(clazz);		
+		return query(null);		
 	}
 	
 	public T find(long id) {
