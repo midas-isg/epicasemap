@@ -3,6 +3,7 @@ package suites;
 import gateways.configuration.AppKey;
 import gateways.database.jpa.JpaAdaptor;
 import integrations.app.App;
+import integrations.server.Server;
 
 import org.junit.Test;
 
@@ -38,6 +39,7 @@ public class CoverageBooster extends TestCase {
 		new Application();
 		new API();
 		new JpaAdaptor(null);
+		new Server();
 	}
 }
 

@@ -1,8 +1,6 @@
 package integrations.server;
 
 import static org.fest.assertions.Assertions.assertThat;
-import static play.test.Helpers.running;
-import static play.test.Helpers.testServer;
 
 import org.junit.Test;
 
@@ -12,13 +10,13 @@ public class TestLandingPage {
     @Test
     public void containsConextForJavaScript() {
         Runnable block = () -> {
-        	String context = Helper.readContext();
+        	String context = Server.getContext();
         	String expected = javaScriptContext(context);
-        	String url = "http://localhost:3333" + context;
+        	String url = Server.makeTestUrl("");
             String actual = Helper.get(url).getBody();
 			assertThat(actual).contains(expected);
         };
-		running(testServer(3333), block);
+		Server.run(block);
     }
 
 	private String javaScriptContext(String context) {
