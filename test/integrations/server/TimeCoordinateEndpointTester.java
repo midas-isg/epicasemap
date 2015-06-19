@@ -13,11 +13,11 @@ import java.util.Iterator;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-public class TestEndpointTimeCoordinate {
+public class TimeCoordinateEndpointTester {
 	private final long seriesId = 2L;
 	
-	private static TestEndpointTimeCoordinate newInstance() {
-		return new TestEndpointTimeCoordinate();
+	private static TimeCoordinateEndpointTester newInstance() {
+		return new TimeCoordinateEndpointTester();
 	}
 	
 	public static Runnable dateRange() {

@@ -3,13 +3,16 @@ package integrations.server;
 import org.junit.Test;
 
 public class TestRoutes {
-    @Test
+    @Test // @Ignore("to run test faster")
     public void allRoutes() {
     	Runnable[] tests = {
-    		TestEndpointSeries.defaultParameters(),	
+    		SeriesEndpointTester.defaultParameters(),	
     		
-    		TestEndpointTimeCoordinate.dateRange(),
-    		TestEndpointTimeCoordinate.pagination(),
+    		TimeCoordinateEndpointTester.dateRange(),
+    		TimeCoordinateEndpointTester.pagination(),
+    		TimeCoordinateEndpointTester.defaultParameters(),
+    		
+    		LandingPageTester.containsConextForJavaScript()
     	};
 		Server.run(tests);
     }

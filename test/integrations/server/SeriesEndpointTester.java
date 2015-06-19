@@ -9,11 +9,11 @@ import java.util.Iterator;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-public class TestEndpointSeries {
+public class SeriesEndpointTester {
 	private final String path = "/api/series";
 	
 	public static Runnable defaultParameters() {
-		return () -> new TestEndpointSeries().actThenAssertDefaultParameters();
+		return () -> new SeriesEndpointTester().actThenAssertDefaultParameters();
 	}
 
 	private void actThenAssertDefaultParameters() {
