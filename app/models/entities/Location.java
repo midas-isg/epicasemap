@@ -1,22 +1,16 @@
 package models.entities;
 
-import java.util.Date;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.Table;
 
 @Entity
-@Table(name = "ebola_geo")
-public class Geotag {
+public class Location {
 	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
-	@Column(name = "date_time")
-	private Date timestamp;
+	private String label;
+	@Column(name = "als_id")
+	private Long alsId;
 	@Column(name = "lat")
 	private Double latitude;
 	@Column(name = "long")
@@ -30,12 +24,20 @@ public class Geotag {
 		this.id = id;
 	}
 
-	public Date getTimestamp() {
-		return timestamp;
+	public String getLabel() {
+		return label;
 	}
 
-	public void setTimestamp(Date timestamp) {
-		this.timestamp = timestamp;
+	public void setLabel(String label) {
+		this.label = label;
+	}
+
+	public Long getAlsId() {
+		return alsId;
+	}
+
+	public void setAlsId(Long alsId) {
+		this.alsId = alsId;
 	}
 
 	public Double getLatitude() {
@@ -52,11 +54,5 @@ public class Geotag {
 
 	public void setLongitude(Double longitude) {
 		this.longitude = longitude;
-	}
-
-	@Override
-	public String toString() {
-		return "Geotag [id=" + id + ", timestamp=" + timestamp + ", latitude="
-				+ latitude + ", longitude=" + longitude + "]";
 	}
 }
