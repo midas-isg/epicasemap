@@ -1,9 +1,9 @@
 package controllers;
 
 import gateways.configuration.ConfReader;
-import gateways.database.CoordinateTimeDao;
+import gateways.database.CoordinateDao;
 import interactors.ConfRule;
-import interactors.CoordinateTimeRule;
+import interactors.CoordinateRule;
 
 import javax.persistence.EntityManager;
 
@@ -11,9 +11,9 @@ public class Factory {
 	private Factory() {
 	}
 
-	public static CoordinateTimeRule makeCoordinateTimeRule(EntityManager em) {
-		CoordinateTimeDao dao = new CoordinateTimeDao(em);
-		return new CoordinateTimeRule(dao);
+	public static CoordinateRule makeCoordinateRule(EntityManager em) {
+		CoordinateDao dao = new CoordinateDao(em);
+		return new CoordinateRule(dao);
 	}
 
 	public static ConfRule makeConfRule() {
@@ -24,8 +24,8 @@ public class Factory {
 		return new ConfReader();
 	}
 
-	public static CoordinateTimeDao makeCoordinateTimeDao(EntityManager em) {
-		return new CoordinateTimeDao(em);
+	public static CoordinateDao makeCoordinateDao(EntityManager em) {
+		return new CoordinateDao(em);
 	}
 }
 

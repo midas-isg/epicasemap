@@ -1,7 +1,7 @@
 package _imperfactcoverage;
 
 import static org.fest.assertions.Assertions.assertThat;
-import integrations.app.controllers.TestCoordinateTime;
+import integrations.app.controllers.TestCoordinate;
 
 import org.junit.Assert;
 
@@ -12,7 +12,7 @@ public class Detour {
 	private Detour(){
 	}
 
-	public static Callback0 testLimitWithNegative(TestCoordinateTime that) {
+	public static Callback0 testLimitWithNegative(TestCoordinate that) {
 		return () -> {
 			try {
 				that.testLimit(-1, 0);
