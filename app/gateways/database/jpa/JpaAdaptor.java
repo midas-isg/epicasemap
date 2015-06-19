@@ -3,6 +3,8 @@ package gateways.database.jpa;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
@@ -12,7 +14,7 @@ import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
-import models.entities.filters.DateRange;
+import models.entities.filters.TimestampRange;
 import models.entities.filters.Filter;
 import models.entities.filters.Pagination;
 
@@ -50,27 +52,38 @@ public class JpaAdaptor {
 	private <T> TypedQuery<T> buildQuery(Class<T> clazz, Filter filter) {
 		/*if (filter == null || ! (filter instanceof DateRange))
 			return buildQuery(clazz);*/
-		return buildQuery(clazz, (DateRange) filter); 
+		return buildQuery(clazz, (TimestampRange) filter); 
 	}
 	
-	private <T> TypedQuery<T> buildQuery(Class<T> clazz, DateRange filter) {
+	private <T> TypedQuery<T> buildQuery(Class<T> clazz, TimestampRange filter) {
 		CriteriaQuery<T> criteriaQuery = createCriteriaQuery(clazz);
 		Root<T> root = criteriaQuery.from(clazz);
 		CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
-		final String attributeName = filter.getDateAttribute();
+		final String attributeName = filter.getTimestampAttribute();
 		final Path<Date> date = root.<Date>get(attributeName);
 		List<Predicate> predicates = new ArrayList<>();
-		Date date1 = filter.getStartInclusive();
+		Date date1 = filter.getStartTimestampInclusive();
 		if (date1 != null){
 			Predicate p = criteriaBuilder.greaterThanOrEqualTo(date, date1);
 			predicates.add(p);
 		}
 		
-		Date date2 = filter.getEndExclusiveDate();
+		Date date2 = filter.getEndTimestampExclusive();
 		if (date2 != null){
 			Predicate p = criteriaBuilder.lessThan(date, date2);
 			predicates.add(p);
 		}
+		
+		Map<String, Object> map = filter.getEqualities();
+		for (Entry<String, Object> pair : map.entrySet()){
+			final Object value = pair.getValue();
+			if (value == null)
+				continue;
+			final Path<?> path = root.get(pair.getKey());
+			Predicate p = criteriaBuilder.equal(path, value);
+			predicates.add(p);
+		}
+		
 		criteriaQuery.where(predicates.toArray(new Predicate[predicates.size()]));
 		TypedQuery<T> query = em.createQuery(criteriaQuery);
 		return query;

@@ -10,7 +10,7 @@ import java.util.Date;
 
 import javax.persistence.EntityManager;
 
-import models.entities.CoordinateTime;
+import models.entities.Coordinate;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -25,19 +25,19 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 import controllers.API;
 
-public class TestCoordinateTime {
-	private static int numberCoordinateTimes = 6;
+public class TestCoordinate {
+	private static int numberCoordinates = 6;
 
 	@BeforeClass
 	public static void populateDatabase(){
-		runWithTransaction(() -> createCoordinateTimes());
+		runWithTransaction(() -> createCoordinates());
 	}
 	
-	private static void createCoordinateTimes() {
+	private static void createCoordinates() {
 		EntityManager em = JPA.em();
 		Instant t = Instant.EPOCH;
-		for (int i = 0; i < numberCoordinateTimes; i++){
-			CoordinateTime data = new CoordinateTime();
+		for (int i = 0; i < numberCoordinates; i++){
+			Coordinate data = new Coordinate();
 			t = t.plus(1, ChronoUnit.DAYS);
 			data.setTimestamp(Date.from(t));
 			em.persist(data);
@@ -51,23 +51,23 @@ public class TestCoordinateTime {
 			String start = t.toString();
 			int n = 5;
 			String end = t.plus(n, ChronoUnit.DAYS).toString();
-    		Result result = API.getCoordinateTimes(start, end, null, 0);
-    		assertCoordinateTimes(result, n - 1);
+    		Result result = API.getTimeCoordinateSeries(null, start, end, null, 0);
+    		assertCoordinates(result, n - 1);
     	});
 	}
 
     @Test
     public void testDefaultParameters() {
     	runWithTransaction(() -> {
-    		Result result = API.getCoordinateTimes(null, null, null, 0);
-    		assertCoordinateTimes(result, numberCoordinateTimes);
+    		Result result = API.getTimeCoordinateSeries(null, null, null, null, 0);
+    		assertCoordinates(result, numberCoordinates);
     	});
     }
 
     @Test
     public void testLimits() {
     	runWithTransaction(() -> {
-    		final int N = numberCoordinateTimes;
+    		final int N = numberCoordinates;
 			testLimit(N, N);
     		testLimit(N + 1, N);
     		testLimit(N - 1, N - 1);
@@ -83,7 +83,7 @@ public class TestCoordinateTime {
 	@Test
     public void testLimitsAndOffsets() {
     	runWithTransaction(() -> {
-    		final int N = numberCoordinateTimes;
+    		final int N = numberCoordinates;
     		testLimitAndOffset(N, 1, N - 1);
 
     		testLimitAndOffset(N, N - 1, 1);
@@ -97,11 +97,11 @@ public class TestCoordinateTime {
 	}
 
 	private void testLimitAndOffset(Integer limit, int offset, int expected) {
-		Result result = API.getCoordinateTimes(null, null, limit, offset);
-		assertCoordinateTimes(result, expected);
+		Result result = API.getTimeCoordinateSeries(null, null, null, limit, offset);
+		assertCoordinates(result, expected);
 	}
 
-	private void assertCoordinateTimes(Result result, int n) {
+	private void assertCoordinates(Result result, int n) {
 		String content = contentAsString(result);
 		JsonNode root = Json.parse(content);
 		JsonNode results = root.get("results");

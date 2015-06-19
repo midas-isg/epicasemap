@@ -17,7 +17,7 @@ import suites.Helper;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-public class TestCoordinateTime {
+public class TestTimeCoordinate {
 	@Test
 	public void dateRange() {
 		testInServer(() -> actThenAssertDateRange());
@@ -25,7 +25,7 @@ public class TestCoordinateTime {
 	
 	private void actThenAssertDateRange() {
 		String time = EPOCH.toString();
-		String url = makeCoordinateTimesUrl() 
+		String url = makeTimeCoordinatesUrl() 
 		+ "?startInclusive=" + time + "&endExclusive=" + time;
 		assertLimit(url, 0);
 	}
@@ -37,7 +37,7 @@ public class TestCoordinateTime {
 	
 	private void actThenAssertPagination() {
 		int n = 5;
-		String url = makeCoordinateTimesUrl() + "?offset=" + n + "&limit=" + n;
+		String url = makeTimeCoordinatesUrl() + "?offset=" + n + "&limit=" + n;
 		assertLimit(url, n);
 	}
 
@@ -57,7 +57,7 @@ public class TestCoordinateTime {
 		assertThat(results.getNodeType()).isSameAs(ARRAY);
 		int size = results.size();
 		if (size > 0 )
-			assertCoordinateTimes(results);
+			assertCoordinates(results);
 		assertThat(size).isGreaterThanOrEqualTo(min);
 		if (max != null)
 			assertThat(size).isLessThanOrEqualTo(max);
@@ -70,12 +70,12 @@ public class TestCoordinateTime {
 		assertThat(filter.get("offset").asInt()).isEqualTo(0);
 	}
 	
-	private void assertCoordinateTimes(JsonNode results) {
+	private void assertCoordinates(JsonNode results) {
 		assertThat(results).isNotEmpty();
 		JsonNode node = results.get(0);
 		Iterator<String> fields = node.fieldNames();
 		String idName = "id";
-		assertThat(fields).containsOnly(idName, "timestamp", "latitude", "longitude");
+		assertThat(fields).containsOnly(idName, "seriesId", "value", "timestamp", "latitude", "longitude");
 		assertThat(node.get(idName).asLong()).isPositive();
 	}
 
@@ -89,12 +89,12 @@ public class TestCoordinateTime {
 	}
 
 	private void actThenAssertDefaultParameters() {
-		JsonNode root = assertMin(makeCoordinateTimesUrl(), 1);
+		JsonNode root = assertMin(makeTimeCoordinatesUrl(), 1);
 		assertDefaultFilter(root.get("filter"));
 	}
 
-	private String makeCoordinateTimesUrl() {
+	private String makeTimeCoordinatesUrl() {
 		String context = Helper.readContext();
-		return "http://localhost:3333" + context + "/api/coordinate-times";
+		return "http://localhost:3333" + context + "/api/series/2/time-coordinate";
 	}
 }

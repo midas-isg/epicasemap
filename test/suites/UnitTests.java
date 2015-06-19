@@ -1,9 +1,8 @@
 package suites;
 
-import gateways.database.TestCoordinateTimeDao;
+import gateways.database.TestCoordinateDao;
 import interactors.TestConfRule;
 import models.entities.TestCoordinate;
-import models.entities.TestCoordinateTime;
 
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
@@ -15,8 +14,7 @@ import controllers.TestResponseWrapper;
 @RunWith(Suite.class)
 @SuiteClasses({
 	TestResponseWrapper.class,
-	TestCoordinateTimeDao.class,
-	TestCoordinateTime.class,
+	TestCoordinateDao.class,
 	TestCoordinate.class,
 	TestConfRule.class,
 	TestFactory.class,
