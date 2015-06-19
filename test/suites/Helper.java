@@ -1,5 +1,10 @@
 package suites;
 
+import static org.fest.assertions.Assertions.assertThat;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.JsonNodeType;
+
 import _imperfactcoverage.Detour;
 import interactors.ConfRule;
 import play.db.jpa.JPA;
@@ -35,5 +40,9 @@ public class Helper {
 
 	public static <T> T wrapNoThrowingCheckedExecption(Function0<T> block) {
 		return Detour.wrapNoThrowingCheckedExecption(block);
+	}
+	
+	public static void assertNodeType(JsonNode node, JsonNodeType expected) {
+		assertThat(node.getNodeType()).isSameAs(expected);
 	}
 }
