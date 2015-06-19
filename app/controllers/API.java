@@ -1,12 +1,15 @@
 package controllers;
 
 import interactors.CoordinateRule;
+import interactors.SeriesRule;
 
 import java.util.Date;
 import java.util.List;
 
 import models.entities.Coordinate;
 import models.entities.CoordinateFilter;
+import models.entities.Series;
+import models.entities.filters.Filter;
 
 import org.joda.time.DateTime;
 
@@ -33,6 +36,15 @@ public class API extends Controller {
 		return ok(Json.toJson(response));
 	}
 
+	@Transactional
+	public static Result getSeries(){
+		Filter filter = null;
+		SeriesRule rule = Factory.makeSeriesRule(JPA.em());
+		List<Series> results = rule.query(filter);;
+		Object response = ResponseWrapper.wrap(results, filter);
+		return ok(Json.toJson(response));
+	}
+	
 	private static CoordinateFilter buildCoordinateFilter(
 			Long seriesId,
 			String startInclusive, 
@@ -56,4 +68,3 @@ public class API extends Controller {
 		return DateTime.parse(text).toDate();
 	}
 }
-

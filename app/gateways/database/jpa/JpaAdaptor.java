@@ -44,14 +44,20 @@ public class JpaAdaptor {
 		query.setFirstResult(offset);
 	}
 
-	/*private <T> TypedQuery<T> buildQuery(Class<T> clazz) {
-		CriteriaQuery<T> criteriaQuery = createCriteriaQuery(clazz);
+	private <T> TypedQuery<T> buildQuery(Class<T> clazz) {
+		CriteriaQuery<T> criteriaQuery = createCriteriaQueryFrom(clazz);
 		return em.createQuery(criteriaQuery);
-	}*/
+	}
+	
+	private <T> CriteriaQuery<T> createCriteriaQueryFrom(Class<T> clazz){
+		CriteriaQuery<T> criteriaQuery =  createCriteriaQuery(clazz);
+		criteriaQuery.from(clazz);
+		return criteriaQuery;
+	}
 	
 	private <T> TypedQuery<T> buildQuery(Class<T> clazz, Filter filter) {
-		/*if (filter == null || ! (filter instanceof DateRange))
-			return buildQuery(clazz);*/
+		if (filter == null || ! (filter instanceof TimestampRange))
+			return buildQuery(clazz);
 		return buildQuery(clazz, (TimestampRange) filter); 
 	}
 	

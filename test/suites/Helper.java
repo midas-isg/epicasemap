@@ -46,7 +46,7 @@ public class Helper {
 		assertThat(node.getNodeType()).isSameAs(expected);
 	}
 	
-	public static void assertEqualTo(Object actual, Object expected) {
+	public static void assertAreEqual(Object actual, Object expected) {
 		assertThat(actual).isEqualTo(expected);
 	}
 }
