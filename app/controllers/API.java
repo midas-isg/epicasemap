@@ -1,6 +1,15 @@
 package controllers;
 
-import interactors.GeotagRule;
+import interactors.CoordinateRule;
+
+import java.util.Date;
+import java.util.List;
+
+import models.entities.Coordinate;
+import models.entities.CoordinateFilter;
+
+import org.joda.time.DateTime;
+
 import play.db.jpa.JPA;
 import play.db.jpa.Transactional;
 import play.libs.Json;
@@ -9,8 +18,42 @@ import play.mvc.Result;
 
 public class API extends Controller {
 	@Transactional
-    public static Result getGeotags() {
-		GeotagRule rule = Factory.makeGeotagRule(JPA.em());
-        return ok(Json.toJson(rule.findAll()));
-    }
+	public static Result getTimeCoordinateSeries(
+			Long seriesId,
+			String startInclusive, 
+			String endExclusive, 
+			Integer limit, 
+			int offset
+	) {
+		CoordinateRule rule = Factory.makeCoordinateRule(JPA.em());
+		CoordinateFilter filter = buildCoordinateFilter(seriesId, startInclusive, 
+				endExclusive, limit, offset);
+        List<Coordinate> results = rule.query(filter);
+		Object response = ResponseWrapper.wrap(results, filter);
+		return ok(Json.toJson(response));
+	}
+
+	private static CoordinateFilter buildCoordinateFilter(
+			Long seriesId,
+			String startInclusive, 
+			String endExclusive, 
+			Integer limit, 
+			int offset
+	) {
+		CoordinateFilter filter = new CoordinateFilter();
+		filter.setSeriesId(seriesId);
+		filter.setStartTimestampInclusive(toDate(startInclusive));
+		filter.setEndTimestampExclusive(toDate(endExclusive));
+		filter.setLimit(limit);
+		filter.setOffset(offset);
+		return filter;
+	}
+
+	private static Date toDate(String text) {
+		if (text == null)
+			return null;
+		
+		return DateTime.parse(text).toDate();
+	}
 }
+
