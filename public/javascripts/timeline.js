@@ -5,7 +5,7 @@ timeline.js
 (function() {
 	function MagicMap() {
 		L.mapbox.accessToken = 'pk.eyJ1IjoidHBzMjMiLCJhIjoiVHEzc0tVWSJ9.0oYZqcggp29zNZlCcb2esA';
-		this.map = L.mapbox.map('map', 'mapbox.streets'/*'mapbox.dark'*/, { worldCopyJump: true, bounceAtZoomLimits: false, zoom: 1, minZoom: 1})
+		this.map = L.mapbox.map('map', /*'mapbox.streets'*//**/'mapbox.dark'/**/, { worldCopyJump: true, bounceAtZoomLimits: false, zoom: 1, minZoom: 1})
 			.setView([37.8, -96], 4);
 
 		//this.popup = new L.Popup({ autoPan: false }),
