@@ -7,9 +7,9 @@ import java.io.File;
 import java.util.Map;
 
 import play.Configuration;
-import play.db.jpa.JPA;
 import play.libs.F.Callback0;
 import play.test.FakeApplication;
+import suites.Helper;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
@@ -22,7 +22,15 @@ public class App {
 	}
 
 	public static App newWithInMemoryDb() {
-		return new App("test/resources/conf/test_in_memory_DB.conf");
+		return newWithInMemoryDb(false);
+	}
+	
+	public static App newWithInMemoryDbWithDbOpen() {
+		return newWithInMemoryDb(true);
+	}
+
+	public static App newWithInMemoryDb(boolean isKeptDatabaseOpen) {
+		return new App("test/resources/conf/test_in_memory_DB.conf", isKeptDatabaseOpen);
 	}
 
 	public static App doNotUseForBoostingupCoverageOnly(String path) {
@@ -32,14 +40,31 @@ public class App {
 			return null;
 		}
 	}
-
+	
 	private App(String testConfPathname) {
+		this(testConfPathname, false);
+	}
+
+	private App(String testConfPathname, boolean isKeptDatabaseOpen) {
 		Map<String, Object> configurationMap = readConf(testConfPathname);
+		if (isKeptDatabaseOpen)
+			KeepDatabaseOpen(configurationMap);
 		fakeApp = fakeApplication(configurationMap);
 	}
 
+	private void KeepDatabaseOpen(Map<String, Object> originalMap) {
+		Map<String, Object> map = getMap(getMap(originalMap, "db"), "default");
+		String url = (String) map.get("url");
+		map.put("url", url + "-keep;DB_CLOSE_DELAY=-1");
+	}
+
+	@SuppressWarnings("unchecked")
+	private Map<String, Object> getMap(Map<String, Object> map, String key) {
+		return (Map<String, Object>)map.get(key);
+	}
+
 	public void runWithTransaction(Callback0 callback) {
-		running(fakeApp, withTransaction(callback));
+		running(fakeApp, () -> Helper.wrapTransaction(callback));
 	}
 
 	private Map<String, Object> readConf(String pathname) {
@@ -49,11 +74,5 @@ public class App {
 		Config config = ConfigFactory.parseFile(file);
 		Configuration configuration = new Configuration(config);
 		return configuration.asMap();
-	}
-
-	private Runnable withTransaction(Callback0 callback) {
-		return () -> {
-			JPA.withTransaction(callback);
-		};
 	}
 }

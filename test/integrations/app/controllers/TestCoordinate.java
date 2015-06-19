@@ -1,0 +1,114 @@
+package integrations.app.controllers;
+
+import static org.fest.assertions.Assertions.assertThat;
+import static play.test.Helpers.contentAsString;
+import integrations.app.App;
+
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Date;
+
+import javax.persistence.EntityManager;
+
+import models.entities.Coordinate;
+
+import org.junit.BeforeClass;
+import org.junit.Test;
+
+import play.db.jpa.JPA;
+import play.libs.F.Callback0;
+import play.libs.Json;
+import play.mvc.Result;
+import _imperfactcoverage.Detour;
+
+import com.fasterxml.jackson.databind.JsonNode;
+
+import controllers.API;
+
+public class TestCoordinate {
+	private static int numberCoordinates = 6;
+
+	@BeforeClass
+	public static void populateDatabase(){
+		runWithTransaction(() -> createCoordinates());
+	}
+	
+	private static void createCoordinates() {
+		EntityManager em = JPA.em();
+		Instant t = Instant.EPOCH;
+		for (int i = 0; i < numberCoordinates; i++){
+			Coordinate data = new Coordinate();
+			t = t.plus(1, ChronoUnit.DAYS);
+			data.setTimestamp(Date.from(t));
+			em.persist(data);
+		}
+	}
+	
+	@Test
+	public void testDateRanges() throws Exception {
+		runWithTransaction(() -> {
+			Instant t = Instant.EPOCH;
+			String start = t.toString();
+			int n = 5;
+			String end = t.plus(n, ChronoUnit.DAYS).toString();
+    		Result result = API.getTimeCoordinateSeries(null, start, end, null, 0);
+    		assertCoordinates(result, n - 1);
+    	});
+	}
+
+    @Test
+    public void testDefaultParameters() {
+    	runWithTransaction(() -> {
+    		Result result = API.getTimeCoordinateSeries(null, null, null, null, 0);
+    		assertCoordinates(result, numberCoordinates);
+    	});
+    }
+
+    @Test
+    public void testLimits() {
+    	runWithTransaction(() -> {
+    		final int N = numberCoordinates;
+			testLimit(N, N);
+    		testLimit(N + 1, N);
+    		testLimit(N - 1, N - 1);
+    		testLimit(0, N);
+    	});
+    }
+
+    @Test
+    public void testLimitWithNegative() {
+		runWithTransaction(Detour.testLimitWithNegative(this));
+    }
+    
+	@Test
+    public void testLimitsAndOffsets() {
+    	runWithTransaction(() -> {
+    		final int N = numberCoordinates;
+    		testLimitAndOffset(N, 1, N - 1);
+
+    		testLimitAndOffset(N, N - 1, 1);
+    		testLimitAndOffset(null, N - 1, 1);
+    	});
+    }
+
+	public void testLimit(int limit, int expected) {
+		int offset = 0;
+		testLimitAndOffset(limit, offset, expected);
+	}
+
+	private void testLimitAndOffset(Integer limit, int offset, int expected) {
+		Result result = API.getTimeCoordinateSeries(null, null, null, limit, offset);
+		assertCoordinates(result, expected);
+	}
+
+	private void assertCoordinates(Result result, int n) {
+		String content = contentAsString(result);
+		JsonNode root = Json.parse(content);
+		JsonNode results = root.get("results");
+		assertThat(results.size()).isEqualTo(n);
+	}
+
+    private static void runWithTransaction(Callback0 callback) {
+		App.newWithInMemoryDbWithDbOpen().runWithTransaction(callback);
+	}
+}
