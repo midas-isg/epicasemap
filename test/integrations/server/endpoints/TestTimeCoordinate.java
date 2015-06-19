@@ -27,7 +27,7 @@ public class TestTimeCoordinate {
 		String time = EPOCH.toString();
 		String url = makeTimeCoordinatesUrl() 
 		+ "?startInclusive=" + time + "&endExclusive=" + time;
-		assertLimit(url, 0);
+		testJsonResponseLimit(url, 0);
 	}
 
 	@Test
@@ -38,18 +38,18 @@ public class TestTimeCoordinate {
 	private void actThenAssertPagination() {
 		int n = 5;
 		String url = makeTimeCoordinatesUrl() + "?offset=" + n + "&limit=" + n;
-		assertLimit(url, n);
+		testJsonResponseLimit(url, n);
 	}
 
-	private JsonNode assertMin(String url, int min) {
-		return assertClosedInterval(url, min, null);
+	private JsonNode testJsonResponseMin(String url, int min) {
+		return testJsonResponseClosedInterval(url, min, null);
 	}
 	
-	private JsonNode assertLimit(String url, int limit) {
-		return assertClosedInterval(url, limit, limit);
+	private JsonNode testJsonResponseLimit(String url, int limit) {
+		return testJsonResponseClosedInterval(url, limit, limit);
 	}
 	
-	private JsonNode assertClosedInterval(String url, int min, Integer max) {
+	private JsonNode testJsonResponseClosedInterval(String url, int min, Integer max) {
 		WSResponse response = Helper.get(url);
 		JsonNode root = response.asJson();
 		assertThat(root.getNodeType()).isSameAs(OBJECT);
@@ -89,7 +89,7 @@ public class TestTimeCoordinate {
 	}
 
 	private void actThenAssertDefaultParameters() {
-		JsonNode root = assertMin(makeTimeCoordinatesUrl(), 1);
+		JsonNode root = testJsonResponseMin(makeTimeCoordinatesUrl(), 1);
 		assertDefaultFilter(root.get("filter"));
 	}
 
