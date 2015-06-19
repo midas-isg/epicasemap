@@ -7,16 +7,13 @@ import static suites.Helper.testJsonResponseMin;
 
 import java.util.Iterator;
 
-import org.junit.Test;
-
 import com.fasterxml.jackson.databind.JsonNode;
 
 public class TestEndpointSeries {
 	private final String path = "/api/series";
 	
-	@Test
-	public void defaultParameters() {
-		Server.run(() -> actThenAssertDefaultParameters());
+	public static Runnable defaultParameters() {
+		return () -> new TestEndpointSeries().actThenAssertDefaultParameters();
 	}
 
 	private void actThenAssertDefaultParameters() {
