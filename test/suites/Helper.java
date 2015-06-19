@@ -44,8 +44,8 @@ public class Helper {
 		return Detour.wrapNoThrowingCheckedExecption(block);
 	}
 	
-	public static void assertNodeType(JsonNode node, JsonNodeType expected) {
-		assertThat(node.getNodeType()).isSameAs(expected);
+	public static void assertNodeType(JsonNode node, JsonNodeType... expected) {
+		assertThat(node.getNodeType()).isIn((Object[])expected);
 	}
 	
 	public static void assertAreEqual(Object actual, Object expected) {
@@ -72,5 +72,13 @@ public class Helper {
 			assertThat(size).isLessThanOrEqualTo(max);
 		return root;
 	}
-
+	
+	public static JsonNode testJsonResponse(String url) {
+		WSResponse response = Helper.get(url);
+		JsonNode root = response.asJson();
+		assertNodeType(root, OBJECT);
+		JsonNode result = root.get("result");
+		assertNodeType(result, OBJECT);
+		return root;
+	}
 }

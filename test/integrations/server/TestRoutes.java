@@ -6,6 +6,7 @@ public class TestRoutes {
     @Test // @Ignore("to run test faster")
     public void allRoutes() {
     	Runnable[] tests = {
+   			SeriesEndpointTester.read(),	
     		SeriesEndpointTester.defaultParameters(),	
     		
     		TimeCoordinateEndpointTester.dateRange(),
