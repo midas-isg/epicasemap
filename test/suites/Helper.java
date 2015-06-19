@@ -45,4 +45,8 @@ public class Helper {
 	public static void assertNodeType(JsonNode node, JsonNodeType expected) {
 		assertThat(node.getNodeType()).isSameAs(expected);
 	}
+	
+	public static void assertEqualTo(Object actual, Object expected) {
+		assertThat(actual).isEqualTo(expected);
+	}
 }
