@@ -105,7 +105,7 @@ public class TestCoordinate {
 		String content = contentAsString(result);
 		JsonNode root = Json.parse(content);
 		JsonNode results = root.get("results");
-		assertThat(results.size()).isEqualTo(n);
+		assertThat(results).hasSize(n);
 	}
 
     private static void runWithTransaction(Callback0 callback) {
