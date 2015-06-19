@@ -7,7 +7,7 @@ import static java.time.Instant.EPOCH;
 import static org.fest.assertions.Assertions.assertThat;
 import static play.test.Helpers.running;
 import static play.test.Helpers.testServer;
-import static suites.Helper.assertEqualTo;
+import static suites.Helper.assertAreEqual;
 import static suites.Helper.assertNodeType;
 
 import java.util.Iterator;
@@ -71,13 +71,13 @@ public class TestTimeCoordinate {
 	private void assertDefaultFilter(JsonNode filter) {
 		assertNodeType(filter, OBJECT);
 		assertNodeType(filter.get("limit"), NULL);
-		assertEqualTo(filter.get("offset").asInt(), 0);
+		assertAreEqual(filter.get("offset").asInt(), 0);
 		assertNodeType(filter.get("startTimestampInclusive"), NULL);
 		assertNodeType(filter.get("endTimestampExclusive"), NULL);
-		assertEqualTo(filter.get("timestampAttribute").asText(), "timestamp");
+		assertAreEqual(filter.get("timestampAttribute").asText(), "timestamp");
 		final JsonNode equalities = filter.get("equalities");
 		assertNodeType(equalities, OBJECT);
-		assertEqualTo(equalities.get("seriesId").asLong(), seriesId);
+		assertAreEqual(equalities.get("seriesId").asLong(), seriesId);
 	}
 
 	private void assertCoordinates(JsonNode results) {

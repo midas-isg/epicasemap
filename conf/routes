@@ -5,6 +5,7 @@
 # Home page
 GET     /                           controllers.Application.index()
 
+GET		/api/series					controllers.API.getSeries()
 GET		/api/series/:id/time-coordinate		controllers.API.getTimeCoordinateSeries(id:Long, startInclusive:String?=null, endExclusive:String?=null, limit:java.lang.Integer?=null, offset:Int?=0)
 
 
