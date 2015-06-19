@@ -11,27 +11,27 @@ import static suites.Helper.testJsonResponseMin;
 
 import java.util.Iterator;
 
-import org.junit.Test;
-
 import com.fasterxml.jackson.databind.JsonNode;
 
 public class TestEndpointTimeCoordinate {
 	private final long seriesId = 2L;
 	
-	@Test
-	public void dateRange() {
-		Server.run(() -> testDateRange());
+	private static TestEndpointTimeCoordinate newInstance() {
+		return new TestEndpointTimeCoordinate();
 	}
 	
-	public void testDateRange() {
+	public static Runnable dateRange() {
+		return () -> newInstance().testDateRange();
+	}
+
+	private void testDateRange() {
 		String ts = EPOCH.toString();
 		String url = makeUrl("?startInclusive=" + ts + "&endExclusive=" + ts);
 		testJsonResponseLimit(url, 0);
 	}
 
-	@Test
-	public void pagination() {
-		Server.run(() -> testPagination());
+	public static Runnable pagination() {
+		return () -> newInstance().testPagination();
 	}
 	
 	private void testPagination() {
@@ -40,9 +40,8 @@ public class TestEndpointTimeCoordinate {
 		testJsonResponseLimit(url, n);
 	}
 
-	@Test
-	public void defaultParameters() {
-		Server.run(() -> testDefaultParameters());
+	public static Runnable defaultParameters() {
+		return () -> newInstance().testDefaultParameters();
 	}
 
 	public void testDefaultParameters() {

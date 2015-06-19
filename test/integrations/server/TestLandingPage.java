@@ -1,14 +1,10 @@
 package integrations.server;
 
 import static org.fest.assertions.Assertions.assertThat;
-
-import org.junit.Test;
-
 import suites.Helper;
 
 public class TestLandingPage {
-    @Test
-    public void containsConextForJavaScript() {
+	public static Runnable containsConextForJavaScript() {
         Runnable block = () -> {
         	String context = Server.getContext();
         	String expected = javaScriptContext(context);
@@ -16,10 +12,10 @@ public class TestLandingPage {
             String actual = Helper.get(url).getBody();
 			assertThat(actual).contains(expected);
         };
-		Server.run(block);
+		return block;
     }
 
-	private String javaScriptContext(String context) {
+	private static String javaScriptContext(String context) {
 		String template = "var CONTEXT = '%s';";
 		String expected = String.format(template, context);
 		return expected;
