@@ -1,42 +1,30 @@
 package integrations.server;
 
-import static com.fasterxml.jackson.databind.node.JsonNodeType.ARRAY;
 import static com.fasterxml.jackson.databind.node.JsonNodeType.NULL;
-import static com.fasterxml.jackson.databind.node.JsonNodeType.OBJECT;
 import static org.fest.assertions.Assertions.assertThat;
-import static play.test.Helpers.running;
-import static play.test.Helpers.testServer;
 import static suites.Helper.assertNodeType;
+import static suites.Helper.testJsonResponseMin;
 
 import java.util.Iterator;
 
 import org.junit.Test;
 
-import play.libs.ws.WSResponse;
-import suites.Helper;
-
 import com.fasterxml.jackson.databind.JsonNode;
 
 public class TestEndpointSeries {
-	private JsonNode testJsonResponseMin(String url, int min) {
-		WSResponse response = Helper.get(url);
-		JsonNode root = response.asJson();
-		assertThat(root.getNodeType()).isSameAs(OBJECT);
-		JsonNode results = root.get("results");
-		assertThat(results.getNodeType()).isSameAs(ARRAY);
-		int size = results.size();
-		assertSeries(results);
-		assertThat(size).isGreaterThanOrEqualTo(min);
-		return root;
-	}
+	private final String path = "/api/series";
 	
-	private void assertDefaultFilter(JsonNode filter) {
-		assertNodeType(filter, NULL);
-		/*assertNodeType(filter, OBJECT);
-		assertNodeType(filter.get("limit"), NULL);
-		Helper.assertAreEqual(filter.get("offset").asInt(), 0);*/
+	@Test
+	public void defaultParameters() {
+		Server.run(() -> actThenAssertDefaultParameters());
 	}
-	
+
+	private void actThenAssertDefaultParameters() {
+		JsonNode root = testJsonResponseMin(Server.makeTestUrl(path), 1);
+		assertSeries(root.get("results"));
+		assertDefaultFilter(root.get("filter"));
+	}
+
 	private void assertSeries(JsonNode results) {
 		assertThat(results).isNotEmpty();
 		JsonNode node = results.get(0);
@@ -46,22 +34,11 @@ public class TestEndpointSeries {
 		assertThat(node.get(idName).asLong()).isPositive();
 	}
 
-	@Test
-	public void defaultParameters() {
-		testInServer(() -> actThenAssertDefaultParameters());
+	private void assertDefaultFilter(JsonNode filter) {
+		assertNodeType(filter, NULL);
+		/*assertNodeType(filter, OBJECT);
+		assertNodeType(filter.get("limit"), NULL);
+		Helper.assertAreEqual(filter.get("offset").asInt(), 0);*/
 	}
-
-	private void testInServer(Runnable actThenAssert) {
-		running(testServer(3333), actThenAssert);
-	}
-
-	private void actThenAssertDefaultParameters() {
-		JsonNode root = testJsonResponseMin(makeTimeCoordinatesUrl(), 1);
-		assertDefaultFilter(root.get("filter"));
-	}
-
-	private String makeTimeCoordinatesUrl() {
-		String context = Helper.readContext();
-		return "http://localhost:3333" + context + "/api/series";
-	}
+	
 }
