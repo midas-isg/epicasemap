@@ -52,9 +52,9 @@ public class TestTimeCoordinate {
 	private JsonNode testJsonResponseClosedInterval(String url, int min, Integer max) {
 		WSResponse response = Helper.get(url);
 		JsonNode root = response.asJson();
-		assertThat(root.getNodeType()).isSameAs(OBJECT);
+		Helper.assertNodeType(root, OBJECT);
 		JsonNode results = root.get("results");
-		assertThat(results.getNodeType()).isSameAs(ARRAY);
+		Helper.assertNodeType(results, ARRAY);
 		int size = results.size();
 		if (size > 0 )
 			assertCoordinates(results);
@@ -63,10 +63,10 @@ public class TestTimeCoordinate {
 			assertThat(size).isLessThanOrEqualTo(max);
 		return root;
 	}
-	
+
 	private void assertDefaultFilter(JsonNode filter) {
-		assertThat(filter.getNodeType()).isSameAs(OBJECT);
-		assertThat(filter.get("limit").getNodeType()).isSameAs(NULL);
+		Helper.assertNodeType(filter, OBJECT);
+		Helper.assertNodeType(filter.get("limit"), NULL);
 		assertThat(filter.get("offset").asInt()).isEqualTo(0);
 	}
 	
