@@ -9,6 +9,8 @@ import org.junit.Test;
 
 import controllers.API;
 import controllers.Application;
+import controllers.Factory;
+import controllers.ResponseWrapper;
 
 public class CoverageBooster extends TestCase {
 	@Test
@@ -17,7 +19,15 @@ public class CoverageBooster extends TestCase {
 		ignoreAppKeyEnum();
 		ignoreDefaultConstructors();
 		ignoreSpecialCaseInTests();
-		testPrivateDefaultConstructor(Helper.class);
+		testPrivateConstructors(
+				ResponseWrapper.class,
+				Factory.class
+		);
+	}
+
+	private void testPrivateConstructors(Class<?>... classes) throws Exception {
+		for (Class<?> clazz : classes)
+			testPrivateDefaultConstructor(clazz);
 	}
 
 	private void ignoreSpecialCaseInTests() {
@@ -39,6 +49,11 @@ public class CoverageBooster extends TestCase {
 		new Application();
 		new API();
 		new JpaAdaptor(null);
+		ignoreDefaultConstructorsForTests();
+	}
+
+	private void ignoreDefaultConstructorsForTests() {
+		new Helper();
 		new Server();
 	}
 }
