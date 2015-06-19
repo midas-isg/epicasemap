@@ -17,9 +17,6 @@ import com.fasterxml.jackson.databind.node.JsonNodeType;
 import controllers.Factory;
 
 public class Helper {
-	private Helper(){
-	}
-
 	public static WSResponse get(String url) {
 		long timeout = 1000000;
 		WSResponse response = WS.url(url).get().get(timeout);
