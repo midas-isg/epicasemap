@@ -78,4 +78,10 @@ public class Helper {
 		assertNodeType(result, OBJECT);
 		return root;
 	}
+	
+	public static void assertValueRange(JsonNode node, double max, double min) {
+		final double val = node.asDouble();
+		assertThat(val).isLessThanOrEqualTo(max);
+		assertThat(val).isGreaterThanOrEqualTo(min);
+	}
 }
