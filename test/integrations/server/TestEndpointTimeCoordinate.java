@@ -1,4 +1,4 @@
-package integrations.server.endpoints;
+package integrations.server;
 
 import static com.fasterxml.jackson.databind.node.JsonNodeType.ARRAY;
 import static com.fasterxml.jackson.databind.node.JsonNodeType.NULL;
@@ -19,7 +19,7 @@ import suites.Helper;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-public class TestTimeCoordinate {
+public class TestEndpointTimeCoordinate {
 	private final long seriesId = 2L;
 	
 	@Test
