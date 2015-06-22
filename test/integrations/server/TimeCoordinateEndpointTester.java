@@ -70,7 +70,9 @@ public class TimeCoordinateEndpointTester {
 		final String ts = "timestamp";
 		final String lat = "latitude";
 		final String lon = "longitude";
-		assertThat(fields).containsOnly(id, sid, val, ts, lat, lon);
+		final String lid = "locationId";
+
+		assertThat(fields).containsOnly(id, sid, val, ts, lat, lon, lid);
 		assertThat(node.get(id).asLong()).isPositive();
 		assertThat(node.get(sid).asLong()).isPositive();
 		assertThat(node.get(val).asDouble()).isPositive();
