@@ -54,9 +54,6 @@ public class SeriesEndpointTester {
 
 	private void assertDefaultFilter(JsonNode filter) {
 		assertNodeType(filter, NULL);
-		/*assertNodeType(filter, OBJECT);
-		assertNodeType(filter.get("limit"), NULL);
-		Helper.assertAreEqual(filter.get("offset").asInt(), 0);*/
 	}
 	
 	private static SeriesEndpointTester newInstance() {
