@@ -23,7 +23,7 @@ timeline.js
 	}
 
 	MagicMap.prototype.start = function() {
-		this.load(EBOLA_GEO);
+		this.load(1);
 		this.packHeat();
 		
 		this.loadBuffer();
@@ -35,329 +35,330 @@ timeline.js
 		this.closeTooltip;
 		//this.map.legendControl.addLegend(this.getLegendHTML());
 		
-		
-		(function() {
-			// create the detail chart
-			function createDetail(masterChart) {
-				// prepare the detail chart
-				var detailData = [],
-					detailStart = Date.UTC(MAGIC_MAP.buffer[0].date.getUTCFullYear(),
-							MAGIC_MAP.buffer[0].date.getUTCMonth(),
-							MAGIC_MAP.buffer[0].date.getUTCDate()); //Date.UTC(2008, 7, 1);
-
-				$.each(masterChart.series[0].data, function () {
-					if (this.x >= detailStart) {
-						detailData.push(this.y);
-					}
-				});
-
-				// create a detail chart referenced by a global variable
-				detailChart = $('#detail-container').highcharts({
-					chart: {
-						marginBottom: 110,//120,
-						reflow: false,
-						marginLeft: 50,
-						//marginRight: 20,
-						backgroundColor: null,
-						style: {
-							//position: 'absolute'
-						}
-					},
-					credits: {
-						enabled: false
-					},
-					title: {
-						text: 'Ebola References',
-						style: {
-							color: 'rgba(255, 255, 255, 255)'
-						}
-					},
-					subtitle: {
-						text: 'Select an area by dragging across the lower chart',
-						style: {
-							color: 'rgba(255, 255, 255, 255)'
-						}
-					},
-					xAxis: {
-						type: 'datetime'
-					},
-					yAxis: {
-						title: {
-							text: null
-						},
-						maxZoom: 0.1
-					},
-					tooltip: {
-						formatter: function () {
-							var point = this.points[0];
-							return '<b>' + point.series.name + '</b><br/>' +
-								Highcharts.dateFormat('%A %B %e %Y', this.x) + ':<br/>' +
-								point.y;//'1 USD = ' + Highcharts.numberFormat(point.y, 2) + ' EUR';
-						},
-						shared: true
-					},
-					legend: {
-						enabled: false
-					},
-					plotOptions: {
-						series: {
-							marker: {
-								enabled: false,
-								states: {
-									hover: {
-										enabled: true,
-										radius: 3
-									}
-								}
-							}
-						}
-					},
-					series: [{
-						name: 'Ebola References per Day',
-						pointStart: detailStart,
-						pointInterval: 24 * 3600 * 1000,
-						data: detailData
-					}],
-					exporting: {
-						enabled: false
-					}
-
-				}).highcharts(); // return chart
-			}
-
-			// create the master chart
-			function createMaster() {
-				$('#master-container').highcharts({
-					chart: {
-						reflow: false,
-						backgroundColor: null,
-						marginLeft: 50,
-						//marginRight: 20,
-						zoomType: 'x',
-						events: {
-							// listen to the selection event on the master chart to update the
-							// extremes of the detail chart
-							selection: function (event) {
-								var extremesObject = event.xAxis[0],
-									min = extremesObject.min,
-									max = extremesObject.max,
-									detailData = [],
-									xAxis = this.xAxis[0],
-									startFrame;
-
-								// reverse engineer the last part of the data
-								$.each(this.series[0].data, function () {
-									if((this.x > min) && (this.x < max)) {
-										detailData.push([this.x, this.y]);
-									}
-								});
-
-								// move the plot bands to reflect the new detail span
-								xAxis.removePlotBand('mask-before');
-								xAxis.addPlotBand({
-									id: 'mask-before',
-									from: Date.UTC(MAGIC_MAP.buffer[0].date.getUTCFullYear(),
-										MAGIC_MAP.buffer[0].date.getUTCMonth(),
-										MAGIC_MAP.buffer[0].date.getUTCDate()),
-									to: min,
-									color: 'rgba(128, 128, 128, 0.2)'
-								});
-
-								xAxis.removePlotBand('mask-after');
-								xAxis.addPlotBand({
-									id: 'mask-after',
-									from: max,
-									to: Date.UTC(MAGIC_MAP.buffer[MAGIC_MAP.buffer.length - 1].date.getUTCFullYear(),
-										MAGIC_MAP.buffer[MAGIC_MAP.buffer.length - 1].date.getUTCMonth(),
-										MAGIC_MAP.buffer[MAGIC_MAP.buffer.length - 1].date.getUTCDate()),
-									color: 'rgba(128, 128, 128, 0.2)'
-								});
-								
-								detailChart.series[0].setData(detailData);
-								
-								startFrame = Math.floor((new Date(min) - MAGIC_MAP.buffer[0].date) / 86400000);
-								
-								if(startFrame < 0) {
-									startFrame = 0;
-								}
-								
-								console.log(startFrame + "->" + (startFrame + detailData.length));
-								
-								MAGIC_MAP.playSection(startFrame, startFrame + detailData.length);
-
-								return false;
-							}
-						}
-					},
-					title: {
-						text: null
-					},
-					xAxis: {
-						type: 'datetime',
-						showLastTickLabel: true,
-						maxZoom: 1209600000, //14 * 24 * 3600000, // fourteen days
-						plotBands: [{
-							id: 'mask-before',
-							from: Date.UTC(MAGIC_MAP.buffer[0].date.getUTCFullYear(),
-									MAGIC_MAP.buffer[0].date.getUTCMonth(),
-									MAGIC_MAP.buffer[0].date.getUTCDate()),//Date.UTC(2006, 0, 1),
-							to: Date.UTC(MAGIC_MAP.buffer[MAGIC_MAP.buffer.length -1].date.getUTCFullYear(),
-									MAGIC_MAP.buffer[MAGIC_MAP.buffer.length -1].date.getUTCMonth(),
-									MAGIC_MAP.buffer[MAGIC_MAP.buffer.length -1].date.getUTCDate()), //Date.UTC(2008, 7, 1),
-							color: 'rgba(0, 0, 0, 0.2)'
-						}],
-						title: {
-							text: null
-						}
-					},
-					yAxis: {
-						gridLineWidth: 0,
-						labels: {
-							enabled: false
-						},
-						title: {
-							text: null
-						},
-						min: 0.6,
-						showFirstLabel: false
-					},
-					tooltip: {
-						formatter: function () {
-							return false;
-						}
-					},
-					legend: {
-						enabled: false
-					},
-					credits: {
-						enabled: false
-					},
-					plotOptions: {
-						series: {
-							fillColor: {
-								linearGradient: [0, 0, 0, 70],
-								stops: [
-									[0, Highcharts.getOptions().colors[0]],
-									[1, 'rgba(255,255,255,0)']
-								]
-							},
-							lineWidth: 1,
-							marker: {
-								enabled: false
-							},
-							shadow: false,
-							states: {
-								hover: {
-									lineWidth: 1
-								}
-							},
-							enableMouseTracking: false
-						}
-					},
-					series: [{
-						type: 'area',
-						name: 'References per Day',
-						pointInterval: 86400000, //24 * 3600 * 1000,
-						pointStart: Date.UTC(MAGIC_MAP.buffer[0].date.getUTCFullYear(),
-									MAGIC_MAP.buffer[0].date.getUTCMonth(),
-									MAGIC_MAP.buffer[0].date.getUTCDate()), //Date.UTC(2006, 0, 1),
-						data: MAGIC_MAP.frameTotal//data
-					}],
-					exporting: {
-						enabled: false
-					}
-				},
-				function (masterChart) {
-					createDetail(masterChart);
-				}).highcharts(); // return chart instance
-			}
-
-			// make the container smaller and add a second container for the master chart
-			var $container = $('#container');
-
-			//$('<div id="detail-container">').appendTo($container);
-
-			$('<div id="master-container">')
-				//.css({ position: 'absolute', top: 300, height: 100, width: '100%' })
-				.css({ position: 'relative', bottom: 10, height: 100 })
-				.appendTo($container);
-
-			// create master and in its callback, create the detail chart
-			createMaster();
-		})();
-		
-		
 		document.getElementById('body').onkeyup = this.handleInput;
 		setInterval(this.loop, 0);
 		
 		return;
 	}
 
-	MagicMap.prototype.load = function(input) {
-		var i,
-		frame = 0,
-		skipped = 0,
-		filler = 0,
-		threshold = 86400000, //ms in a day
-		lastDate = new Date(input[0][0].split("T")[0]),
-		emptyDate,
-		inputDate,
-		deltaTime;
+	MagicMap.prototype.load = function(series) {
+		var URL = "http://localhost:9000/epidemap/api/series/" + series + "/time-coordinate",
+		thisMap = this;
 		
-		this.buffer.push({coordinates: [], date: null});
-		this.frameTotal[0] = 0;
-		
-		for(i = 0; i < input.length; i++) {
-			if(input[i].length >= 3) {
-				inputDate = new Date(input[i][0].split("T")[0]);
-				//Update frame if new point is outside of time threshold
-				emptyDate = lastDate;
-				deltaTime = inputDate.valueOf() - lastDate.valueOf();
+		$.ajax({
+			url: URL,
+			success: function(result) {
+				var i,
+				frame = 0,
+				skipped = 0,
+				filler = 0,
+				threshold = 86400000, //ms in a day
+				lastDate = new Date(result.results[0].timestamp),
+				emptyDate,
+				inputDate,
+				deltaTime;
 				
-				while(deltaTime >= threshold) {
-					this.buffer.push({coordinates: [], date: null});
-					frame++;
-					filler++;
-					emptyDate = new Date(emptyDate.valueOf() + threshold);
-					this.buffer[frame].date = emptyDate;
-					this.frameTotal[frame] = 0;
-					
-					deltaTime -= threshold;
+				thisMap.buffer.push({coordinates: [], date: null});
+				thisMap.frameTotal[0] = 0;
+				
+				for(i = 0; i < result.results.length; i++) {
+					if(result.results[i]) {
+						inputDate = new Date(result.results[i].timestamp);
+						inputDate.setHours(0);
+						inputDate.setMinutes(0);
+						inputDate.setSeconds(0);
+						
+						//Update frame if new point is outside of time threshold
+						emptyDate = lastDate;
+						deltaTime = inputDate.valueOf() - lastDate.valueOf();
+						
+						while(deltaTime >= threshold) {
+							thisMap.buffer.push({coordinates: [], date: null});
+							frame++;
+							filler++;
+							emptyDate = new Date(emptyDate.valueOf() + threshold);
+							thisMap.buffer[frame].date = emptyDate;
+							thisMap.frameTotal[frame] = 0;
+							
+							deltaTime -= threshold;
+						}
+						
+						thisMap.buffer[frame].coordinates.push({latitude: result.results[i].latitude, longitude: result.results[i].longitude});
+						thisMap.buffer[frame].date = inputDate;
+						thisMap.frameTotal[frame]++;
+						
+						lastDate = thisMap.buffer[frame].date;
+					}
+					else {
+						skipped++;
+					}
 				}
+				console.log("Loaded " + (result.results.length - skipped) + " entries");
+				console.log("Skipped " + skipped + " malformed entries");
+				console.log(filler + " days occurred without reports in this timespan");
+				console.log("Total Frames: " + frame + 1);
+				console.log("Buffer length: " + thisMap.buffer.length);
 				
-				this.buffer[frame].coordinates.push({latitude: input[i][2], longitude: input[i][1]});
-				this.buffer[frame].date = inputDate;
-				this.frameTotal[frame]++;
+				thisMap.createChart()
 				
-				lastDate = this.buffer[frame].date;
+				return;
+			},
+			error: function() {
+				return;
 			}
-			else {
-				skipped++;
-			}
-		}
-		console.log("Loaded " + (input.length - skipped) + " entries");
-		console.log("Skipped " + skipped + " malformed entries");
-		console.log(filler + " days occurred without reports in this timespan");
-		console.log("Total Frames: " + frame + 1);
-		console.log("Buffer length: " + this.buffer.length);
+		});
 		
-		if(this.series) {
-			/*
-			this.series.remove(false);
-			
-			// generate an array of empty data
-			var data = [];
-			
-			for (i = -10; i <= 0; i += 1) {
-				data.push({
-					x: i,
-					y: 0
-				});
-			}
-			
-			this.series.setData(data, true, false, false);
-			*/
+		return;
+	}
+	
+	MagicMap.prototype.createChart = function() {
+			// create the detail chart
+		function createDetail(masterChart) {
+			// prepare the detail chart
+			var detailData = [],
+				detailStart = Date.UTC(MAGIC_MAP.buffer[0].date.getUTCFullYear(),
+						MAGIC_MAP.buffer[0].date.getUTCMonth(),
+						MAGIC_MAP.buffer[0].date.getUTCDate()); //Date.UTC(2008, 7, 1);
+
+			$.each(masterChart.series[0].data, function () {
+				if (this.x >= detailStart) {
+					detailData.push(this.y);
+				}
+			});
+
+			// create a detail chart referenced by a global variable
+			detailChart = $('#detail-container').highcharts({
+				chart: {
+					marginBottom: 110,//120,
+					reflow: false,
+					marginLeft: 50,
+					//marginRight: 20,
+					backgroundColor: null,
+					style: {
+						//position: 'absolute'
+					}
+				},
+				credits: {
+					enabled: false
+				},
+				title: {
+					text: 'Ebola References',
+					style: {
+						color: 'rgba(255, 255, 255, 255)'
+					}
+				},
+				subtitle: {
+					text: 'Select an area by dragging across the lower chart',
+					style: {
+						color: 'rgba(255, 255, 255, 255)'
+					}
+				},
+				xAxis: {
+					type: 'datetime'
+				},
+				yAxis: {
+					title: {
+						text: null
+					},
+					maxZoom: 0.1
+				},
+				tooltip: {
+					formatter: function () {
+						var point = this.points[0];
+						return '<b>' + point.series.name + '</b><br/>' +
+							Highcharts.dateFormat('%A %B %e %Y', this.x) + ':<br/>' +
+							point.y;//'1 USD = ' + Highcharts.numberFormat(point.y, 2) + ' EUR';
+					},
+					shared: true
+				},
+				legend: {
+					enabled: false
+				},
+				plotOptions: {
+					series: {
+						marker: {
+							enabled: false,
+							states: {
+								hover: {
+									enabled: true,
+									radius: 3
+								}
+							}
+						}
+					}
+				},
+				series: [{
+					name: 'Ebola References per Day',
+					pointStart: detailStart,
+					pointInterval: 24 * 3600 * 1000,
+					data: detailData
+				}],
+				exporting: {
+					enabled: false
+				}
+
+			}).highcharts(); // return chart
 		}
+
+		// create the master chart
+		function createMaster() {
+			$('#master-container').highcharts({
+				chart: {
+					reflow: false,
+					backgroundColor: null,
+					marginLeft: 50,
+					//marginRight: 20,
+					zoomType: 'x',
+					events: {
+						// listen to the selection event on the master chart to update the
+						// extremes of the detail chart
+						selection: function (event) {
+							var extremesObject = event.xAxis[0],
+								min = extremesObject.min,
+								max = extremesObject.max,
+								detailData = [],
+								xAxis = this.xAxis[0],
+								startFrame;
+
+							// reverse engineer the last part of the data
+							$.each(this.series[0].data, function () {
+								if((this.x > min) && (this.x < max)) {
+									detailData.push([this.x, this.y]);
+								}
+							});
+
+							// move the plot bands to reflect the new detail span
+							xAxis.removePlotBand('mask-before');
+							xAxis.addPlotBand({
+								id: 'mask-before',
+								from: Date.UTC(MAGIC_MAP.buffer[0].date.getUTCFullYear(),
+									MAGIC_MAP.buffer[0].date.getUTCMonth(),
+									MAGIC_MAP.buffer[0].date.getUTCDate()),
+								to: min,
+								color: 'rgba(128, 128, 128, 0.2)'
+							});
+
+							xAxis.removePlotBand('mask-after');
+							xAxis.addPlotBand({
+								id: 'mask-after',
+								from: max,
+								to: Date.UTC(MAGIC_MAP.buffer[MAGIC_MAP.buffer.length - 1].date.getUTCFullYear(),
+									MAGIC_MAP.buffer[MAGIC_MAP.buffer.length - 1].date.getUTCMonth(),
+									MAGIC_MAP.buffer[MAGIC_MAP.buffer.length - 1].date.getUTCDate()),
+								color: 'rgba(128, 128, 128, 0.2)'
+							});
+							
+							detailChart.series[0].setData(detailData);
+							
+							startFrame = Math.floor((new Date(min) - MAGIC_MAP.buffer[0].date) / 86400000);
+							
+							if(startFrame < 0) {
+								startFrame = 0;
+							}
+							
+							console.log(startFrame + "->" + (startFrame + detailData.length));
+							
+							MAGIC_MAP.playSection(startFrame, startFrame + detailData.length);
+
+							return false;
+						}
+					}
+				},
+				title: {
+					text: null
+				},
+				xAxis: {
+					type: 'datetime',
+					showLastTickLabel: true,
+					maxZoom: 1209600000, //14 * 24 * 3600000, // fourteen days
+					plotBands: [{
+						id: 'mask-before',
+						from: Date.UTC(MAGIC_MAP.buffer[0].date.getUTCFullYear(),
+								MAGIC_MAP.buffer[0].date.getUTCMonth(),
+								MAGIC_MAP.buffer[0].date.getUTCDate()),//Date.UTC(2006, 0, 1),
+						to: Date.UTC(MAGIC_MAP.buffer[MAGIC_MAP.buffer.length -1].date.getUTCFullYear(),
+								MAGIC_MAP.buffer[MAGIC_MAP.buffer.length -1].date.getUTCMonth(),
+								MAGIC_MAP.buffer[MAGIC_MAP.buffer.length -1].date.getUTCDate()), //Date.UTC(2008, 7, 1),
+						color: 'rgba(0, 0, 0, 0.2)'
+					}],
+					title: {
+						text: null
+					}
+				},
+				yAxis: {
+					gridLineWidth: 0,
+					labels: {
+						enabled: false
+					},
+					title: {
+						text: null
+					},
+					min: 0.6,
+					showFirstLabel: false
+				},
+				tooltip: {
+					formatter: function () {
+						return false;
+					}
+				},
+				legend: {
+					enabled: false
+				},
+				credits: {
+					enabled: false
+				},
+				plotOptions: {
+					series: {
+						fillColor: {
+							linearGradient: [0, 0, 0, 70],
+							stops: [
+								[0, Highcharts.getOptions().colors[0]],
+								[1, 'rgba(255,255,255,0)']
+							]
+						},
+						lineWidth: 1,
+						marker: {
+							enabled: false
+						},
+						shadow: false,
+						states: {
+							hover: {
+								lineWidth: 1
+							}
+						},
+						enableMouseTracking: false
+					}
+				},
+				series: [{
+					type: 'area',
+					name: 'References per Day',
+					pointInterval: 86400000, //24 * 3600 * 1000,
+					pointStart: Date.UTC(MAGIC_MAP.buffer[0].date.getUTCFullYear(),
+								MAGIC_MAP.buffer[0].date.getUTCMonth(),
+								MAGIC_MAP.buffer[0].date.getUTCDate()), //Date.UTC(2006, 0, 1),
+					data: MAGIC_MAP.frameTotal//data
+				}],
+				exporting: {
+					enabled: false
+				}
+			},
+			function (masterChart) {
+				createDetail(masterChart);
+			}).highcharts(); // return chart instance
+		}
+
+		// make the container smaller and add a second container for the master chart
+		var $container = $('#container');
+
+		//$('<div id="detail-container">').appendTo($container);
+
+		$('<div id="master-container">')
+			//.css({ position: 'absolute', top: 300, height: 100, width: '100%' })
+			.css({ position: 'relative', bottom: 10, height: 100 })
+			.appendTo($container);
+
+		// create master and in its callback, create the detail chart
+		createMaster();
 		
 		return;
 	}
