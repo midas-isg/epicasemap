@@ -9,6 +9,8 @@ GET		/api/series					controllers.API.getSeries()
 GET		/api/series/:id				controllers.API.readSeries(id:Long)
 GET		/api/series/:id/time-coordinate		controllers.API.getTimeCoordinateSeries(id:Long, startInclusive?=null, endExclusive?=null, limit:java.lang.Integer?=null, offset:Int?=0)
 
+GET		/api/locations/:id			controllers.API.readLocation(id:Long)
+
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.at(path="/public", file)
