@@ -8,6 +8,7 @@ import java.util.List;
 
 import models.entities.Coordinate;
 import models.entities.CoordinateFilter;
+import models.entities.Location;
 import models.entities.Series;
 import models.entities.filters.Filter;
 
@@ -54,6 +55,14 @@ public class API extends Controller {
 		return ok(Json.toJson(response));
 	}
 
+	@Transactional
+	public static Result readLocation(long id){
+		Filter filter = null;
+		Location result = JPA.em().find(Location.class, id);
+		Object response = ResponseWrapper.wrap(result, filter);
+		return ok(Json.toJson(response));
+	}
+	
 	private static CoordinateFilter buildCoordinateFilter(
 			Long seriesId,
 			String startInclusive, 
