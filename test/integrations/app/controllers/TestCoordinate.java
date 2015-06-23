@@ -23,7 +23,7 @@ import _imperfactcoverage.Detour;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-import controllers.API;
+import controllers.ApiTimeCoordinateSeries;
 
 public class TestCoordinate {
 	private static int numberCoordinates = 6;
@@ -51,7 +51,7 @@ public class TestCoordinate {
 			String start = t.toString();
 			int n = 5;
 			String end = t.plus(n, ChronoUnit.DAYS).toString();
-    		Result result = API.getTimeCoordinateSeries(null, start, end, null, 0);
+    		Result result = ApiTimeCoordinateSeries.get(null, start, end, null, 0);
     		assertCoordinates(result, n - 1);
     	});
 	}
@@ -59,7 +59,7 @@ public class TestCoordinate {
     @Test
     public void testDefaultParameters() {
     	runWithTransaction(() -> {
-    		Result result = API.getTimeCoordinateSeries(null, null, null, null, 0);
+    		Result result = ApiTimeCoordinateSeries.get(null, null, null, null, 0);
     		assertCoordinates(result, numberCoordinates);
     	});
     }
@@ -97,7 +97,7 @@ public class TestCoordinate {
 	}
 
 	private void testLimitAndOffset(Integer limit, int offset, int expected) {
-		Result result = API.getTimeCoordinateSeries(null, null, null, limit, offset);
+		Result result = ApiTimeCoordinateSeries.get(null, null, null, limit, offset);
 		assertCoordinates(result, expected);
 	}
 

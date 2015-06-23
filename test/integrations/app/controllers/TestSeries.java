@@ -13,7 +13,7 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-import controllers.API;
+import controllers.ApiSeries;
 import play.db.jpa.JPA;
 import play.libs.Json;
 import play.libs.F.Callback0;
@@ -48,7 +48,7 @@ public class TestSeries {
 
 	private void testReadSeries( Series expected) {
 		long id = expected.getId();
-		final Result response = API.getSeries();
+		final Result response = ApiSeries.get();
 		final String content = contentAsString(response);
 		final JsonNode root = Json.parse(content);
 		final JsonNode results = root.get("results");

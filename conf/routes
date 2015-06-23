@@ -5,11 +5,18 @@
 # Home page
 GET     /                           controllers.Application.index()
 
-GET		/api/series					controllers.API.getSeries()
-GET		/api/series/:id				controllers.API.readSeries(id:Long)
-GET		/api/series/:id/time-coordinate		controllers.API.getTimeCoordinateSeries(id:Long, startInclusive?=null, endExclusive?=null, limit:java.lang.Integer?=null, offset:Int?=0)
 
-GET		/api/locations/:id			controllers.API.readLocation(id:Long)
+# Swagger API documentation
+GET     /api                        controllers.Application.swagger
+GET     /api.json                   controllers.ApiHelpController.getResources
+GET     /api.json*path              controllers.ApiHelpController.getResource(path)
+
+
+# API
+GET     /api/series                 controllers.ApiSeries.get()
+GET     /api/series/:id             controllers.ApiSeries.read(id:Long)
+GET     /api/series/:id/time-coordinate   controllers.ApiTimeCoordinateSeries.get(id:Long, startInclusive?=null, endExclusive?=null, limit:java.lang.Integer?=null, offset:Int?=0)
+GET     /api/locations/:id          controllers.ApiLocation.read(id:Long)
 
 
 # Map static resources from the /public folder to the /assets URL path

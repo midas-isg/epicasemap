@@ -7,7 +7,9 @@ import integrations.server.Server;
 
 import org.junit.Test;
 
-import controllers.API;
+import controllers.ApiLocation;
+import controllers.ApiSeries;
+import controllers.ApiTimeCoordinateSeries;
 import controllers.Application;
 import controllers.Factory;
 import controllers.ResponseWrapper;
@@ -15,7 +17,6 @@ import controllers.ResponseWrapper;
 public class CoverageBooster extends TestCase {
 	@Test
 	public void makeup() throws Exception {
-		ignoreUnitTestSuiteConstructor();
 		ignoreAppKeyEnum();
 		ignoreDefaultConstructors();
 		ignoreSpecialCaseInTests();
@@ -23,6 +24,7 @@ public class CoverageBooster extends TestCase {
 				ResponseWrapper.class,
 				Factory.class
 		);
+		Application.swagger();
 	}
 
 	private void testPrivateConstructors(Class<?>... classes) throws Exception {
@@ -35,10 +37,6 @@ public class CoverageBooster extends TestCase {
 		App.doNotUseForBoostingupCoverageOnly("test/resources/conf/test.conf");
 	}
 
-	private void ignoreUnitTestSuiteConstructor() {
-		new UnitTests();
-	}
-	
 	private void ignoreAppKeyEnum() throws Exception {
 		for(AppKey key : AppKey.values()){
 			AppKey.valueOf(key.name());
@@ -46,13 +44,20 @@ public class CoverageBooster extends TestCase {
 	}
 
 	private void ignoreDefaultConstructors() {
-		new Application();
-		new API();
+		ignoreDefaultConstructorsForControllers();
 		new JpaAdaptor(null);
 		ignoreDefaultConstructorsForTests();
 	}
 
+	private void ignoreDefaultConstructorsForControllers() {
+		new Application();
+		new ApiSeries();
+		new ApiLocation();
+		new ApiTimeCoordinateSeries();
+	}
+
 	private void ignoreDefaultConstructorsForTests() {
+		new UnitTests();
 		new Helper();
 		new Server();
 	}
