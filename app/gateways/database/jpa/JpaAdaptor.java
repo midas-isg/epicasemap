@@ -2,6 +2,7 @@ package gateways.database.jpa;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -10,13 +11,14 @@ import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Order;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
-import models.entities.filters.TimestampRange;
 import models.entities.filters.Filter;
 import models.entities.filters.Pagination;
+import models.entities.filters.TimestampRange;
 
 public class JpaAdaptor {
 	private EntityManager em;
@@ -91,8 +93,18 @@ public class JpaAdaptor {
 		}
 		
 		criteriaQuery.where(predicates.toArray(new Predicate[predicates.size()]));
+		final LinkedHashMap<String, Filter.Order> orders = filter.getOrder();
+		for (Entry<String, Filter.Order> pair : orders.entrySet()){
+			final Path<Object> path = root.get(pair.getKey());
+			final Order order = toOrder(criteriaBuilder, path, pair.getValue());
+			criteriaQuery.orderBy(order);
+		}
 		TypedQuery<T> query = em.createQuery(criteriaQuery);
 		return query;
+	}
+
+	private Order toOrder(CriteriaBuilder cb, Path<?> path, Filter.Order o) {
+		return (o == Filter.Order.DESC) ? cb.desc(path) : cb.asc(path);
 	}
 
 	private <T> CriteriaQuery<T> createCriteriaQuery(Class<T> clazz) {

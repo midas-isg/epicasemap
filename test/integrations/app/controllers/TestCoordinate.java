@@ -2,15 +2,20 @@ package integrations.app.controllers;
 
 import static org.fest.assertions.Assertions.assertThat;
 import static play.test.Helpers.contentAsString;
+import gateways.database.jpa.JpaAdaptor;
 import integrations.app.App;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.LinkedHashMap;
+import java.util.List;
 
 import javax.persistence.EntityManager;
 
 import models.entities.Coordinate;
+import models.entities.CoordinateFilter;
+import models.entities.filters.Filter;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -110,5 +115,25 @@ public class TestCoordinate {
 
     private static void runWithTransaction(Callback0 callback) {
 		App.newWithInMemoryDbWithDbOpen().runWithTransaction(callback);
+	}
+    
+    @Test
+	public void testOrder() throws Exception {
+    	runWithTransaction(() -> {
+    		final JpaAdaptor jpa = new JpaAdaptor(JPA.em());
+    		CoordinateFilter filter = new CoordinateFilter();
+    		final String timestamp = "timestamp";
+    		filter.setTimestampAttribute(timestamp);
+    		filter.setOffset(0);
+    		filter.setEqualities(java.util.Collections.emptyMap());
+    		LinkedHashMap<String, Filter.Order> order = new LinkedHashMap<>();
+			order.put(timestamp, Filter.Order.DESC);
+    		filter.setOrder(order);
+    		List<Coordinate> results = jpa.query(Coordinate.class, filter);
+    		Coordinate privious = results.get(0);
+    		for (Coordinate result : results){
+    			assertThat(result.getTimestamp().getTime()).isLessThanOrEqualTo(privious.getTimestamp().getTime());
+    		}
+    	});
 	}
 }
