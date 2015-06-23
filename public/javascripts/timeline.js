@@ -23,7 +23,7 @@ timeline.js
 	}
 
 	MagicMap.prototype.start = function() {
-		this.load(1);
+		this.load(3);
 		this.packHeat();
 		
 		this.loadBuffer();
@@ -354,7 +354,7 @@ timeline.js
 
 		$('<div id="master-container">')
 			//.css({ position: 'absolute', top: 300, height: 100, width: '100%' })
-			.css({ position: 'relative', bottom: 10, height: 100 })
+			.css({ position: 'relative', bottom: 100, height: 100 })
 			.appendTo($container);
 
 		// create master and in its callback, create the detail chart
@@ -385,21 +385,21 @@ timeline.js
 			this.points.push([this.buffer[this.frame].coordinates[i].latitude, this.buffer[this.frame].coordinates[i].longitude, 0.4/*1.0*/]);
 		}
 		
-		/*
-		for(i = 0; i < this.points.length; i++) {
-			if(this.points[i][2] > 0) {
-				this.points[i][2] -= 0.01;
-			}
-			else {
-				this.points.splice(i, 1);
+		if(this.playBack) {
+			for(i = 0; i < this.points.length; i++) {
+				if(this.points[i][2] > 0) {
+					this.points[i][2] -= 0.01;
+				}
+				else {
+					this.points.splice(i, 1);
+				}
 			}
 		}
-		*/
 		
 		if(this.frame < (this.buffer.length - 1)) {
 			this.frame++;
 		}
-		else {
+		else if(this.playBack){
 			this.playBack = false;
 			this.paused = true;
 			console.log("Finished playback");
