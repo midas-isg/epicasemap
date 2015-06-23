@@ -19,7 +19,7 @@ import play.mvc.Result;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-import controllers.API;
+import controllers.ApiTimeCoordinateSeries;
 import controllers.Factory;
 
 public class TestWithDatabase {
@@ -31,7 +31,7 @@ public class TestWithDatabase {
     		testReadCoordinate(em, id);
     		testReadSeries(em, 1L);
     		testReadLocation(em, 1L);
-    		testReadSeriesData(em, 2L);
+    		testReadSeriesData(em, 5575L);
     	};
     	App.newWithTestDb().runWithTransaction(callback);
     }
@@ -54,7 +54,7 @@ public class TestWithDatabase {
 	}
 
 	private long testRead1CoordinateViaAPI() {
-		Result result = API.getTimeCoordinateSeries(null, null, null, 1, 0);
+		Result result = ApiTimeCoordinateSeries.get(null, null, null, 1, 0);
 		JsonNode results = toJsonNode(result).get("results");
 		assertThat(results.size()).isGreaterThan(0);
 		JsonNode node = results.get(0);

@@ -1,6 +1,7 @@
 package integrations.app.controllers;
 
 import static org.fest.assertions.Assertions.assertThat;
+import static play.test.Helpers.*;
 import integrations.app.App;
 
 import javax.persistence.EntityManager;
@@ -10,8 +11,13 @@ import models.entities.Series;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.fasterxml.jackson.databind.JsonNode;
+
+import controllers.ApiSeries;
 import play.db.jpa.JPA;
+import play.libs.Json;
 import play.libs.F.Callback0;
+import play.mvc.Result;
 
 public class TestSeries {
 	private static Series theData;
@@ -37,15 +43,17 @@ public class TestSeries {
     }
     
 	private void testCreateSeries() {
-    	EntityManager em = JPA.em();
-		testReadSeries(em, theData);
+		testReadSeries(theData);
 	}
 
-	private void testReadSeries(EntityManager em, Series expected) {
+	private void testReadSeries( Series expected) {
 		long id = expected.getId();
-		Series actual = em.find(expected.getClass(), id);
-		assertThat(actual).isEqualTo(expected);
-		assertThat(actual).isNotSameAs(expected);
+		final Result response = ApiSeries.get();
+		final String content = contentAsString(response);
+		final JsonNode root = Json.parse(content);
+		final JsonNode results = root.get("results");
+		final JsonNode data0 = results.get(0);
+		assertThat(data0.get("id").asLong()).isEqualTo(id);
 	}
 
     private static void runWithTransaction(Callback0 callback) {

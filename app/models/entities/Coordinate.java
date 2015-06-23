@@ -23,6 +23,8 @@ public class Coordinate {
 	private Double latitude;
 	@Column(name = "long")
 	private Double longitude;
+	@Column(name = "location_id")
+	private Long locationId;
 
 	public Date getTimestamp() {
 		return timestamp;
@@ -70,5 +72,13 @@ public class Coordinate {
 
 	public void setLongitude(Double longitude) {
 		this.longitude = longitude;
+	}
+
+	public Long getLocationId() {
+		return locationId;
+	}
+
+	public void setLocationId(Long locationId) {
+		this.locationId = locationId;
 	}
 }
