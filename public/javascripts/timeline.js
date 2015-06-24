@@ -5,25 +5,28 @@ timeline.js
 (function() {
 	function MagicMap() {
 		L.mapbox.accessToken = 'pk.eyJ1IjoidHBzMjMiLCJhIjoiVHEzc0tVWSJ9.0oYZqcggp29zNZlCcb2esA';
-		this.map = L.mapbox.map('map', /*'mapbox.streets'*//**/'mapbox.dark'/**/, { worldCopyJump: true, bounceAtZoomLimits: false, zoom: 1, minZoom: 1})
+		this.map = L.mapbox.map('map', /*'mapbox.streets'*//**/'mapbox.dark'/**/, { worldCopyJump: true, bounceAtZoomLimits: false, zoom: 2, minZoom: 1})
 			.setView([37.8, -96], 4);
 
 		//this.popup = new L.Popup({ autoPan: false }),
-		this.points = [],
-		//this.buffer = [],
-		this.frameTotal = [],
-		this.heat = null,
-		this.paused = false,
-		this.frame,
-		this.chart = null,
-		this.dataset = [],
+		this.points = [];
+		this.heat = null;
+		this.paused = false;
+		this.frame;
+		this.frameCount;
+		this.chart = null;
+		this.dataset = [];
+		this.earliestDate = new Date();
+		this.latestDate = new Date(0);
 		this.playBack = false;
+		this.toLoad = [1];
 		
 		return this;
 	}
 
 	MagicMap.prototype.start = function() {
-		this.load(1);
+		this.load();
+		
 		this.packHeat();
 		
 		this.loadBuffer();
@@ -41,9 +44,12 @@ timeline.js
 		return;
 	}
 
-	MagicMap.prototype.load = function(seriesID) {
-		var URL = "http://localhost:9000/epidemap/api/series/" + seriesID + "/time-coordinate",
+	MagicMap.prototype.load = function() {
+		var seriesID = this.toLoad.pop(),
+		URL,
 		thisMap = this;
+		
+		URL = "http://localhost:9000/epidemap/api/series/" + seriesID + "/time-coordinate";
 		
 		$.ajax({
 			url: URL,
@@ -59,9 +65,14 @@ timeline.js
 				deltaTime,
 				datasetID = thisMap.dataset.length;
 				
-				thisMap.dataset.push({buffer: [{coordinates: [], date: null}]});
-				//thisMap.buffer.push({coordinates: [], date: null});
-				thisMap.frameTotal[0] = 0;
+				thisMap.dataset.push({buffer: [{coordinates: [], date: null, value: 0}], maxValue: 0, frameAggregate: [0]});
+				
+				if(thisMap.earliestDate > lastDate) {
+					thisMap.earliestDate = lastDate;
+				}
+				else {
+					lastDate = thisMap.earliestDate;
+				}
 				
 				for(i = 0; i < result.results.length; i++) {
 					if(result.results[i]) {
@@ -80,14 +91,20 @@ timeline.js
 							filler++;
 							emptyDate = new Date(emptyDate.valueOf() + threshold);
 							thisMap.dataset[datasetID].buffer[frame].date = emptyDate;
-							thisMap.frameTotal[frame] = 0;
+							thisMap.dataset[datasetID].frameAggregate[frame] = 0;
 							
 							deltaTime -= threshold;
 						}
 						
 						thisMap.dataset[datasetID].buffer[frame].coordinates.push({latitude: result.results[i].latitude, longitude: result.results[i].longitude});
 						thisMap.dataset[datasetID].buffer[frame].date = inputDate;
-						thisMap.frameTotal[frame]++;
+						thisMap.dataset[datasetID].buffer[frame].value = result.results[i].value;
+						
+						if(thisMap.dataset[datasetID].maxValue < result.results[i].value) {
+							thisMap.dataset[datasetID].maxValue = result.results[i].value;
+						}
+						
+						thisMap.dataset[datasetID].frameAggregate[frame] += result.results[i].value;
 						
 						lastDate = thisMap.dataset[datasetID].buffer[frame].date;
 					}
@@ -101,7 +118,14 @@ timeline.js
 				console.log("Total Frames: " + frame + 1);
 				console.log("Buffer length: " + thisMap.dataset[datasetID].buffer.length);
 				
-				thisMap.createChart(); //TODO: call this after loading all datasets
+				if(thisMap.latestDate < thisMap.dataset[datasetID].buffer[frame].date) {
+					thisMap.latestDate = thisMap.dataset[datasetID].buffer[frame].date;
+					thisMap.frameCount = frame + 1;
+				}
+				
+				if(thisMap.toLoad.length == 0) {
+					thisMap.createChart(); //call this after loading all datasets
+				}
 				
 				return;
 			},
@@ -109,6 +133,10 @@ timeline.js
 				return;
 			}
 		});
+		
+		if(thisMap.toLoad.length > 1) {
+			this.load();
+		}
 		
 		return;
 	}
@@ -120,9 +148,11 @@ timeline.js
 		function createDetail(masterChart) {
 			// prepare the detail chart
 			var detailData = [],
-				detailStart = Date.UTC(MAGIC_MAP.dataset[0].buffer[0].date.getUTCFullYear(),
-						MAGIC_MAP.dataset[0].buffer[0].date.getUTCMonth(),
-						MAGIC_MAP.dataset[0].buffer[0].date.getUTCDate()); //Date.UTC(2008, 7, 1);
+				detailStart;
+				
+				detailStart = Date.UTC(MAGIC_MAP.earliestDate.getUTCFullYear(),
+						MAGIC_MAP.earliestDate.getUTCMonth(),
+						MAGIC_MAP.earliestDate.getUTCDate());
 
 			$.each(masterChart.series[0].data, function () {
 				if (this.x >= detailStart) {
@@ -225,7 +255,7 @@ timeline.js
 								startFrame;
 
 							// reverse engineer the last part of the data
-							$.each(this.series[0].data, function () {
+							$.each(this.series[0].data, function() {
 								if((this.x > min) && (this.x < max)) {
 									detailData.push([this.x, this.y]);
 								}
@@ -235,9 +265,9 @@ timeline.js
 							xAxis.removePlotBand('mask-before');
 							xAxis.addPlotBand({
 								id: 'mask-before',
-								from: Date.UTC(MAGIC_MAP.dataset[0].buffer[0].date.getUTCFullYear(),
-									MAGIC_MAP.dataset[0].buffer[0].date.getUTCMonth(),
-									MAGIC_MAP.dataset[0].buffer[0].date.getUTCDate()),
+								from: Date.UTC(MAGIC_MAP.earliestDate.getUTCFullYear(),
+									MAGIC_MAP.earliestDate.getUTCMonth(),
+									MAGIC_MAP.earliestDate.getUTCDate()),
 								to: min,
 								color: 'rgba(128, 128, 128, 0.2)'
 							});
@@ -246,22 +276,22 @@ timeline.js
 							xAxis.addPlotBand({
 								id: 'mask-after',
 								from: max,
-								to: Date.UTC(MAGIC_MAP.dataset[0].buffer[MAGIC_MAP.dataset[0].buffer.length - 1].date.getUTCFullYear(),
-									MAGIC_MAP.dataset[0].buffer[MAGIC_MAP.dataset[0].buffer.length - 1].date.getUTCMonth(),
-									MAGIC_MAP.dataset[0].buffer[MAGIC_MAP.dataset[0].buffer.length - 1].date.getUTCDate()),
+								to: Date.UTC(MAGIC_MAP.latestDate.getUTCFullYear(),
+									MAGIC_MAP.latestDate.getUTCMonth(),
+									MAGIC_MAP.latestDate.getUTCDate()),
 								color: 'rgba(128, 128, 128, 0.2)'
 							});
 							
 							detailChart.series[0].setData(detailData);
 							
-							startFrame = Math.floor((new Date(min) - MAGIC_MAP.dataset[0].buffer[0].date) / 86400000);
+							//startFrame = Math.floor((new Date(min) - MAGIC_MAP.dataset[0].buffer[0].date) / 86400000);
+							startFrame = Math.floor((new Date(min) - MAGIC_MAP.earliestDate) / 86400000);
 							
 							if(startFrame < 0) {
 								startFrame = 0;
 							}
 							
 							console.log(startFrame + "->" + (startFrame + detailData.length));
-							
 							MAGIC_MAP.playSection(startFrame, startFrame + detailData.length);
 
 							return false;
@@ -277,12 +307,12 @@ timeline.js
 					maxZoom: 1209600000, //14 * 24 * 3600000, // fourteen days
 					plotBands: [{
 						id: 'mask-before',
-						from: Date.UTC(MAGIC_MAP.dataset[0].buffer[0].date.getUTCFullYear(),
-								MAGIC_MAP.dataset[0].buffer[0].date.getUTCMonth(),
-								MAGIC_MAP.dataset[0].buffer[0].date.getUTCDate()),//Date.UTC(2006, 0, 1),
-						to: Date.UTC(MAGIC_MAP.dataset[0].buffer[MAGIC_MAP.dataset[0].buffer.length -1].date.getUTCFullYear(),
-								MAGIC_MAP.dataset[0].buffer[MAGIC_MAP.dataset[0].buffer.length -1].date.getUTCMonth(),
-								MAGIC_MAP.dataset[0].buffer[MAGIC_MAP.dataset[0].buffer.length -1].date.getUTCDate()), //Date.UTC(2008, 7, 1),
+						from: Date.UTC(MAGIC_MAP.earliestDate.getUTCFullYear(),
+								MAGIC_MAP.earliestDate.getUTCMonth(),
+								MAGIC_MAP.earliestDate.getUTCDate()),
+						to: Date.UTC(MAGIC_MAP.latestDate.getUTCFullYear(),
+								MAGIC_MAP.latestDate.getUTCMonth(),
+								MAGIC_MAP.latestDate.getUTCDate()),
 						color: 'rgba(0, 0, 0, 0.2)'
 					}],
 					title: {
@@ -304,6 +334,7 @@ timeline.js
 					formatter: function () {
 						return false;
 					}
+					//, crosshairs: true
 				},
 				legend: {
 					enabled: false
@@ -337,10 +368,10 @@ timeline.js
 					type: 'area',
 					name: 'References per Day',
 					pointInterval: 86400000, //24 * 3600 * 1000,
-					pointStart: Date.UTC(MAGIC_MAP.dataset[0].buffer[0].date.getUTCFullYear(),
-								MAGIC_MAP.dataset[0].buffer[0].date.getUTCMonth(),
-								MAGIC_MAP.dataset[0].buffer[0].date.getUTCDate()), //Date.UTC(2006, 0, 1),
-					data: MAGIC_MAP.frameTotal//data
+					pointStart: Date.UTC(MAGIC_MAP.earliestDate.getUTCFullYear(),
+								MAGIC_MAP.earliestDate.getUTCMonth(),
+								MAGIC_MAP.earliestDate.getUTCDate()),
+					data: MAGIC_MAP.dataset[0].frameAggregate //y-value array
 				}],
 				exporting: {
 					enabled: false
@@ -386,24 +417,31 @@ timeline.js
 	}
 
 	MagicMap.prototype.playBuffer = function() {
-		var i;
+		var i,
+		setID;
 		
-		for(i = 0; i < this.dataset[0].buffer[this.frame].coordinates.length; i++) {
-			this.points.push([this.dataset[0].buffer[this.frame].coordinates[i].latitude, this.dataset[0].buffer[this.frame].coordinates[i].longitude, 0.4/*1.0*/]);
-		}
-		
-		if(this.playBack) {
-			for(i = 0; i < this.points.length; i++) {
-				if(this.points[i][2] > 0) {
-					this.points[i][2] -= 0.01;
+		for(setID = 0; setID < this.dataset.length; setID++){
+			if(this.dataset[setID].buffer[this.frame]) {
+				for(i = 0; i < this.dataset[setID].buffer[this.frame].coordinates.length; i++) {
+					this.points.push([this.dataset[setID].buffer[this.frame].coordinates[i].latitude,
+						this.dataset[setID].buffer[this.frame].coordinates[i].longitude,
+						(this.dataset[setID].buffer[this.frame].value) / this.dataset[setID].maxValue]);
 				}
-				else {
-					this.points.splice(i, 1);
+				
+				if(this.playBack) {
+					for(i = 0; i < this.points.length; i++) {
+						if(this.points[i][2] > 0) {
+							this.points[i][2] -= 0.01;
+						}
+						else {
+							this.points.splice(i, 1);
+						}
+					}
 				}
 			}
 		}
 		
-		if(this.frame < (this.dataset[0].buffer.length - 1)) {
+		if(this.frame < this.frameCount) {
 			this.frame++;
 		}
 		else if(this.playBack){
@@ -436,7 +474,16 @@ timeline.js
 
 	MagicMap.prototype.packHeat = function() {
 		if(!this.heat) {
-			this.heat = L.heatLayer(this.points, {minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 1, radius: 5, /*gradient: {0.0: '#000000', 0.0: '#c000c0', 0.3: '#0000ff', 0.45: '#00ffff', 0.6: '#00ff00', 0.75: '#ffff00', 1.0: '#ff0000'}*/}).addTo(this.map);
+			this.heat = L.heatLayer(this.points, {minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 1, radius: 5,
+				gradient: {
+					0.0: '#ff00ff',
+					0.2: '#0000ff',
+					0.4: '#00ffff',
+					0.6: '#00ff00',
+					0.8: '#ffff00',
+					1.00: '#ff0000'
+				}
+			}).addTo(this.map);
 		}
 		
 		this.heat.setLatLngs(this.points);
@@ -455,11 +502,6 @@ timeline.js
 					thisMap.playBuffer();//TEST.timeMethod(thisMap.playBuffer);
 				}
 				
-				// update the chart each frame
-				var x = (thisMap.dataset[0].buffer[thisMap.frame].date.getUTCMonth() + 1) + "/" +
-					thisMap.dataset[0].buffer[thisMap.frame].date.getUTCDate() + "/" +
-					thisMap.dataset[0].buffer[thisMap.frame].date.getUTCFullYear(); //thisMap.frame + 1;
-				
 				thisMap.packHeat();
 			}
 		}
@@ -470,23 +512,24 @@ timeline.js
 	}
 
 	MagicMap.prototype.handleInput = function(event) {
-		switch(event.keyCode) {
+		switch(event.which) {
 			case 13:
 				MAGIC_MAP.paused = !MAGIC_MAP.paused;
 				console.log(new Date());
-			break;
-			
-			case 32:
-	console.log("Buffer:");
-	console.log(MAGIC_MAP.dataset[0].buffer);
-				MAGIC_MAP.loadBuffer();
 			break;
 			
 			case 96:
 				MAGIC_MAP.playBack = false;
 			break;
 			
+			case 82:
+console.log("Buffer:");
+//console.log(MAGIC_MAP.dataset[].buffer);
+				MAGIC_MAP.loadBuffer();
+			break;
+			
 			default:
+				console.log("event.which code: " + event.which);
 			break;
 		}
 		
