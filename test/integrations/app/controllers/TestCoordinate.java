@@ -2,15 +2,20 @@ package integrations.app.controllers;
 
 import static org.fest.assertions.Assertions.assertThat;
 import static play.test.Helpers.contentAsString;
+import gateways.database.jpa.JpaAdaptor;
 import integrations.app.App;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.LinkedHashMap;
+import java.util.List;
 
 import javax.persistence.EntityManager;
 
 import models.entities.Coordinate;
+import models.entities.CoordinateFilter;
+import models.entities.filters.Filter;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -23,7 +28,7 @@ import _imperfactcoverage.Detour;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-import controllers.API;
+import controllers.ApiTimeCoordinateSeries;
 
 public class TestCoordinate {
 	private static int numberCoordinates = 6;
@@ -51,7 +56,7 @@ public class TestCoordinate {
 			String start = t.toString();
 			int n = 5;
 			String end = t.plus(n, ChronoUnit.DAYS).toString();
-    		Result result = API.getTimeCoordinateSeries(null, start, end, null, 0);
+    		Result result = ApiTimeCoordinateSeries.get(null, start, end, null, 0);
     		assertCoordinates(result, n - 1);
     	});
 	}
@@ -59,7 +64,7 @@ public class TestCoordinate {
     @Test
     public void testDefaultParameters() {
     	runWithTransaction(() -> {
-    		Result result = API.getTimeCoordinateSeries(null, null, null, null, 0);
+    		Result result = ApiTimeCoordinateSeries.get(null, null, null, null, 0);
     		assertCoordinates(result, numberCoordinates);
     	});
     }
@@ -97,7 +102,7 @@ public class TestCoordinate {
 	}
 
 	private void testLimitAndOffset(Integer limit, int offset, int expected) {
-		Result result = API.getTimeCoordinateSeries(null, null, null, limit, offset);
+		Result result = ApiTimeCoordinateSeries.get(null, null, null, limit, offset);
 		assertCoordinates(result, expected);
 	}
 
@@ -105,10 +110,30 @@ public class TestCoordinate {
 		String content = contentAsString(result);
 		JsonNode root = Json.parse(content);
 		JsonNode results = root.get("results");
-		assertThat(results.size()).isEqualTo(n);
+		assertThat(results).hasSize(n);
 	}
 
     private static void runWithTransaction(Callback0 callback) {
 		App.newWithInMemoryDbWithDbOpen().runWithTransaction(callback);
+	}
+    
+    @Test
+	public void testOrder() throws Exception {
+    	runWithTransaction(() -> {
+    		final JpaAdaptor jpa = new JpaAdaptor(JPA.em());
+    		CoordinateFilter filter = new CoordinateFilter();
+    		final String timestamp = "timestamp";
+    		filter.setTimestampAttribute(timestamp);
+    		filter.setOffset(0);
+    		filter.setEqualities(java.util.Collections.emptyMap());
+    		LinkedHashMap<String, Filter.Order> order = new LinkedHashMap<>();
+			order.put(timestamp, Filter.Order.DESC);
+    		filter.setOrder(order);
+    		List<Coordinate> results = jpa.query(Coordinate.class, filter);
+    		Coordinate privious = results.get(0);
+    		for (Coordinate result : results){
+    			assertThat(result.getTimestamp().getTime()).isLessThanOrEqualTo(privious.getTimestamp().getTime());
+    		}
+    	});
 	}
 }

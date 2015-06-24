@@ -32,13 +32,12 @@ public class TestLocation {
 
 	
     @Test
-    public void createSeries() {
-		runWithTransaction(() -> testCreateSeries());
+    public void createLocation() {
+		runWithTransaction(() -> testCreateLocation());
     }
     
-	private void testCreateSeries() {
-    	EntityManager em = JPA.em();
-		testReadLocation(em, theData);
+	private void testCreateLocation() {
+    	testReadLocation(JPA.em(), theData);
 	}
 
 	private void testReadLocation(EntityManager em, Location expected) {

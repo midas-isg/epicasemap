@@ -1,13 +1,14 @@
 package models.entities;
 
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
-import models.entities.filters.TimestampRange;
 import models.entities.filters.Filter;
 import models.entities.filters.Pagination;
+import models.entities.filters.TimestampRange;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 
 public class CoordinateFilter implements Pagination, TimestampRange, Filter {
@@ -23,6 +24,8 @@ public class CoordinateFilter implements Pagination, TimestampRange, Filter {
 	
 	private Integer limit;
 	private Integer offset;
+	
+	private LinkedHashMap<String, Order> order;
 
 	public Long getSeriesId() {
 		return seriesId;
@@ -90,4 +93,14 @@ public class CoordinateFilter implements Pagination, TimestampRange, Filter {
 	public void setOffset(Integer offset) {
 		this.offset = offset;
 	}
+
+	@Override
+	public LinkedHashMap<String, Order> getOrder() {
+		return order;
+	}
+	
+	public void setOrder(LinkedHashMap<String, Order> map) {
+		order = map;
+	}
+
 }
