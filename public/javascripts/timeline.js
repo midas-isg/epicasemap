@@ -353,16 +353,19 @@ timeline.js
 
 		// make the container smaller and add a second container for the master chart
 		var $container = $('#container');
-
+		
 		//$('<div id="detail-container">').appendTo($container);
-
 		$('<div id="master-container">')
 			//.css({ position: 'absolute', top: 300, height: 100, width: '100%' })
 			.css({ position: 'relative', bottom: 100, height: 100 })
 			.appendTo($container);
-
+			
 		// create master and in its callback, create the detail chart
 		createMaster();
+		
+		//TODO: transfer mouse events from detail container to map
+		//$('#detail-container').mousedown(function(event) { event.stopImmediatePropagation(); return $('.leaflet-layer').mousedown(); });
+		//$('#detail-container').mousemove(function(event) { event.stopImmediatePropagation(); return $('.leaflet-layer').mousemove(); });
 		
 		return;
 	}
