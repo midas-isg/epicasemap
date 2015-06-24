@@ -10,20 +10,20 @@ timeline.js
 
 		//this.popup = new L.Popup({ autoPan: false }),
 		this.points = [],
-		this.buffer = [],
+		//this.buffer = [],
 		this.frameTotal = [],
 		this.heat = null,
 		this.paused = false,
 		this.frame,
 		this.chart = null,
-		this.series = null,
+		this.dataset = [],
 		this.playBack = false;
 		
 		return this;
 	}
 
 	MagicMap.prototype.start = function() {
-		this.load(3);
+		this.load(1);
 		this.packHeat();
 		
 		this.loadBuffer();
@@ -41,8 +41,8 @@ timeline.js
 		return;
 	}
 
-	MagicMap.prototype.load = function(series) {
-		var URL = "http://localhost:9000/epidemap/api/series/" + series + "/time-coordinate",
+	MagicMap.prototype.load = function(seriesID) {
+		var URL = "http://localhost:9000/epidemap/api/series/" + seriesID + "/time-coordinate",
 		thisMap = this;
 		
 		$.ajax({
@@ -56,9 +56,11 @@ timeline.js
 				lastDate = new Date(result.results[0].timestamp),
 				emptyDate,
 				inputDate,
-				deltaTime;
+				deltaTime,
+				datasetID = thisMap.dataset.length;
 				
-				thisMap.buffer.push({coordinates: [], date: null});
+				thisMap.dataset.push({buffer: [{coordinates: [], date: null}]});
+				//thisMap.buffer.push({coordinates: [], date: null});
 				thisMap.frameTotal[0] = 0;
 				
 				for(i = 0; i < result.results.length; i++) {
@@ -73,21 +75,21 @@ timeline.js
 						deltaTime = inputDate.valueOf() - lastDate.valueOf();
 						
 						while(deltaTime >= threshold) {
-							thisMap.buffer.push({coordinates: [], date: null});
+							thisMap.dataset[datasetID].buffer.push({coordinates: [], date: null});
 							frame++;
 							filler++;
 							emptyDate = new Date(emptyDate.valueOf() + threshold);
-							thisMap.buffer[frame].date = emptyDate;
+							thisMap.dataset[datasetID].buffer[frame].date = emptyDate;
 							thisMap.frameTotal[frame] = 0;
 							
 							deltaTime -= threshold;
 						}
 						
-						thisMap.buffer[frame].coordinates.push({latitude: result.results[i].latitude, longitude: result.results[i].longitude});
-						thisMap.buffer[frame].date = inputDate;
+						thisMap.dataset[datasetID].buffer[frame].coordinates.push({latitude: result.results[i].latitude, longitude: result.results[i].longitude});
+						thisMap.dataset[datasetID].buffer[frame].date = inputDate;
 						thisMap.frameTotal[frame]++;
 						
-						lastDate = thisMap.buffer[frame].date;
+						lastDate = thisMap.dataset[datasetID].buffer[frame].date;
 					}
 					else {
 						skipped++;
@@ -97,9 +99,9 @@ timeline.js
 				console.log("Skipped " + skipped + " malformed entries");
 				console.log(filler + " days occurred without reports in this timespan");
 				console.log("Total Frames: " + frame + 1);
-				console.log("Buffer length: " + thisMap.buffer.length);
+				console.log("Buffer length: " + thisMap.dataset[datasetID].buffer.length);
 				
-				thisMap.createChart()
+				thisMap.createChart(); //TODO: call this after loading all datasets
 				
 				return;
 			},
@@ -112,13 +114,15 @@ timeline.js
 	}
 	
 	MagicMap.prototype.createChart = function() {
+		//TODO: replace dataset[0] with iteration such as dataset[id]
+		
 			// create the detail chart
 		function createDetail(masterChart) {
 			// prepare the detail chart
 			var detailData = [],
-				detailStart = Date.UTC(MAGIC_MAP.buffer[0].date.getUTCFullYear(),
-						MAGIC_MAP.buffer[0].date.getUTCMonth(),
-						MAGIC_MAP.buffer[0].date.getUTCDate()); //Date.UTC(2008, 7, 1);
+				detailStart = Date.UTC(MAGIC_MAP.dataset[0].buffer[0].date.getUTCFullYear(),
+						MAGIC_MAP.dataset[0].buffer[0].date.getUTCMonth(),
+						MAGIC_MAP.dataset[0].buffer[0].date.getUTCDate()); //Date.UTC(2008, 7, 1);
 
 			$.each(masterChart.series[0].data, function () {
 				if (this.x >= detailStart) {
@@ -231,9 +235,9 @@ timeline.js
 							xAxis.removePlotBand('mask-before');
 							xAxis.addPlotBand({
 								id: 'mask-before',
-								from: Date.UTC(MAGIC_MAP.buffer[0].date.getUTCFullYear(),
-									MAGIC_MAP.buffer[0].date.getUTCMonth(),
-									MAGIC_MAP.buffer[0].date.getUTCDate()),
+								from: Date.UTC(MAGIC_MAP.dataset[0].buffer[0].date.getUTCFullYear(),
+									MAGIC_MAP.dataset[0].buffer[0].date.getUTCMonth(),
+									MAGIC_MAP.dataset[0].buffer[0].date.getUTCDate()),
 								to: min,
 								color: 'rgba(128, 128, 128, 0.2)'
 							});
@@ -242,15 +246,15 @@ timeline.js
 							xAxis.addPlotBand({
 								id: 'mask-after',
 								from: max,
-								to: Date.UTC(MAGIC_MAP.buffer[MAGIC_MAP.buffer.length - 1].date.getUTCFullYear(),
-									MAGIC_MAP.buffer[MAGIC_MAP.buffer.length - 1].date.getUTCMonth(),
-									MAGIC_MAP.buffer[MAGIC_MAP.buffer.length - 1].date.getUTCDate()),
+								to: Date.UTC(MAGIC_MAP.dataset[0].buffer[MAGIC_MAP.dataset[0].buffer.length - 1].date.getUTCFullYear(),
+									MAGIC_MAP.dataset[0].buffer[MAGIC_MAP.dataset[0].buffer.length - 1].date.getUTCMonth(),
+									MAGIC_MAP.dataset[0].buffer[MAGIC_MAP.dataset[0].buffer.length - 1].date.getUTCDate()),
 								color: 'rgba(128, 128, 128, 0.2)'
 							});
 							
 							detailChart.series[0].setData(detailData);
 							
-							startFrame = Math.floor((new Date(min) - MAGIC_MAP.buffer[0].date) / 86400000);
+							startFrame = Math.floor((new Date(min) - MAGIC_MAP.dataset[0].buffer[0].date) / 86400000);
 							
 							if(startFrame < 0) {
 								startFrame = 0;
@@ -273,12 +277,12 @@ timeline.js
 					maxZoom: 1209600000, //14 * 24 * 3600000, // fourteen days
 					plotBands: [{
 						id: 'mask-before',
-						from: Date.UTC(MAGIC_MAP.buffer[0].date.getUTCFullYear(),
-								MAGIC_MAP.buffer[0].date.getUTCMonth(),
-								MAGIC_MAP.buffer[0].date.getUTCDate()),//Date.UTC(2006, 0, 1),
-						to: Date.UTC(MAGIC_MAP.buffer[MAGIC_MAP.buffer.length -1].date.getUTCFullYear(),
-								MAGIC_MAP.buffer[MAGIC_MAP.buffer.length -1].date.getUTCMonth(),
-								MAGIC_MAP.buffer[MAGIC_MAP.buffer.length -1].date.getUTCDate()), //Date.UTC(2008, 7, 1),
+						from: Date.UTC(MAGIC_MAP.dataset[0].buffer[0].date.getUTCFullYear(),
+								MAGIC_MAP.dataset[0].buffer[0].date.getUTCMonth(),
+								MAGIC_MAP.dataset[0].buffer[0].date.getUTCDate()),//Date.UTC(2006, 0, 1),
+						to: Date.UTC(MAGIC_MAP.dataset[0].buffer[MAGIC_MAP.dataset[0].buffer.length -1].date.getUTCFullYear(),
+								MAGIC_MAP.dataset[0].buffer[MAGIC_MAP.dataset[0].buffer.length -1].date.getUTCMonth(),
+								MAGIC_MAP.dataset[0].buffer[MAGIC_MAP.dataset[0].buffer.length -1].date.getUTCDate()), //Date.UTC(2008, 7, 1),
 						color: 'rgba(0, 0, 0, 0.2)'
 					}],
 					title: {
@@ -333,9 +337,9 @@ timeline.js
 					type: 'area',
 					name: 'References per Day',
 					pointInterval: 86400000, //24 * 3600 * 1000,
-					pointStart: Date.UTC(MAGIC_MAP.buffer[0].date.getUTCFullYear(),
-								MAGIC_MAP.buffer[0].date.getUTCMonth(),
-								MAGIC_MAP.buffer[0].date.getUTCDate()), //Date.UTC(2006, 0, 1),
+					pointStart: Date.UTC(MAGIC_MAP.dataset[0].buffer[0].date.getUTCFullYear(),
+								MAGIC_MAP.dataset[0].buffer[0].date.getUTCMonth(),
+								MAGIC_MAP.dataset[0].buffer[0].date.getUTCDate()), //Date.UTC(2006, 0, 1),
 					data: MAGIC_MAP.frameTotal//data
 				}],
 				exporting: {
@@ -381,8 +385,8 @@ timeline.js
 	MagicMap.prototype.playBuffer = function() {
 		var i;
 		
-		for(i = 0; i < this.buffer[this.frame].coordinates.length; i++) {
-			this.points.push([this.buffer[this.frame].coordinates[i].latitude, this.buffer[this.frame].coordinates[i].longitude, 0.4/*1.0*/]);
+		for(i = 0; i < this.dataset[0].buffer[this.frame].coordinates.length; i++) {
+			this.points.push([this.dataset[0].buffer[this.frame].coordinates[i].latitude, this.dataset[0].buffer[this.frame].coordinates[i].longitude, 0.4/*1.0*/]);
 		}
 		
 		if(this.playBack) {
@@ -396,7 +400,7 @@ timeline.js
 			}
 		}
 		
-		if(this.frame < (this.buffer.length - 1)) {
+		if(this.frame < (this.dataset[0].buffer.length - 1)) {
 			this.frame++;
 		}
 		else if(this.playBack){
@@ -449,10 +453,9 @@ timeline.js
 				}
 				
 				// update the chart each frame
-				var x = (thisMap.buffer[thisMap.frame].date.getUTCMonth() + 1) + "/" +
-					thisMap.buffer[thisMap.frame].date.getUTCDate() + "/" +
-					thisMap.buffer[thisMap.frame].date.getUTCFullYear(); //thisMap.frame + 1;
-				//thisMap.series.addPoint([x, thisMap.buffer[thisMap.frame].coordinates.length ? thisMap.buffer[thisMap.frame].coordinates.length : 0], true, true, false);
+				var x = (thisMap.dataset[0].buffer[thisMap.frame].date.getUTCMonth() + 1) + "/" +
+					thisMap.dataset[0].buffer[thisMap.frame].date.getUTCDate() + "/" +
+					thisMap.dataset[0].buffer[thisMap.frame].date.getUTCFullYear(); //thisMap.frame + 1;
 				
 				thisMap.packHeat();
 			}
@@ -472,7 +475,7 @@ timeline.js
 			
 			case 32:
 	console.log("Buffer:");
-	console.log(MAGIC_MAP.buffer);
+	console.log(MAGIC_MAP.dataset[0].buffer);
 				MAGIC_MAP.loadBuffer();
 			break;
 			
