@@ -15,6 +15,7 @@ public class Location {
 	private Double latitude;
 	@Column(name = "long")
 	private Double longitude;
+	private String geojson;
 
 	public Long getId() {
 		return id;
@@ -54,5 +55,13 @@ public class Location {
 
 	public void setLongitude(Double longitude) {
 		this.longitude = longitude;
+	}
+
+	public String getGeojson() {
+		return geojson;
+	}
+
+	public void setGeojson(String geojson) {
+		this.geojson = geojson;
 	}
 }
