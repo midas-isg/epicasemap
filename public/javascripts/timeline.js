@@ -17,15 +17,26 @@ timeline.js
 		this.chart = null;
 		this.dataset = [];
 		this.earliestDate = new Date();
+		this.earliestDate.setHours(0);
+		this.earliestDate.setMinutes(0);
+		this.earliestDate.setSeconds(0);
+		
 		this.latestDate = new Date(0);
+		this.latestDate.setHours(0);
+		this.latestDate.setMinutes(0);
+		this.latestDate.setSeconds(0);
+		
 		this.playBack = false;
-		this.toLoad = [1];
+		this.toLoad = [3, 1];
 		
 		return this;
 	}
 
 	MagicMap.prototype.start = function() {
-		this.load();
+		var i;
+		for(i = 0; i < this.toLoad.length; i++) {
+			this.load(this.toLoad[i]);
+		}
 		
 		this.packHeat();
 		
@@ -44,12 +55,9 @@ timeline.js
 		return;
 	}
 
-	MagicMap.prototype.load = function() {
-		var seriesID = this.toLoad.pop(),
-		URL,
+	MagicMap.prototype.load = function(seriesID) {
+		var URL = "http://localhost:9000/epidemap/api/series/" + seriesID + "/time-coordinate";
 		thisMap = this;
-		
-		URL = "http://localhost:9000/epidemap/api/series/" + seriesID + "/time-coordinate";
 		
 		$.ajax({
 			url: URL,
@@ -65,7 +73,7 @@ timeline.js
 				deltaTime,
 				datasetID = thisMap.dataset.length;
 				
-				thisMap.dataset.push({buffer: [{coordinates: [], date: null, value: 0}], maxValue: 0, frameAggregate: [0]});
+				thisMap.dataset.push({seriesID: result.filter.equalities.seriesId, buffer: [{coordinates: [], date: null, value: 0}], maxValue: 0, frameAggregate: [0]});
 				
 				if(thisMap.earliestDate > lastDate) {
 					thisMap.earliestDate = lastDate;
@@ -123,6 +131,7 @@ timeline.js
 					thisMap.frameCount = frame + 1;
 				}
 				
+				thisMap.toLoad.pop();
 				if(thisMap.toLoad.length == 0) {
 					thisMap.createChart(); //call this after loading all datasets
 				}
@@ -134,10 +143,6 @@ timeline.js
 			}
 		});
 		
-		if(thisMap.toLoad.length > 1) {
-			this.load();
-		}
-		
 		return;
 	}
 	
@@ -147,18 +152,25 @@ timeline.js
 			// create the detail chart
 		function createDetail(masterChart) {
 			// prepare the detail chart
-			var detailData = [],
-				detailStart;
+			var detailSeries = [],
+				detailStart =  [],
+				i;
 				
-				detailStart = Date.UTC(MAGIC_MAP.earliestDate.getUTCFullYear(),
-						MAGIC_MAP.earliestDate.getUTCMonth(),
-						MAGIC_MAP.earliestDate.getUTCDate());
-
-			$.each(masterChart.series[0].data, function () {
-				if (this.x >= detailStart) {
-					detailData.push(this.y);
+				for(i = 0; i < MAGIC_MAP.dataset.length; i++) {
+					detailStart.push(Date.UTC(MAGIC_MAP.dataset[i].buffer[0].date.getUTCFullYear(),
+						MAGIC_MAP.dataset[i].buffer[0].date.getUTCMonth(),
+						MAGIC_MAP.dataset[i].buffer[0].date.getUTCDate()));
 				}
-			});
+
+			for(i = 0; i < masterChart.series.length; i++) {
+				detailSeries.push({detailData: []});
+				
+				$.each(masterChart.series[i].data, function () {
+					if(this.x >= detailStart[i]) {
+						detailSeries[i].detailData.push(this.y);
+					}
+				});
+			}
 
 			// create a detail chart referenced by a global variable
 			detailChart = $('#detail-container').highcharts({
@@ -176,7 +188,7 @@ timeline.js
 					enabled: false
 				},
 				title: {
-					text: 'Ebola References',
+					text: 'Data Comparison',
 					style: {
 						color: 'rgba(255, 255, 255, 255)'
 					}
@@ -197,6 +209,7 @@ timeline.js
 					maxZoom: 0.1
 				},
 				tooltip: {
+					/*
 					formatter: function () {
 						var point = this.points[0];
 						return '<b>' + point.series.name + '</b><br/>' +
@@ -204,6 +217,8 @@ timeline.js
 							point.y;//'1 USD = ' + Highcharts.numberFormat(point.y, 2) + ' EUR';
 					},
 					shared: true
+					*/
+					pointFormat: '{series.name} <br /><b>{point.y:,.0f}</b> instances'
 				},
 				legend: {
 					enabled: false
@@ -221,16 +236,23 @@ timeline.js
 						}
 					}
 				},
-				series: [{
-					name: 'Ebola References per Day',
-					pointStart: detailStart,
-					pointInterval: 24 * 3600 * 1000,
-					data: detailData
-				}],
+				series: [
+					{
+						name: "Series " + MAGIC_MAP.dataset[0].seriesID, //'Ebola References per Day',
+						pointStart: detailStart[0],
+						pointInterval: 86400000,//24 * 3600 * 1000,
+						data: detailSeries[0].detailData
+					},
+					{
+						name: "Series " + MAGIC_MAP.dataset[1].seriesID, //'Ebola References per Day',
+						pointStart: detailStart[1],
+						pointInterval: 86400000,//24 * 3600 * 1000,
+						data: detailSeries[1].detailData
+					}
+				],
 				exporting: {
 					enabled: false
 				}
-
 			}).highcharts(); // return chart
 		}
 
@@ -250,16 +272,21 @@ timeline.js
 							var extremesObject = event.xAxis[0],
 								min = extremesObject.min,
 								max = extremesObject.max,
-								detailData = [],
+								detailSeries = [],
 								xAxis = this.xAxis[0],
-								startFrame;
-
-							// reverse engineer the last part of the data
-							$.each(this.series[0].data, function() {
-								if((this.x > min) && (this.x < max)) {
-									detailData.push([this.x, this.y]);
-								}
-							});
+								startFrame,
+								i;
+							
+							for(i = 0; i < this.series.length; i++) {
+								detailSeries.push({detailData: []});
+								
+								// reverse engineer the last part of the data
+								$.each(this.series[i].data, function() {
+									if((this.x > min) && (this.x < max)) {
+										detailSeries[i].detailData.push([this.x, this.y])
+									}
+								});
+							}
 
 							// move the plot bands to reflect the new detail span
 							xAxis.removePlotBand('mask-before');
@@ -282,7 +309,9 @@ timeline.js
 								color: 'rgba(128, 128, 128, 0.2)'
 							});
 							
-							detailChart.series[0].setData(detailData);
+							for(i = 0; i < detailChart.series.length; i++) {
+								detailChart.series[i].setData(detailSeries[i].detailData);
+							}
 							
 							//startFrame = Math.floor((new Date(min) - MAGIC_MAP.dataset[0].buffer[0].date) / 86400000);
 							startFrame = Math.floor((new Date(min) - MAGIC_MAP.earliestDate) / 86400000);
@@ -291,8 +320,8 @@ timeline.js
 								startFrame = 0;
 							}
 							
-							console.log(startFrame + "->" + (startFrame + detailData.length));
-							MAGIC_MAP.playSection(startFrame, startFrame + detailData.length);
+							console.log(startFrame + "->" + (startFrame + detailSeries[0].detailData.length));
+							MAGIC_MAP.playSection(startFrame, startFrame + detailSeries[0].detailData.length);
 
 							return false;
 						}
@@ -364,15 +393,26 @@ timeline.js
 						enableMouseTracking: false
 					}
 				},
-				series: [{
-					type: 'area',
-					name: 'References per Day',
-					pointInterval: 86400000, //24 * 3600 * 1000,
-					pointStart: Date.UTC(MAGIC_MAP.earliestDate.getUTCFullYear(),
-								MAGIC_MAP.earliestDate.getUTCMonth(),
-								MAGIC_MAP.earliestDate.getUTCDate()),
-					data: MAGIC_MAP.dataset[0].frameAggregate //y-value array
-				}],
+				series: [
+					{
+						type: 'area',
+						name: MAGIC_MAP.dataset[0].seriesID, //'References per Day',
+						pointInterval: 86400000, //24 * 3600 * 1000,
+						pointStart: Date.UTC(MAGIC_MAP.earliestDate.getUTCFullYear(),
+									MAGIC_MAP.earliestDate.getUTCMonth(),
+									MAGIC_MAP.earliestDate.getUTCDate()),
+						data: MAGIC_MAP.dataset[0].frameAggregate //y-value array
+					},
+					{
+						type: 'area',
+						name: MAGIC_MAP.dataset[1].seriesID, //'References per Day'
+						pointInterval: 86400000, //24 * 3600 * 1000,
+						pointStart: Date.UTC(MAGIC_MAP.earliestDate.getUTCFullYear(),
+									MAGIC_MAP.earliestDate.getUTCMonth(),
+									MAGIC_MAP.earliestDate.getUTCDate()),
+						data: MAGIC_MAP.dataset[1].frameAggregate //y-value array
+					}
+				],
 				exporting: {
 					enabled: false
 				}
