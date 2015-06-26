@@ -7,8 +7,12 @@ import static suites.Helper.assertAreEqual;
 import static suites.Helper.assertNodeType;
 import integrations.app.App;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.persistence.EntityManager;
 
+import models.entities.Series;
 import models.entities.Viz;
 
 import org.junit.Test;
@@ -31,6 +35,7 @@ public class TestViz {
 		EntityManager em = JPA.em();
 		Viz data = new Viz();
 		em.persist(data);
+		em.detach(data);
 		return data;
 	}
 	
@@ -68,6 +73,25 @@ public class TestViz {
 		runWithTransaction(() -> testCrud());
     }
     
+    @Test
+	public void createComplex() throws Exception {
+		runWithTransaction(() -> {
+			Series s1 = TestSeries.persistNewSeries();
+			List<Series> list = asList(s1);
+			Viz data = new Viz();
+			data.setAllSeries(list);
+			testCreate();
+		});
+	}
+    
+    
+	private <T> List<T> asList(@SuppressWarnings("unchecked") T... ts) {
+		List<T> list = new ArrayList<>();
+		for (T t : ts)
+			list.add(t);
+		return list;
+	}
+
 	private void testCrud() {
 		Viz data = testCreate();
 		testRead(data);
@@ -78,13 +102,16 @@ public class TestViz {
 
 	private Viz testCreate() {
 		Viz newData = new Viz();
-		
+		testCreate(newData);
+		return newData;
+	}
+
+	public void testCreate(Viz newData) {
 		final long id = ApiViz.create(newData);
 		
 		EntityManager em = JPA.em();
 		em.detach(newData);
 		assertVizIsEqaulTo(em, id, newData);
-		return newData;
 	}
 
 	private void testRead(Viz expected) {
