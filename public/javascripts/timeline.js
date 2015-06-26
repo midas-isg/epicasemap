@@ -322,6 +322,7 @@ timeline.js
 								detailSeries = [],
 								xAxis = this.xAxis[0],
 								startFrame,
+								endFrame,
 								i;
 							
 							for(i = 0; i < this.series.length; i++) {
@@ -329,7 +330,7 @@ timeline.js
 								
 								// reverse engineer the last part of the data
 								$.each(this.series[i].data, function() {
-									if((this.x > min) && (this.x < max)) {
+									if((this.x >= min) && (this.x < max)) {
 										detailSeries[i].detailData.push([this.x, this.y])
 									}
 								});
@@ -362,13 +363,16 @@ timeline.js
 							
 							//startFrame = Math.floor((new Date(min) - MAGIC_MAP.dataset[0].buffer[0].date) / 86400000);
 							startFrame = Math.floor((new Date(min) - MAGIC_MAP.earliestDate) / 86400000);
+							endFrame = Math.floor((new Date(max) - MAGIC_MAP.earliestDate) / 86400000);
 							
 							if(startFrame < 0) {
 								startFrame = 0;
 							}
 							
-							console.log(startFrame + "->" + (startFrame + detailSeries[0].detailData.length));
-							MAGIC_MAP.playSection(startFrame, startFrame + detailSeries[0].detailData.length);
+							//console.log(startFrame + "->" + (startFrame + detailSeries[0].detailData.length));
+							//MAGIC_MAP.playSection(startFrame, startFrame + detailSeries[0].detailData.length);
+							console.log(startFrame + "->" + endFrame);
+							MAGIC_MAP.playSection(startFrame, endFrame);
 
 							return false;
 						}
@@ -480,7 +484,7 @@ timeline.js
 		
 		for(i = 0; i < this.set.length; i++) {
 			//empty visiblePoints array
-			//while(this.visiblePoints.length > 0) { this.visiblePoints.pop(); }
+			//while(this.set[i].visiblePoints.length > 0) { this.set[i].visiblePoints.pop(); }
 			this.set[i].visiblePoints.length = 0; //hopefully the old data is garbage collected!
 		}
 		
