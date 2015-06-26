@@ -1,14 +1,16 @@
 package integrations.app.controllers;
 
+import static com.fasterxml.jackson.databind.node.JsonNodeType.NULL;
 import static org.fest.assertions.Assertions.assertThat;
 import static play.test.Helpers.contentAsString;
+import static suites.Helper.assertAreEqual;
+import static suites.Helper.assertNodeType;
 import integrations.app.App;
 
 import javax.persistence.EntityManager;
 
 import models.entities.Viz;
 
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import play.db.jpa.JPA;
@@ -21,42 +23,109 @@ import com.fasterxml.jackson.databind.JsonNode;
 import controllers.ApiViz;
 
 public class TestViz {
-	private static Viz theData;
-	
-	@BeforeClass
-	public static void populateDatabase(){
-		runWithTransaction(() -> persistNewSeries());
+    private static void runWithTransaction(Callback0 callback) {
+		App.newWithInMemoryDbWithDbOpen().runWithTransaction(callback);
 	}
-	
-	private static Viz persistNewSeries() {
+
+	private static Viz persistNewViz() {
 		EntityManager em = JPA.em();
-		theData = new Viz();
-		em.persist(theData);
-		return theData;
+		Viz data = new Viz();
+		em.persist(data);
+		return data;
 	}
 	
+    @Test
+	public void create() {
+		runWithTransaction(() -> testCreate());
+	}
+
+	@Test
+	public void read() {
+		runWithTransaction(() -> {
+			Viz persistedData = persistNewViz();
+			testRead(persistedData);
+		});
+	}
+
+	@Test
+	public void update() {
+		runWithTransaction(() -> {
+			Viz persistedData = persistNewViz();
+			testUpdate(persistedData.getId());
+		});
+	}
+
+	@Test
+	public void delete() {
+		runWithTransaction(() -> {
+			Viz dataForDelete = persistNewViz();
+			testDelete(dataForDelete.getId());
+		});
+	}
+
     @Test
     public void crud() {
 		runWithTransaction(() -> testCrud());
     }
     
 	private void testCrud() {
-		final Long theId = theData.getId();
-		testRead(theId, theData);
-		Viz data = new Viz();
-		final long id = ApiViz.create(data);
-		testRead(id, data);
+		Viz data = testCreate();
+		testRead(data);
+		final Long id = data.getId();
+		testUpdate(id);
+		testDelete(id);
 	}
 
-	private void testRead(long id, Viz expected) {
+	private Viz testCreate() {
+		Viz newData = new Viz();
+		
+		final long id = ApiViz.create(newData);
+		
+		EntityManager em = JPA.em();
+		em.detach(newData);
+		assertVizIsEqaulTo(em, id, newData);
+		return newData;
+	}
+
+	private void testRead(Viz expected) {
+		long id = expected.getId();
+		
 		final Result response = ApiViz.read(id);
+		
 		final String content = contentAsString(response);
 		final JsonNode root = Json.parse(content);
 		final JsonNode data = root.get("result");
-		assertThat(data.get("id").asLong()).isEqualTo(id);
+		assertAreEqual(data.get("id").asLong(), id);
+		assertTextNode(data.get("name"), expected.getName());
 	}
 
-    private static void runWithTransaction(Callback0 callback) {
-		App.newWithInMemoryDbWithDbOpen().runWithTransaction(callback);
+	private void testUpdate(long id) {
+		Viz dataToUpdate = new Viz();
+		dataToUpdate.setName("name");
+		ApiViz.update(id, dataToUpdate);
+		
+		final EntityManager em = JPA.em();
+		em.detach(dataToUpdate);
+		assertVizIsEqaulTo(em, id, dataToUpdate);
+	}
+
+	private void testDelete(long id) {
+		ApiViz.deleteById(id);
+
+		final EntityManager em = JPA.em();
+		Viz del = em.find(Viz.class, id);
+		assertThat(del).isNull();
+	}
+
+	private void assertVizIsEqaulTo(EntityManager em, long id, Viz expected) {
+		Viz found = em.find(Viz.class, id);
+		assertAreEqual(found, expected);
+	}
+
+	private void assertTextNode(JsonNode actual, String expected) {
+		if (expected == null)
+			assertNodeType(actual, NULL);
+		else 
+			assertAreEqual(actual.asText(), expected);
 	}
 }

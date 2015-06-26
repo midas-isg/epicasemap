@@ -38,22 +38,30 @@ public class ApiViz extends Controller {
 	
 	@Transactional
 	public static Result put(long id) {
-		final EntityManager em = JPA.em();
-		Viz original = em.find(Viz.class, id);
 		Viz data = vizForm.bindFromRequest().get();
-		data.setId(original.getId());
-		em.merge(data);
+		update(id, data);
 		setResponseLocationFromRequest();
 		return noContent();
+	}
+
+	public static void update(long id, Viz data) {
+		final EntityManager em = JPA.em();
+		Viz original = em.find(Viz.class, id);
+		data.setId(original.getId());
+		em.merge(data);
 	}
 	
 	@Transactional
 	public static Result delete(long id) {
+		deleteById(id);
+		setResponseLocationFromRequest();
+		return noContent();
+	}
+
+	public static void deleteById(long id) {
 		final EntityManager em = JPA.em();
 		Viz data = em.find(Viz.class, id);
 		em.remove(data);
-		setResponseLocationFromRequest();
-		return noContent();
 	}
 	
 	private static void setResponseLocationFromRequest(String... tails) {
