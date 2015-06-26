@@ -27,10 +27,9 @@ public class TestSeries {
 		runWithTransaction(() -> persistNewSeries());
 	}
 	
-	private static Series persistNewSeries() {
+	public static Series persistNewSeries() {
 		EntityManager em = JPA.em();
 		theData = new Series();
-		theData.setId(1L);
 		theData.setName("name");
 		theData.setDescription("description");
 		em.persist(theData);
