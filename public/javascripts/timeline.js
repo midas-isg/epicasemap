@@ -4,38 +4,61 @@ timeline.js
 
 (function() {
 	function MagicMap() {
+		var i;
+		
 		L.mapbox.accessToken = 'pk.eyJ1IjoidHBzMjMiLCJhIjoiVHEzc0tVWSJ9.0oYZqcggp29zNZlCcb2esA';
 		this.map = L.mapbox.map('map', /*'mapbox.streets'*//**/'mapbox.dark'/**/, { worldCopyJump: true, bounceAtZoomLimits: false, zoom: 2, minZoom: 1})
 			.setView([37.8, -96], 4);
 
 		//this.popup = new L.Popup({ autoPan: false }),
-		this.points = [];
-		this.heat = null;
+		this.heat = []; //null;
 		this.paused = false;
 		this.frame;
 		this.frameCount;
 		this.chart = null;
 		this.dataset = [];
 		this.earliestDate = new Date();
-		this.earliestDate.setHours(0);
-		this.earliestDate.setMinutes(0);
-		this.earliestDate.setSeconds(0);
+		this.earliestDate.setUTCHours(0);
+		this.earliestDate.setUTCMinutes(0);
+		this.earliestDate.setUTCSeconds(0);
 		
 		this.latestDate = new Date(0);
-		this.latestDate.setHours(0);
-		this.latestDate.setMinutes(0);
-		this.latestDate.setSeconds(0);
+		this.latestDate.setUTCHours(0);
+		this.latestDate.setUTCMinutes(0);
+		this.latestDate.setUTCSeconds(0);
 		
 		this.playBack = false;
-		this.toLoad = [3, 1];
+		this.seriesToLoad = [1, 2, 3];
+		this.set = [];
+		for(i = 0; i < this.seriesToLoad.length; i++) {
+			this.set.push({visiblePoints: []});
+		}
+		
+		this.setGradient = [];
+			
+		this.setGradient.push({
+			0.0: '#800000',
+			1.0: '#ff0000'
+		});
+		
+		this.setGradient.push({
+			0.0: '#008000',
+			1.0: '#00ff00'
+		});
+		
+		this.setGradient.push({
+			0.0: '#000080',
+			1.0: '#0000ff'
+		});
 		
 		return this;
 	}
 
 	MagicMap.prototype.start = function() {
 		var i;
-		for(i = 0; i < this.toLoad.length; i++) {
-			this.load(this.toLoad[i]);
+		
+		for(i = 0; i < this.seriesToLoad.length; i++) {
+			this.load(this.seriesToLoad[i]);
 		}
 		
 		this.packHeat();
@@ -73,21 +96,25 @@ timeline.js
 				deltaTime,
 				datasetID = thisMap.dataset.length;
 				
-				thisMap.dataset.push({seriesID: result.filter.equalities.seriesId, buffer: [{coordinates: [], date: null, value: 0}], maxValue: 0, frameAggregate: [0]});
+				lastDate.setUTCHours(0);
+				lastDate.setUTCMinutes(0);
+				lastDate.setUTCSeconds(0);
+				
+				thisMap.dataset.push({seriesID: result.filter.equalities.seriesId, buffer: [{coordinates: [], date: null, value: 0}], maxValue: 0, frameAggregate: [0], frameOffset: 0});
 				
 				if(thisMap.earliestDate > lastDate) {
-					thisMap.earliestDate = lastDate;
+					thisMap.earliestDate = new Date(lastDate);
 				}
 				else {
-					lastDate = thisMap.earliestDate;
+					lastDate = new Date(thisMap.earliestDate);
 				}
 				
 				for(i = 0; i < result.results.length; i++) {
 					if(result.results[i]) {
 						inputDate = new Date(result.results[i].timestamp);
-						inputDate.setHours(0);
-						inputDate.setMinutes(0);
-						inputDate.setSeconds(0);
+						inputDate.setUTCHours(0);
+						inputDate.setUTCMinutes(0);
+						inputDate.setUTCSeconds(0);
 						
 						//Update frame if new point is outside of time threshold
 						emptyDate = lastDate;
@@ -131,8 +158,16 @@ timeline.js
 					thisMap.frameCount = frame + 1;
 				}
 				
-				thisMap.toLoad.pop();
-				if(thisMap.toLoad.length == 0) {
+				thisMap.seriesToLoad.shift();
+				if(thisMap.seriesToLoad.length == 0) {
+					for(i = 0; i < thisMap.dataset.length; i++) {
+						deltaTime = thisMap.dataset[i].buffer[0].date.valueOf() - thisMap.earliestDate.valueOf();
+						
+						if(deltaTime != 0) {
+							thisMap.dataset[i].frameOffset = Math.floor(deltaTime / threshold);
+						}
+					}
+					
 					thisMap.createChart(); //call this after loading all datasets
 				}
 				
@@ -147,20 +182,19 @@ timeline.js
 	}
 	
 	MagicMap.prototype.createChart = function() {
-		//TODO: replace dataset[0] with iteration such as dataset[id]
-		
 			// create the detail chart
 		function createDetail(masterChart) {
 			// prepare the detail chart
 			var detailSeries = [],
 				detailStart =  [],
+				series = [],
 				i;
-				
-				for(i = 0; i < MAGIC_MAP.dataset.length; i++) {
-					detailStart.push(Date.UTC(MAGIC_MAP.dataset[i].buffer[0].date.getUTCFullYear(),
-						MAGIC_MAP.dataset[i].buffer[0].date.getUTCMonth(),
-						MAGIC_MAP.dataset[i].buffer[0].date.getUTCDate()));
-				}
+			
+			for(i = 0; i < MAGIC_MAP.dataset.length; i++) {
+				detailStart.push(Date.UTC(MAGIC_MAP.dataset[i].buffer[0].date.getUTCFullYear(),
+					MAGIC_MAP.dataset[i].buffer[0].date.getUTCMonth(),
+					MAGIC_MAP.dataset[i].buffer[0].date.getUTCDate()));
+			}
 
 			for(i = 0; i < masterChart.series.length; i++) {
 				detailSeries.push({detailData: []});
@@ -170,6 +204,16 @@ timeline.js
 						detailSeries[i].detailData.push(this.y);
 					}
 				});
+			}
+			
+			for(i = 0; i < MAGIC_MAP.dataset.length; i++) {
+				series.push({
+						name: "Series " + MAGIC_MAP.dataset[i].seriesID, //'Ebola References per Day',
+						pointStart: detailStart[i],
+						pointInterval: 86400000,//24 * 3600 * 1000,
+						data: detailSeries[i].detailData
+					}
+				);
 			}
 
 			// create a detail chart referenced by a global variable
@@ -211,7 +255,7 @@ timeline.js
 				tooltip: {
 					/*
 					formatter: function () {
-						var point = this.points[0];
+						var point = this.visiblePoints[0];
 						return '<b>' + point.series.name + '</b><br/>' +
 							Highcharts.dateFormat('%A %B %e %Y', this.x) + ':<br/>' +
 							point.y;//'1 USD = ' + Highcharts.numberFormat(point.y, 2) + ' EUR';
@@ -236,20 +280,7 @@ timeline.js
 						}
 					}
 				},
-				series: [
-					{
-						name: "Series " + MAGIC_MAP.dataset[0].seriesID, //'Ebola References per Day',
-						pointStart: detailStart[0],
-						pointInterval: 86400000,//24 * 3600 * 1000,
-						data: detailSeries[0].detailData
-					},
-					{
-						name: "Series " + MAGIC_MAP.dataset[1].seriesID, //'Ebola References per Day',
-						pointStart: detailStart[1],
-						pointInterval: 86400000,//24 * 3600 * 1000,
-						data: detailSeries[1].detailData
-					}
-				],
+				series: series,
 				exporting: {
 					enabled: false
 				}
@@ -258,6 +289,22 @@ timeline.js
 
 		// create the master chart
 		function createMaster() {
+			var i,
+				dataSeries = [];
+			
+			for(i = 0; i < MAGIC_MAP.dataset.length; i++) {
+				dataSeries.push({
+						type: 'area',
+						name: MAGIC_MAP.dataset[i].seriesID, //'References per Day'
+						pointInterval: 86400000, //24 * 3600 * 1000,
+						pointStart: Date.UTC(MAGIC_MAP.dataset[i].buffer[0].date.getUTCFullYear(),
+									MAGIC_MAP.dataset[i].buffer[0].date.getUTCMonth(),
+									MAGIC_MAP.dataset[i].buffer[0].date.getUTCDate()),
+						data: MAGIC_MAP.dataset[i].frameAggregate //y-value array
+					}
+				);
+			}
+			
 			$('#master-container').highcharts({
 				chart: {
 					reflow: false,
@@ -393,26 +440,7 @@ timeline.js
 						enableMouseTracking: false
 					}
 				},
-				series: [
-					{
-						type: 'area',
-						name: MAGIC_MAP.dataset[0].seriesID, //'References per Day',
-						pointInterval: 86400000, //24 * 3600 * 1000,
-						pointStart: Date.UTC(MAGIC_MAP.earliestDate.getUTCFullYear(),
-									MAGIC_MAP.earliestDate.getUTCMonth(),
-									MAGIC_MAP.earliestDate.getUTCDate()),
-						data: MAGIC_MAP.dataset[0].frameAggregate //y-value array
-					},
-					{
-						type: 'area',
-						name: MAGIC_MAP.dataset[1].seriesID, //'References per Day'
-						pointInterval: 86400000, //24 * 3600 * 1000,
-						pointStart: Date.UTC(MAGIC_MAP.earliestDate.getUTCFullYear(),
-									MAGIC_MAP.earliestDate.getUTCMonth(),
-									MAGIC_MAP.earliestDate.getUTCDate()),
-						data: MAGIC_MAP.dataset[1].frameAggregate //y-value array
-					}
-				],
+				series: dataSeries,
 				exporting: {
 					enabled: false
 				}
@@ -427,7 +455,6 @@ timeline.js
 		
 		//$('<div id="detail-container">').appendTo($container);
 		$('<div id="master-container">')
-			//.css({ position: 'absolute', top: 300, height: 100, width: '100%' })
 			.css({ position: 'relative', bottom: 100, height: 100 })
 			.appendTo($container);
 			
@@ -446,35 +473,43 @@ timeline.js
 	}
 
 	MagicMap.prototype.loadBuffer = function() {
+		var i;
+		
 		this.frame = 0;
 		this.playBack = true;
 		
-		//empty points array
-		//while(this.points.length > 0) { this.points.pop(); }
-		this.points.length = 0; //hopefully the old data is garbage collected!
+		for(i = 0; i < this.set.length; i++) {
+			//empty visiblePoints array
+			//while(this.visiblePoints.length > 0) { this.visiblePoints.pop(); }
+			this.set[i].visiblePoints.length = 0; //hopefully the old data is garbage collected!
+		}
 		
 		return;
 	}
 
 	MagicMap.prototype.playBuffer = function() {
 		var i,
-		setID;
+		setID,
+		setFrame;
 		
 		for(setID = 0; setID < this.dataset.length; setID++){
-			if(this.dataset[setID].buffer[this.frame]) {
-				for(i = 0; i < this.dataset[setID].buffer[this.frame].coordinates.length; i++) {
-					this.points.push([this.dataset[setID].buffer[this.frame].coordinates[i].latitude,
-						this.dataset[setID].buffer[this.frame].coordinates[i].longitude,
-						(this.dataset[setID].buffer[this.frame].value) / this.dataset[setID].maxValue]);
+			setFrame = this.frame - this.dataset[setID].frameOffset;
+			
+			if(this.dataset[setID].buffer[setFrame]) {
+				for(i = 0; i < this.dataset[setID].buffer[setFrame].coordinates.length; i++) {
+					this.set[setID].visiblePoints.push([this.dataset[setID].buffer[setFrame].coordinates[i].latitude,
+						this.dataset[setID].buffer[setFrame].coordinates[i].longitude,
+						this.dataset[setID].buffer[setFrame].value / this.dataset[setID].maxValue]);
 				}
 				
 				if(this.playBack) {
-					for(i = 0; i < this.points.length; i++) {
-						if(this.points[i][2] > 0) {
-							this.points[i][2] -= 0.01;
+					for(i = 0; i < this.set[setID].visiblePoints.length; i++) {
+						if(this.set[setID].visiblePoints[i][2] > 0.00) {
+							this.set[setID].visiblePoints[i][2] -= 0.01;
 						}
 						else {
-							this.points.splice(i, 1);
+							this.set[setID].visiblePoints.splice(i, 1);
+							i--;
 						}
 					}
 				}
@@ -495,14 +530,18 @@ timeline.js
 	}
 	
 	MagicMap.prototype.playSection = function(startFrame, endFrame) {
+		var i;
+		
+		//TODO: ensure startFrame and EndFrame hit all series throughout during visualization
 		this.playBack = false;
 		this.paused = true;
 		this.frame = startFrame;
 		
-		//empty points array
-		this.points.length = 0; //hopefully the old data is garbage collected!
+		for(i = 0; i < this.set.length; i++) {
+			//empty visiblePoints array
+			this.set[i].visiblePoints.length = 0; //hopefully the old data is garbage collected!
+		}
 		
-		var i;
 		for(i = startFrame; i <= endFrame; i++) {
 			this.playBuffer();
 		}
@@ -513,21 +552,21 @@ timeline.js
 	}
 
 	MagicMap.prototype.packHeat = function() {
-		if(!this.heat) {
-			this.heat = L.heatLayer(this.points, {minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 1, radius: 5,
-				gradient: {
-					0.0: '#ff00ff',
-					0.2: '#0000ff',
-					0.4: '#00ffff',
-					0.6: '#00ff00',
-					0.8: '#ffff00',
-					1.00: '#ff0000'
-				}
-			}).addTo(this.map);
-		}
+		var setID;
 		
-		this.heat.setLatLngs(this.points);
-	//console.log(this.heat._latlngs);
+		for(setID = 0; setID < this.dataset.length; setID++) {
+			if(!this.heat[setID]) {
+				this.heat.push(L.heatLayer(this.set[setID].visiblePoints,
+					{
+						minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.1, radius: 5,
+						gradient: this.setGradient[setID]
+					}
+				).addTo(this.map));
+			}
+			
+			this.heat[setID].setLatLngs(this.set[setID].visiblePoints);
+//console.log(this.heat[setID]._latlngs);
+		}
 		
 		return;
 	}
