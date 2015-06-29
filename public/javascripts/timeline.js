@@ -18,36 +18,36 @@ timeline.js
 		this.chart = null;
 		this.dataset = [];
 		this.earliestDate = new Date();
-		this.earliestDate.setUTCHours(0);
-		this.earliestDate.setUTCMinutes(0);
-		this.earliestDate.setUTCSeconds(0);
+		this.zeroTime(this.earliestDate);
 		
 		this.latestDate = new Date(0);
-		this.latestDate.setUTCHours(0);
-		this.latestDate.setUTCMinutes(0);
-		this.latestDate.setUTCSeconds(0);
+		this.zeroTime(this.latestDate);
 		
 		this.playBack = false;
-		this.seriesToLoad = [1, 2, 3];
+		this.seriesToLoad = [1, 3, 16];
 		this.set = [];
 		for(i = 0; i < this.seriesToLoad.length; i++) {
 			this.set.push({visiblePoints: []});
 		}
 		
 		this.setGradient = [];
-			
+		this.colors = ['#ff0000', '#00ff00', '#0000ff'];
+		
 		this.setGradient.push({
-			0.0: '#800000',
+			//0.0: '#800000',
+			0.0: '#ff0000',
 			1.0: '#ff0000'
 		});
 		
 		this.setGradient.push({
-			0.0: '#008000',
+			//0.0: '#008000',
+			0.0: '#00ff00',
 			1.0: '#00ff00'
 		});
 		
 		this.setGradient.push({
-			0.0: '#000080',
+			//0.0: '#000080',
+			0.0: '#0000ff',
 			1.0: '#0000ff'
 		});
 		
@@ -96,9 +96,7 @@ timeline.js
 				deltaTime,
 				datasetID = thisMap.dataset.length;
 				
-				lastDate.setUTCHours(0);
-				lastDate.setUTCMinutes(0);
-				lastDate.setUTCSeconds(0);
+				thisMap.zeroTime(lastDate);
 				
 				thisMap.dataset.push({seriesID: result.filter.equalities.seriesId, buffer: [{coordinates: [], date: null, value: 0}], maxValue: 0, frameAggregate: [0], frameOffset: 0});
 				
@@ -106,15 +104,13 @@ timeline.js
 					thisMap.earliestDate = new Date(lastDate);
 				}
 				else {
-					lastDate = new Date(thisMap.earliestDate);
+					//lastDate = new Date(thisMap.earliestDate);
 				}
 				
 				for(i = 0; i < result.results.length; i++) {
 					if(result.results[i]) {
 						inputDate = new Date(result.results[i].timestamp);
-						inputDate.setUTCHours(0);
-						inputDate.setUTCMinutes(0);
-						inputDate.setUTCSeconds(0);
+						thisMap.zeroTime(inputDate);
 						
 						//Update frame if new point is outside of time threshold
 						emptyDate = lastDate;
@@ -133,13 +129,18 @@ timeline.js
 						
 						thisMap.dataset[datasetID].buffer[frame].coordinates.push({latitude: result.results[i].latitude, longitude: result.results[i].longitude});
 						thisMap.dataset[datasetID].buffer[frame].date = inputDate;
-						thisMap.dataset[datasetID].buffer[frame].value = result.results[i].value;
 						
+						thisMap.dataset[datasetID].buffer[frame].value = result.results[i].value; //TODO: make this per point to control radius!
+						thisMap.dataset[datasetID].frameAggregate[frame] += result.results[i].value;
+						
+						/*
 						if(thisMap.dataset[datasetID].maxValue < result.results[i].value) {
 							thisMap.dataset[datasetID].maxValue = result.results[i].value;
 						}
-						
-						thisMap.dataset[datasetID].frameAggregate[frame] += result.results[i].value;
+						*/
+						if(thisMap.dataset[datasetID].maxValue < thisMap.dataset[datasetID].frameAggregate[frame]) {
+							thisMap.dataset[datasetID].maxValue = thisMap.dataset[datasetID].frameAggregate[frame];
+						}
 						
 						lastDate = thisMap.dataset[datasetID].buffer[frame].date;
 					}
@@ -228,6 +229,7 @@ timeline.js
 						//position: 'absolute'
 					}
 				},
+				colors: MAGIC_MAP.colors,
 				credits: {
 					enabled: false
 				},
@@ -321,6 +323,8 @@ timeline.js
 								max = extremesObject.max,
 								detailSeries = [],
 								xAxis = this.xAxis[0],
+								minDate = new Date(extremesObject.min),
+								maxDate = new Date(extremesObject.max),
 								startFrame,
 								endFrame,
 								i;
@@ -330,7 +334,7 @@ timeline.js
 								
 								// reverse engineer the last part of the data
 								$.each(this.series[i].data, function() {
-									if((this.x >= min) && (this.x < max)) {
+									if((this.x >= min) && (this.x <= max)) {
 										detailSeries[i].detailData.push([this.x, this.y])
 									}
 								});
@@ -361,9 +365,11 @@ timeline.js
 								detailChart.series[i].setData(detailSeries[i].detailData);
 							}
 							
-							//startFrame = Math.floor((new Date(min) - MAGIC_MAP.dataset[0].buffer[0].date) / 86400000);
-							startFrame = Math.floor((new Date(min) - MAGIC_MAP.earliestDate) / 86400000);
-							endFrame = Math.floor((new Date(max) - MAGIC_MAP.earliestDate) / 86400000);
+							MAGIC_MAP.zeroTime(minDate);
+							MAGIC_MAP.zeroTime(maxDate);
+							
+							startFrame = Math.floor((minDate - MAGIC_MAP.earliestDate) / 86400000);
+							endFrame = Math.floor((maxDate - MAGIC_MAP.earliestDate) / 86400000);
 							
 							if(startFrame < 0) {
 								startFrame = 0;
@@ -378,6 +384,7 @@ timeline.js
 						}
 					}
 				},
+				colors: MAGIC_MAP.colors,
 				title: {
 					text: null
 				},
@@ -424,6 +431,7 @@ timeline.js
 				},
 				plotOptions: {
 					series: {
+						/*
 						fillColor: {
 							linearGradient: [0, 0, 0, 70],
 							stops: [
@@ -431,6 +439,7 @@ timeline.js
 								[1, 'rgba(255,255,255,0)']
 							]
 						},
+						*/
 						lineWidth: 1,
 						marker: {
 							enabled: false
@@ -459,7 +468,7 @@ timeline.js
 		
 		//$('<div id="detail-container">').appendTo($container);
 		$('<div id="master-container">')
-			.css({ position: 'relative', bottom: 100, height: 100 })
+			.css({ position: 'relative', bottom: 100, height: 100, 'background-color': 'rgba(255, 255, 255, 0.1)' })
 			.appendTo($container);
 			
 		// create master and in its callback, create the detail chart
@@ -503,7 +512,7 @@ timeline.js
 				for(i = 0; i < this.dataset[setID].buffer[setFrame].coordinates.length; i++) {
 					this.set[setID].visiblePoints.push([this.dataset[setID].buffer[setFrame].coordinates[i].latitude,
 						this.dataset[setID].buffer[setFrame].coordinates[i].longitude,
-						this.dataset[setID].buffer[setFrame].value / this.dataset[setID].maxValue]);
+						this.dataset[setID].frameAggregate[setFrame] / this.dataset[setID].maxValue]); //TODO: values should affect radius -not alpha coloring
 				}
 				
 				if(this.playBack) {
@@ -700,6 +709,16 @@ console.log("Buffer:");
 		}
 
 		return '<span>Age of reports (days)</span><ul>' + labels.join('') + '</ul>';
+	}
+	
+	/* helper to zero-out the time of a Date object (it's bad practice to modify standard JavaScript objects) */
+	MagicMap.prototype.zeroTime = function(dateTime) {
+		dateTime.setUTCHours(0);
+		dateTime.setUTCMinutes(0);
+		dateTime.setUTCSeconds(0);
+		dateTime.setUTCMilliseconds(0);
+		
+		return dateTime;
 	}
 	
 	$(document).ready(function() {
