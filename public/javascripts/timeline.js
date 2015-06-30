@@ -530,6 +530,8 @@ timeline.js
 			this.set[i].visiblePoints.length = 0; //hopefully the old data is garbage collected!
 		}
 		
+		$("#playback-button").removeClass("disabled");
+		
 		return;
 	}
 
@@ -569,6 +571,9 @@ timeline.js
 		else if(this.playBack){
 			this.playBack = false;
 			this.paused = true;
+			$("#playback-button").addClass("disabled");
+			$("#playback-button span").toggleClass("glyphicon-pause")
+				.toggleClass("glyphicon-play");
 			console.log("Finished playback");
 			console.log(new Date());
 		}
