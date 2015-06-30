@@ -7,7 +7,7 @@ timeline.js
 		var i;
 		
 		L.mapbox.accessToken = 'pk.eyJ1IjoidHBzMjMiLCJhIjoiVHEzc0tVWSJ9.0oYZqcggp29zNZlCcb2esA';
-		this.map = L.mapbox.map('map', /*'mapbox.streets'*//**/'mapbox.dark'/**/, { worldCopyJump: true, bounceAtZoomLimits: false, zoom: 2, minZoom: 1})
+		this.map = L.mapbox.map('map', 'mapbox.streets'/*'mapbox.dark'*/, { worldCopyJump: true, bounceAtZoomLimits: false, zoom: 2, minZoom: 2})
 			.setView([37.8, -96], 4);
 
 		//this.popup = new L.Popup({ autoPan: false }),
@@ -24,7 +24,7 @@ timeline.js
 		this.zeroTime(this.latestDate);
 		
 		this.playBack = false;
-		this.seriesToLoad = [1, 3, 16];
+		this.seriesToLoad = [1, 259];
 		this.set = [];
 		for(i = 0; i < this.seriesToLoad.length; i++) {
 			this.set.push({visiblePoints: []});
@@ -74,6 +74,30 @@ timeline.js
 		
 		document.getElementById('body').onkeyup = this.handleInput;
 		setInterval(this.loop, 0);
+		
+		$("#reset-button").click(function() {
+			var i;
+			
+			console.log("Buffer:");
+			//console.log(MAGIC_MAP.dataset[].buffer);
+			MAGIC_MAP.loadBuffer();
+			
+			for(i = 0; i < MAGIC_MAP.heat.length; i++) {
+				MAGIC_MAP.heat[i].redraw();
+			}
+			
+			return;
+		});
+		
+		$("#playback-button").click(function() {
+			MAGIC_MAP.paused = !MAGIC_MAP.paused;
+			console.log(new Date());
+			
+			$("#playback-button span").toggleClass("glyphicon-play")
+				.toggleClass("glyphicon-pause");
+			
+			return;
+		});
 		
 		return;
 	}
@@ -224,7 +248,7 @@ timeline.js
 					reflow: false,
 					marginLeft: 50,
 					//marginRight: 20,
-					backgroundColor: null,
+					backgroundColor: "rgba(255, 255, 255, 0.1)", //null,
 					style: {
 						//position: 'absolute'
 					}
@@ -236,23 +260,25 @@ timeline.js
 				title: {
 					text: 'Data Comparison',
 					style: {
-						color: 'rgba(255, 255, 255, 255)'
+						color: 'rgba(0, 128, 128, 255)'
 					}
 				},
 				subtitle: {
 					text: 'Select an area by dragging across the lower chart',
 					style: {
-						color: 'rgba(255, 255, 255, 255)'
+						color: 'rgba(0, 128, 128, 255)'
 					}
 				},
 				xAxis: {
-					type: 'datetime'
+					type: 'datetime',
+					lineColor: '#008080'
 				},
 				yAxis: {
 					title: {
 						text: null
 					},
-					maxZoom: 0.1
+					maxZoom: 0.1,
+					gridLineColor: '#008080'
 				},
 				tooltip: {
 					/*
@@ -310,9 +336,11 @@ timeline.js
 			$('#master-container').highcharts({
 				chart: {
 					reflow: false,
-					backgroundColor: null,
+					backgroundColor: "rgba(128, 128, 128, 0.1)", //null,
 					marginLeft: 50,
 					//marginRight: 20,
+					spacingTop: 5,
+					spacingBottom: 5,
 					zoomType: 'x',
 					events: {
 						// listen to the selection event on the master chart to update the
@@ -424,7 +452,12 @@ timeline.js
 					//, crosshairs: true
 				},
 				legend: {
-					enabled: false
+					enabled: true,
+					padding: 0,
+					maxHeight: 8,
+					itemStyle: {
+						fontSize: "8px"
+					}
 				},
 				credits: {
 					enabled: false
@@ -468,7 +501,7 @@ timeline.js
 		
 		//$('<div id="detail-container">').appendTo($container);
 		$('<div id="master-container">')
-			.css({ position: 'relative', bottom: 100, height: 100, 'background-color': 'rgba(255, 255, 255, 0.1)' })
+			.css({ position: 'relative', bottom: 115, height: 125, 'background-color': 'rgba(255, 255, 255, 0.1)' })
 			.appendTo($container);
 			
 		// create master and in its callback, create the detail chart
@@ -512,7 +545,8 @@ timeline.js
 				for(i = 0; i < this.dataset[setID].buffer[setFrame].coordinates.length; i++) {
 					this.set[setID].visiblePoints.push([this.dataset[setID].buffer[setFrame].coordinates[i].latitude,
 						this.dataset[setID].buffer[setFrame].coordinates[i].longitude,
-						this.dataset[setID].frameAggregate[setFrame] / this.dataset[setID].maxValue]); //TODO: values should affect radius -not alpha coloring
+						1.0]);
+						//this.dataset[setID].frameAggregate[setFrame] / this.dataset[setID].maxValue]); //TODO: values should affect radius -not alpha coloring
 				}
 				
 				if(this.playBack) {
@@ -606,8 +640,7 @@ timeline.js
 	MagicMap.prototype.handleInput = function(event) {
 		switch(event.which) {
 			case 13:
-				MAGIC_MAP.paused = !MAGIC_MAP.paused;
-				console.log(new Date());
+				$("#playback-button").click();
 			break;
 			
 			case 96:
@@ -615,9 +648,7 @@ timeline.js
 			break;
 			
 			case 82:
-console.log("Buffer:");
-//console.log(MAGIC_MAP.dataset[].buffer);
-				MAGIC_MAP.loadBuffer();
+				$("#reset-button").click();
 			break;
 			
 			default:
