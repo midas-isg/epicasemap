@@ -1,5 +1,6 @@
 package integrations.server;
 
+import static com.fasterxml.jackson.databind.node.JsonNodeType.ARRAY;
 import static com.fasterxml.jackson.databind.node.JsonNodeType.NULL;
 import static com.fasterxml.jackson.databind.node.JsonNodeType.OBJECT;
 import static org.fest.assertions.Assertions.assertThat;
@@ -10,11 +11,19 @@ import static play.mvc.Http.Status.NO_CONTENT;
 import static suites.Helper.assertAreEqual;
 import static suites.Helper.assertNodeType;
 import static suites.Helper.testJsonResponse;
-import models.entities.Viz;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+import models.entities.Series;
+import models.entities.VizInput;
 import play.libs.ws.WS;
 import play.libs.ws.WSResponse;
+import suites.Helper;
 
 import com.fasterxml.jackson.databind.JsonNode;
+
+import controllers.ApiSeries;
 
 public class VizEndpointTester {
 	private static final int timeout = 100000;
@@ -25,14 +34,13 @@ public class VizEndpointTester {
 	}
 	
 	private void testCrud() {
-		final Viz data = testCreate();
-		long id = data.getId();
-		testRead(id);
+		final VizInput data = testCreate();
+		testRead(data);
 		testUpdate(data);
-		testDelete(id);
+		testDelete(data.getId());
 	}
 
-	private void testUpdate(Viz data) {
+	private void testUpdate(VizInput data) {
 		long id = data.getId();
 		final String url = urlWithId(id);
 		final String name = "update name";
@@ -41,26 +49,44 @@ public class VizEndpointTester {
 		assertAreEqual(update.getStatus(), NO_CONTENT);
 	}
 
-	private Viz testCreate() {
-		Viz data = new Viz();
+	private VizInput testCreate() {
+		VizInput input = new VizInput();
+		List<Series> all = 	Helper.wrapTransaction(() -> {
+			return ApiSeries.find(null);
+		});
+		
+		assertThat(all.size()).isGreaterThanOrEqualTo(2);
+		final List<Long> list = all.subList(0, 2).stream().map(it -> it.getId()).collect(Collectors.toList());
+		input.setSeriesIds(list);
+		input.setName("Test first 2 Series");
+		
 		final String url = baseUrl();
-		WSResponse create = WS.url(url).post(toJson(data)).get(timeout);
+		WSResponse create = WS.url(url).post(toJson(input)).get(timeout);
 		assertAreEqual(create.getStatus(), CREATED);
 		final String location = create.getHeader(LOCATION);
 		long id = toId(location);
 		final String path = append(basePath, id);
 		assertThat(location).endsWith(path);
-		data.setId(id);
-		return data;
+		input.setId(id);
+		return input;
 	}
 
-	private void testRead(long id) {
+	private void testRead(VizInput expected) {
+		long id = expected.getId();
 		final String urlWithId = urlWithId(id);
 		final JsonNode root = testJsonResponse(urlWithId);
 		assertNodeType(root.get("filter"), NULL);
 		final JsonNode result = root.get("result");
 		assertNodeType(result, OBJECT);
 		assertAreEqual(result.get("id").asLong(), id);
+		final JsonNode allSeries = result.get("allSeries");
+		assertNodeType(allSeries, ARRAY);
+		final List<Long> seriesIds = expected.getSeriesIds();
+		assertThat(allSeries).hasSize(seriesIds.size());
+		for (JsonNode series: allSeries){
+			assertNodeType(series, OBJECT);
+			assertThat(series.get("id").asLong()).isIn(seriesIds);
+		}
 	}
 
 	private void testDelete(long id) {

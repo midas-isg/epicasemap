@@ -15,6 +15,7 @@ import javax.persistence.EntityManager;
 
 import models.entities.Series;
 import models.entities.Viz;
+import models.entities.VizInput;
 
 import org.junit.Test;
 
@@ -82,7 +83,8 @@ public class TestViz {
 			List<Series> list = asList(s1);
 			data.setAllSeries(list);
 			data.setName("complex");
-			actCreate(data);
+			final long id = actCreate(data);
+			data.setId(id);
 		});
 		
 		runWithTransaction(() -> detachThenAssertWithDatabase(data));
@@ -109,7 +111,8 @@ public class TestViz {
 	}
 
 	private Viz testCreate(Viz newData) {
-		actCreate(newData);
+		final long id = actCreate(newData);
+		newData.setId(id);
 		detachThenAssertWithDatabase(newData);
 		return newData;
 	}
@@ -119,7 +122,8 @@ public class TestViz {
 	}
 
 	private long actCreate(Viz newData) {
-		return ApiViz.create(newData);
+		VizInput input = VizInput.from(newData);
+		return ApiViz.create(input);
 	}
 
 	private void testRead(Viz expected) {
