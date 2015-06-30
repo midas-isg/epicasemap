@@ -5,27 +5,29 @@ import static controllers.ResponseWrapper.okAsWrappedJsonObject;
 import javax.persistence.EntityManager;
 
 import models.entities.Viz;
+import models.entities.VizInput;
 import play.data.Form;
 import play.db.jpa.JPA;
 import play.db.jpa.Transactional;
 import play.mvc.Controller;
-import play.mvc.Result;
 import play.mvc.Http.Context;
 import play.mvc.Http.Request;
+import play.mvc.Result;
 
 public class ApiViz extends Controller {
-	public static Form<Viz> vizForm = Form.form(Viz.class);
+	public static Form<VizInput> vizForm = Form.form(VizInput.class);
 	
 	@Transactional
 	public static Result post() {
-		Viz data = vizForm.bindFromRequest().get();
+		VizInput data = vizForm.bindFromRequest().get();
 		long id = create(data);
 		setResponseLocationFromRequest(id + "");
 		return created();
 	}
 
-	public static long create(Viz data) {
+	public static long create(VizInput input) {
 		final EntityManager em = JPA.em();
+		final Viz data = input.toViz();
 		em.persist(data);
 		return data.getId();
 	}
@@ -38,7 +40,8 @@ public class ApiViz extends Controller {
 	
 	@Transactional
 	public static Result put(long id) {
-		Viz data = vizForm.bindFromRequest().get();
+		final VizInput input = vizForm.bindFromRequest().get();
+		final Viz data = input.toViz();
 		update(id, data);
 		setResponseLocationFromRequest();
 		return noContent();
