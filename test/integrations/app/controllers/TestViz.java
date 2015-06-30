@@ -1,5 +1,6 @@
 package integrations.app.controllers;
 
+import static com.fasterxml.jackson.databind.node.JsonNodeType.ARRAY;
 import static com.fasterxml.jackson.databind.node.JsonNodeType.NULL;
 import static org.fest.assertions.Assertions.assertThat;
 import static play.test.Helpers.contentAsString;
@@ -31,7 +32,7 @@ public class TestViz {
 		App.newWithInMemoryDbWithDbOpen().runWithTransaction(callback);
 	}
 
-	private static Viz persistNewViz() {
+	private static Viz persistThenDetachNewViz() {
 		EntityManager em = JPA.em();
 		Viz data = new Viz();
 		em.persist(data);
@@ -47,7 +48,7 @@ public class TestViz {
 	@Test
 	public void read() {
 		runWithTransaction(() -> {
-			Viz persistedData = persistNewViz();
+			Viz persistedData = persistThenDetachNewViz();
 			testRead(persistedData);
 		});
 	}
@@ -55,7 +56,7 @@ public class TestViz {
 	@Test
 	public void update() {
 		runWithTransaction(() -> {
-			Viz persistedData = persistNewViz();
+			Viz persistedData = persistThenDetachNewViz();
 			testUpdate(persistedData.getId());
 		});
 	}
@@ -63,7 +64,7 @@ public class TestViz {
 	@Test
 	public void delete() {
 		runWithTransaction(() -> {
-			Viz dataForDelete = persistNewViz();
+			Viz dataForDelete = persistThenDetachNewViz();
 			testDelete(dataForDelete.getId());
 		});
 	}
@@ -75,13 +76,16 @@ public class TestViz {
     
     @Test
 	public void createComplex() throws Exception {
+    	Viz data = new Viz();
 		runWithTransaction(() -> {
-			Series s1 = TestSeries.persistNewSeries();
+			Series s1 = TestSeries.persistThenDetachNewSeries();
 			List<Series> list = asList(s1);
-			Viz data = new Viz();
 			data.setAllSeries(list);
-			testCreate();
+			data.setName("complex");
+			actCreate(data);
 		});
+		
+		runWithTransaction(() -> detachThenAssertWithDatabase(data));
 	}
     
     
@@ -101,17 +105,21 @@ public class TestViz {
 	}
 
 	private Viz testCreate() {
-		Viz newData = new Viz();
-		testCreate(newData);
+		return testCreate(new Viz());
+	}
+
+	private Viz testCreate(Viz newData) {
+		actCreate(newData);
+		detachThenAssertWithDatabase(newData);
 		return newData;
 	}
 
-	public void testCreate(Viz newData) {
-		final long id = ApiViz.create(newData);
-		
-		EntityManager em = JPA.em();
-		em.detach(newData);
-		assertVizIsEqaulTo(em, id, newData);
+	private void detachThenAssertWithDatabase(Viz expected) {
+		detachThenAssertWithDatabase(expected.getId(), expected);
+	}
+
+	private long actCreate(Viz newData) {
+		return ApiViz.create(newData);
 	}
 
 	private void testRead(Viz expected) {
@@ -124,16 +132,22 @@ public class TestViz {
 		final JsonNode data = root.get("result");
 		assertAreEqual(data.get("id").asLong(), id);
 		assertTextNode(data.get("name"), expected.getName());
+		assertArrayNode(data.get("allSeries"), expected.getAllSeries(), Series.class);
+	}
+
+	private <T> void assertArrayNode(JsonNode actualList, List<T> expected, Class<T> clazz) {
+		assertNodeType(actualList, ARRAY);
+		for (int i = 0; i < expected.size(); i++) {
+			Object actual = Json.fromJson(actualList.get(i), clazz);
+			assertAreEqual(actual, expected.get(i));
+		}
 	}
 
 	private void testUpdate(long id) {
 		Viz dataToUpdate = new Viz();
 		dataToUpdate.setName("name");
 		ApiViz.update(id, dataToUpdate);
-		
-		final EntityManager em = JPA.em();
-		em.detach(dataToUpdate);
-		assertVizIsEqaulTo(em, id, dataToUpdate);
+		detachThenAssertWithDatabase(id, dataToUpdate);
 	}
 
 	private void testDelete(long id) {
@@ -144,7 +158,10 @@ public class TestViz {
 		assertThat(del).isNull();
 	}
 
-	private void assertVizIsEqaulTo(EntityManager em, long id, Viz expected) {
+	private void detachThenAssertWithDatabase(long id, Viz expected) {
+		EntityManager em = JPA.em();
+		em.detach(expected);
+		
 		Viz found = em.find(Viz.class, id);
 		assertAreEqual(found, expected);
 	}
