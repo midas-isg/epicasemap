@@ -79,7 +79,7 @@ timeline.js
 	}
 
 	MagicMap.prototype.load = function(seriesID) {
-		var URL = "http://localhost:9000/epidemap/api/series/" + seriesID + "/time-coordinate";
+		var URL = CONTEXT + "/api/series/" + seriesID + "/time-coordinate";
 		thisMap = this;
 		
 		$.ajax({
