@@ -24,10 +24,10 @@ public class TestSeries {
 	
 	@BeforeClass
 	public static void populateDatabase(){
-		runWithTransaction(() -> theData = persistNewSeries());
+		runWithTransaction(() -> theData = persistThenDetachNewSeries());
 	}
 	
-	public static Series persistNewSeries() {
+	static Series persistThenDetachNewSeries() {
 		EntityManager em = JPA.em();
 		final Series data = new Series();
 		data.setName("name");
