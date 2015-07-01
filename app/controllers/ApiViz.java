@@ -23,7 +23,7 @@ import play.mvc.Http.Context;
 import play.mvc.Http.Request;
 import play.mvc.Result;
 
-@Api(value = "/vizs", description = "Endpoint for Vizs")
+@Api(value = "/vizs", description = "Endpoints for Vizs", hidden = false)
 public class ApiViz extends Controller {
 	private static final String ex = "vizs.json";
 	private static final String exBody = "See an example of body at "
@@ -32,11 +32,13 @@ public class ApiViz extends Controller {
 
 	public static Form<VizInput> vizForm = Form.form(VizInput.class);
 
-	@ApiOperation(httpMethod = "POST", value = "Creates a new Viz", 
+	@ApiOperation(httpMethod = "POST", nickname = "create", value = "Creates a new Viz", 
 		notes = "This endpoint creates a Viz using submitted JSON object in body "
 		+ "and returns the URI via the 'Location' Header in the response. "
 		+ "Currently, no content returns in the body. ")
-	@ApiResponses(value = { @ApiResponse(code = CREATED, message = "Success") })
+	@ApiResponses({ 
+		@ApiResponse(code = OK, message = "(Not used yet)"),
+		@ApiResponse(code = CREATED, message = "Success") })
 	@ApiImplicitParams({ 
 		@ApiImplicitParam(required = true, value = exBody, dataType = type, paramType = "body")
 	})
@@ -55,8 +57,8 @@ public class ApiViz extends Controller {
 		return data.getId();
 	}
 
-	@ApiOperation(httpMethod = "GET", value = "Returns the Viz by ID")
-	@ApiResponses(value = { @ApiResponse(code = OK, message = "Success") })
+	@ApiOperation(httpMethod = "GET", nickname = "read", value = "Returns the Viz by ID")
+	@ApiResponses({ @ApiResponse(code = OK, message = "Success") })
 	@Transactional
 	public static Result read(
 			@ApiParam(value = "ID of the Viz", required = true) 
@@ -66,15 +68,16 @@ public class ApiViz extends Controller {
 		return okAsWrappedJsonObject(data, null);
 	}
 
-	@ApiOperation(httpMethod = "PUT", value = "Updates the Viz", 
-			notes = "This endpoint does full update the given Viz "
-			+ "idientified by 'id' with submitted JSON object in body "
-			+ "and returns the URI via the 'Location' Header in the response. "
-			+ "Currently, no content in the body. ")
-	@ApiResponses(value = { @ApiResponse(code = NO_CONTENT, message = "Success") })
+	@ApiOperation(httpMethod = "PUT", nickname = "update", value = "Updates the Viz", 
+		notes = "This endpoint does full update the given Viz "
+		+ "idientified by 'id' with submitted JSON object in body "
+		+ "and returns the URI via the 'Location' Header in the response. "
+		+ "Currently, no content in the body. ")
+	@ApiResponses({
+		@ApiResponse(code = OK, message = "(Not used yet)"),
+		@ApiResponse(code = NO_CONTENT, message = "Success") })
 	@ApiImplicitParams({ 
-		@ApiImplicitParam(required = true, value = exBody, dataType = type, paramType = "body") 
-	})
+		@ApiImplicitParam(required = true, value = exBody, dataType = type, paramType = "body") })
 	@Transactional
 	public static Result put(
 			@ApiParam(value = "ID of the Viz", required = true) @PathParam("id") long id) {
@@ -92,11 +95,13 @@ public class ApiViz extends Controller {
 		em.merge(data);
 	}
 
-	@ApiOperation(httpMethod = "DELETE", value = "Deletes the Viz", 
-			notes = "This endpoint deletes the given Viz idientified by 'id' "
-			+ "and returns the URI via the 'Location' Header in the response. "
-			+ "Currently, no content in the body. ")
-	@ApiResponses(value = { @ApiResponse(code = NO_CONTENT, message = "Success") })
+	@ApiOperation(httpMethod = "DELETE", nickname = "delete", value = "Deletes the Viz", 
+		notes = "This endpoint deletes the given Viz idientified by 'id' "
+		+ "and returns the URI via the 'Location' Header in the response. "
+		+ "Currently, no content in the body. ")
+	@ApiResponses({ 
+		@ApiResponse(code = OK, message = "(Not used yet)"),
+		@ApiResponse(code = NO_CONTENT, message = "Success") })
 	@Transactional
 	public static Result delete(
 			@ApiParam(value = "ID of the Viz", required = true) 

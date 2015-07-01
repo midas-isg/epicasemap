@@ -19,10 +19,10 @@ import com.wordnik.swagger.annotations.ApiParam;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
 
-@Api(value = "/series", description = "Endpoint for series")
+@Api(value = "/series", description = "Endpoints for Series")
 public class ApiSeries extends Controller {
-	@ApiOperation(httpMethod = "GET", value = "Returns all series")
-	@ApiResponses(value = { @ApiResponse(code = OK, message = "Success") })
+	@ApiOperation(httpMethod = "GET", nickname = "list", value = "Lists all Series")
+	@ApiResponses({ @ApiResponse(code = OK, message = "Success") })
 	@Transactional
 	public static Result get() {
 		Filter filter = null;
@@ -36,8 +36,8 @@ public class ApiSeries extends Controller {
 		return rule.query(filter);
 	}
 
-	@ApiOperation(httpMethod = "GET", value = "Returns a series by ID")
-	@ApiResponses(value = { @ApiResponse(code = OK, message = "Success"), })
+	@ApiOperation(httpMethod = "GET", nickname = "read", value = "Returns the Series by ID")
+	@ApiResponses({ @ApiResponse(code = OK, message = "Success") })
 	@Transactional
 	public static Result read(
 			@ApiParam(value = "ID of the series", required = true)
