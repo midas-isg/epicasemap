@@ -184,9 +184,10 @@ timeline.js
 				
 				thisMap.seriesToLoad.shift();
 				if(thisMap.seriesToLoad.length == 0) {
+					thisMap.frameCount = Math.floor((thisMap.latestDate.valueOf() - thisMap.earliestDate.valueOf()) / threshold) + 1;
+					
 					for(i = 0; i < thisMap.dataset.length; i++) {
 						deltaTime = thisMap.dataset[i].buffer[0].date.valueOf() - thisMap.earliestDate.valueOf();
-						thisMap.frameCount = Math.floor((thisMap.latestDate.valueOf() - thisMap.earliestDate.valueOf()) / threshold) + 1;
 						
 						if(deltaTime != 0) {
 							thisMap.dataset[i].frameOffset = Math.floor(deltaTime / threshold);
