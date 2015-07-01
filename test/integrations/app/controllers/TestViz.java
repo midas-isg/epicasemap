@@ -29,7 +29,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import controllers.ApiViz;
 
 public class TestViz {
-    private static void runWithTransaction(Callback0 callback) {
+	private static void runWithTransaction(Callback0 callback) {
 		App.newWithInMemoryDbWithDbOpen().runWithTransaction(callback);
 	}
 
@@ -40,13 +40,13 @@ public class TestViz {
 		em.detach(data);
 		return data;
 	}
-	
+
 	@Test
 	public void correctTypeName() throws Exception {
 		assertAreEqual(ApiViz.type, VizInput.class.getName());
 	}
-	
-    @Test
+
+	@Test
 	public void create() {
 		runWithTransaction(() -> testCreate());
 	}
@@ -75,14 +75,14 @@ public class TestViz {
 		});
 	}
 
-    @Test
-    public void crud() {
+	@Test
+	public void crud() {
 		runWithTransaction(() -> testCrud());
-    }
-    
-    @Test
+	}
+
+	@Test
 	public void createComplex() throws Exception {
-    	Viz data = new Viz();
+		Viz data = new Viz();
 		runWithTransaction(() -> {
 			Series s1 = TestSeries.persistThenDetachNewSeries();
 			List<Series> list = asList(s1);
@@ -91,11 +91,10 @@ public class TestViz {
 			final long id = actCreate(data);
 			data.setId(id);
 		});
-		
+
 		runWithTransaction(() -> detachThenAssertWithDatabase(data));
 	}
-    
-    
+
 	private <T> List<T> asList(@SuppressWarnings("unchecked") T... ts) {
 		List<T> list = new ArrayList<>();
 		for (T t : ts)
@@ -133,18 +132,20 @@ public class TestViz {
 
 	private void testRead(Viz expected) {
 		long id = expected.getId();
-		
+
 		final Result response = ApiViz.read(id);
-		
+
 		final String content = contentAsString(response);
 		final JsonNode root = Json.parse(content);
 		final JsonNode data = root.get("result");
 		assertAreEqual(data.get("id").asLong(), id);
 		assertTextNode(data.get("name"), expected.getName());
-		assertArrayNode(data.get("allSeries"), expected.getAllSeries(), Series.class);
+		assertArrayNode(data.get("allSeries"), expected.getAllSeries(),
+				Series.class);
 	}
 
-	private <T> void assertArrayNode(JsonNode actualList, List<T> expected, Class<T> clazz) {
+	private <T> void assertArrayNode(JsonNode actualList, List<T> expected,
+			Class<T> clazz) {
 		assertNodeType(actualList, ARRAY);
 		for (int i = 0; i < expected.size(); i++) {
 			Object actual = Json.fromJson(actualList.get(i), clazz);
@@ -170,7 +171,7 @@ public class TestViz {
 	private void detachThenAssertWithDatabase(long id, Viz expected) {
 		EntityManager em = JPA.em();
 		em.detach(expected);
-		
+
 		Viz found = em.find(Viz.class, id);
 		assertAreEqual(found, expected);
 	}
@@ -178,7 +179,7 @@ public class TestViz {
 	private void assertTextNode(JsonNode actual, String expected) {
 		if (expected == null)
 			assertNodeType(actual, NULL);
-		else 
+		else
 			assertAreEqual(actual.asText(), expected);
 	}
 }

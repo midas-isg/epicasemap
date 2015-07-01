@@ -14,25 +14,21 @@ import javax.persistence.ManyToMany;
 
 @Entity
 public class Viz {
-	@Id @GeneratedValue(strategy = GenerationType.AUTO)
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
 	private String name;
 	@ManyToMany(fetch = FetchType.LAZY)
-	@JoinTable(
-			name = "viz_series", 
-			joinColumns = {
-					@JoinColumn(name = "viz_id", nullable = false)
-			},
-			inverseJoinColumns ={
-					@JoinColumn(name = "series_id", nullable = false)
-			}
+	@JoinTable(name = "viz_series", 
+		joinColumns = { @JoinColumn(name = "viz_id", nullable = false) }, 
+		inverseJoinColumns = { @JoinColumn(name = "series_id", nullable = false) }
 	)
 	private List<Series> allSeries;
-	
-	public Viz(){
+
+	public Viz() {
 		allSeries = new ArrayList<>();
 	}
-	
+
 	public Long getId() {
 		return id;
 	}
@@ -102,7 +98,7 @@ public class Viz {
 		if (b == null)
 			return false;
 		assert (a != null && b != null);
-		
+
 		if (a.size() != b.size())
 			return false;
 		return a.containsAll(b);

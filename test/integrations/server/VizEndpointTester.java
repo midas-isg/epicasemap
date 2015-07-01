@@ -31,11 +31,11 @@ import controllers.ApiSeries;
 public class VizEndpointTester {
 	private static final int timeout = 100000;
 	private final String basePath = "/api/vizs";
-	
+
 	public static Runnable crud() {
 		return () -> newInstance().testCrud();
 	}
-	
+
 	private void testCrud() {
 		final Tuple data = testCreate();
 		testRead(data);
@@ -54,18 +54,20 @@ public class VizEndpointTester {
 
 	private Tuple testCreate() {
 		VizInput input = new VizInput();
-		List<Series> all = 	Helper.wrapTransaction(() -> {
+		List<Series> all = Helper.wrapTransaction(() -> {
 			return ApiSeries.find(null);
 		});
-		
+
 		assertThat(all.size()).isGreaterThanOrEqualTo(2);
-		final List<Long> list = all.subList(0, 2).stream().map(it -> it.getId()).collect(Collectors.toList());
+		final List<Long> list = all.subList(0, 2).stream()
+				.map(it -> it.getId()).collect(Collectors.toList());
 		input.setSeriesIds(list);
 		input.setName("Test first 2 Series");
 		String msg = Json.toJson(input) + "";
-		Helper.wrapNoThrowingCheckedExecption(() -> Files.write(Paths.get("./public/examples/" + basePath + ".json"), msg.getBytes()));
-	
-		
+		Helper.wrapNoThrowingCheckedExecption(() -> Files.write(
+				Paths.get("./public/examples/" + basePath + ".json"),
+				msg.getBytes()));
+
 		final String url = baseUrl();
 		WSResponse create = WS.url(url).post(toJson(input)).get(timeout);
 		assertAreEqual(create.getStatus(), CREATED);
@@ -92,7 +94,7 @@ public class VizEndpointTester {
 		assertNodeType(allSeries, ARRAY);
 		final List<Long> seriesIds = expected.getSeriesIds();
 		assertThat(allSeries).hasSize(seriesIds.size());
-		for (JsonNode series: allSeries){
+		for (JsonNode series : allSeries) {
 			assertNodeType(series, OBJECT);
 			assertThat(series.get("id").asLong()).isIn(seriesIds);
 		}
@@ -103,11 +105,10 @@ public class VizEndpointTester {
 		assertAreEqual(delete.getStatus(), NO_CONTENT);
 	}
 
-	
 	private static VizEndpointTester newInstance() {
 		return new VizEndpointTester();
 	}
-	
+
 	private String baseUrl() {
 		return Server.makeTestUrl(basePath);
 	}
@@ -125,7 +126,7 @@ public class VizEndpointTester {
 		String number = tokens[tokens.length - 1];
 		return Long.parseLong(number);
 	}
-	
+
 	private static class Tuple {
 		public Long id;
 		public VizInput input;

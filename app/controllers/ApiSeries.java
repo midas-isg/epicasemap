@@ -21,16 +21,10 @@ import com.wordnik.swagger.annotations.ApiResponses;
 
 @Api(value = "/series", description = "Endpoint for series")
 public class ApiSeries extends Controller {
-	@ApiOperation(
-			httpMethod = "GET", 
-			nickname = "find", 
-			value = "Returns all series" 
-	)
-	@ApiResponses(value = {
-			@ApiResponse(code = OK, message = "Successful retrieval"),
-	})
+	@ApiOperation(httpMethod = "GET", value = "Returns all series")
+	@ApiResponses(value = { @ApiResponse(code = OK, message = "Success") })
 	@Transactional
-	public static Result get(){
+	public static Result get() {
 		Filter filter = null;
 		List<Series> results = find(filter);
 		return ResponseWrapper.okAsWrappedJsonArray(results, filter);
@@ -41,23 +35,18 @@ public class ApiSeries extends Controller {
 		SeriesRule rule = Factory.makeSeriesRule(JPA.em());
 		return rule.query(filter);
 	}
-	
-	@ApiOperation(
-			httpMethod = "GET", 
-			nickname = "read", 
-			value = "Returns a series by ID" 
-	)
-	@ApiResponses(value = {
-			@ApiResponse(code = OK, message = "Successful retrieval"),
-	})
+
+	@ApiOperation(httpMethod = "GET", value = "Returns a series by ID")
+	@ApiResponses(value = { @ApiResponse(code = OK, message = "Success"), })
 	@Transactional
 	public static Result read(
-			@ApiParam(value = "ID of the series", required = true) 
-			@PathParam("id") 
-			long id){
+			@ApiParam(value = "ID of the series", required = true)
+			@PathParam("id")
+			long id) {
 		Filter filter = null;
 		SeriesRule rule = Factory.makeSeriesRule(JPA.em());
-		Series result = rule.read(id, filter);;
+		Series result = rule.read(id, filter);
+		;
 		return ResponseWrapper.okAsWrappedJsonObject(result, filter);
 	}
 }

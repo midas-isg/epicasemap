@@ -9,7 +9,7 @@ import play.db.jpa.JPA;
 public class VizInput {
 	private String name;
 	private List<Long> seriesIds;
-	
+
 	public List<Long> getSeriesIds() {
 		return seriesIds;
 	}
@@ -41,9 +41,7 @@ public class VizInput {
 		if (input == null)
 			return null;
 
-		return input.stream()
-				.map(it -> it.getId())
-				.collect(toList());
+		return input.stream().map(it -> it.getId()).collect(toList());
 	}
 
 	public Viz toViz() {
@@ -61,8 +59,7 @@ public class VizInput {
 		if (ids == null)
 			return null;
 
-		return ids.stream()
-				.map(id -> JPA.em().find(Series.class, id))
+		return ids.stream().map(id -> JPA.em().find(Series.class, id))
 				.collect(toList());
 	}
 
@@ -71,4 +68,3 @@ public class VizInput {
 		return "VizInput [seriesIds=" + seriesIds + ", name=" + name + "]";
 	}
 }
-
