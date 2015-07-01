@@ -10,6 +10,7 @@ import org.junit.Test;
 import controllers.ApiLocation;
 import controllers.ApiSeries;
 import controllers.ApiTimeCoordinateSeries;
+import controllers.ApiViz;
 import controllers.Application;
 import controllers.Factory;
 import controllers.ResponseWrapper;
@@ -54,6 +55,7 @@ public class CoverageBooster extends TestCase {
 		new ApiSeries();
 		new ApiLocation();
 		new ApiTimeCoordinateSeries();
+		new ApiViz();
 	}
 
 	private void ignoreDefaultConstructorsForTests() {

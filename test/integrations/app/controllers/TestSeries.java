@@ -24,17 +24,17 @@ public class TestSeries {
 	
 	@BeforeClass
 	public static void populateDatabase(){
-		runWithTransaction(() -> persistNewSeries());
+		runWithTransaction(() -> theData = persistThenDetachNewSeries());
 	}
 	
-	private static Series persistNewSeries() {
+	static Series persistThenDetachNewSeries() {
 		EntityManager em = JPA.em();
-		theData = new Series();
-		theData.setId(1L);
-		theData.setName("name");
-		theData.setDescription("description");
-		em.persist(theData);
-		return theData;
+		final Series data = new Series();
+		data.setName("name");
+		data.setDescription("description");
+		em.persist(data);
+		em.detach(data);
+		return data;
 	}
 	
     @Test
