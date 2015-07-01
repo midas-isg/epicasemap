@@ -27,29 +27,18 @@ import play.mvc.Result;
 public class ApiViz extends Controller {
 	private static final String ex = "vizs.json";
 	private static final String exBody = "See an example of body at "
-			+ "<a href='assets/examples/api/" + ex + "'>"+ ex + "</a> ";
+			+ "<a href='assets/examples/api/" + ex + "'>" + ex + "</a> ";
 	public static final String type = "models.entities.VizInput";
-	
+
 	public static Form<VizInput> vizForm = Form.form(VizInput.class);
-	
-	@ApiOperation(
-		httpMethod = "POST", 
-		nickname = "create",
+
+	@ApiOperation(httpMethod = "POST", value = "Creates a new Viz", 
 		notes = "This endpoint creates a Viz using submitted JSON object in body "
 		+ "and returns the URI via the 'Location' Header in the response. "
-		+ "Currently, no content returns in the body. ",
-		value = "Creates a new Viz"
-	)
-	@ApiResponses(value = {
-		@ApiResponse(code = CREATED, message = "Successful creation")
-	})
-	@ApiImplicitParams({
-		@ApiImplicitParam(
-			required = true,
-			value = exBody,
-			dataType = type,
-			paramType = "body"
-		) 
+		+ "Currently, no content returns in the body. ")
+	@ApiResponses(value = { @ApiResponse(code = CREATED, message = "Success") })
+	@ApiImplicitParams({ 
+		@ApiImplicitParam(required = true, value = exBody, dataType = type, paramType = "body")
 	})
 	@Transactional
 	public static Result post() {
@@ -66,50 +55,29 @@ public class ApiViz extends Controller {
 		return data.getId();
 	}
 
-	@ApiOperation(
-		httpMethod = "GET", 
-		nickname = "read", 
-		value = "Returns the Viz by ID"
-	)
-	@ApiResponses(value = {
-		@ApiResponse(code = OK, message = "Successful retrieval")
-	})
+	@ApiOperation(httpMethod = "GET", value = "Returns the Viz by ID")
+	@ApiResponses(value = { @ApiResponse(code = OK, message = "Success") })
 	@Transactional
 	public static Result read(
 			@ApiParam(value = "ID of the Viz", required = true) 
 			@PathParam("id") 
-			long id
-	) {
+			long id) {
 		Viz data = JPA.em().find(Viz.class, id);
 		return okAsWrappedJsonObject(data, null);
 	}
-	
-	@ApiOperation(
-		httpMethod = "PUT", 
-		nickname = "update",
-		notes = "This endpoint does full update the given Viz "
-		+ "idientified by 'id' with submitted JSON object in body "
-		+ "and returns the URI via the 'Location' Header in the response. "
-		+ "Currently, no content in the body. ",
-		value = "Updates the Viz"
-	)
-	@ApiResponses(value = {
-		@ApiResponse(code = NO_CONTENT, message = "The Viz updated")
-	})
-	@ApiImplicitParams({
-		@ApiImplicitParam(
-			required = true,
-			value = exBody,
-			dataType = type,
-			paramType = "body"
-		) 
+
+	@ApiOperation(httpMethod = "PUT", value = "Updates the Viz", 
+			notes = "This endpoint does full update the given Viz "
+			+ "idientified by 'id' with submitted JSON object in body "
+			+ "and returns the URI via the 'Location' Header in the response. "
+			+ "Currently, no content in the body. ")
+	@ApiResponses(value = { @ApiResponse(code = NO_CONTENT, message = "Success") })
+	@ApiImplicitParams({ 
+		@ApiImplicitParam(required = true, value = exBody, dataType = type, paramType = "body") 
 	})
 	@Transactional
 	public static Result put(
-			@ApiParam(value = "ID of the Viz", required = true) 
-			@PathParam("id") 
-			long id
-	) {
+			@ApiParam(value = "ID of the Viz", required = true) @PathParam("id") long id) {
 		final VizInput input = vizForm.bindFromRequest().get();
 		final Viz data = input.toViz();
 		update(id, data);
@@ -123,24 +91,17 @@ public class ApiViz extends Controller {
 		data.setId(original.getId());
 		em.merge(data);
 	}
-	
-	@ApiOperation(
-			httpMethod = "DELETE", 
-			nickname = "delete",
+
+	@ApiOperation(httpMethod = "DELETE", value = "Deletes the Viz", 
 			notes = "This endpoint deletes the given Viz idientified by 'id' "
 			+ "and returns the URI via the 'Location' Header in the response. "
-			+ "Currently, no content in the body. ",
-			value = "Deletes the Viz"
-	)
-	@ApiResponses(value = {
-		@ApiResponse(code = NO_CONTENT, message = "The Viz updated")
-	})
+			+ "Currently, no content in the body. ")
+	@ApiResponses(value = { @ApiResponse(code = NO_CONTENT, message = "Success") })
 	@Transactional
 	public static Result delete(
-			@ApiParam(value = "ID of the Viz", required = true)
-			@PathParam("id")
-			long id
-	) {
+			@ApiParam(value = "ID of the Viz", required = true) 
+			@PathParam("id") 
+			long id) {
 		deleteById(id);
 		setResponseLocationFromRequest();
 		return noContent();
@@ -151,7 +112,7 @@ public class ApiViz extends Controller {
 		Viz data = em.find(Viz.class, id);
 		em.remove(data);
 	}
-	
+
 	private static void setResponseLocationFromRequest(String... tails) {
 		String url = makeUriFromRequest();
 		for (String tail : tails)

@@ -34,24 +34,25 @@ public class Helper {
 	public static <T> T wrapNoThrowingCheckedExecption(Function0<T> block) {
 		return Detour.wrapNoThrowingCheckedExecption(block);
 	}
-	
+
 	public static void assertNodeType(JsonNode node, JsonNodeType... expected) {
-		assertThat(node.getNodeType()).isIn((Object[])expected);
+		assertThat(node.getNodeType()).isIn((Object[]) expected);
 	}
-	
+
 	public static void assertAreEqual(Object actual, Object expected) {
 		assertThat(actual).isEqualTo(expected);
 	}
-	
+
 	public static JsonNode testJsonResponseMin(String url, int min) {
 		return testJsonResponseClosedInterval(url, min, null);
 	}
-	
+
 	public static JsonNode testJsonResponseLimit(String url, int limit) {
 		return testJsonResponseClosedInterval(url, limit, limit);
 	}
-	
-	private static JsonNode testJsonResponseClosedInterval(String url, int min, Integer max) {
+
+	private static JsonNode testJsonResponseClosedInterval(String url, int min,
+			Integer max) {
 		WSResponse response = Helper.get(url);
 		JsonNode root = response.asJson();
 		assertNodeType(root, OBJECT);
@@ -63,7 +64,7 @@ public class Helper {
 			assertThat(size).isLessThanOrEqualTo(max);
 		return root;
 	}
-	
+
 	public static JsonNode testJsonResponse(String url) {
 		WSResponse response = Helper.get(url);
 		JsonNode root = response.asJson();
@@ -72,7 +73,7 @@ public class Helper {
 		assertNodeType(result, OBJECT);
 		return root;
 	}
-	
+
 	public static void assertValueRange(JsonNode node, double max, double min) {
 		final double val = node.asDouble();
 		assertThat(val).isLessThanOrEqualTo(max);

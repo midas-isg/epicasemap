@@ -25,13 +25,14 @@ public class App {
 	public static App newWithInMemoryDb() {
 		return newWithInMemoryDb(false);
 	}
-	
+
 	public static App newWithInMemoryDbWithDbOpen() {
 		return newWithInMemoryDb(true);
 	}
 
 	public static App newWithInMemoryDb(boolean isKeptDatabaseOpen) {
-		return new App("test/resources/conf/test_in_memory_DB.conf", isKeptDatabaseOpen);
+		return new App("test/resources/conf/test_in_memory_DB.conf",
+				isKeptDatabaseOpen);
 	}
 
 	public static App doNotUseForBoostingupCoverageOnly(String path) {
@@ -41,7 +42,7 @@ public class App {
 			return null;
 		}
 	}
-	
+
 	private App(String testConfPathname) {
 		this(testConfPathname, false);
 	}
@@ -61,7 +62,7 @@ public class App {
 
 	@SuppressWarnings("unchecked")
 	private Map<String, Object> getMap(Map<String, Object> map, String key) {
-		return (Map<String, Object>)map.get(key);
+		return (Map<String, Object>) map.get(key);
 	}
 
 	public void runWithTransaction(Callback0 callback) {
@@ -69,7 +70,7 @@ public class App {
 			callback.invoke();
 			return null;
 		};
-		
+
 		running(fakeApp, () -> Helper.wrapTransaction(f));
 	}
 

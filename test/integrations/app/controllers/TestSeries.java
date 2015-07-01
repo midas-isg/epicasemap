@@ -21,12 +21,12 @@ import play.mvc.Result;
 
 public class TestSeries {
 	private static Series theData;
-	
+
 	@BeforeClass
-	public static void populateDatabase(){
+	public static void populateDatabase() {
 		runWithTransaction(() -> theData = persistThenDetachNewSeries());
 	}
-	
+
 	static Series persistThenDetachNewSeries() {
 		EntityManager em = JPA.em();
 		final Series data = new Series();
@@ -36,17 +36,17 @@ public class TestSeries {
 		em.detach(data);
 		return data;
 	}
-	
-    @Test
-    public void createSeries() {
+
+	@Test
+	public void createSeries() {
 		runWithTransaction(() -> testCreateSeries());
-    }
-    
+	}
+
 	private void testCreateSeries() {
 		testReadSeries(theData);
 	}
 
-	private void testReadSeries( Series expected) {
+	private void testReadSeries(Series expected) {
 		long id = expected.getId();
 		final Result response = ApiSeries.get();
 		final String content = contentAsString(response);
@@ -56,7 +56,7 @@ public class TestSeries {
 		assertThat(data0.get("id").asLong()).isEqualTo(id);
 	}
 
-    private static void runWithTransaction(Callback0 callback) {
+	private static void runWithTransaction(Callback0 callback) {
 		App.newWithInMemoryDbWithDbOpen().runWithTransaction(callback);
 	}
 }

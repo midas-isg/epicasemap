@@ -39,7 +39,7 @@ public class CoverageBooster extends TestCase {
 	}
 
 	private void ignoreAppKeyEnum() throws Exception {
-		for(AppKey key : AppKey.values()){
+		for (AppKey key : AppKey.values()) {
 			AppKey.valueOf(key.name());
 		}
 	}
@@ -64,4 +64,3 @@ public class CoverageBooster extends TestCase {
 		new Server();
 	}
 }
-
