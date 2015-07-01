@@ -8,6 +8,7 @@ import java.util.Map;
 
 import play.Configuration;
 import play.libs.F.Callback0;
+import play.libs.F.Function0;
 import play.test.FakeApplication;
 import suites.Helper;
 
@@ -64,7 +65,12 @@ public class App {
 	}
 
 	public void runWithTransaction(Callback0 callback) {
-		running(fakeApp, () -> Helper.wrapTransaction(callback));
+		Function0<Void> f = () -> {
+			callback.invoke();
+			return null;
+		};
+		
+		running(fakeApp, () -> Helper.wrapTransaction(f));
 	}
 
 	private Map<String, Object> readConf(String pathname) {
