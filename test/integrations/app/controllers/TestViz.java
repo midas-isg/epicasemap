@@ -41,6 +41,11 @@ public class TestViz {
 		return data;
 	}
 	
+	@Test
+	public void correctTypeName() throws Exception {
+		assertAreEqual(ApiViz.type, VizInput.class.getName());
+	}
+	
     @Test
 	public void create() {
 		runWithTransaction(() -> testCreate());

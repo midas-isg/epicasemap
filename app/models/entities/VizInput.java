@@ -6,7 +6,8 @@ import java.util.List;
 
 import play.db.jpa.JPA;
 
-public class VizInput extends Viz {
+public class VizInput {
+	private String name;
 	private List<Long> seriesIds;
 	
 	public List<Long> getSeriesIds() {
@@ -17,13 +18,20 @@ public class VizInput extends Viz {
 		this.seriesIds = seriesIds;
 	}
 
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
 	public static VizInput from(Viz data) {
 		VizInput result = new VizInput();
 		return result.fromViz(data);
 	}
 
 	private VizInput fromViz(Viz data) {
-		setId(data.getId());
 		setName(data.getName());
 		setSeriesIds(toIds(data.getAllSeries()));
 		return this;
@@ -40,7 +48,6 @@ public class VizInput extends Viz {
 
 	public Viz toViz() {
 		Viz result = new Viz();
-		result.setId(getId());
 		result.setName(getName());
 		final List<Long> ids = getSeriesIds();
 		if (ids == null)
@@ -61,8 +68,7 @@ public class VizInput extends Viz {
 
 	@Override
 	public String toString() {
-		return "VizInput [seriesIds=" + seriesIds + ", getId()=" + getId()
-				+ ", getName()=" + getName() + "]";
+		return "VizInput [seriesIds=" + seriesIds + ", name=" + name + "]";
 	}
 }
 
