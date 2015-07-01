@@ -5,7 +5,6 @@ import static com.fasterxml.jackson.databind.node.JsonNodeType.OBJECT;
 import static org.fest.assertions.Assertions.assertThat;
 import interactors.ConfRule;
 import play.db.jpa.JPA;
-import play.libs.F.Callback0;
 import play.libs.F.Function0;
 import play.libs.ws.WS;
 import play.libs.ws.WSResponse;
@@ -28,13 +27,8 @@ public class Helper {
 		return conf.readString("application.context");
 	}
 
-	public static void wrapTransaction(Callback0 block) {
-		Function0<Void> f = () -> {
-			block.invoke();
-			return null;
-		};
-		
-		wrapNoThrowingCheckedExecption(() -> JPA.withTransaction(f));
+	public static <T> T wrapTransaction(Function0<T> block) {
+		return wrapNoThrowingCheckedExecption(() -> JPA.withTransaction(block));
 	}
 
 	public static <T> T wrapNoThrowingCheckedExecption(Function0<T> block) {

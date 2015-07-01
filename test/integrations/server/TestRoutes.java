@@ -6,6 +6,8 @@ public class TestRoutes {
     @Test // @Ignore("to run test faster")
     public void allRoutes() {
     	Runnable[] tests = {
+    		VizEndpointTester.crud(),
+    		
     		LocationEndpointTester.read(),
     		
    			SeriesEndpointTester.read(),	
