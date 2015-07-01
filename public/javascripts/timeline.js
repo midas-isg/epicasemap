@@ -180,13 +180,13 @@ timeline.js
 				
 				if(thisMap.latestDate < thisMap.dataset[datasetID].buffer[frame].date) {
 					thisMap.latestDate = thisMap.dataset[datasetID].buffer[frame].date;
-					thisMap.frameCount = frame + 1;
 				}
 				
 				thisMap.seriesToLoad.shift();
 				if(thisMap.seriesToLoad.length == 0) {
 					for(i = 0; i < thisMap.dataset.length; i++) {
 						deltaTime = thisMap.dataset[i].buffer[0].date.valueOf() - thisMap.earliestDate.valueOf();
+						thisMap.frameCount = Math.floor((thisMap.latestDate.valueOf() - thisMap.earliestDate.valueOf()) / threshold) + 1;
 						
 						if(deltaTime != 0) {
 							thisMap.dataset[i].frameOffset = Math.floor(deltaTime / threshold);
@@ -258,13 +258,13 @@ timeline.js
 					enabled: false
 				},
 				title: {
-					text: 'Data Comparison',
+					text: null, //'Data Comparison',
 					style: {
 						color: 'rgba(0, 128, 128, 255)'
 					}
 				},
 				subtitle: {
-					text: 'Select an area by dragging across the lower chart',
+					text: null, //'Select an area by dragging across the lower chart',
 					style: {
 						color: 'rgba(0, 128, 128, 255)'
 					}
@@ -403,6 +403,10 @@ timeline.js
 								startFrame = 0;
 							}
 							
+							if(endFrame > (MAGIC_MAP.frameCount - 1)) {
+								endFrame = (MAGIC_MAP.frameCount - 1);
+							}
+							
 							//console.log(startFrame + "->" + (startFrame + detailSeries[0].detailData.length));
 							//MAGIC_MAP.playSection(startFrame, startFrame + detailSeries[0].detailData.length);
 							console.log(startFrame + "->" + endFrame);
@@ -535,23 +539,34 @@ timeline.js
 		return;
 	}
 
-	MagicMap.prototype.playBuffer = function() {
+	MagicMap.prototype.playBuffer = function(startFrame, endFrame) {
 		var i,
 		setID,
-		setFrame;
+		setFrame,
+		currentDate,
+		dateString,
+		adjustedStart,
+		adjustedEnd;
 		
 		for(setID = 0; setID < this.dataset.length; setID++){
 			setFrame = this.frame - this.dataset[setID].frameOffset;
+			adjustedStart = startFrame - this.dataset[setID].frameOffset;
+			adjustedEnd = endFrame - this.dataset[setID].frameOffset;
 			
 			if(this.dataset[setID].buffer[setFrame]) {
 				for(i = 0; i < this.dataset[setID].buffer[setFrame].coordinates.length; i++) {
 					this.set[setID].visiblePoints.push([this.dataset[setID].buffer[setFrame].coordinates[i].latitude,
 						this.dataset[setID].buffer[setFrame].coordinates[i].longitude,
 						1.0]);
-						//this.dataset[setID].frameAggregate[setFrame] / this.dataset[setID].maxValue]); //TODO: values should affect radius -not alpha coloring
+					
+					//this.dataset[setID].frameAggregate[setFrame] / this.dataset[setID].maxValue]); //TODO: values should affect radius -not alpha coloring
 				}
 				
 				if(this.playBack) {
+					currentDate = this.dataset[setID].buffer[setFrame].date;
+					dateString = (currentDate.getUTCMonth() + 1) + '/' + currentDate.getUTCDate() + '/' + currentDate.getUTCFullYear();
+					$("#current-date").text(dateString);
+					
 					for(i = 0; i < this.set[setID].visiblePoints.length; i++) {
 						if(this.set[setID].visiblePoints[i][2] > 0.00) {
 							this.set[setID].visiblePoints[i][2] -= 0.01;
@@ -561,6 +576,13 @@ timeline.js
 							i--;
 						}
 					}
+				}
+				else if(this.dataset[setID].buffer[adjustedStart] && this.dataset[setID].buffer[adjustedEnd]) {
+					currentDate = this.dataset[setID].buffer[adjustedStart].date;
+					dateString = (currentDate.getUTCMonth() + 1) + '/' + currentDate.getUTCDate() + '/' + currentDate.getUTCFullYear() + " - ";
+					currentDate = this.dataset[setID].buffer[adjustedEnd].date;
+					dateString += (currentDate.getUTCMonth() + 1) + '/' + currentDate.getUTCDate() + '/' + currentDate.getUTCFullYear();
+					$("#current-date").text(dateString);
 				}
 			}
 		}
@@ -595,7 +617,7 @@ timeline.js
 		}
 		
 		for(i = startFrame; i <= endFrame; i++) {
-			this.playBuffer();
+			this.playBuffer(startFrame, endFrame);
 		}
 		
 		this.packHeat();
