@@ -12,11 +12,14 @@ import static suites.Helper.assertAreEqual;
 import static suites.Helper.assertNodeType;
 import static suites.Helper.testJsonResponse;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import models.entities.Series;
 import models.entities.VizInput;
+import play.libs.Json;
 import play.libs.ws.WS;
 import play.libs.ws.WSResponse;
 import suites.Helper;
@@ -34,22 +37,22 @@ public class VizEndpointTester {
 	}
 	
 	private void testCrud() {
-		final VizInput data = testCreate();
+		final Tuple data = testCreate();
 		testRead(data);
 		testUpdate(data);
-		testDelete(data.getId());
+		testDelete(data.id);
 	}
 
-	private void testUpdate(VizInput data) {
-		long id = data.getId();
-		final String url = urlWithId(id);
+	private void testUpdate(Tuple pair) {
+		final String url = urlWithId(pair.id);
 		final String name = "update name";
+		VizInput data = pair.input;
 		data.setName(name);
 		WSResponse update = WS.url(url).put(toJson(data)).get(timeout);
 		assertAreEqual(update.getStatus(), NO_CONTENT);
 	}
 
-	private VizInput testCreate() {
+	private Tuple testCreate() {
 		VizInput input = new VizInput();
 		List<Series> all = 	Helper.wrapTransaction(() -> {
 			return ApiSeries.find(null);
@@ -59,6 +62,9 @@ public class VizEndpointTester {
 		final List<Long> list = all.subList(0, 2).stream().map(it -> it.getId()).collect(Collectors.toList());
 		input.setSeriesIds(list);
 		input.setName("Test first 2 Series");
+		String msg = Json.toJson(input) + "";
+		Helper.wrapNoThrowingCheckedExecption(() -> Files.write(Paths.get("./public/examples/" + basePath + ".json"), msg.getBytes()));
+	
 		
 		final String url = baseUrl();
 		WSResponse create = WS.url(url).post(toJson(input)).get(timeout);
@@ -67,12 +73,15 @@ public class VizEndpointTester {
 		long id = toId(location);
 		final String path = append(basePath, id);
 		assertThat(location).endsWith(path);
-		input.setId(id);
-		return input;
+		Tuple pair = new Tuple();
+		pair.id = id;
+		pair.input = input;
+		return pair;
 	}
 
-	private void testRead(VizInput expected) {
-		long id = expected.getId();
+	private void testRead(Tuple pair) {
+		long id = pair.id;
+		VizInput expected = pair.input;
 		final String urlWithId = urlWithId(id);
 		final JsonNode root = testJsonResponse(urlWithId);
 		assertNodeType(root.get("filter"), NULL);
@@ -115,5 +124,10 @@ public class VizEndpointTester {
 		final String[] tokens = location.split("/");
 		String number = tokens[tokens.length - 1];
 		return Long.parseLong(number);
+	}
+	
+	private static class Tuple {
+		public Long id;
+		public VizInput input;
 	}
 }
