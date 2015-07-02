@@ -2,7 +2,7 @@ package interactors;
 
 import gateways.database.VizDao;
 import models.entities.Viz;
-import models.views.VizInput;
+import models.view.VizInput;
 
 public class VizRule extends CrudRule<Viz> {
 	private VizDao dao;

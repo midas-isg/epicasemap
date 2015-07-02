@@ -15,7 +15,7 @@ import javax.persistence.EntityManager;
 
 import models.entities.Series;
 import models.entities.Viz;
-import models.views.VizInput;
+import models.view.VizInput;
 
 import org.junit.Test;
 

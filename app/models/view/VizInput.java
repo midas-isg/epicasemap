@@ -1,4 +1,4 @@
-package models.views;
+package models.view;
 
 import static java.util.stream.Collectors.toList;
 
