@@ -1,9 +1,20 @@
 package controllers;
 
 import static controllers.ResponseWrapper.okAsWrappedJsonObject;
+import interactors.VizRule;
 
-import javax.persistence.EntityManager;
 import javax.ws.rs.PathParam;
+
+import models.entities.Viz;
+import models.entities.VizInput;
+import models.entities.filters.Filter;
+import play.data.Form;
+import play.db.jpa.JPA;
+import play.db.jpa.Transactional;
+import play.mvc.Controller;
+import play.mvc.Http.Context;
+import play.mvc.Http.Request;
+import play.mvc.Result;
 
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiImplicitParam;
@@ -12,16 +23,6 @@ import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
-
-import models.entities.Viz;
-import models.entities.VizInput;
-import play.data.Form;
-import play.db.jpa.JPA;
-import play.db.jpa.Transactional;
-import play.mvc.Controller;
-import play.mvc.Http.Context;
-import play.mvc.Http.Request;
-import play.mvc.Result;
 
 @Api(value = "/vizs", description = "Endpoints for Vizs", hidden = false)
 public class ApiViz extends Controller {
@@ -50,11 +51,8 @@ public class ApiViz extends Controller {
 		return created();
 	}
 
-	public static long create(VizInput input) {
-		final EntityManager em = JPA.em();
-		final Viz data = input.toViz();
-		em.persist(data);
-		return data.getId();
+	public static long create(VizInput data) {
+		return makeRule().create(data);
 	}
 
 	@ApiOperation(httpMethod = "GET", nickname = "read", value = "Returns the Viz by ID")
@@ -64,8 +62,9 @@ public class ApiViz extends Controller {
 			@ApiParam(value = "ID of the Viz", required = true) 
 			@PathParam("id") 
 			long id) {
-		Viz data = JPA.em().find(Viz.class, id);
-		return okAsWrappedJsonObject(data, null);
+		Viz data = makeRule().read(id);
+		Filter filter = null;
+		return okAsWrappedJsonObject(data, filter);
 	}
 
 	@ApiOperation(httpMethod = "PUT", nickname = "update", value = "Updates the Viz", 
@@ -89,10 +88,7 @@ public class ApiViz extends Controller {
 	}
 
 	public static void update(long id, Viz data) {
-		final EntityManager em = JPA.em();
-		Viz original = em.find(Viz.class, id);
-		data.setId(original.getId());
-		em.merge(data);
+		makeRule().update(id, data);
 	}
 
 	@ApiOperation(httpMethod = "DELETE", nickname = "delete", value = "Deletes the Viz", 
@@ -113,9 +109,7 @@ public class ApiViz extends Controller {
 	}
 
 	public static void deleteById(long id) {
-		final EntityManager em = JPA.em();
-		Viz data = em.find(Viz.class, id);
-		em.remove(data);
+		makeRule().delete(id);
 	}
 
 	private static void setResponseLocationFromRequest(String... tails) {
@@ -128,5 +122,9 @@ public class ApiViz extends Controller {
 	private static String makeUriFromRequest() {
 		Request request = Context.current().request();
 		return request.getHeader(ORIGIN) + request.path();
+	}
+	
+	private static VizRule makeRule() {
+		return Factory.makeVizRule(JPA.em());
 	}
 }

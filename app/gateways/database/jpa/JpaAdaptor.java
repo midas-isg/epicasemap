@@ -16,6 +16,7 @@ import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
+import models.entities.Entity;
 import models.entities.filters.Filter;
 import models.entities.filters.Pagination;
 import models.entities.filters.TimestampRange;
@@ -112,9 +113,25 @@ public class JpaAdaptor {
 		CriteriaQuery<T> criteriaQuery = criteriaBuilder.createQuery(clazz);
 		return criteriaQuery;
 	}
+	
+	public <T> T create(T data) {
+		em.persist(data);
+		return data;
+	}
 
-	public <T> T find(Class<T> clazz, long id) {
-		T result = em.find(clazz, id);
-		return result;
+	public <T> T read(Class<T> clazz, long id) {
+		return em.find(clazz, id);
+	}
+
+	public <T> void delete(Class<T> clazz, long id) {
+		T data = em.find(clazz, id);
+		em.remove(data);
+	}
+
+	public <T extends Entity> T update(Class<T> clazz, long id, T data) {
+		T original = em.find(clazz, id);
+		data.setId(original.getId());
+		em.merge(data);
+		return data;
 	}
 }

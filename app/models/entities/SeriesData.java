@@ -9,7 +9,7 @@ import javax.persistence.Table;
 
 @Entity
 @Table(name = "series_data")
-public class SeriesData {
+public class SeriesData implements models.entities.Entity {
 	@Id
 	private Long id;
 	@ManyToOne
@@ -19,10 +19,12 @@ public class SeriesData {
 	private Date timestamp;
 	private Double value;
 	
+	@Override
 	public Long getId() {
 		return id;
 	}
 	
+	@Override
 	public void setId(Long id) {
 		this.id = id;
 	}

@@ -84,7 +84,7 @@ public class TestWithDatabase {
 	}
 
 	private void testReadCoordinate(EntityManager em, long id) {
-		Coordinate data = Factory.makeCoordinateDao(em).find(id);
+		Coordinate data = Factory.makeCoordinateDao(em).read(id);
 		assertThat(data.getId()).isEqualTo(id);
 	}
 
