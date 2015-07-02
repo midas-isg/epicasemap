@@ -32,8 +32,7 @@ public class ApiSeries extends Controller {
 
 	@Transactional
 	public static List<Series> find(Filter filter) {
-		SeriesRule rule = Factory.makeSeriesRule(JPA.em());
-		return rule.query(filter);
+		return makeRule().query(filter);
 	}
 
 	@ApiOperation(httpMethod = "GET", nickname = "read", value = "Returns the Series by ID")
@@ -43,10 +42,12 @@ public class ApiSeries extends Controller {
 			@ApiParam(value = "ID of the series", required = true)
 			@PathParam("id")
 			long id) {
+		Series result = makeRule().read(id);
 		Filter filter = null;
-		SeriesRule rule = Factory.makeSeriesRule(JPA.em());
-		Series result = rule.read(id, filter);
-		;
 		return ResponseWrapper.okAsWrappedJsonObject(result, filter);
+	}
+
+	public static SeriesRule makeRule() {
+		return Factory.makeSeriesRule(JPA.em());
 	}
 }
