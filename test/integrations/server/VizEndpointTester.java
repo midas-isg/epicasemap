@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import models.entities.Series;
-import models.entities.VizInput;
+import models.views.VizInput;
 import play.libs.Json;
 import play.libs.ws.WS;
 import play.libs.ws.WSResponse;

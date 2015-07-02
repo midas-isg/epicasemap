@@ -1,9 +1,11 @@
-package models.entities;
+package models.views;
 
 import static java.util.stream.Collectors.toList;
 
 import java.util.List;
 
+import models.entities.Series;
+import models.entities.Viz;
 import play.db.jpa.JPA;
 
 public class VizInput {
