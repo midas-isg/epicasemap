@@ -1,11 +1,11 @@
 package integrations.app.controllers;
 
-import static com.fasterxml.jackson.databind.node.JsonNodeType.ARRAY;
-import static com.fasterxml.jackson.databind.node.JsonNodeType.NULL;
 import static org.fest.assertions.Assertions.assertThat;
 import static play.test.Helpers.contentAsString;
 import static suites.Helper.assertAreEqual;
-import static suites.Helper.assertNodeType;
+import static suites.Helper.assertArrayNode;
+import static suites.Helper.assertTextNode;
+import static suites.Helper.detachThenAssertWithDatabase;
 import integrations.app.App;
 
 import java.util.ArrayList;
@@ -92,7 +92,7 @@ public class TestViz {
 			data.setId(id);
 		});
 
-		runWithTransaction(() -> detachThenAssertWithDatabase(data));
+		runWithTransaction(() -> detachAndAssertWithDatabase(data));
 	}
 
 	private <T> List<T> asList(@SuppressWarnings("unchecked") T... ts) {
@@ -117,11 +117,11 @@ public class TestViz {
 	private Viz testCreate(Viz newData) {
 		final long id = actCreate(newData);
 		newData.setId(id);
-		detachThenAssertWithDatabase(newData);
+		detachAndAssertWithDatabase(newData);
 		return newData;
 	}
 
-	private void detachThenAssertWithDatabase(Viz expected) {
+	private void detachAndAssertWithDatabase(Viz expected) {
 		detachThenAssertWithDatabase(expected.getId(), expected);
 	}
 
@@ -144,15 +144,6 @@ public class TestViz {
 				Series.class);
 	}
 
-	private <T> void assertArrayNode(JsonNode actualList, List<T> expected,
-			Class<T> clazz) {
-		assertNodeType(actualList, ARRAY);
-		for (int i = 0; i < expected.size(); i++) {
-			Object actual = Json.fromJson(actualList.get(i), clazz);
-			assertAreEqual(actual, expected.get(i));
-		}
-	}
-
 	private void testUpdate(long id) {
 		Viz dataToUpdate = new Viz();
 		dataToUpdate.setName("name");
@@ -166,20 +157,5 @@ public class TestViz {
 		final EntityManager em = JPA.em();
 		Viz del = em.find(Viz.class, id);
 		assertThat(del).isNull();
-	}
-
-	private void detachThenAssertWithDatabase(long id, Viz expected) {
-		EntityManager em = JPA.em();
-		em.detach(expected);
-
-		Viz found = em.find(Viz.class, id);
-		assertAreEqual(found, expected);
-	}
-
-	private void assertTextNode(JsonNode actual, String expected) {
-		if (expected == null)
-			assertNodeType(actual, NULL);
-		else
-			assertAreEqual(actual.asText(), expected);
 	}
 }

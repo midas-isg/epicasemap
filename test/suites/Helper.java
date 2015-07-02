@@ -1,11 +1,18 @@
 package suites;
 
 import static com.fasterxml.jackson.databind.node.JsonNodeType.ARRAY;
+import static com.fasterxml.jackson.databind.node.JsonNodeType.NULL;
 import static com.fasterxml.jackson.databind.node.JsonNodeType.OBJECT;
 import static org.fest.assertions.Assertions.assertThat;
 import interactors.ConfRule;
+
+import java.util.List;
+
+import javax.persistence.EntityManager;
+
 import play.db.jpa.JPA;
 import play.libs.F.Function0;
+import play.libs.Json;
 import play.libs.ws.WS;
 import play.libs.ws.WSResponse;
 import _imperfactcoverage.Detour;
@@ -78,5 +85,31 @@ public class Helper {
 		final double val = node.asDouble();
 		assertThat(val).isLessThanOrEqualTo(max);
 		assertThat(val).isGreaterThanOrEqualTo(min);
+	}
+
+	public static <T> void assertArrayNode(JsonNode actuals, List<T> expected,
+			Class<T> clazz) {
+		assertNodeType(actuals, ARRAY);
+		for (int i = 0; i < expected.size(); i++) {
+			Object actual = Json.fromJson(actuals.get(i), clazz);
+			assertAreEqual(actual, expected.get(i));
+		}
+	}
+
+	public static void assertTextNode(JsonNode actual, String expected) {
+		if (expected == null)
+			assertNodeType(actual, NULL);
+		else
+			assertAreEqual(actual.asText(), expected);
+	}
+
+	public static <T> void detachThenAssertWithDatabase(long id, T expected) {
+		EntityManager em = JPA.em();
+		em.detach(expected);
+
+		@SuppressWarnings("unchecked")
+		final Class<T> clazz = (Class<T>) expected.getClass();
+		T found = em.find(clazz, id);
+		assertAreEqual(found, expected);
 	}
 }

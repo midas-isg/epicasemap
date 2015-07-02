@@ -1,11 +1,17 @@
 package suites;
 
+import static java.util.Arrays.asList;
+import static suites.Helper.assertArrayNode;
 import gateways.configuration.AppKey;
 import gateways.database.jpa.JpaAdaptor;
 import integrations.app.App;
 import integrations.server.Server;
 
 import org.junit.Test;
+
+import play.libs.Json;
+
+import com.fasterxml.jackson.databind.JsonNode;
 
 import controllers.ApiLocation;
 import controllers.ApiSeries;
@@ -26,6 +32,15 @@ public class CoverageBooster extends TestCase {
 				Factory.class
 		);
 		Application.swagger();
+		testHelper();
+	}
+
+	private void testHelper() {
+		String[] texts = new String[]{"a", "b"};
+		final JsonNode json = Json.toJson(texts);
+		assertArrayNode(json, asList(texts), String.class);
+		
+		Helper.assertTextNode(json.get(0), "a");
 	}
 
 	private void testPrivateConstructors(Class<?>... classes) throws Exception {
