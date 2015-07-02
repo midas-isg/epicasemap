@@ -7,7 +7,7 @@ import javax.ws.rs.PathParam;
 
 import models.entities.Viz;
 import models.entities.filters.Filter;
-import models.views.VizInput;
+import models.view.VizInput;
 import play.data.Form;
 import play.db.jpa.JPA;
 import play.db.jpa.Transactional;
@@ -29,7 +29,7 @@ public class ApiViz extends Controller {
 	private static final String ex = "vizs.json";
 	private static final String exBody = "See an example of body at "
 			+ "<a href='assets/examples/api/" + ex + "'>" + ex + "</a> ";
-	public static final String type = "models.entities.VizInput";
+	public static final String type = "models.view.VizInput";
 
 	public static Form<VizInput> vizForm = Form.form(VizInput.class);
 
