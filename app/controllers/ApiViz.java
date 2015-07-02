@@ -6,8 +6,8 @@ import interactors.VizRule;
 import javax.ws.rs.PathParam;
 
 import models.entities.Viz;
-import models.entities.VizInput;
 import models.entities.filters.Filter;
+import models.views.VizInput;
 import play.data.Form;
 import play.db.jpa.JPA;
 import play.db.jpa.Transactional;
