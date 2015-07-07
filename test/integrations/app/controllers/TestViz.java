@@ -2,13 +2,13 @@ package integrations.app.controllers;
 
 import static org.fest.assertions.Assertions.assertThat;
 import static play.test.Helpers.contentAsString;
+import static suites.Helper.asList;
 import static suites.Helper.assertAreEqual;
 import static suites.Helper.assertArrayNode;
 import static suites.Helper.assertTextNode;
 import static suites.Helper.detachThenAssertWithDatabase;
 import integrations.app.App;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -95,13 +95,6 @@ public class TestViz {
 		runWithTransaction(() -> detachAndAssertWithDatabase(data));
 	}
 
-	private <T> List<T> asList(@SuppressWarnings("unchecked") T... ts) {
-		List<T> list = new ArrayList<>();
-		for (T t : ts)
-			list.add(t);
-		return list;
-	}
-
 	private void testCrud() {
 		Viz data = testCreate();
 		testRead(data);
@@ -126,7 +119,7 @@ public class TestViz {
 	}
 
 	private long actCreate(Viz newData) {
-		VizInput input = VizInput.from(newData);
+		VizInput input = ApiViz.from(newData);
 		return ApiViz.create(input);
 	}
 

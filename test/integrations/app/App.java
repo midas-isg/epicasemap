@@ -23,16 +23,15 @@ public class App {
 	}
 
 	public static App newWithInMemoryDb() {
-		return newWithInMemoryDb(false);
+		return newWithInMemoryDb("");
 	}
 
 	public static App newWithInMemoryDbWithDbOpen() {
-		return newWithInMemoryDb(true);
+		return newWithInMemoryDb("keep");
 	}
 
-	public static App newWithInMemoryDb(boolean isKeptDatabaseOpen) {
-		return new App("test/resources/conf/test_in_memory_DB.conf",
-				isKeptDatabaseOpen);
+	public static App newWithInMemoryDb(String uid) {
+		return new App("test/resources/conf/test_in_memory_DB.conf", uid);
 	}
 
 	public static App doNotUseForBoostingupCoverageOnly(String path) {
@@ -44,20 +43,25 @@ public class App {
 	}
 
 	private App(String testConfPathname) {
-		this(testConfPathname, false);
+		this(testConfPathname, "");
 	}
 
-	private App(String testConfPathname, boolean isKeptDatabaseOpen) {
+	private App(String testConfPathname, String uid) {
 		Map<String, Object> configurationMap = readConf(testConfPathname);
-		if (isKeptDatabaseOpen)
-			KeepDatabaseOpen(configurationMap);
+		keepDatabaseOpen(configurationMap, uid);
 		fakeApp = fakeApplication(configurationMap);
 	}
 
-	private void KeepDatabaseOpen(Map<String, Object> originalMap) {
+	public FakeApplication getFakeApp() {
+		return fakeApp;
+	}
+
+	private void keepDatabaseOpen(Map<String, Object> originalMap, String uid) {
+		if (uid == null || uid.isEmpty())
+			return;
 		Map<String, Object> map = getMap(getMap(originalMap, "db"), "default");
 		String url = (String) map.get("url");
-		map.put("url", url + "-keep;DB_CLOSE_DELAY=-1");
+		map.put("url", url + "-" + uid + ";DB_CLOSE_DELAY=-1");
 	}
 
 	@SuppressWarnings("unchecked")

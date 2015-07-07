@@ -39,7 +39,10 @@ public class Factory {
 	
 	public static VizRule makeVizRule(EntityManager em) {
 		VizDao dao = new VizDao(em);
-		return new VizRule(dao);
+		VizRule vizRule = new VizRule(dao);
+		final SeriesRule rule = makeSeriesRule(em);
+		vizRule.setSeriesRule(rule);
+		return vizRule;
 	}
 }
 
