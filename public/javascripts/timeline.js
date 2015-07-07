@@ -543,10 +543,6 @@ timeline.js
 		adjustedStart,
 		adjustedEnd;
 		
-		if(endFrame) {
-			console.log((endFrame - startFrame) + " frames");
-		}
-		
 		for(setID = 0; setID < this.dataset.length; setID++) {
 			setFrame = this.frame - this.dataset[setID].frameOffset;
 			adjustedStart = startFrame - this.dataset[setID].frameOffset;
@@ -554,16 +550,10 @@ timeline.js
 			
 			if(this.dataset[setID].buffer[setFrame]) {
 				for(i = 0; i < this.dataset[setID].buffer[setFrame].point.length; i++) {
-					this.set[setID].visiblePoints.push([this.dataset[setID].buffer[setFrame].point[i].latitude,
-						this.dataset[setID].buffer[setFrame].point[i].longitude,
-						(this.dataset[setID].buffer[setFrame].point[i].value / this.dataset[setID].maxValue)]);
-					
-					if(this.dataset[setID].seriesID === 259){
-						if(i === 0) {
-							console.log("Frame " + setFrame);
-							console.log(this.set[setID].visiblePoints);
-						}
-						console.log("Buffer[" + i + "]: " + this.dataset[setID].buffer[setFrame].point[i].value);
+					if(this.dataset[setID].buffer[setFrame].point[i].value > 0) {
+						this.set[setID].visiblePoints.push([this.dataset[setID].buffer[setFrame].point[i].latitude,
+							this.dataset[setID].buffer[setFrame].point[i].longitude,
+							(this.dataset[setID].buffer[setFrame].point[i].value / this.dataset[setID].maxValue)]);
 					}
 				}
 				
@@ -580,7 +570,6 @@ timeline.js
 					$("#current-date").text(dateString);
 				}
 			}
-			//else { console.log("Empty(?) Frame " + setFrame); console.log(this.dataset[setID].buffer[setFrame]); }
 			
 			if(this.playBack) {
 				for(i = 0; i < this.set[setID].visiblePoints.length; i++) {
@@ -624,6 +613,8 @@ timeline.js
 			this.set[i].visiblePoints.length = 0; //hopefully the old data is garbage collected!
 		}
 		
+console.log((endFrame - startFrame) + " frames");
+		
 		for(i = startFrame; i <= endFrame; i++) {
 			this.playBuffer(startFrame, endFrame);
 		}
@@ -645,8 +636,9 @@ timeline.js
 					}
 				).addTo(this.map));
 			}
-			
-			this.heat[setID].setLatLngs(this.set[setID].visiblePoints);
+			else {
+				this.heat[setID].setLatLngs(this.set[setID].visiblePoints);
+			}
 //console.log(this.heat[setID]._latlngs);
 		}
 		
