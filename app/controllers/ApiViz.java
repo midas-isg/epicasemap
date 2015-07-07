@@ -81,7 +81,7 @@ public class ApiViz extends Controller {
 	public static Result put(
 			@ApiParam(value = "ID of the Viz", required = true) @PathParam("id") long id) {
 		final VizInput input = vizForm.bindFromRequest().get();
-		final Viz data = input.toViz();
+		final Viz data = makeRule().toViz(input);
 		update(id, data);
 		setResponseLocationFromRequest();
 		return noContent();
@@ -126,5 +126,9 @@ public class ApiViz extends Controller {
 	
 	private static VizRule makeRule() {
 		return Factory.makeVizRule(JPA.em());
+	}
+
+	public static VizInput from(Viz data) {
+		return makeRule().fromViz(data);
 	}
 }

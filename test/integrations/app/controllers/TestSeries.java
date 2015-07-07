@@ -1,7 +1,7 @@
 package integrations.app.controllers;
 
 import static org.fest.assertions.Assertions.assertThat;
-import static play.test.Helpers.*;
+import static play.test.Helpers.contentAsString;
 import integrations.app.App;
 
 import javax.persistence.EntityManager;
@@ -11,13 +11,14 @@ import models.entities.Series;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import play.db.jpa.JPA;
+import play.libs.F.Callback0;
+import play.libs.Json;
+import play.mvc.Result;
+
 import com.fasterxml.jackson.databind.JsonNode;
 
 import controllers.ApiSeries;
-import play.db.jpa.JPA;
-import play.libs.Json;
-import play.libs.F.Callback0;
-import play.mvc.Result;
 
 public class TestSeries {
 	private static Series theData;
@@ -57,6 +58,7 @@ public class TestSeries {
 	}
 
 	private static void runWithTransaction(Callback0 callback) {
-		App.newWithInMemoryDbWithDbOpen().runWithTransaction(callback);
+		final String className = TestSeries.class.getName();
+		App.newWithInMemoryDb(className).runWithTransaction(callback);
 	}
 }
