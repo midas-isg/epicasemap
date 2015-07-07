@@ -15,7 +15,8 @@ timeline.js
 		this.paused = false;
 		this.frame;
 		this.frameCount;
-		this.chart = null;
+		this.masterChart = null;
+		this.detailChart = null;
 		this.dataset = [];
 		this.earliestDate = new Date();
 		this.zeroTime(this.earliestDate);
@@ -122,7 +123,7 @@ timeline.js
 				
 				thisMap.zeroTime(lastDate);
 				
-				thisMap.dataset.push({seriesID: result.filter.equalities.seriesId, buffer: [{coordinates: [], date: null, value: 0}], maxValue: 0, frameAggregate: [0], frameOffset: 0});
+				thisMap.dataset.push({seriesID: result.filter.equalities.seriesId, buffer: [{point: [], date: null}], maxValue: 0, frameAggregate: [0], frameOffset: 0});
 				
 				if(thisMap.earliestDate > lastDate) {
 					thisMap.earliestDate = new Date(lastDate);
@@ -141,7 +142,7 @@ timeline.js
 						deltaTime = inputDate.valueOf() - lastDate.valueOf();
 						
 						while(deltaTime >= threshold) {
-							thisMap.dataset[datasetID].buffer.push({coordinates: [], date: null});
+							thisMap.dataset[datasetID].buffer.push({point: [], date: null});
 							frame++;
 							filler++;
 							emptyDate = new Date(emptyDate.valueOf() + threshold);
@@ -151,19 +152,14 @@ timeline.js
 							deltaTime -= threshold;
 						}
 						
-						thisMap.dataset[datasetID].buffer[frame].coordinates.push({latitude: result.results[i].latitude, longitude: result.results[i].longitude});
+						thisMap.dataset[datasetID].buffer[frame].point.push({latitude: result.results[i].latitude, longitude: result.results[i].longitude, value: result.results[i].value});
 						thisMap.dataset[datasetID].buffer[frame].date = inputDate;
 						
-						thisMap.dataset[datasetID].buffer[frame].value = result.results[i].value; //TODO: make this per point to control radius!
+						//thisMap.dataset[datasetID].buffer[frame].value = result.results[i].value; //TODO: make this per point to control radius!
 						thisMap.dataset[datasetID].frameAggregate[frame] += result.results[i].value;
 						
-						/*
 						if(thisMap.dataset[datasetID].maxValue < result.results[i].value) {
 							thisMap.dataset[datasetID].maxValue = result.results[i].value;
-						}
-						*/
-						if(thisMap.dataset[datasetID].maxValue < thisMap.dataset[datasetID].frameAggregate[frame]) {
-							thisMap.dataset[datasetID].maxValue = thisMap.dataset[datasetID].frameAggregate[frame];
 						}
 						
 						lastDate = thisMap.dataset[datasetID].buffer[frame].date;
@@ -242,8 +238,8 @@ timeline.js
 				);
 			}
 
-			// create a detail chart referenced by a global variable
-			detailChart = $('#detail-container').highcharts({
+			// create a detail chart referenced by a variable
+			MAGIC_MAP.detailChart = $('#detail-container').highcharts({
 				chart: {
 					marginBottom: 110,//120,
 					reflow: false,
@@ -334,7 +330,7 @@ timeline.js
 				);
 			}
 			
-			$('#master-container').highcharts({
+			MAGIC_MAP.masterChart = $('#master-container').highcharts({
 				chart: {
 					reflow: false,
 					backgroundColor: "rgba(128, 128, 128, 0.1)", //null,
@@ -346,7 +342,7 @@ timeline.js
 					events: {
 						// listen to the selection event on the master chart to update the
 						// extremes of the detail chart
-						selection: function (event) {
+						selection: function(event) {
 							var extremesObject = event.xAxis[0],
 								min = extremesObject.min,
 								max = extremesObject.max,
@@ -390,8 +386,8 @@ timeline.js
 								color: 'rgba(128, 128, 128, 0.2)'
 							});
 							
-							for(i = 0; i < detailChart.series.length; i++) {
-								detailChart.series[i].setData(detailSeries[i].detailData);
+							for(i = 0; i < MAGIC_MAP.detailChart.series.length; i++) {
+								MAGIC_MAP.detailChart.series[i].setData(detailSeries[i].detailData);
 							}
 							
 							MAGIC_MAP.zeroTime(minDate);
@@ -408,8 +404,6 @@ timeline.js
 								endFrame = (MAGIC_MAP.frameCount - 1);
 							}
 							
-							//console.log(startFrame + "->" + (startFrame + detailSeries[0].detailData.length));
-							//MAGIC_MAP.playSection(startFrame, startFrame + detailSeries[0].detailData.length);
 							console.log(startFrame + "->" + endFrame);
 							MAGIC_MAP.playSection(startFrame, endFrame);
 
@@ -549,34 +543,34 @@ timeline.js
 		adjustedStart,
 		adjustedEnd;
 		
-		for(setID = 0; setID < this.dataset.length; setID++){
+		if(endFrame) {
+			console.log((endFrame - startFrame) + " frames");
+		}
+		
+		for(setID = 0; setID < this.dataset.length; setID++) {
 			setFrame = this.frame - this.dataset[setID].frameOffset;
 			adjustedStart = startFrame - this.dataset[setID].frameOffset;
 			adjustedEnd = endFrame - this.dataset[setID].frameOffset;
 			
 			if(this.dataset[setID].buffer[setFrame]) {
-				for(i = 0; i < this.dataset[setID].buffer[setFrame].coordinates.length; i++) {
-					this.set[setID].visiblePoints.push([this.dataset[setID].buffer[setFrame].coordinates[i].latitude,
-						this.dataset[setID].buffer[setFrame].coordinates[i].longitude,
-						1.0]);
+				for(i = 0; i < this.dataset[setID].buffer[setFrame].point.length; i++) {
+					this.set[setID].visiblePoints.push([this.dataset[setID].buffer[setFrame].point[i].latitude,
+						this.dataset[setID].buffer[setFrame].point[i].longitude,
+						(this.dataset[setID].buffer[setFrame].point[i].value / this.dataset[setID].maxValue)]);
 					
-					//this.dataset[setID].frameAggregate[setFrame] / this.dataset[setID].maxValue]); //TODO: values should affect radius -not alpha coloring
+					if(this.dataset[setID].seriesID === 259){
+						if(i === 0) {
+							console.log("Frame " + setFrame);
+							console.log(this.set[setID].visiblePoints);
+						}
+						console.log("Buffer[" + i + "]: " + this.dataset[setID].buffer[setFrame].point[i].value);
+					}
 				}
 				
 				if(this.playBack) {
 					currentDate = this.dataset[setID].buffer[setFrame].date;
 					dateString = (currentDate.getUTCMonth() + 1) + '/' + currentDate.getUTCDate() + '/' + currentDate.getUTCFullYear();
 					$("#current-date").text(dateString);
-					
-					for(i = 0; i < this.set[setID].visiblePoints.length; i++) {
-						if(this.set[setID].visiblePoints[i][2] > 0.00) {
-							this.set[setID].visiblePoints[i][2] -= 0.01;
-						}
-						else {
-							this.set[setID].visiblePoints.splice(i, 1);
-							i--;
-						}
-					}
 				}
 				else if(this.dataset[setID].buffer[adjustedStart] && this.dataset[setID].buffer[adjustedEnd]) {
 					currentDate = this.dataset[setID].buffer[adjustedStart].date;
@@ -584,6 +578,19 @@ timeline.js
 					currentDate = this.dataset[setID].buffer[adjustedEnd].date;
 					dateString += (currentDate.getUTCMonth() + 1) + '/' + currentDate.getUTCDate() + '/' + currentDate.getUTCFullYear();
 					$("#current-date").text(dateString);
+				}
+			}
+			//else { console.log("Empty(?) Frame " + setFrame); console.log(this.dataset[setID].buffer[setFrame]); }
+			
+			if(this.playBack) {
+				for(i = 0; i < this.set[setID].visiblePoints.length; i++) {
+					if(this.set[setID].visiblePoints[i][2] > 0.00) {
+						this.set[setID].visiblePoints[i][2] -= 0.01;
+					}
+					else {
+						this.set[setID].visiblePoints.splice(i, 1);
+						i--;
+					}
 				}
 			}
 		}
@@ -633,7 +640,7 @@ timeline.js
 			if(!this.heat[setID]) {
 				this.heat.push(L.heatLayer(this.set[setID].visiblePoints,
 					{
-						minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.1, radius: 5,
+						minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.1, //radius: 5,
 						gradient: this.setGradient[setID]
 					}
 				).addTo(this.map));
