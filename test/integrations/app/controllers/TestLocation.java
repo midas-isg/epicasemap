@@ -32,7 +32,7 @@ public class TestLocation {
 
 	
     @Test
-    public void createLocation() {
+    public void create() {
 		runWithTransaction(() -> testCreateLocation());
     }
     

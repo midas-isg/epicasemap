@@ -39,7 +39,7 @@ public class TestSeries {
 	}
 
 	@Test
-	public void createSeries() {
+	public void create() {
 		runWithTransaction(() -> testCreateSeries());
 	}
 
