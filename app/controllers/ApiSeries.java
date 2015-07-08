@@ -27,7 +27,7 @@ public class ApiSeries extends Controller {
 	public static Result get() {
 		Filter filter = null;
 		List<Series> results = find(filter);
-		return ResponseWrapper.okAsWrappedJsonArray(results, filter);
+		return ResponseHelper.okAsWrappedJsonArray(results, filter);
 	}
 
 	@Transactional
@@ -44,7 +44,7 @@ public class ApiSeries extends Controller {
 			long id) {
 		Series result = makeRule().read(id);
 		Filter filter = null;
-		return ResponseWrapper.okAsWrappedJsonObject(result, filter);
+		return ResponseHelper.okAsWrappedJsonObject(result, filter);
 	}
 
 	public static SeriesRule makeRule() {

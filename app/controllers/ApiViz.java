@@ -1,6 +1,6 @@
 package controllers;
 
-import static controllers.ResponseWrapper.okAsWrappedJsonObject;
+import static controllers.ResponseHelper.okAsWrappedJsonObject;
 import interactors.VizRule;
 
 import javax.ws.rs.PathParam;

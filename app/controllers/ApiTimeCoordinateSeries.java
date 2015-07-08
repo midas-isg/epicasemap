@@ -58,7 +58,7 @@ public class ApiTimeCoordinateSeries extends Controller {
 		CoordinateFilter filter = buildCoordinateFilter(seriesId,
 				startInclusive, endExclusive, limit, offset);
 		List<Coordinate> results = rule.query(filter);
-		return ResponseWrapper.okAsWrappedJsonArray(results, filter);
+		return ResponseHelper.okAsWrappedJsonArray(results, filter);
 	}
 
 	private static CoordinateFilter buildCoordinateFilter(Long seriesId,

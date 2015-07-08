@@ -19,7 +19,7 @@ import controllers.ApiTimeCoordinateSeries;
 import controllers.ApiViz;
 import controllers.Application;
 import controllers.Factory;
-import controllers.ResponseWrapper;
+import controllers.ResponseHelper;
 
 public class CoverageBooster extends TestCase {
 	@Test
@@ -28,7 +28,7 @@ public class CoverageBooster extends TestCase {
 		ignoreDefaultConstructors();
 		ignoreSpecialCaseInTests();
 		testPrivateConstructors(
-				ResponseWrapper.class,
+				ResponseHelper.class,
 				Factory.class
 		);
 		Application.swagger();
