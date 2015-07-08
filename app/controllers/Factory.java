@@ -28,10 +28,6 @@ public class Factory {
 		return new ConfReader();
 	}
 
-	public static CoordinateDao makeCoordinateDao(EntityManager em) {
-		return new CoordinateDao(em);
-	}
-	
 	public static SeriesRule makeSeriesRule(EntityManager em) {
 		SeriesDao dao = new SeriesDao(em);
 		return new SeriesRule(dao);
