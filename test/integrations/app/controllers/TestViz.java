@@ -9,6 +9,7 @@ import static suites.Helper.assertTextNode;
 import static suites.Helper.detachThenAssertWithDatabase;
 import integrations.app.App;
 
+import java.util.Collections;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -87,6 +88,7 @@ public class TestViz {
 			Series s1 = TestSeries.persistThenDetachNewSeries();
 			List<Series> list = asList(s1);
 			data.setAllSeries(list);
+			data.setAllSeries2(Collections.emptyList());
 			data.setName("complex");
 			final long id = actCreate(data);
 			data.setId(id);

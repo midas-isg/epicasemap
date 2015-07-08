@@ -25,13 +25,13 @@ import controllers.Factory;
 
 public class Helper {
 	public static WSResponse get(String url) {
-		long timeout = 1000000;
-		WSResponse response = WS.url(url).get().get(timeout);
+		final long timeout = 1000000;
+		final WSResponse response = WS.url(url).get().get(timeout);
 		return response;
 	}
 
 	public static String readContext() {
-		ConfRule conf = Factory.makeConfRule();
+		final ConfRule conf = Factory.makeConfRule();
 		return conf.readString("application.context");
 	}
 
@@ -44,6 +44,7 @@ public class Helper {
 	}
 
 	public static void assertNodeType(JsonNode node, JsonNodeType... expected) {
+		assertThat(node).isNotNull();
 		assertThat(node.getNodeType()).isIn((Object[]) expected);
 	}
 
@@ -61,12 +62,12 @@ public class Helper {
 
 	private static JsonNode testJsonResponseClosedInterval(String url, int min,
 			Integer max) {
-		WSResponse response = Helper.get(url);
-		JsonNode root = response.asJson();
+		final WSResponse response = Helper.get(url);
+		final JsonNode root = response.asJson();
 		assertNodeType(root, OBJECT);
-		JsonNode results = root.get("results");
+		final JsonNode results = root.get("results");
 		assertNodeType(results, ARRAY);
-		int size = results.size();
+		final int size = results.size();
 		assertThat(size).isGreaterThanOrEqualTo(min);
 		if (max != null)
 			assertThat(size).isLessThanOrEqualTo(max);
@@ -74,10 +75,10 @@ public class Helper {
 	}
 
 	public static JsonNode testJsonResponse(String url) {
-		WSResponse response = Helper.get(url);
-		JsonNode root = response.asJson();
+		final WSResponse response = Helper.get(url);
+		final JsonNode root = response.asJson();
 		assertNodeType(root, OBJECT);
-		JsonNode result = root.get("result");
+		final JsonNode result = root.get("result");
 		assertNodeType(result, OBJECT);
 		return root;
 	}
@@ -92,7 +93,7 @@ public class Helper {
 			Class<T> clazz) {
 		assertNodeType(actuals, ARRAY);
 		for (int i = 0; i < expected.size(); i++) {
-			Object actual = Json.fromJson(actuals.get(i), clazz);
+			final Object actual = Json.fromJson(actuals.get(i), clazz);
 			assertAreEqual(actual, expected.get(i));
 		}
 	}
@@ -105,12 +106,12 @@ public class Helper {
 	}
 
 	public static <T> void detachThenAssertWithDatabase(long id, T expected) {
-		EntityManager em = JPA.em();
+		final EntityManager em = JPA.em();
 		em.detach(expected);
 
 		@SuppressWarnings("unchecked")
 		final Class<T> clazz = (Class<T>) expected.getClass();
-		T found = em.find(clazz, id);
+		final T found = em.find(clazz, id);
 		assertAreEqual(found, expected);
 	}
 

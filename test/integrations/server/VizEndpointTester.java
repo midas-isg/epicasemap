@@ -15,6 +15,7 @@ import static suites.Helper.testJsonResponse;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import models.entities.Series;
@@ -29,7 +30,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import controllers.ApiSeries;
 
 public class VizEndpointTester {
-	private static final int timeout = 100000;
+	private static final int timeout = 100_000;
 	private final String basePath = "/api/vizs";
 
 	public static Runnable crud() {
@@ -46,9 +47,9 @@ public class VizEndpointTester {
 	private void testUpdate(Tuple pair) {
 		final String url = urlWithId(pair.id);
 		final String name = "update name";
-		VizInput data = pair.input;
+		final VizInput data = pair.input;
 		data.setName(name);
-		WSResponse update = WS.url(url).put(toJson(data)).get(timeout);
+		final WSResponse update = WS.url(url).put(toJson(data)).get(timeout);
 		assertAreEqual(update.getStatus(), NO_CONTENT);
 	}
 
@@ -59,49 +60,59 @@ public class VizEndpointTester {
 		});
 
 		assertThat(all.size()).isGreaterThanOrEqualTo(2);
-		final List<Long> list = all.subList(0, 2).stream()
-				.map(it -> it.getId()).collect(Collectors.toList());
-		input.setSeriesIds(list);
+		input.setSeriesIds(toList(all.subList(0, 1), it -> it.getId()));
+		input.setSeries2Ids(toList(all.subList(0, 2), it -> it.getId()));
 		input.setName("Test first 2 Series");
-		String msg = Json.toJson(input) + "";
-		Helper.wrapNoThrowingCheckedExecption(() -> Files.write(
-				Paths.get("./public/examples/" + basePath + ".json"),
-				msg.getBytes()));
-
+		final JsonNode json = Json.toJson(input);
+		toFile("./public/examples/" + basePath + ".json", json + "");
 		final String url = baseUrl();
-		WSResponse create = WS.url(url).post(toJson(input)).get(timeout);
+		final WSResponse create = WS.url(url).post(json).get(timeout);
 		assertAreEqual(create.getStatus(), CREATED);
 		final String location = create.getHeader(LOCATION);
-		long id = toId(location);
+		final long id = toId(location);
 		final String path = append(basePath, id);
 		assertThat(location).endsWith(path);
-		Tuple pair = new Tuple();
+		final Tuple pair = new Tuple();
 		pair.id = id;
 		pair.input = input;
 		return pair;
 	}
 
+	private void toFile(final String filePath, final String content) {
+		Helper.wrapNoThrowingCheckedExecption(() -> Files.write(
+				Paths.get(filePath),
+				content.getBytes()));
+	}
+
+	private List<Long> toList(final List<Series> input,
+			final Function<? super Series, ? extends Long> mapper) {
+		return input.stream().map(mapper).collect(Collectors.toList());
+	}
+
 	private void testRead(Tuple pair) {
 		long id = pair.id;
-		VizInput expected = pair.input;
+		final VizInput expected = pair.input;
 		final String urlWithId = urlWithId(id);
 		final JsonNode root = testJsonResponse(urlWithId);
 		assertNodeType(root.get("filter"), NULL);
 		final JsonNode result = root.get("result");
 		assertNodeType(result, OBJECT);
 		assertAreEqual(result.get("id").asLong(), id);
-		final JsonNode allSeries = result.get("allSeries");
+		assertAllSeries(result.get("allSeries"), expected.getSeriesIds());
+		assertAllSeries(result.get("allSeries2"), expected.getSeries2Ids());
+	}
+
+	public void assertAllSeries(final JsonNode allSeries, List<Long> expected) {
 		assertNodeType(allSeries, ARRAY);
-		final List<Long> seriesIds = expected.getSeriesIds();
-		assertThat(allSeries).hasSize(seriesIds.size());
+		assertThat(allSeries).hasSize(expected.size());
 		for (JsonNode series : allSeries) {
 			assertNodeType(series, OBJECT);
-			assertThat(series.get("id").asLong()).isIn(seriesIds);
+			assertThat(series.get("id").asLong()).isIn(expected);
 		}
 	}
 
 	private void testDelete(long id) {
-		WSResponse delete = WS.url(urlWithId(id)).delete().get(timeout);
+		final WSResponse delete = WS.url(urlWithId(id)).delete().get(timeout);
 		assertAreEqual(delete.getStatus(), NO_CONTENT);
 	}
 
@@ -123,7 +134,7 @@ public class VizEndpointTester {
 
 	private long toId(final String location) {
 		final String[] tokens = location.split("/");
-		String number = tokens[tokens.length - 1];
+		final String number = tokens[tokens.length - 1];
 		return Long.parseLong(number);
 	}
 
