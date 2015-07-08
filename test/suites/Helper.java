@@ -6,7 +6,6 @@ import static com.fasterxml.jackson.databind.node.JsonNodeType.OBJECT;
 import static org.fest.assertions.Assertions.assertThat;
 import interactors.ConfRule;
 
-import java.util.Arrays;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -113,9 +112,5 @@ public class Helper {
 		final Class<T> clazz = (Class<T>) expected.getClass();
 		final T found = em.find(clazz, id);
 		assertAreEqual(found, expected);
-	}
-
-	public static <T> List<T> asList(@SuppressWarnings("unchecked") T... ts) {
-		return Arrays.asList(ts);
 	}
 }

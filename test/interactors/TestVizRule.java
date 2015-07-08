@@ -1,8 +1,9 @@
 package interactors;
 
+import static java.util.Arrays.asList;
 import static org.fest.assertions.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
-import static suites.Helper.*;
+import static suites.Helper.assertAreEqual;
 
 import java.util.ArrayList;
 import java.util.List;

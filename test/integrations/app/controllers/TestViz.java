@@ -1,8 +1,8 @@
 package integrations.app.controllers;
 
+import static java.util.Arrays.asList;
 import static org.fest.assertions.Assertions.assertThat;
 import static play.test.Helpers.contentAsString;
-import static suites.Helper.asList;
 import static suites.Helper.assertAreEqual;
 import static suites.Helper.assertArrayNode;
 import static suites.Helper.assertTextNode;
