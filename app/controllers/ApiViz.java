@@ -1,6 +1,7 @@
 package controllers;
 
 import static controllers.ResponseHelper.okAsWrappedJsonObject;
+import static controllers.ResponseHelper.setResponseLocationFromRequest;
 import interactors.VizRule;
 
 import javax.ws.rs.PathParam;
@@ -12,8 +13,6 @@ import play.data.Form;
 import play.db.jpa.JPA;
 import play.db.jpa.Transactional;
 import play.mvc.Controller;
-import play.mvc.Http.Context;
-import play.mvc.Http.Request;
 import play.mvc.Result;
 
 import com.wordnik.swagger.annotations.Api;
@@ -112,18 +111,6 @@ public class ApiViz extends Controller {
 		makeRule().delete(id);
 	}
 
-	private static void setResponseLocationFromRequest(String... tails) {
-		String url = makeUriFromRequest();
-		for (String tail : tails)
-			url += "/" + tail;
-		response().setHeader(LOCATION, url);
-	}
-
-	private static String makeUriFromRequest() {
-		Request request = Context.current().request();
-		return request.getHeader(ORIGIN) + request.path();
-	}
-	
 	private static VizRule makeRule() {
 		return Factory.makeVizRule(JPA.em());
 	}
