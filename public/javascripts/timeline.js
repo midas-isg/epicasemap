@@ -32,25 +32,32 @@ timeline.js
 		}
 		
 		this.setGradient = [];
-		this.colors = ['#ff0000', '#00ff00', '#0000ff'];
+		this.colorSet = [
+			['#1b9e77', '#d95f02', '#7570b3', '#e7298a', '#66a61e'],
+			['#a6cee3', '#1f78b4', '#b2df8a', "#33a02c", "#fb9a99"],
+			['#66c2a5', '#fc8d62', '#8da0cb', "#e78ac3", "#a6d854"]
+		];
+		this.colors = this.colorSet[0];
 		
+		for(i = 0; i < this.colors.length; i++) {
+			this.setGradient.push({
+				0.0: this.colors[i]
+			});
+		}
+		
+		/*
 		this.setGradient.push({
-			//0.0: '#800000',
-			0.0: '#ff0000',
-			1.0: '#ff0000'
+			0.0: '#ff0000'
 		});
 		
 		this.setGradient.push({
-			//0.0: '#008000',
-			0.0: '#00ff00',
-			1.0: '#00ff00'
+			0.0: '#00ff00'
 		});
 		
 		this.setGradient.push({
-			//0.0: '#000080',
-			0.0: '#0000ff',
-			1.0: '#0000ff'
+			0.0: '#0000ff'
 		});
+		*/
 		
 		return this;
 	}
