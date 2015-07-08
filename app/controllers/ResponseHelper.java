@@ -9,8 +9,8 @@ import play.libs.Json;
 import play.mvc.Controller;
 import play.mvc.Result;
 
-public class ResponseWrapper {
-	private ResponseWrapper() {
+public class ResponseHelper {
+	private ResponseHelper() {
 	}
 
 	static Map<String, Object> wrap(List<?> results, Object filter) {
@@ -28,12 +28,12 @@ public class ResponseWrapper {
 	}
 
 	public static Result okAsWrappedJsonArray(List<?> results, Filter filter) {
-		Object response = ResponseWrapper.wrap(results, filter);
+		Object response = ResponseHelper.wrap(results, filter);
 		return Controller.ok(Json.toJson(response));
 	}
 
 	public static Result okAsWrappedJsonObject(Object result, Filter filter) {
-		Object response = ResponseWrapper.wrap(result, filter);
+		Object response = ResponseHelper.wrap(result, filter);
 		return Controller.ok(Json.toJson(response));
 	}
 }
