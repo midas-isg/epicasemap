@@ -22,10 +22,6 @@ public class App {
 		return new App("test/resources/conf/test.conf");
 	}
 
-	public static App newWithInMemoryDb() {
-		return newWithInMemoryDb("");
-	}
-
 	public static App newWithInMemoryDbWithDbOpen() {
 		return newWithInMemoryDb("keep");
 	}
