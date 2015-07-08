@@ -6,9 +6,9 @@ import suites.Helper;
 public class LandingPageTester {
 	public static Runnable containsConextForJavaScript() {
         Runnable block = () -> {
-        	String context = Server.getContext() + "/";
+        	String context = (Server.getContext() + "/").replaceAll("//", "/");
         	String expected = new LandingPageTester().javaScriptContext(context);
-        	String url = Server.makeTestUrl("/");
+        	String url = Server.makeTestUrl("/").replaceAll("//$", "/");
             String actual = Helper.get(url).getBody();
 			assertThat(actual).contains(expected);
         };
