@@ -29,7 +29,7 @@ public class ApiViz extends Controller {
 	private static final String ex = "vizs.json";
 	private static final String exBody = "See an example of body at "
 			+ "<a href='assets/examples/api/" + ex + "'>" + ex + "</a> ";
-	public static final String type = "models.view.VizInput";
+	public static final String inputType = "models.view.VizInput";
 
 	public static Form<VizInput> vizForm = Form.form(VizInput.class);
 
@@ -41,7 +41,7 @@ public class ApiViz extends Controller {
 		@ApiResponse(code = OK, message = "(Not used yet)"),
 		@ApiResponse(code = CREATED, message = "Success") })
 	@ApiImplicitParams({ 
-		@ApiImplicitParam(required = true, value = exBody, dataType = type, paramType = "body")
+		@ApiImplicitParam(required = true, value = exBody, dataType = inputType, paramType = "body")
 	})
 	@Transactional
 	public static Result post() {
@@ -76,7 +76,7 @@ public class ApiViz extends Controller {
 		@ApiResponse(code = OK, message = "(Not used yet)"),
 		@ApiResponse(code = NO_CONTENT, message = "Success") })
 	@ApiImplicitParams({ 
-		@ApiImplicitParam(required = true, value = exBody, dataType = type, paramType = "body") })
+		@ApiImplicitParam(required = true, value = exBody, dataType = inputType, paramType = "body") })
 	@Transactional
 	public static Result put(
 			@ApiParam(value = "ID of the Viz", required = true) @PathParam("id") long id) {

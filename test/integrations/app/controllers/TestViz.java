@@ -43,8 +43,8 @@ public class TestViz {
 	}
 
 	@Test
-	public void correctTypeName() throws Exception {
-		assertAreEqual(ApiViz.type, VizInput.class.getName());
+	public void correctInputTypeName() throws Exception {
+		assertAreEqual(ApiViz.inputType, VizInput.class.getName());
 	}
 
 	@Test
