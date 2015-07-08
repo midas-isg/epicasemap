@@ -560,7 +560,7 @@ timeline.js
 					if(this.dataset[setID].buffer[setFrame].point[i].value > 0) {
 						this.set[setID].visiblePoints.push([this.dataset[setID].buffer[setFrame].point[i].latitude,
 							this.dataset[setID].buffer[setFrame].point[i].longitude,
-							(this.dataset[setID].buffer[setFrame].point[i].value / this.dataset[setID].maxValue),
+							1.0,
 							(this.dataset[setID].buffer[setFrame].point[i].value / this.dataset[setID].maxValue)]);
 					}
 				}
