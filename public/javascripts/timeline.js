@@ -94,6 +94,8 @@ timeline.js
 				MAGIC_MAP.heat[i].redraw();
 			}
 			
+			MAGIC_MAP.masterChart.xAxis[0].removePlotLine('date-line');
+			
 			return;
 		});
 		
@@ -101,11 +103,25 @@ timeline.js
 			MAGIC_MAP.paused = !MAGIC_MAP.paused;
 			console.log(new Date());
 			
-			$("#playback-button span").toggleClass("glyphicon-play")
-				.toggleClass("glyphicon-pause");
-			
-			return;
+			return MAGIC_MAP.updatePlaybackInterface();
 		});
+		
+		return;
+	}
+	
+	MagicMap.prototype.updatePlaybackInterface = function() {
+		if(!MAGIC_MAP.paused) {
+			MAGIC_MAP.masterChart.xAxis[0].removePlotBand('mask-before');
+			MAGIC_MAP.masterChart.xAxis[0].removePlotBand('mask-after');
+			
+			$("#playback-button span").removeClass("glyphicon-play")
+				.addClass("glyphicon-pause");
+			MAGIC_MAP.playBack = true;
+		}
+		else {
+			$("#playback-button span").addClass("glyphicon-play")
+			.removeClass("glyphicon-pause");
+		}
 		
 		return;
 	}
@@ -371,7 +387,7 @@ timeline.js
 									}
 								});
 							}
-
+							
 							// move the plot bands to reflect the new detail span
 							xAxis.removePlotBand('mask-before');
 							xAxis.addPlotBand({
@@ -423,6 +439,7 @@ timeline.js
 					text: null
 				},
 				xAxis: {
+					crosshair: true,
 					type: 'datetime',
 					showLastTickLabel: true,
 					maxZoom: 1209600000, //14 * 24 * 3600000, // fourteen days
@@ -546,7 +563,7 @@ timeline.js
 		setID,
 		setFrame,
 		currentDate,
-		dateString,
+		dateString = null,
 		adjustedStart,
 		adjustedEnd;
 		
@@ -565,17 +582,28 @@ timeline.js
 					}
 				}
 				
-				if(this.playBack) {
-					currentDate = this.dataset[setID].buffer[setFrame].date;
-					dateString = (currentDate.getUTCMonth() + 1) + '/' + currentDate.getUTCDate() + '/' + currentDate.getUTCFullYear();
-					$("#current-date").text(dateString);
-				}
-				else if(this.dataset[setID].buffer[adjustedStart] && this.dataset[setID].buffer[adjustedEnd]) {
-					currentDate = this.dataset[setID].buffer[adjustedStart].date;
-					dateString = (currentDate.getUTCMonth() + 1) + '/' + currentDate.getUTCDate() + '/' + currentDate.getUTCFullYear() + " - ";
-					currentDate = this.dataset[setID].buffer[adjustedEnd].date;
-					dateString += (currentDate.getUTCMonth() + 1) + '/' + currentDate.getUTCDate() + '/' + currentDate.getUTCFullYear();
-					$("#current-date").text(dateString);
+				if(!dateString) {
+					this.masterChart.xAxis[0].removePlotLine('date-line');
+					
+					if(this.playBack) {
+						currentDate = this.dataset[setID].buffer[setFrame].date;
+						dateString = (currentDate.getUTCMonth() + 1) + '/' + currentDate.getUTCDate() + '/' + currentDate.getUTCFullYear();
+						$("#current-date").text(dateString);
+						
+						this.masterChart.xAxis[0].addPlotLine({
+							value: currentDate.valueOf(),
+							color: 'red',
+							width: 2,
+							id: 'date-line'
+						});
+					}
+					else if(this.dataset[setID].buffer[adjustedStart] && this.dataset[setID].buffer[adjustedEnd]) {
+						currentDate = this.dataset[setID].buffer[adjustedStart].date;
+						dateString = (currentDate.getUTCMonth() + 1) + '/' + currentDate.getUTCDate() + '/' + currentDate.getUTCFullYear() + " - ";
+						currentDate = this.dataset[setID].buffer[adjustedEnd].date;
+						dateString += (currentDate.getUTCMonth() + 1) + '/' + currentDate.getUTCDate() + '/' + currentDate.getUTCFullYear();
+						$("#current-date").text(dateString);
+					}
 				}
 			}
 			
@@ -614,6 +642,8 @@ timeline.js
 		//TODO: ensure startFrame and EndFrame hit all series throughout during visualization
 		this.playBack = false;
 		this.paused = true;
+		this.updatePlaybackInterface();
+		$("#playback-button").removeClass("disabled");
 		this.frame = startFrame;
 		
 		for(i = 0; i < this.set.length; i++) {
