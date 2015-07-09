@@ -1,8 +1,10 @@
 package controllers;
 
+import static interactors.FileHandler.persist;
 import interactors.DelimitedFile;
-import static interactors.FileHandler.parsFile;
-import static interactors.FileHandler.saveFile;
+import interactors.FileHandler;
+
+import java.util.ArrayList;
 
 import play.mvc.Controller;
 import play.mvc.Http.MultipartFormData;
@@ -12,8 +14,17 @@ public class DataSerieUpload extends Controller {
 
 	public static Result upload() {
 
-		if (persist(getFileObject(request().body().asMultipartFormData()))) {
-			return ok("File uploaded");
+		DelimitedFile dataFile = getFileObject(request().body()
+				.asMultipartFormData());
+		ArrayList<String> errorMsgList = FileHandler.getFileErrors(dataFile);
+		if (errorMsgList.size() == 0) {
+			if (persist(dataFile)) { // TODO: should return msg
+				return ok("File uploaded");
+			} else {
+				// TODO: error msg
+				return badRequest();
+			}
+
 		} else {
 
 			// TODO: return error
@@ -28,8 +39,4 @@ public class DataSerieUpload extends Controller {
 				body.asFormUrlEncoded());
 	}
 
-	private static boolean persist(DelimitedFile datafile) {
-		return saveFile(parsFile(datafile));
-
-	}
 }
