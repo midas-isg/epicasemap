@@ -4,15 +4,20 @@ import java.io.File;
 import java.util.Map;
 
 import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVRecord;
 
 public class DelimitedFile {
 	public static final String APOLLO_ID_FORMAT = "apolloIdFormat";
 	public static final String COORDINATE_FORMAT = "coordinateFormat";
-	
+	public static final String TIME_HEADER = "time";
+	public static final String APOLLO_ID_HEADER = "apollo ID";
+	public static final String VALUE_HEADER = "value";
+	public static final String LATITUDE_HEADER = "latitude";
+	public static final String LONGITUDE_HEADER = "longitude";
+
+
+
 	private File file;
 	private Map<String, String[]> metaData;
-	private Iterable<CSVRecord> records;
 
 	public DelimitedFile(File file, Map<String, String[]> metaData) {
 		this.file = file;
@@ -36,17 +41,21 @@ public class DelimitedFile {
 	}
 
 	public CSVFormat getCSVFormat() {
-		char del = getMetaData().get("delimiter")[0].charAt(0);
+		char del = getMetaData().get("delimiter")[0].charAt(0);  //TODO: change string to constant
 		return CSVFormat.newFormat(del);
 
 	}
 
-	public Iterable<CSVRecord> getRecords() {
-		return records;
+	public String getFileFormat() {
+		return getMetaData().get("format")[0]; //TODO: change string to constant
 	}
 
-	public void setRecords(Iterable<CSVRecord> records) {
-		this.records = records;
+	public String getTitle() {
+		return metaData.get("title")[0]; //TODO: change string to constant
+	}
+
+	public String getDescription() {
+		return metaData.get("description")[0]; //TODO: change string to constant
 	}
 
 }
