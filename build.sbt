@@ -20,5 +20,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.play" %% "play-java-ws" % "2.3.9" % "test",
   "postgresql" % "postgresql" % "9.1-901.jdbc4",
   "org.hibernate" % "hibernate-entitymanager" % "4.3.8.Final",
-  javaJpa
+  javaJpa,
+  "org.apache.commons" % "commons-csv" % "1.1",
+  "commons-lang" % "commons-lang" % "2.6"
 )
