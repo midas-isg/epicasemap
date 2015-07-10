@@ -26,40 +26,42 @@ app.service("api", [ '$http', '$q', function ($http, $q) {
 	
 }]);
 
-app.controller('PromiseCtrl', [ '$scope', 'api', function($scope, api) {
-	var data;
-	
+app.controller('viz', [ '$scope', 'api', function($scope, api) {
+	var allSeries;
+	var view = {};
+	$scope.view = view;
+
 	api.list('series').then(function (rsp)	{
-		data = rsp.data;
-		$scope.example1 = data;
+		allSeries = rsp.data.results;
+		view.allSeries = allSeries;
 	});
     
     $scope.getTotal = function () {
-        return data && data.results && data.results.length || 0;
+        return allSeries && allSeries.length || 0;
     };
     
     $scope.submit = function () {
     	var body = {name: 'test NG'};
     	
-    	$scope.example2 = _.filter(data.results, function(it){
+    	view.series1Objects = _.filter(allSeries, function(it){
             return it.s1;
         });
-    	$scope.example3 = _.map($scope.example2, function(it){ return it.id; });
-    	body.seriesIds = $scope.example3;
+    	body.seriesIds = _.map(view.series1Objects, function(it){ return it.id; });
+    	view.series1Ids = body.seriesIds;
 
-    	$scope.example4 = _.filter(data.results, function(it){
+    	view.series2Objects = _.filter(allSeries, function(it){
             return it.s2;
         });
-    	$scope.example5 = _.map($scope.example4, function(it){ return it.id; });
-    	body.series2Ids = $scope.example5;
+    	body.series2Ids = _.map(view.series2Objects, function(it){ return it.id; });
+    	view.series2Ids = body.series2Ids;
     	$scope.save(body);
     };
     
     $scope.save = function(data) {
     	api.save(data).then(function (location)	{
-    		$scope.example5 = location;
+    		$scope.view.location = location;
         	api.get(location).then(function (rsp)	{
-        		$scope.example2 = rsp.data;
+        		$scope.view.viz = rsp.data.result;
         	});
     	});
     }
