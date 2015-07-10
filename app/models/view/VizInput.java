@@ -6,6 +6,7 @@ public class VizInput {
 	private String name;
 	private List<Long> seriesIds;
 	private List<Long> series2Ids;
+	private String uiSetting;
 
 	public List<Long> getSeriesIds() {
 		return seriesIds;
@@ -31,9 +32,18 @@ public class VizInput {
 		this.series2Ids = series2Ids;
 	}
 
+	public String getUiSetting() {
+		return uiSetting;
+	}
+
+	public void setUiSetting(String uiSetting) {
+		this.uiSetting = uiSetting;
+	}
+
 	@Override
 	public String toString() {
 		return "VizInput [name=" + name + ", seriesIds=" + seriesIds
-				+ ", series2Ids=" + series2Ids + "]";
+				+ ", series2Ids=" + series2Ids + ", uiSetting=" + uiSetting
+				+ "]";
 	}
 }
