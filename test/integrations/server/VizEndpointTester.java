@@ -63,10 +63,12 @@ public class VizEndpointTester {
 		input.setSeriesIds(toList(all.subList(0, 1), it -> it.getId()));
 		input.setSeries2Ids(toList(all.subList(0, 2), it -> it.getId()));
 		input.setName("Test first 2 Series");
-		final JsonNode json = Json.toJson(input);
-		toFile("./public/examples/" + basePath + ".json", json + "");
+		input.setUiSetting("{}");
+		final JsonNode root = Json.toJson(input);
+		final String json = root + "";
+		toFile("./public/examples/" + basePath + ".json", json);
 		final String url = baseUrl();
-		final WSResponse create = WS.url(url).post(json).get(timeout);
+		final WSResponse create = WS.url(url).post(root).get(timeout);
 		assertAreEqual(create.getStatus(), CREATED);
 		final String location = create.getHeader(LOCATION);
 		final long id = toId(location);
@@ -100,6 +102,8 @@ public class VizEndpointTester {
 		assertAreEqual(result.get("id").asLong(), id);
 		assertAllSeries(result.get("allSeries"), expected.getSeriesIds());
 		assertAllSeries(result.get("allSeries2"), expected.getSeries2Ids());
+		assertAreEqual(result.get("uiSetting").asText(), expected.getUiSetting());
+		
 	}
 
 	public void assertAllSeries(final JsonNode allSeries, List<Long> expected) {

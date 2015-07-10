@@ -31,6 +31,7 @@ public class Viz implements models.entities.Entity {
 		inverseJoinColumns = { @JoinColumn(name = "series_id", nullable = false) }
 	)
 	private List<Series> allSeries2;
+	private String uiSetting;
 
 	public Viz() {
 		allSeries = new ArrayList<>();
@@ -68,6 +69,14 @@ public class Viz implements models.entities.Entity {
 
 	public void setAllSeries2(List<Series> allSeries2) {
 		this.allSeries2 = allSeries2;
+	}
+
+	public String getUiSetting() {
+		return uiSetting;
+	}
+
+	public void setUiSetting(String uiSetting) {
+		this.uiSetting = uiSetting;
 	}
 
 	@Override
