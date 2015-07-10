@@ -1,0 +1,43 @@
+<html>
+<head>
+<script type="text/javascript"
+	src='https://code.angularjs.org/1.4.2/angular.js'></script>
+<script type="text/javascript"
+	src='http://documentcloud.github.io/underscore/underscore-min.js'></script>
+<script type="text/javascript" src='ng.js'></script>
+</head>
+<div ng-app="app">
+	<div ng-controller="PromiseCtrl">
+		<h2>input</h2>
+		<p>{{example1.results}}</p>
+		<h2>output S1 objects</h2>
+		<p>{{example2}}</p>
+		<h2>output S1 IDs</h2>
+		<p>{{example3}}</p>
+		<h2>output S2 objects</h2>
+		<p>{{example4}}</p>
+		<h2>output S2 IDs</h2>
+		<p>{{example5}}</p>
+
+		<h2>Total series: {{getTotal()}}</h2>
+		<button class="btn-large" ng-click="submit()">Try</button>
+		<table class="table table-striped">
+			<thead>
+				<tr>
+					<td>S1</td>
+					<td>S2</td>
+					<td>name</td>
+				</tr>
+			</thead>
+			<tbody>
+				<tr ng-repeat="series in example1.results">
+					<td><input type="checkbox" ng-model="series.s1"></td>
+					<td><input type="checkbox" ng-model="series.s2"></td>
+					<td>{{series.name}}</td>
+				</tr>
+			</tbody>
+		</table>
+
+	</div>
+</div>
+</html>
