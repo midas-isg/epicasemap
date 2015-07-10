@@ -1,7 +1,37 @@
-@(message: String)
+@*(message: String, version: String)*@
+@(title: String)
 
-@main("Welcome to Play") {
+@imports = {
+	<script src='https://api.tiles.mapbox.com/mapbox.js/v2.1.9/mapbox.js'></script>
+	<link href='https://api.tiles.mapbox.com/mapbox.js/v2.1.9/mapbox.css' rel='stylesheet' />
 
-    @play20.welcome(message, style = "Java")
+	<script src='@routes.Assets.at("external_packages/Highcharts-4.1.5/js/highcharts.js")'></script>
+	<script src='@routes.Assets.at("external_packages/Highcharts-4.1.5/js/modules/exporting.js")'></script>
 
+	<script src='@routes.Assets.at("javascripts/leaflet-heat2.js")'></script>
+	<!--<script src='external-lib/leaflet-heat/leaflet-heat2.js'></script>-->
+
+	<!--<script src='js/test.js'></script>-->
+
+	<link href='@routes.Assets.at("stylesheets/index.css")' rel='stylesheet' />
+	
+	<script src='@routes.Assets.at("javascripts/timeline.js")'></script>
+	
+	<!--<link rel='stylesheet' href='@routes.Assets.at("stylesheets/bcos.css")'>-->
+}
+
+@main(title, imports) {
+	<div id='body' style="clear: right;">
+		<div id='map' style="max-width: 90%; background-color: #808080;"></div>
+		
+		<div id="container" style="max-width: 80%; max-height: 300px; margin: 0px 0px 0px 0px; position: relative; bottom: 220px;">
+			<div style="/*width: 72px;*/ position: relative; bottom: -30px; z-index: 1;">
+				<button id="reset-button" class="btn btn-sm" style="background-color: rgba(221, 221, 221, 0.6);"><span class="glyphicon glyphicon-step-backward" aria-hidden="true"></span></button>
+				<button id="playback-button" class="btn btn-sm" style="background-color: rgba(221, 221, 221, 0.6);"><span class="glyphicon glyphicon-play" aria-hidden="true"></span></button>
+				<span id="current-date" style="background-color: rgba(255, 255, 255, 0.6); float: right; clear: right;"></span>
+			</div>
+			
+			<div id="detail-container" style="height: 300px; z-index: -1;"></div>
+		</div>
+	</div>
 }
