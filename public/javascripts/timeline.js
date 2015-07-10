@@ -15,6 +15,9 @@ timeline.js
 		this.paused = false;
 		this.frame;
 		this.frameCount;
+		this.startFrame;
+		this.endFrame;
+		this.reset = false;
 		this.masterChart = null;
 		this.detailChart = null;
 		this.dataset = [];
@@ -69,13 +72,6 @@ timeline.js
 			this.load(this.seriesToLoad[i]);
 		}
 		
-		this.packHeat();
-		
-		this.loadBuffer();
-		console.log("Finished generating. Unpause to begin.");
-		this.paused = true;
-		
-		
 		//legend stuff
 		this.closeTooltip;
 		//this.map.legendControl.addLegend(this.getLegendHTML());
@@ -111,9 +107,6 @@ timeline.js
 	
 	MagicMap.prototype.updatePlaybackInterface = function() {
 		if(!MAGIC_MAP.paused) {
-			MAGIC_MAP.masterChart.xAxis[0].removePlotBand('mask-before');
-			MAGIC_MAP.masterChart.xAxis[0].removePlotBand('mask-after');
-			
 			$("#playback-button span").removeClass("glyphicon-play")
 				.addClass("glyphicon-pause");
 			MAGIC_MAP.playBack = true;
@@ -214,6 +207,10 @@ timeline.js
 					}
 					
 					thisMap.createChart(); //call this after loading all datasets
+					thisMap.packHeat();
+					thisMap.loadBuffer();
+					thisMap.paused = true;
+					console.log("Finished loading. Unpause to begin.");
 				}
 				
 				return;
@@ -545,7 +542,12 @@ timeline.js
 		var i;
 		
 		this.frame = 0;
+		this.startFrame = 0;
+		this.endFrame = this.frameCount - 1;
 		this.playBack = true;
+		
+		this.masterChart.xAxis[0].removePlotBand('mask-before');
+		this.masterChart.xAxis[0].removePlotBand('mask-after');
 		
 		for(i = 0; i < this.set.length; i++) {
 			//empty visiblePoints array
@@ -566,6 +568,15 @@ timeline.js
 		dateString = null,
 		adjustedStart,
 		adjustedEnd;
+		
+		if(this.reset) {
+			this.reset = false;
+			
+			for(i = 0; i < this.set.length; i++) {
+				//empty visiblePoints array
+				this.set[i].visiblePoints.length = 0; //hopefully the old data is garbage collected!
+			}
+		}
 		
 		for(setID = 0; setID < this.dataset.length; setID++) {
 			setFrame = this.frame - this.dataset[setID].frameOffset;
@@ -620,15 +631,19 @@ timeline.js
 			}
 		}
 		
-		if(this.frame < this.frameCount) {
+		if(this.frame < endFrame) {
 			this.frame++;
 		}
-		else if(this.playBack){
+		else if(this.playBack) {
 			this.playBack = false;
 			this.paused = true;
-			$("#playback-button").addClass("disabled");
+			this.frame = startFrame;
+			this.reset = true;
+			//$("#playback-button").addClass("disabled");
+			
 			$("#playback-button span").toggleClass("glyphicon-pause")
 				.toggleClass("glyphicon-play");
+			
 			console.log("Finished playback");
 			console.log(new Date());
 		}
@@ -658,6 +673,10 @@ console.log((endFrame - startFrame) + " frames");
 		}
 		
 		this.packHeat();
+		this.frame = startFrame;
+		this.startFrame = startFrame;
+		this.endFrame = endFrame;
+		this.reset = true;
 		
 		return;
 	}
@@ -690,7 +709,7 @@ console.log((endFrame - startFrame) + " frames");
 					thisMap.evolve();//TEST.timeMethod(thisMap.evolve);
 				}
 				else {
-					thisMap.playBuffer();//TEST.timeMethod(thisMap.playBuffer);
+					thisMap.playBuffer(thisMap.startFrame, thisMap.endFrame);//TEST.timeMethod(thisMap.playBuffer);
 				}
 				
 				thisMap.packHeat();
