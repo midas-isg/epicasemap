@@ -4,12 +4,15 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 
 import javax.persistence.EntityManager;
 
 import models.entities.Location;
 import models.entities.Series;
+import models.entities.SeriesData;
+import models.entities.Viz;
 
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
@@ -23,31 +26,43 @@ public class FileHandler {
 	public static boolean persist(DelimitedFile dataFile) {
 
 		// TODO: should return a msg
-		
-		long serieID = createSeries(dataFile.getTitle(),dataFile.getDescription());
-		long locID = 0;
+		long serieID = createSeries(dataFile.getTitle(),
+				dataFile.getDescription());
 		String fileFormat = dataFile.getFileFormat();
 		CSVParser parser = parsFile(dataFile);
 		Iterator<CSVRecord> records = parser.iterator();
-		records.next();
-		
-		while (records.hasNext()) {	
+		while (records.hasNext()) {
 			CSVRecord record = records.next();
-			if (fileFormat.equals(DelimitedFile.APOLLO_ID_FORMAT)) {
-				locID = createLocationFromApolloID(Long.parseLong(record
-						.get(DelimitedFile.APOLLO_ID_HEADER)));
-			} else if (fileFormat.equals(DelimitedFile.COORDINATE_FORMAT)) {
-				locID = createLocationFromCoordinates(
-						Double.parseDouble(record
-								.get(DelimitedFile.LATITUDE_HEADER)),
-						Double.parseDouble(record
-								.get(DelimitedFile.LONGITUDE_HEADER)));
+			if (persistRecord(serieID, fileFormat, record) == 0) {
+				return false;
 			}
-			//createSeriesData(serieID,locID,DateTime.parse(record.get(DelimitedFile.TIME_HEADER)).toDate(),Long.parseLong(record.get(DelimitedFile.VALUE_HEADER)));
-			
 		}
 		return true;
 
+	}
+
+	private static long persistRecord(long serieID, String fileFormat,
+			CSVRecord record) throws NumberFormatException {
+		
+		long locId = 0;
+		
+		if (fileFormat.equals(DelimitedFile.APOLLO_ID_FORMAT)) {
+			
+			locId = createLocationFromApolloID(Long.parseLong(record
+					.get(DelimitedFile.APOLLO_ID_HEADER)));
+			
+		} else if (fileFormat.equals(DelimitedFile.COORDINATE_FORMAT)) {
+			
+			locId = createLocationFromCoordinates(Double.parseDouble(record
+					.get(DelimitedFile.LATITUDE_HEADER)),
+					Double.parseDouble(record
+							.get(DelimitedFile.LONGITUDE_HEADER)));
+		}
+		long seriesDataId = createSeriesData(serieID, locId,
+				DateTime.parse(record.get(DelimitedFile.TIME_HEADER)).toDate(),
+				Double.parseDouble(record.get(DelimitedFile.VALUE_HEADER)));
+		
+		return seriesDataId;
 	}
 
 	public static ArrayList<String> getFileErrors(DelimitedFile dataFile) {
@@ -56,14 +71,12 @@ public class FileHandler {
 		ArrayList<String> errorMsgList = new ArrayList<String>();
 		String errorMsg = "";
 		Iterator<CSVRecord> records = parser.iterator();
-		records.next();
 		while (records.hasNext()) {
 			if ((errorMsg = getRecordErrors(records.next(),
 					dataFile.getFileFormat())) != null) {
 				errorMsgList.add("Line " + parser.getCurrentLineNumber() + ": "
 						+ errorMsg);
 			}
-
 		}
 		return errorMsgList;
 	}
@@ -110,9 +123,9 @@ public class FileHandler {
 					.getCSVFormat()
 					.withHeader(dataFile.getMetaData().get("headers"))
 					// TODO: use a constant instead of headers
-					.withIgnoreEmptyLines(false)
+					.withIgnoreEmptyLines(true)
 					.withIgnoreSurroundingSpaces(true)
-					.withSkipHeaderRecord(false)
+					.withSkipHeaderRecord(true)
 					.parse(new FileReader(dataFile.getFile()));
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
@@ -121,9 +134,7 @@ public class FileHandler {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
 		return records;
-
 	}
 
 	private static long createLocationFromApolloID(long apolloID) {
@@ -133,7 +144,7 @@ public class FileHandler {
 		em.persist(loc);
 		return loc.getId();
 	}
-	
+
 	private static long createSeries(String title, String desc) {
 		final EntityManager em = JPA.em();
 		final Series serie = new Series();
@@ -154,15 +165,18 @@ public class FileHandler {
 		return loc.getId();
 	}
 
-
-	/*private static void createSeriesData(long serieID, long locID, Date time,
-			long value) {
+	private static long createSeriesData(long serieID, long locID, Date time,
+			double value) {
 		final EntityManager em = JPA.em();
 		final SeriesData seriesData = new SeriesData();
-		Location loc = new Location();
-		seriesData.setLocation();
-		em.persist(loc);
-		return loc.getId();		
-	}*/
+		Location loc = JPA.em().find(Location.class, locID);
+		seriesData.setLocation(loc);
+		Series series = JPA.em().find(Series.class, serieID);
+		seriesData.setSeries(series );		
+		seriesData.setTimestamp(time);
+		seriesData.setValue(value);
+		em.persist(seriesData);
+		return seriesData.getId();
+	}
 
 }

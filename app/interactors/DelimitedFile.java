@@ -55,7 +55,7 @@ public class DelimitedFile {
 	}
 
 	public String getDescription() {
-		return metaData.get("description")[0]; //TODO: change string to constant
+		return (metaData.get("description")[0] == null) ? "" : metaData.get("description")[0]; //TODO: change string to constant
 	}
 
 }
