@@ -11,10 +11,6 @@ lazy val root = (project in file(".")).enablePlugins(PlayJava)
 scalaVersion := "2.11.6"
 
 libraryDependencies ++= Seq(
-  javaJpa.exclude(
-  	"org.hibernate.javax.persistence", 
-  	"hibernate-jpa-2.0-api"
-  ),
 
   "com.wordnik" %% "swagger-play2" % "1.3.12",
   "com.typesafe.play" %% "play-java-ws" % "2.3.9" % "test",

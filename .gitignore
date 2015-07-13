@@ -1,5 +1,4 @@
 conf/application_overrides.conf
-test/resources/conf/test.conf
 logs
 project/project
 project/target
