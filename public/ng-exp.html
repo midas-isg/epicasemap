@@ -1,44 +1,86 @@
 <html>
 <head>
-<script type="text/javascript"
+<script type='text/javascript'> var CONTEXT = '/epidemap'</script>
+<script type='text/javascript'
 	src='https://code.angularjs.org/1.4.2/angular.js'></script>
-<script type="text/javascript"
+<script type='text/javascript'
 	src='http://documentcloud.github.io/underscore/underscore-min.js'></script>
-<script type="text/javascript" src='ng.js'></script>
+<script type='text/javascript' src='ng.js'></script>
+<base href="/">
 </head>
-<div ng-app="app">
-	<div ng-controller="viz">
-		<h2>view.allSeries</h2>
-		<p>{{view.allSeries}}</p>
-		<h2>view.viz</h2>
-		<p>{{view.viz}}</p>
+<body ng-app='app' ng-controller='viz'>
 
-		<h2>view.series1Ids</h2>
-		<p>{{view.series1Ids}}</p>
-		<h2>view.series2Ids</h2>
-		<p>{{view.series2Ids}}</p>
-		<h2>view.location</h2>
-		<p>{{view.location}}</p>
-
-		<button class="btn-large" ng-click="submit()">Save</button>
-		<h2>Total series: {{getTotal()}}</h2>
-		<table class="table table-striped">
+	<dialog  id='viz'>
+		<h1>Viz Editor</h1>
+		<form name='form'>
+		<div>ID: {{model.id}}</div>
+		<h2>Enter meta data</h2>
+		<div>Name: <input type='text' ng-model='model.name'> </div>
+		<h2>Select the below series to be Series 1 and Series 2</h2>
+		<button class='btn-large' ng-click='toggle()'>{{lable()}}</button>
+		All {{count(allSeries)}} series
+		<table class='table table-striped'>
 			<thead>
 				<tr>
 					<td>S1</td>
 					<td>S2</td>
-					<td>name</td>
+					<td>Series name</td>
 				</tr>
 			</thead>
 			<tbody>
-				<tr ng-repeat="series in view.allSeries">
-					<td><input type="checkbox" ng-model="series.s1"></td>
-					<td><input type="checkbox" ng-model="series.s2"></td>
+				<tr ng-repeat='series in allSeries' ng-show='isShown(series)'>
+					<td><input type='checkbox' ng-model='series.s1'></td>
+					<td><input type='checkbox' ng-model='series.s2'></td>
 					<td>{{series.name}}</td>
 				</tr>
 			</tbody>
 		</table>
+		<h1>Review</h1>
+		<div>ID: {{model.id}} <br>
+		Name: {{model.name}} <br>
+		Series 1: {{countBy('s1')}} series <br>
+		Series 2: {{countBy('s2')}} series <br>
+		</div>
+		<button class='btn-large' ng-click='close()'>Close</button>
+		<button class='btn-large' ng-click='submit()'>Save</button>
+		<button class='btn-large' ng-click="submitThenClose()">Save & Close</button>
+		<button class='btn-large' ng-click='removeThenClose()' ng-show='model.id'>Delete & Close</button>
+		</form>
+		<div id='debug' hidden>
+			<h2>model</h2>
+			<div>{{model}}</div>
+		</div>
+	</dialog>
 
+	<div>
+		<h1>Viz Management</h1>
+		<h2>Create a new Viz</h2>
+		<button class='btn-large' ng-click='addNew()'>Add new</button>
+		<h2>Or edit one of the below Vizs</h2>
+		<div>Total: {{count(vizs)}} Vizs</div>
+		<table class='table table-striped'>
+			<thead>
+				<tr>
+					<td>Edit</td>
+					<td>Viz ID</td>
+					<td>Viz name</td>
+					<td>|Series 1|</td>
+					<td>|Series 2|</td>
+				</tr>
+			</thead>
+			<tbody>
+				<tr ng-repeat='viz in vizs'>
+					<td><button class='btn' ng-click='edit(viz)'>...</button></td>
+					<td>{{viz.id}}</td>
+					<td>{{viz.name}}</td>
+					<td>{{count(viz.allSeries)}}</td>
+					<td>{{count(viz.allSeries2)}}</td>
+				</tr>
+			</tbody>
+		</table>
 	</div>
-</div>
+
+
+</body>
+
 </html>
