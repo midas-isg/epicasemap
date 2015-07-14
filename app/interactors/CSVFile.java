@@ -5,7 +5,7 @@ import java.util.Map;
 
 import org.apache.commons.csv.CSVFormat;
 
-public class DelimitedFile {
+public class CSVFile {
 	public static final String APOLLO_ID_FORMAT = "apolloIdFormat";
 	public static final String COORDINATE_FORMAT = "coordinateFormat";
 	public static final String TIME_HEADER = "time";
@@ -17,7 +17,7 @@ public class DelimitedFile {
 	private File file;
 	private Map<String, String[]> metaData;
 
-	public DelimitedFile(File file, Map<String, String[]> metaData) {
+	public CSVFile(File file, Map<String, String[]> metaData) {
 		this.file = file;
 		this.metaData = metaData;
 	}
