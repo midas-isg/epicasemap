@@ -10,7 +10,8 @@ import static play.mvc.Http.Status.CREATED;
 import static play.mvc.Http.Status.NO_CONTENT;
 import static suites.Helper.assertAreEqual;
 import static suites.Helper.assertNodeType;
-import static suites.Helper.testJsonResponse;
+import static suites.Helper.testJsonArrayResponse;
+import static suites.Helper.testJsonObjectResponse;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -35,6 +36,20 @@ public class VizEndpointTester {
 
 	public static Runnable crud() {
 		return () -> newInstance().testCrud();
+	}
+
+	public static Runnable find() {
+		return () -> newInstance().testFind();
+	}
+
+	private void testFind() {
+		testFindAll();
+	}
+
+	private void testFindAll() {
+		final JsonNode root = testJsonArrayResponse(baseUrl());
+		JsonNode results = root.get("results");
+		assertThat(results.size()).isGreaterThanOrEqualTo(1);
 	}
 
 	private void testCrud() {
@@ -95,7 +110,7 @@ public class VizEndpointTester {
 		long id = pair.id;
 		final VizInput expected = pair.input;
 		final String urlWithId = urlWithId(id);
-		final JsonNode root = testJsonResponse(urlWithId);
+		final JsonNode root = testJsonObjectResponse(urlWithId);
 		assertNodeType(root.get("filter"), NULL);
 		final JsonNode result = root.get("result");
 		assertNodeType(result, OBJECT);

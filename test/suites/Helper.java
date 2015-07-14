@@ -4,6 +4,7 @@ import static com.fasterxml.jackson.databind.node.JsonNodeType.ARRAY;
 import static com.fasterxml.jackson.databind.node.JsonNodeType.NULL;
 import static com.fasterxml.jackson.databind.node.JsonNodeType.OBJECT;
 import static org.fest.assertions.Assertions.assertThat;
+import static play.mvc.Http.Status.OK;
 import interactors.ConfRule;
 
 import java.util.List;
@@ -73,12 +74,25 @@ public class Helper {
 		return root;
 	}
 
-	public static JsonNode testJsonResponse(String url) {
-		final WSResponse response = Helper.get(url);
-		final JsonNode root = response.asJson();
-		assertNodeType(root, OBJECT);
+	public static JsonNode testJsonObjectResponse(String url) {
+		final JsonNode root = testJsonResponse(url);
 		final JsonNode result = root.get("result");
 		assertNodeType(result, OBJECT);
+		return root;
+	}
+
+	private static JsonNode testJsonResponse(String url) {
+		final WSResponse response = Helper.get(url);
+		assertAreEqual(response.getStatus(), OK);
+		final JsonNode root = response.asJson();
+		assertNodeType(root, OBJECT);
+		return root;
+	}
+
+	public static JsonNode testJsonArrayResponse(String url) {
+		final JsonNode root = testJsonResponse(url);
+		final JsonNode results = root.get("results");
+		assertNodeType(results, ARRAY);
 		return root;
 	}
 
