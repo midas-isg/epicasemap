@@ -10,7 +10,7 @@ import org.joda.time.DateTime;
 
 public class CSVFileValidator {
 
-	public static ArrayList<String> getFileErrors(DelimitedFile dataFile) {
+	public static ArrayList<String> getFileErrors(CSVFile dataFile) {
 
 		CSVParser parser = CSVFileParser.parser(dataFile);
 		ArrayList<String> errorMsgList = new ArrayList<String>();
@@ -31,29 +31,29 @@ public class CSVFileValidator {
 		String errorMsg = "";
 
 		try {
-			DateTime.parse(record.get(DelimitedFile.TIME_HEADER));
+			DateTime.parse(record.get(CSVFile.TIME_HEADER));
 		} catch (IllegalArgumentException e) {
 			errorMsg += e.getMessage() + '\n';
 		}
 
-		if (!NumberUtils.isNumber(record.get(DelimitedFile.VALUE_HEADER))) {
+		if (!NumberUtils.isNumber(record.get(CSVFile.VALUE_HEADER))) {
 			errorMsg += "value is not valid.\n";
 		}
 
 		switch (fileFormat) {
-		case DelimitedFile.APOLLO_ID_FORMAT:
+		case CSVFile.APOLLO_ID_FORMAT:
 
 			if (!NumberUtils.isNumber(record
-					.get(DelimitedFile.APOLLO_ID_HEADER))) {
+					.get(CSVFile.APOLLO_ID_HEADER))) {
 				errorMsg += "apollo ID is not valid.\n";
 			}
 
-		case DelimitedFile.COORDINATE_FORMAT:
+		case CSVFile.COORDINATE_FORMAT:
 
 			if (!NumberUtils
-					.isNumber(record.get(DelimitedFile.LATITUDE_HEADER))
+					.isNumber(record.get(CSVFile.LATITUDE_HEADER))
 					|| !NumberUtils.isNumber(record
-							.get(DelimitedFile.LONGITUDE_HEADER))) {
+							.get(CSVFile.LONGITUDE_HEADER))) {
 				errorMsg += "Coordinate is not valid.\n";
 			}
 		}

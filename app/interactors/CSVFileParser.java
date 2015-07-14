@@ -14,7 +14,7 @@ public class CSVFileParser {
 	private static boolean Ignore_Surrounding_Spaces = true;
 	private static boolean Skip_Header_Record = true;
 
-	public static CSVParser parser(DelimitedFile dataFile) {
+	public static CSVParser parser(CSVFile dataFile) {
 
 		return  parser(dataFile.getCSVFormat(), dataFile.getHeaders(),
 				dataFile.getFile());

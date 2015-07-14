@@ -17,73 +17,74 @@ import play.db.jpa.JPA;
 
 public class CSVFilePersister {
 
-	public static boolean persistDelimitedFile(DelimitedFile dataFile) {
+	public static boolean persistCSVFile(CSVFile dataFile) {
 
 		// TODO: should return a msg
-		Series serie = createSeries(dataFile);
+		long serieId = createSeries(dataFile);
 		CSVParser parser = CSVFileParser.parser(dataFile);
-		return persistRecords(serie.getId(), dataFile.getFileFormat(), parser);
+		return persistRecords(serieId, dataFile.getFileFormat(), parser);
 
 	}
 
-	private static boolean persistRecords(long serieID, String fileFormat,
+	private static boolean persistRecords(long serieId, String fileFormat,
 			CSVParser parser) throws NumberFormatException {
 		Iterator<CSVRecord> records = parser.iterator();
 		while (records.hasNext()) {
 			CSVRecord record = records.next();
-			if (persistRecord(serieID, fileFormat, record) == 0) {
+			if (persistRecord(serieId, fileFormat, record) == 0) {
 				return false;
 			}
 		}
 		return true;
 	}
 
-	private static long persistRecord(long serieID, String fileFormat,
+	private static long persistRecord(long serieId, String fileFormat,
 			CSVRecord record) throws NumberFormatException {
 
 		long locId = 0;
 
-		if (fileFormat.equals(DelimitedFile.APOLLO_ID_FORMAT)) {
+		if (fileFormat.equals(CSVFile.APOLLO_ID_FORMAT)) {
 
-			locId = createLocationFromApolloID(Long.parseLong(record
-					.get(DelimitedFile.APOLLO_ID_HEADER)));
+			locId = createLocation(Long.parseLong(record
+					.get(CSVFile.APOLLO_ID_HEADER)));
 
-		} else if (fileFormat.equals(DelimitedFile.COORDINATE_FORMAT)) {
+		} else if (fileFormat.equals(CSVFile.COORDINATE_FORMAT)) {
 
-			locId = createLocationFromCoordinates(Double.parseDouble(record
-					.get(DelimitedFile.LATITUDE_HEADER)),
+			locId = createLocation(Double.parseDouble(record
+					.get(CSVFile.LATITUDE_HEADER)),
 					Double.parseDouble(record
-							.get(DelimitedFile.LONGITUDE_HEADER)));
+							.get(CSVFile.LONGITUDE_HEADER)));
 		}
-		long seriesDataId = createSeriesData(serieID, locId,
-				DateTime.parse(record.get(DelimitedFile.TIME_HEADER)).toDate(),
-				Double.parseDouble(record.get(DelimitedFile.VALUE_HEADER)));
+		long seriesDataId = createSeriesData(serieId, locId,
+				DateTime.parse(record.get(CSVFile.TIME_HEADER)).toDate(),
+				Double.parseDouble(record.get(CSVFile.VALUE_HEADER)));
 
 		return seriesDataId;
 	}
 	
-	private static Series createSeries(DelimitedFile dataFile) {
+	private static long createSeries(CSVFile dataFile) {
 		return createSeries(dataFile.getTitle(), dataFile.getDescription());
 	}
 
-	private static long createLocationFromApolloID(long apolloID) {
+	private static long createLocation(long apolloId) {
 		final EntityManager em = JPA.em();
 		final Location loc = new Location();
-		loc.setAlsId(apolloID);
+		loc.setAlsId(apolloId);
+		
 		em.persist(loc);
 		return loc.getId();
 	}
 
-	private static Series createSeries(String title, String desc) {
+	private static long createSeries(String title, String desc) {
 		final EntityManager em = JPA.em();
 		final Series serie = new Series();
 		serie.setName(title);
 		serie.setDescription(desc);
 		em.persist(serie);
-		return serie;
+		return serie.getId();
 	}
 
-	private static long createLocationFromCoordinates(Double latitude,
+	private static long createLocation(Double latitude,
 			Double longitude) {
 
 		final EntityManager em = JPA.em();
@@ -94,13 +95,13 @@ public class CSVFilePersister {
 		return loc.getId();
 	}
 
-	private static long createSeriesData(long serieID, long locID, Date time,
+	private static long createSeriesData(long serieId, long locId, Date time,
 			double value) {
 		final EntityManager em = JPA.em();
 		final SeriesData seriesData = new SeriesData();
-		Location loc = JPA.em().find(Location.class, locID);
+		Location loc = JPA.em().find(Location.class, locId);
 		seriesData.setLocation(loc);
-		Series series = JPA.em().find(Series.class, serieID);
+		Series series = JPA.em().find(Series.class, serieId);
 		seriesData.setSeries(series);
 		seriesData.setTimestamp(time);
 		seriesData.setValue(value);

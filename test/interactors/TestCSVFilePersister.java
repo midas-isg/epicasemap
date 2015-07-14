@@ -11,24 +11,24 @@ import org.junit.Test;
 
 import play.libs.F.Callback0;
 
-public class TestFileHandler {
+public class TestCSVFilePersister {
 
 	private static void runWithTransaction(Callback0 callback) {
 		App.newWithInMemoryDbWithDbOpen().runWithTransaction(callback);
 	}
 
 	@Test
+	public void testPersistCSVFile() {
+		runWithTransaction(() -> testPersistFile());
+	}
+
 	public void testPersistFile() {
-		runWithTransaction(() -> testPersistDelimitedFile());
-	}
-
-	public void testPersistDelimitedFile() {
-		DelimitedFile dataFile = createTestFileWithApolloIDformat();
-		assertTrue(CSVFilePersister.persistDelimitedFile(dataFile));
+		CSVFile dataFile = createTestFileWithApolloIDformat();
+		assertTrue(CSVFilePersister.persistCSVFile(dataFile));
 
 	}
 
-	private DelimitedFile createTestFileWithApolloIDformat() {
+	private CSVFile createTestFileWithApolloIDformat() {
 
 		File csvFile = new File("test/resources/test_input.txt");
 		Map<String, String[]> metaData = new HashMap<String, String[]>();
@@ -37,7 +37,7 @@ public class TestFileHandler {
 		metaData.put("delimiter", new String[] { "," });
 		metaData.put("headers", new String[] { "time", "apollo ID", "value" });
 		metaData.put("description", new String[] { "desc" });
-		DelimitedFile dataFile = new DelimitedFile(csvFile, metaData);
+		CSVFile dataFile = new CSVFile(csvFile, metaData);
 		return dataFile;
 	}
 
