@@ -14,8 +14,6 @@ public class DelimitedFile {
 	public static final String LATITUDE_HEADER = "latitude";
 	public static final String LONGITUDE_HEADER = "longitude";
 
-
-
 	private File file;
 	private Map<String, String[]> metaData;
 
@@ -41,21 +39,28 @@ public class DelimitedFile {
 	}
 
 	public CSVFormat getCSVFormat() {
-		char del = getMetaData().get("delimiter")[0].charAt(0);  //TODO: change string to constant
+		char del = getMetaData().get("delimiter")[0].charAt(0); // TODO: change
+																// string to
+																// constant
 		return CSVFormat.newFormat(del);
 
 	}
 
 	public String getFileFormat() {
-		return getMetaData().get("format")[0]; //TODO: change string to constant
+		return getMetaData().get("format")[0]; // TODO: change string to
+												// constant
 	}
 
 	public String getTitle() {
-		return metaData.get("title")[0]; //TODO: change string to constant
+		return metaData.get("title")[0]; // TODO: change string to constant
 	}
 
 	public String getDescription() {
-		return (metaData.get("description")[0] == null) ? "" : metaData.get("description")[0]; //TODO: change string to constant
+		return (metaData.get("description")[0] == null) ? "" : metaData
+				.get("description")[0]; // TODO: change string to constant
 	}
 
+	public String[] getHeaders() {
+		return metaData.get("headers");
+	}
 }
