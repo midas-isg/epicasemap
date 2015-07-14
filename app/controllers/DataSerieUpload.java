@@ -1,8 +1,8 @@
 package controllers;
 
-import static interactors.FileHandler.persist;
+import interactors.CSVFilePersister;
+import interactors.CSVFileValidator;
 import interactors.DelimitedFile;
-import interactors.FileHandler;
 
 import java.util.ArrayList;
 
@@ -16,9 +16,12 @@ public class DataSerieUpload extends Controller {
 
 		DelimitedFile dataFile = getFileObject(request().body()
 				.asMultipartFormData());
-		ArrayList<String> errorMsgList = FileHandler.getFileErrors(dataFile);
+		ArrayList<String> errorMsgList = CSVFileValidator.getFileErrors(dataFile);
 		if (errorMsgList.size() == 0) {
-			if (persist(dataFile)) { // TODO: should return msg
+			if (CSVFilePersister.persistDelimitedFile(dataFile)) { // TODO:
+																	// should
+																	// return
+																	// msg
 				return ok("File uploaded");
 			} else {
 				// TODO: error msg
@@ -38,5 +41,4 @@ public class DataSerieUpload extends Controller {
 		return new DelimitedFile(body.getFile("csvFile").getFile(),
 				body.asFormUrlEncoded());
 	}
-
 }
