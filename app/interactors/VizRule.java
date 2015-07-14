@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 
 import models.entities.Series;
 import models.entities.Viz;
+import models.entities.filters.Filter;
 import models.view.VizInput;
 
 public class VizRule extends CrudRule<Viz> {
@@ -61,6 +62,11 @@ public class VizRule extends CrudRule<Viz> {
 		input.setUiSetting(data.getUiSetting());
 		return input;
 	}
+	
+	public List<Viz> query(Filter filter) {
+		return dao.query(filter);
+	}
+
 
 	private List<Long> toIds(List<Series> input) {
 		return toList(input, it -> it.getId());

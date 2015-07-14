@@ -1,8 +1,11 @@
 package controllers;
 
+import static controllers.ResponseHelper.okAsWrappedJsonArray;
 import static controllers.ResponseHelper.okAsWrappedJsonObject;
 import static controllers.ResponseHelper.setResponseLocationFromRequest;
 import interactors.VizRule;
+
+import java.util.List;
 
 import javax.ws.rs.PathParam;
 
@@ -64,6 +67,15 @@ public class ApiViz extends Controller {
 		Viz data = makeRule().read(id);
 		Filter filter = null;
 		return okAsWrappedJsonObject(data, filter);
+	}
+
+	@ApiOperation(httpMethod = "GET", nickname = "find", value = "Finds all Vizs")
+	@ApiResponses({ @ApiResponse(code = OK, message = "Success") })
+	@Transactional
+	public static Result find() {
+		Filter filter = null;
+		List<Viz> data = makeRule().query(filter);
+		return okAsWrappedJsonArray(data, filter);
 	}
 
 	@ApiOperation(httpMethod = "PUT", nickname = "update", value = "Updates the Viz", 
