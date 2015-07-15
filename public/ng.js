@@ -79,6 +79,7 @@ app.controller('viz', function($scope, api) {
 		allSeries || api.find('series').then(function(rsp) {
 			allSeries = rsp.data.results;
 			$scope.allSeries = allSeries;
+			$scope.seriesOrder = 'id';
 			sync($scope.model, allSeries);
 			setShowAll(showAll);
 		});
@@ -181,6 +182,7 @@ app.controller('viz', function($scope, api) {
 		api.find('vizs').then(function(rsp) {
 			vizs = rsp.data.results;
 			$scope.vizs = vizs;
+			$scope.vizOrder = 'id';
 		});
 	}
 	

@@ -1,4 +1,5 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
 <script type='text/javascript'> var CONTEXT = '/epidemap'</script>
 <script type='text/javascript'
@@ -10,54 +11,94 @@
 </head>
 <body ng-app='app' ng-controller='viz'>
 
-	<dialog  id='viz'>
-		<h1>Viz Editor</h1>
-		<form name='form'>
-		<div>ID: {{model.id}}</div>
-		<h2>Enter meta data</h2>
-		<div>Name: <input type='text' ng-model='model.name'> </div>
-		<h2>Select the below series to be Series 1 and Series 2</h2>
-		<button class='btn-large' ng-click='toggle()'>{{lable()}}</button>
-		All {{count(allSeries)}} series
-		<table class='table table-striped'>
-			<thead>
-				<tr>
-					<td>S1</td>
-					<td>S2</td>
-					<td>Series name</td>
-				</tr>
-			</thead>
-			<tbody>
-				<tr ng-repeat='series in allSeries' ng-show='isShown(series)'>
-					<td><input type='checkbox' ng-model='series.s1'></td>
-					<td><input type='checkbox' ng-model='series.s2'></td>
-					<td>{{series.name}}</td>
-				</tr>
-			</tbody>
-		</table>
-		<h1>Review</h1>
-		<div>ID: {{model.id}} <br>
-		Name: {{model.name}} <br>
-		Series 1: {{countBy('s1')}} series <br>
-		Series 2: {{countBy('s2')}} series <br>
-		</div>
-		<button class='btn-large' ng-click='close()'>Close</button>
-		<button class='btn-large' ng-click='submit()'>Save</button>
-		<button class='btn-large' ng-click="submitThenClose()">Save & Close</button>
-		<button class='btn-large' ng-click='removeThenClose()' ng-show='model.id'>Delete & Close</button>
-		</form>
-		<div id='debug' hidden>
-			<h2>model</h2>
-			<div>{{model}}</div>
-		</div>
-	</dialog>
+<dialog  id='viz'>
+	<h1>Viz Editor</h1>
+	<form name='form'>
+	<div>ID: {{model.id}}</div>
+	<h2>Enter meta data</h2>
+	<div>Name: <input type='text' ng-model='model.name'  autofocus> </div>
+	<h2>Select the below series to be Series 1 and Series 2</h2>
+	
+	<div class="search">
+		<label>search: </label> <input ng-model="seriesQuery"
+			placeholder="Search for Series"  autofocus> 
+		<label>order by:
+			<select ng-model="seriesOrder">
+				<option value="id">ID</option>
+				<option value="name">Name</option>
+			</select>
+		</label> 
+		<label> <input type="radio"
+			ng-model="seriesDir" name="seriesDir" checked> ascending
+		</label> <label> <input type="radio"
+			ng-model="seriesDir" name="seriesDir" value="reverse">
+			descending
+		</label>
+	</div>
+	
+	<button class='btn-large' ng-click='toggle()'>{{lable()}}</button>
+	All {{count(allSeries)}} series
+	<table class='table table-striped'>
+		<thead>
+			<tr>
+				<td>S1</td>
+				<td>S2</td>
+				<td>Series name</td>
+			</tr>
+		</thead>
+		<tbody>
+			<tr ng-show='isShown(series)'
+			 ng-repeat='series in allSeries | filter: seriesQuery | orderBy: seriesOrder:seriesDir' >
+				<td><input type='checkbox' ng-model='series.s1'></td>
+				<td><input type='checkbox' ng-model='series.s2'></td>
+				<td>{{series.name}}</td>
+			</tr>
+		</tbody>
+	</table>
+	<h1>Review</h1>
+	<div>ID: {{model.id}} <br>
+	Name: {{model.name}} <br>
+	Series 1: {{countBy('s1')}} series <br>
+	Series 2: {{countBy('s2')}} series <br>
+	</div>
+	<button class='btn-large' ng-click='close()'>Close</button>
+	<button class='btn-large' ng-click='submit()'>Save</button>
+	<button class='btn-large' ng-click="submitThenClose()">Save & Close</button>
+	<button class='btn-large' ng-click='removeThenClose()' ng-show='model.id'>Delete & Close</button>
+	</form>
+	<div id='debug' hidden>
+		<h2>model</h2>
+		<div>{{model}}</div>
+	</div>
+</dialog>
 
-	<div>
-		<h1>Viz Management</h1>
+<article>
+	<h1>Viz Management</h1>
+	<section>
 		<h2>Create a new Viz</h2>
 		<button class='btn-large' ng-click='addNew()'>Add new</button>
-		<h2>Or edit one of the below Vizs</h2>
-		<div>Total: {{count(vizs)}} Vizs</div>
+	</section>
+	<section>
+		<h2>Edit one of the below Vizs</h2>
+		
+		<div class="search">
+			<label>search: </label> <input ng-model="vizQuery"
+				placeholder="Search for Vizs" autofocus> 
+			<label>order by:
+				<select ng-model="vizOrder">
+					<option value="id">ID</option>
+					<option value="name">Name</option>
+				</select>
+			</label> 
+			<label> <input type="radio"
+				ng-model="vizDir" name="vizDir" checked> ascending
+			</label> <label> <input type="radio"
+				ng-model="vizDir" name="vizDir" value="reverse">
+				descending
+			</label>
+		</div>
+	
+		Total: {{count(vizs)}} Vizs
 		<table class='table table-striped'>
 			<thead>
 				<tr>
@@ -69,7 +110,7 @@
 				</tr>
 			</thead>
 			<tbody>
-				<tr ng-repeat='viz in vizs'>
+				<tr ng-repeat='viz in vizs | filter: vizQuery | orderBy: vizOrder:vizDir'>
 					<td><button class='btn' ng-click='edit(viz)'>...</button></td>
 					<td>{{viz.id}}</td>
 					<td>{{viz.name}}</td>
@@ -78,9 +119,7 @@
 				</tr>
 			</tbody>
 		</table>
-	</div>
-
-
+	</section>
+</article>
 </body>
-
 </html>
