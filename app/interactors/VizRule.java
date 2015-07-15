@@ -78,4 +78,10 @@ public class VizRule extends CrudRule<Viz> {
 
 		return input.stream().map(mapper).collect(Collectors.toList());
 	}
+
+	public void updateUiSetting(long id, String data) {
+		Viz original = read(id);
+		original.setUiSetting(data);
+		update(id, original);
+	}
 }
