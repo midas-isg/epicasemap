@@ -16,8 +16,10 @@ import play.data.Form;
 import play.db.jpa.JPA;
 import play.db.jpa.Transactional;
 import play.mvc.Controller;
+import play.mvc.Http.RequestBody;
 import play.mvc.Result;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiImplicitParam;
 import com.wordnik.swagger.annotations.ApiImplicitParams;
@@ -98,6 +100,27 @@ public class ApiViz extends Controller {
 		return noContent();
 	}
 
+	//
+	@ApiOperation(httpMethod = "PUT", nickname = "updateUiSetting", value = "Updates UI Setting", 
+			notes = "This endpoint does full update only the given UI Setting "
+			+ "of the ViZ idientified by 'id' with submitted JSON object in body "
+			+ "and returns the URI via the 'Location' Header in the response. "
+			+ "Currently, no content in the body. ")
+		@ApiResponses({
+			@ApiResponse(code = OK, message = "(Not used yet)"),
+			@ApiResponse(code = NO_CONTENT, message = "Success") })
+		@ApiImplicitParams({ 
+			@ApiImplicitParam(required = true, paramType = "body") })
+		@Transactional
+		public static Result putUiSetting(
+				@ApiParam(value = "ID of the Viz", required = true) @PathParam("id") long id) {
+			RequestBody body = request().body();
+			final JsonNode root = body.asJson();
+			String json = root.toString();
+			makeRule().updateUiSetting(id, json);
+			setResponseLocationFromRequest();
+			return noContent();
+		}
 	public static void update(long id, Viz data) {
 		makeRule().update(id, data);
 	}

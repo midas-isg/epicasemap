@@ -15,7 +15,9 @@ import static suites.Helper.testJsonObjectResponse;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -34,29 +36,43 @@ public class VizEndpointTester {
 	private static final int timeout = 100_000;
 	private final String basePath = "/api/vizs";
 
-	public static Runnable crud() {
-		return () -> newInstance().testCrud();
+	public static Runnable test() {
+		return () -> newInstance().testOnServer();
 	}
 
-	public static Runnable find() {
-		return () -> newInstance().testFind();
-	}
-
-	private void testFind() {
+	private void testOnServer() {
+		testUpdateUiSetting();
+		testCrud();
 		testFindAll();
 	}
 
-	private void testFindAll() {
+	private void testUpdateUiSetting() {
+		Tuple data = testCreate();
+		long id = data.id;
+		testRead(data);
+		String url = urlWithId(id) + "/uiSetting";
+		Map<String, Object> setting = new HashMap<>();
+		setting.put("key", "value");
+		final JsonNode json = toJson(setting);
+		data.input.setUiSetting(json.toString());
+		final WSResponse update = WS.url(url).put(json).get(timeout);
+		assertAreEqual(update.getStatus(), NO_CONTENT);
+		testRead(data);
+	}
+
+	private long testFindAll() {
 		final JsonNode root = testJsonArrayResponse(baseUrl());
 		JsonNode results = root.get("results");
 		assertThat(results.size()).isGreaterThanOrEqualTo(1);
+		return results.get(0).get("id").asLong();
 	}
 
-	private void testCrud() {
+	private Tuple testCrud() {
 		final Tuple data = testCreate();
 		testRead(data);
 		testUpdate(data);
 		testDelete(data.id);
+		return data;
 	}
 
 	private void testUpdate(Tuple pair) {
@@ -118,7 +134,6 @@ public class VizEndpointTester {
 		assertAllSeries(result.get("allSeries"), expected.getSeriesIds());
 		assertAllSeries(result.get("allSeries2"), expected.getSeries2Ids());
 		assertAreEqual(result.get("uiSetting").asText(), expected.getUiSetting());
-		
 	}
 
 	public void assertAllSeries(final JsonNode allSeries, List<Long> expected) {
