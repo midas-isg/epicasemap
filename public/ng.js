@@ -10,8 +10,8 @@ app.service("api", function($http, $q, $location) {
 	var apiUrl = makeApiUrl();
 
 	this.remove = function(path, id) {
-		var url = makeUrl(path, id);
-		var deferred = $q.defer();
+		var url = makeUrl(path, id), 
+			deferred = $q.defer();
 		$http['delete'](url).then(function(data) {
 			deferred.resolve(data);
 		});
@@ -35,8 +35,8 @@ app.service("api", function($http, $q, $location) {
 	}
 
 	this.save = function(path, body) {
-		var url = makeUrl(path, body.id);
-		var deferred = $q.defer();
+		var url = makeUrl(path, body.id),
+			deferred = $q.defer();
 		if (body.id) {
 			$http.put(url, body).then(function(data) {
 				deferred.resolve(data.headers().location);
@@ -64,35 +64,37 @@ app.service("api", function($http, $q, $location) {
 });
 
 app.controller('viz', function($scope, api) {
-	var vizs;
-	var allSeries;
-    var dialog = document.getElementById('viz');
-
-    updateVizs();
+	var vizs,
+		allSeries,
+		dialog = document.getElementById('viz');
+    loadVizs();
+    
+    api.find('series').then(function(rsp) {
+		allSeries = rsp.data.results;
+		$scope.allSeries = allSeries;
+		$scope.seriesOrders = ['id', 'name'];
+		$scope.seriesOrder = 'id';
+	})
+    
+    $scope.$watch('model', function() {
+    	sync($scope.model, allSeries);
+    });
 	
     $scope.addNew = function() {
     	$scope.edit({allSeries:[], allSeries2:[]}, true);
 	}
     
-	$scope.edit = function(viz, showAll) {
+	$scope.edit = function(viz, isNew) {
 		$scope.model = viz;
-		allSeries || api.find('series').then(function(rsp) {
-			allSeries = rsp.data.results;
-			$scope.allSeries = allSeries;
-			$scope.seriesOrder = 'id';
-			sync($scope.model, allSeries);
-			setShowAll(showAll);
-		});
-		sync($scope.model, allSeries);
-		setShowAll(showAll);
+		setShowAll(isNew);
+		$scope.form.isNew = isNew;
 		dialog.showModal();
+
+		function setShowAll(showAll){
+			$scope.showAll = showAll || false;
+		}
 	};
 
-	function setShowAll(showAll){
-		showAll && $scope.form.$setDirty();
-		$scope.showAll = showAll || false;
-	}
-	
 	$scope.count = function(array) {
 		return array && array.length || 0;
 	};
@@ -136,7 +138,6 @@ app.controller('viz', function($scope, api) {
 				$scope.location = location;
 				api.get(location).then(function(rsp) {
 					$scope.model = rsp.data.result;
-					sync($scope.model, allSeries);
 				});
 			}
 		}
@@ -174,15 +175,16 @@ app.controller('viz', function($scope, api) {
 	}
 	
 	function close(){
-		updateVizs();
+		loadVizs();
         dialog.close();
 	}
 	
-	function updateVizs(){
+	function loadVizs(){
 		api.find('vizs').then(function(rsp) {
 			vizs = rsp.data.results;
 			$scope.vizs = vizs;
 			$scope.vizOrder = 'id';
+			$scope.vizOrders = ['id', 'name'];
 		});
 	}
 	
@@ -191,7 +193,10 @@ app.controller('viz', function($scope, api) {
 			return;
 		check(viz.allSeries.map(byId), 's1');
 		check(viz.allSeries2.map(byId), 's2');
-		$scope.form.$setPristine();
+		if ($scope.form.isNew)
+			$scope.form.$setDirty();
+		else
+			$scope.form.$setPristine();
 
 		function byId(series) {
 			  return series.id;

@@ -10,22 +10,69 @@
 <base href="/">
 </head>
 <body ng-app='app' ng-controller='viz'>
+<article>
+	<h1>Viz Management</h1>
+	<section>
+		<h2>Create a new Viz</h2>
+		<button class='btn-large' ng-click='addNew()'>Add new</button>
+	</section>
+	<section>
+		<h2>Edit existing {{count(vizs)}} Vizs</h2>
+		
+		<div class="search">
+			<label>search: </label> <input ng-model="vizQuery"
+				placeholder="Search for Vizs" autofocus> 
+			<label>order by:
+				<select ng-model="vizOrder">
+					<option ng-repeat='option in vizOrders' value="{{option}}">{{option}}</option>
+				</select>
+			</label> 
+			<label> <input type="radio"
+				ng-model="vizDir" name="vizDir" checked> ascending
+			</label> <label> <input type="radio"
+				ng-model="vizDir" name="vizDir" value="reverse">
+				descending
+			</label>
+		</div>
+	
+		<table class='table table-striped'>
+			<thead>
+				<tr>
+					<td>Edit</td>
+					<td>Viz ID</td>
+					<td>Viz name</td>
+					<td>|Series 1|</td>
+					<td>|Series 2|</td>
+				</tr>
+			</thead>
+			<tbody>
+				<tr ng-repeat='viz in vizs | filter: vizQuery | orderBy: vizOrder:vizDir'>
+					<td><button class='btn' ng-click='edit(viz)'>...</button></td>
+					<td>{{viz.id}}</td>
+					<td>{{viz.name}}</td>
+					<td>{{count(viz.allSeries)}}</td>
+					<td>{{count(viz.allSeries2)}}</td>
+				</tr>
+			</tbody>
+		</table>
+	</section>
+</article>
 
-<dialog  id='viz'>
+
+<dialog id='viz'>  <!-- TODO: only Chrome-35 supported -->
 	<h1>Viz Editor</h1>
 	<form name='form'>
 	<div>ID: {{model.id}}</div>
 	<h2>Enter meta data</h2>
 	<div>Name: <input type='text' ng-model='model.name'  autofocus> </div>
 	<h2>Select the below series to be Series 1 and Series 2</h2>
-	
-	<div class="search">
+
+	<div class="search"> <!-- TODO: mess up with form.$dirty() -->
 		<label>search: </label> <input ng-model="seriesQuery"
 			placeholder="Search for Series"  autofocus> 
 		<label>order by:
 			<select ng-model="seriesOrder">
-				<option value="id">ID</option>
-				<option value="name">Name</option>
+				<option ng-repeat='option in seriesOrders' value="{{option}}">{{option}}</option>
 			</select>
 		</label> 
 		<label> <input type="radio"
@@ -72,54 +119,6 @@
 	</div>
 </dialog>
 
-<article>
-	<h1>Viz Management</h1>
-	<section>
-		<h2>Create a new Viz</h2>
-		<button class='btn-large' ng-click='addNew()'>Add new</button>
-	</section>
-	<section>
-		<h2>Edit one of the below Vizs</h2>
-		
-		<div class="search">
-			<label>search: </label> <input ng-model="vizQuery"
-				placeholder="Search for Vizs" autofocus> 
-			<label>order by:
-				<select ng-model="vizOrder">
-					<option value="id">ID</option>
-					<option value="name">Name</option>
-				</select>
-			</label> 
-			<label> <input type="radio"
-				ng-model="vizDir" name="vizDir" checked> ascending
-			</label> <label> <input type="radio"
-				ng-model="vizDir" name="vizDir" value="reverse">
-				descending
-			</label>
-		</div>
-	
-		Total: {{count(vizs)}} Vizs
-		<table class='table table-striped'>
-			<thead>
-				<tr>
-					<td>Edit</td>
-					<td>Viz ID</td>
-					<td>Viz name</td>
-					<td>|Series 1|</td>
-					<td>|Series 2|</td>
-				</tr>
-			</thead>
-			<tbody>
-				<tr ng-repeat='viz in vizs | filter: vizQuery | orderBy: vizOrder:vizDir'>
-					<td><button class='btn' ng-click='edit(viz)'>...</button></td>
-					<td>{{viz.id}}</td>
-					<td>{{viz.name}}</td>
-					<td>{{count(viz.allSeries)}}</td>
-					<td>{{count(viz.allSeries2)}}</td>
-				</tr>
-			</tbody>
-		</table>
-	</section>
-</article>
+
 </body>
 </html>
