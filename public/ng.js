@@ -3,12 +3,9 @@
 var app = angular.module('app', [])
 .config(function($locationProvider) {
 	  $locationProvider.html5Mode(true).hashPrefix('!');
-})
-;
+});
 
 app.service("api", function($http, $q, $location) {
-	var apiUrl = makeApiUrl();
-
 	this.remove = function(path, id) {
 		var url = makeUrl(path, id), 
 			deferred = $q.defer();
@@ -16,180 +13,150 @@ app.service("api", function($http, $q, $location) {
 			deferred.resolve(data);
 		});
 		return deferred.promise;
-	}
-
+	};
 	this.read = function(path, id) {
 		return this.get(makeUrl(path, id));
-	}
-
+	};
 	this.find = function(path) {
 		return this.get(makeUrl(path));
-	}
-
+	};
 	this.get = function(url) {
 		var deferred = $q.defer();
 		$http.get(url).then(function(data) {
 			deferred.resolve(data);
 		});
 		return deferred.promise;
-	}
-
+	};
 	this.save = function(path, body) {
 		var url = makeUrl(path, body.id),
+			method = body.id ? 'put' : 'post',
 			deferred = $q.defer();
-		if (body.id) {
-			$http.put(url, body).then(function(data) {
-				deferred.resolve(data.headers().location);
-			});
-		} else {
-			$http.post(url, body).then(function(data) {
-				deferred.resolve(data.headers().location);
-			});
-		}
+		$http[method](url, body).then(success);
 		return deferred.promise;
-	}
+		
+		function success(data){
+			deferred.resolve(data.headers().location);
+		}
+	};
 	
 	function makeUrl(path, id){
-		var url = apiUrl + path;
+		var url = makeApiUrl() + path;
 		if (id)
 			url += '/' + id;
 		return url;
 	}
 	
 	function makeApiUrl(){
-		var path = CONTEXT + '/api/';
-		return $location.absUrl().split(CONTEXT)[0] + path.replace('//', '/');
+		var path = CONTEXT + '/api/',
+			host = $location.absUrl().split(CONTEXT)[0];
+		return host + path.replace('//', '/');
 	}
-
 });
 
 app.controller('viz', function($scope, api) {
-	var vizs,
-		allSeries,
-		dialog = document.getElementById('viz');
+	$scope.dialog = document.getElementById('viz');
     loadVizs();
-    
-    api.find('series').then(function(rsp) {
-		allSeries = rsp.data.results;
-		$scope.allSeries = allSeries;
-		$scope.seriesOrders = ['id', 'name'];
-		$scope.seriesOrder = 'id';
-	})
-    
-    $scope.$watch('model', function() {
-    	sync($scope.model, allSeries);
-    });
+    loadAllSeries();
+    $scope.$watch('model', function() { updateAllSeries($scope.model); });
 	
     $scope.addNew = function() {
     	$scope.edit({allSeries:[], allSeries2:[]}, true);
-	}
-    
+	};
 	$scope.edit = function(viz, isNew) {
 		$scope.model = viz;
-		setShowAll(isNew);
+		$scope.showAll = isNew || false;
 		$scope.form.isNew = isNew;
-		dialog.showModal();
-
-		function setShowAll(showAll){
-			$scope.showAll = showAll || false;
-		}
+		$scope.dialog.showModal();
 	};
-
-	$scope.count = function(array) {
-		return array && array.length || 0;
-	};
-
+	$scope.count = function(array) { return array && array.length || 0;	};
 	$scope.countBy = function(key) {
-		return _.countBy(allSeries, function(s) {
+		return _.countBy($scope.allSeries, function(s) {
 			return s[key] ? key : 'others';
 		})[key] || 0;
 	};
-
 	$scope.submit = function(callBack) {
-		var body = initBody($scope.model);
-		body.seriesIds = toSeriesIds('s1');
-		body.series2Ids = toSeriesIds('s2');
+		var body = buildBody($scope.model);
 		save(body, callBack);
 
-		function initBody(model) {
-			return _.omit(model, 'allSeries', 'allSeries2');
-		}
+		function buildBody(model) {
+			var body = _.omit(model, 'allSeries', 'allSeries2');
+			body.seriesIds = toSeriesIds('s1');
+			body.series2Ids = toSeriesIds('s2');
+			return body;
+			
+			function toSeriesIds(key){
+				var seriesObjects = filterByKey();
+				return mapById();
 
-		function toSeriesIds(key){
-			var seriesObjects = filterByKey(allSeries, key);
-			return mapById(seriesObjects);
+				function filterByKey() {
+					return _.filter($scope.allSeries, function(it) { 
+						return it[key]; 
+					});
+				}
 
-			function filterByKey(array, key) {
-				return _.filter(array, function(it) { return it[key]; });
-			}
-
-			function mapById(array) {
-				return _.map(array, function(it) { return it.id; });
+				function mapById() {
+					return _.map(seriesObjects, function(it) { return it.id; });
+				}
 			}
 		}
 		
 		function save(body, callBack) {
-			if ($scope.form.$pristine) 
-				return;
-			callBack = callBack || updateModel;
-			api.save('vizs', body).then(callBack);
-			
-			function updateModel(location) {
-				$scope.location = location;
+			callBack = callBack || loadModel;
+			if ($scope.form.$pristine){
+				callBack();
+			} else {
+				api.save('vizs', body).then(callBack);
+			}
+		
+			function loadModel(location) {
 				api.get(location).then(function(rsp) {
 					$scope.model = rsp.data.result;
 				});
 			}
 		}
 	};
-	
-	$scope.submitThenClose = function() {
-		$scope.submit(close);
-	}
-		
+	$scope.submitThenClose = function() { $scope.submit(close);	};
 	$scope.removeThenClose = function() {
-		api.remove('vizs', $scope.model.id).then(function(rsp){
-			close();
-		});
-	}
-	
+		if (confirm("About to delete this Viz. \nOK = Delete")) 
+			api.remove('vizs', $scope.model.id).then(close);
+	};
 	$scope.close = function() {
-		var yes = true;
+		var isOK = true;
 		if ($scope.form.$dirty)
-			yes = confirm("Changes are not saved. \nOK = Close without save");
-		if (yes) {
+			isOK = confirm("Changes are not saved. \nOK = Close without save");
+		if (isOK) 
 			close();
-		}
-	}
-	
+	};
 	$scope.isShown = function(series) {
 		return $scope.showAll || series.s1 || series.s2;
 	};
-	
-	$scope.toggle = function(series) {
-		$scope.showAll = ! $scope.showAll;
-	};
-	
+	$scope.toggle = function() { $scope.showAll = ! $scope.showAll;	};
 	$scope.lable = function() {
 		return $scope.showAll ? 'Hide series not selected' :'Show all series';
-	}
+	};
 	
 	function close(){
 		loadVizs();
-        dialog.close();
+		$scope.dialog.close();
 	}
 	
 	function loadVizs(){
 		api.find('vizs').then(function(rsp) {
-			vizs = rsp.data.results;
-			$scope.vizs = vizs;
-			$scope.vizOrder = 'id';
-			$scope.vizOrders = ['id', 'name'];
+			$scope.vizs = rsp.data.results;
+			$scope.vizOrder = $scope.vizOrder || 'id';
 		});
 	}
 	
-	function sync(viz, allSeries){
-		if (!viz || !allSeries)
+	function loadAllSeries(){
+		api.find('series').then(function(rsp) {
+			$scope.allSeries = rsp.data.results;
+			updateAllSeries($scope.model);
+			$scope.seriesOrder = $scope.seriesOrder || 'id';
+		});
+	}
+	
+	function updateAllSeries(viz){
+		if (!viz || !$scope.allSeries)
 			return;
 		check(viz.allSeries.map(byId), 's1');
 		check(viz.allSeries2.map(byId), 's2');
@@ -198,16 +165,12 @@ app.controller('viz', function($scope, api) {
 		else
 			$scope.form.$setPristine();
 
-		function byId(series) {
-			  return series.id;
-		}
+		function byId(series) { return series.id; }
 		
 		function check(ids, key){
-			allSeries.forEach(function (series) {
+			$scope.allSeries.forEach(function (series) {
 				  return series[key] = _.contains(ids, series.id);
 			});
 		}
 	}
-
-})
-;
+});

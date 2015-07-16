@@ -20,19 +20,17 @@
 		<h2>Edit existing {{count(vizs)}} Vizs</h2>
 		
 		<div class="search">
-			<label>search: </label> <input ng-model="vizQuery"
-				placeholder="Search for Vizs" autofocus> 
-			<label>order by:
-				<select ng-model="vizOrder">
-					<option ng-repeat='option in vizOrders' value="{{option}}">{{option}}</option>
-				</select>
-			</label> 
-			<label> <input type="radio"
-				ng-model="vizDir" name="vizDir" checked> ascending
-			</label> <label> <input type="radio"
-				ng-model="vizDir" name="vizDir" value="reverse">
-				descending
-			</label>
+			<label>search: </label>
+			<input ng-model="vizQuery" placeholder="Search for Vizs" autofocus> 
+			<label>order by: </label> 
+			<select ng-model="vizOrder">
+				<option value="id">ID</option>
+				<option value="name">Name</option>
+			</select>
+			<input type="radio" ng-model="vizDir" name="vizDir" checked>
+			<label> ascending </label> 
+			<input type="radio"	ng-model="vizDir" name="vizDir" value="reverse">
+			<label> descending</label>
 		</div>
 	
 		<table class='table table-striped'>
@@ -58,7 +56,6 @@
 	</section>
 </article>
 
-
 <dialog id='viz'>  <!-- TODO: only Chrome-35 supported -->
 	<h1>Viz Editor</h1>
 	<form name='form'>
@@ -68,19 +65,18 @@
 	<h2>Select the below series to be Series 1 and Series 2</h2>
 
 	<div class="search"> <!-- TODO: mess up with form.$dirty() -->
-		<label>search: </label> <input ng-model="seriesQuery"
-			placeholder="Search for Series"  autofocus> 
-		<label>order by:
-			<select ng-model="seriesOrder">
-				<option ng-repeat='option in seriesOrders' value="{{option}}">{{option}}</option>
-			</select>
-		</label> 
-		<label> <input type="radio"
-			ng-model="seriesDir" name="seriesDir" checked> ascending
-		</label> <label> <input type="radio"
-			ng-model="seriesDir" name="seriesDir" value="reverse">
-			descending
-		</label>
+		<label>search: </label> 
+		<input ng-model="seriesQuery" placeholder="Search for Series" 
+		autofocus> 
+		<label>order by: </label>
+		<select ng-model='seriesOrder'>
+			<option value="id">ID</option>
+			<option value="name">Name</option>
+		</select>
+		<input type="radio"	ng-model="seriesDir" name="seriesDir" checked>
+		<label> ascending </label> 
+		<input type="radio"	ng-model="seriesDir" name="seriesDir" value="reverse">
+		<label> descending </label>
 	</div>
 	
 	<button class='btn-large' ng-click='toggle()'>{{lable()}}</button>
@@ -118,7 +114,6 @@
 		<div>{{model}}</div>
 	</div>
 </dialog>
-
 
 </body>
 </html>
