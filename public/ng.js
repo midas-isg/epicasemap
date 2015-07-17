@@ -38,6 +38,9 @@ app.service("api", function($http, $q, $location) {
 			deferred.resolve(data.headers().location);
 		}
 	};
+	this.getUrlQuery = function() {
+		return $location.search();
+	}
 	
 	function makeUrl(path, id){
 		var url = makeApiUrl() + path;
@@ -58,7 +61,8 @@ app.controller('viz', function($scope, api) {
     loadVizs();
     loadAllSeries();
     $scope.$watch('model', function() { updateAllSeries($scope.model); });
-	
+    loadVizHavingGivenId();
+    
     $scope.addNew = function() {
     	$scope.edit({allSeries:[], allSeries2:[]}, true);
 	};
@@ -170,6 +174,21 @@ app.controller('viz', function($scope, api) {
 		function check(ids, key){
 			$scope.allSeries.forEach(function (series) {
 				  return series[key] = _.contains(ids, series.id);
+			});
+		}
+	}
+
+	function loadVizHavingGivenId(){
+	    var urlQuery = api.getUrlQuery();
+	    console.log(urlQuery);
+		var id = urlQuery && urlQuery.id;
+		if (id){
+			api.read('vizs', id).then(function(rsp){
+				var viz = rsp.data.result;
+				if (viz)
+					$scope.edit(viz);
+				else
+					alert('Viz with ID=' + id + " was not found!");
 			});
 		}
 	}
