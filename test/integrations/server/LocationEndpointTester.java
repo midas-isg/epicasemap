@@ -6,7 +6,7 @@ import static com.fasterxml.jackson.databind.node.JsonNodeType.STRING;
 import static org.fest.assertions.Assertions.assertThat;
 import static suites.Helper.assertNodeType;
 import static suites.Helper.assertValueRange;
-import static suites.Helper.testJsonResponse;
+import static suites.Helper.testJsonObjectResponse;
 
 import java.util.Iterator;
 
@@ -22,7 +22,7 @@ public class LocationEndpointTester {
 	}
 
 	private void testRead() {
-		JsonNode root = testJsonResponse(url() + "/1");
+		JsonNode root = testJsonObjectResponse(url() + "/1");
 		assertDefaultFilter(root.get("filter"));
 		assertLocation(root.get("result"));
 	}
