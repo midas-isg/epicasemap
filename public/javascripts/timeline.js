@@ -40,6 +40,7 @@ timeline.js
 			['#a6cee3', '#1f78b4', '#b2df8a', "#33a02c", "#fb9a99"],
 			['#66c2a5', '#fc8d62', '#8da0cb', "#e78ac3", "#a6d854"]
 		];
+		
 		this.colors = this.colorSet[0];
 		
 		for(i = 0; i < this.colors.length; i++) {
@@ -47,20 +48,6 @@ timeline.js
 				0.0: this.colors[i]
 			});
 		}
-		
-		/*
-		this.setGradient.push({
-			0.0: '#ff0000'
-		});
-		
-		this.setGradient.push({
-			0.0: '#00ff00'
-		});
-		
-		this.setGradient.push({
-			0.0: '#0000ff'
-		});
-		*/
 		
 		return this;
 	}
@@ -101,6 +88,54 @@ timeline.js
 			
 			return MAGIC_MAP.updatePlaybackInterface();
 		});
+		
+		
+		//TODO: refactor palette click code without causing closure issues
+		$("#palette-0").click(function() {
+			if(!$("#palette-0").hasClass("selected")) {
+				MAGIC_MAP.setColorPalette(0);
+			}
+		});
+		
+		$("#palette-1").click(function() {
+			if(!$("#palette-1").hasClass("selected")) {
+				MAGIC_MAP.setColorPalette(1);
+			}
+		});
+		
+		$("#palette-2").click(function() {
+			if(!$("#palette-2").hasClass("selected")) {
+				MAGIC_MAP.setColorPalette(2);
+			}
+		});
+		
+		return;
+	}
+	
+	MagicMap.prototype.setColorPalette = function(palette) {
+		var i;
+		
+		for(i = 0; i < 3; i++) {
+			$("#palette-" + i).removeClass("selected");
+		}
+		
+		$("#palette-" + palette).addClass("selected");
+		
+		this.colors = this.colorSet[palette];
+		
+		this.setGradient.length = 0;
+		for(i = 0; i < this.colors.length; i++) {
+			this.setGradient.push({
+				0.0: this.colors[i]
+			});
+		}
+		
+		for(i = 0; i < this.set.length; i++) {
+			this.detailChart.series[i].update({color: this.colors[i]}, true);
+			this.masterChart.series[i].update({color: this.colors[i]}, true);
+			
+			this.heat[i].setOptions({gradient: this.setGradient[i]});
+		}
 		
 		return;
 	}
@@ -588,7 +623,7 @@ timeline.js
 					if(this.dataset[setID].buffer[setFrame].point[i].value > 0) {
 						this.set[setID].visiblePoints.push([this.dataset[setID].buffer[setFrame].point[i].latitude,
 							this.dataset[setID].buffer[setFrame].point[i].longitude,
-							1.0,
+							0.7,
 							(this.dataset[setID].buffer[setFrame].point[i].value / this.dataset[setID].maxValue)]);
 					}
 				}
@@ -621,7 +656,7 @@ timeline.js
 			if(this.playBack) {
 				for(i = 0; i < this.set[setID].visiblePoints.length; i++) {
 					if(this.set[setID].visiblePoints[i][2] > 0.00) {
-						this.set[setID].visiblePoints[i][2] -= 0.01;
+						this.set[setID].visiblePoints[i][2] -= 0.0231;
 					}
 					else {
 						this.set[setID].visiblePoints.splice(i, 1);
