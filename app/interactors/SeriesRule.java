@@ -7,7 +7,7 @@ import java.util.List;
 import models.entities.Series;
 import models.entities.filters.Filter;
 
-public class SeriesRule {
+public class SeriesRule extends CrudRule<Series> {
 	private SeriesDao dao;
 
 	public SeriesRule(SeriesDao dao) {
@@ -18,7 +18,8 @@ public class SeriesRule {
 		return dao.query(filter);
 	}
 
-	public Series read(long id, Filter filter) {
-		return dao.find(id);
+	@Override
+	protected SeriesDao getDao() {
+		return dao;
 	}
 }
