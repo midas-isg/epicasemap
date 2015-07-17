@@ -105,9 +105,9 @@
 	Series 2: {{countBy('s2')}} series <br>
 	</div>
 	<button class='btn-large' ng-click='close()'>Close</button>
-	<button class='btn-large' ng-click='submit()'>Save</button>
-	<button class='btn-large' ng-click="submitThenClose()">Save & Close</button>
-	<button class='btn-large' ng-click='removeThenClose()' ng-show='model.id'>Delete & Close</button>
+	<button class='btn-large' ng-click='submit()' ng-disabled='working' >Save</button>
+	<button class='btn-large' ng-click="submitThenClose()" ng-disabled='working' >Save & Close</button>
+	<button class='btn-large' ng-click='removeThenClose()' ng-show='model.id' ng-disabled='working' >Delete & Close</button>
 	</form>
 	<div id='debug' hidden>
 		<h2>model</h2>

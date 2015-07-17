@@ -61,6 +61,7 @@ app.controller('viz', function($scope, api) {
     loadVizs();
     loadAllSeries();
     $scope.$watch('model', function() { updateAllSeries($scope.model); });
+    $scope.$watch('working', function(val, oldVal) { console.log('working: ' + oldVal + ' -> ' + val); });
     loadVizHavingGivenId();
     
     $scope.addNew = function() {
@@ -78,9 +79,9 @@ app.controller('viz', function($scope, api) {
 			return s[key] ? key : 'others';
 		})[key] || 0;
 	};
-	$scope.submit = function(callBack) {
+	$scope.submit = function(callback) {
 		var body = buildBody($scope.model);
-		save(body, callBack);
+		save(body, callback);
 
 		function buildBody(model) {
 			var body = _.omit(model, 'allSeries', 'allSeries2');
@@ -104,16 +105,23 @@ app.controller('viz', function($scope, api) {
 			}
 		}
 		
-		function save(body, callBack) {
-			callBack = callBack || loadModel;
+		function save(body, callback) {
+			callback = callback || loadModel;
 			if ($scope.form.$pristine){
-				callBack();
+				callback();
 			} else {
-				api.save('vizs', body).then(callBack);
+				$scope.working = true;
+				api.save('vizs', body).then(wrapCallback(callback));
+				
+				function wrapCallback(fn) {
+					return function() {
+						$scope.working = false;
+						return fn.apply(this, arguments);
+					};
+				}
 			}
-		
 			function loadModel(location) {
-				api.get(location).then(function(rsp) {
+				location && api.get(location).then(function(rsp) {
 					$scope.model = rsp.data.result;
 				});
 			}
@@ -142,6 +150,7 @@ app.controller('viz', function($scope, api) {
 	function close(){
 		loadVizs();
 		$scope.dialog.close();
+		$scope.working = false;
 	}
 	
 	function loadVizs(){
@@ -180,7 +189,6 @@ app.controller('viz', function($scope, api) {
 
 	function loadVizHavingGivenId(){
 	    var urlQuery = api.getUrlQuery();
-	    console.log(urlQuery);
 		var id = urlQuery && urlQuery.id;
 		if (id){
 			api.read('vizs', id).then(function(rsp){
