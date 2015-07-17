@@ -80,6 +80,21 @@ public class ApiViz extends Controller {
 		return okAsWrappedJsonArray(data, filter);
 	}
 
+	@ApiOperation(httpMethod = "GET", nickname = "readUiSetting", value = "Returns the UI Setting of the Viz by ID")
+	@ApiResponses({ @ApiResponse(code = OK, message = "Success") ,
+					@ApiResponse(code = NOT_FOUND, message = "Viz with the ID not found") })
+	@Transactional
+	public static Result readUiSetting(
+			@ApiParam(value = "ID of the Viz", required = true) 
+			@PathParam("id") 
+			long id) {
+		Viz data = makeRule().read(id);
+		if (data == null)
+			return notFound("Viz with ID=" + id + " not found!");
+		String uiSetting = data.getUiSetting();
+		return ok(String.valueOf(uiSetting));
+	}
+
 	@ApiOperation(httpMethod = "PUT", nickname = "update", value = "Updates the Viz", 
 		notes = "This endpoint does full update the given Viz "
 		+ "idientified by 'id' with submitted JSON object in body "
