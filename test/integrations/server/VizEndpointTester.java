@@ -7,9 +7,12 @@ import static org.fest.assertions.Assertions.assertThat;
 import static play.libs.Json.toJson;
 import static play.mvc.Http.HeaderNames.LOCATION;
 import static play.mvc.Http.Status.CREATED;
+import static play.mvc.Http.Status.NOT_FOUND;
 import static play.mvc.Http.Status.NO_CONTENT;
+import static play.mvc.Http.Status.OK;
 import static suites.Helper.assertAreEqual;
 import static suites.Helper.assertNodeType;
+import static suites.Helper.assertTextNode;
 import static suites.Helper.testJsonArrayResponse;
 import static suites.Helper.testJsonObjectResponse;
 
@@ -49,15 +52,32 @@ public class VizEndpointTester {
 	private void testUpdateUiSetting() {
 		Tuple data = testCreate();
 		long id = data.id;
+		final String subpath = "/ui-setting";
+		String url = urlWithId(id) + subpath;
 		testRead(data);
-		String url = urlWithId(id) + "/uiSetting";
 		Map<String, Object> setting = new HashMap<>();
 		setting.put("key", "value");
 		final JsonNode json = toJson(setting);
-		data.input.setUiSetting(json.toString());
+		final String input = json.toString();
+		data.input.setUiSetting(input);
 		final WSResponse update = WS.url(url).put(json).get(timeout);
 		assertAreEqual(update.getStatus(), NO_CONTENT);
 		testRead(data);
+		final String location = update.getHeader("LOCATION");
+		assertThat(location).endsWith(id + subpath);
+		final WSResponse read = assertStatusOfGet(url, OK);
+		assertJsonString(read.getBody(), input);
+		assertStatusOfGet(urlWithId(0) + subpath, NOT_FOUND);
+	}
+
+	private WSResponse assertStatusOfGet(String url, final int expected) {
+		final WSResponse wsResponse = WS.url(url).get().get(timeout);
+		assertAreEqual(wsResponse.getStatus(), expected);
+		return wsResponse;
+	}
+
+	private void assertJsonString(final String actual, final String expected) {
+		assertAreEqual(actual, expected);
 	}
 
 	private long testFindAll() {
@@ -133,7 +153,7 @@ public class VizEndpointTester {
 		assertAreEqual(result.get("id").asLong(), id);
 		assertAllSeries(result.get("allSeries"), expected.getSeriesIds());
 		assertAllSeries(result.get("allSeries2"), expected.getSeries2Ids());
-		assertAreEqual(result.get("uiSetting").asText(), expected.getUiSetting());
+		assertTextNode(result.get("uiSetting"), expected.getUiSetting());
 	}
 
 	public void assertAllSeries(final JsonNode allSeries, List<Long> expected) {
