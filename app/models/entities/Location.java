@@ -5,7 +5,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 
 @Entity
-public class Location {
+public class Location implements models.entities.Entity {
 	@Id
 	private Long id;
 	private String label;
@@ -17,10 +17,12 @@ public class Location {
 	private Double longitude;
 	private String geojson;
 
+	@Override
 	public Long getId() {
 		return id;
 	}
 
+	@Override
 	public void setId(Long id) {
 		this.id = id;
 	}

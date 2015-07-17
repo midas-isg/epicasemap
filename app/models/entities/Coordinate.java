@@ -11,9 +11,9 @@ import javax.persistence.Table;
 
 @Entity
 @Table(name = "series_view")
-public class Coordinate {
+public class Coordinate implements models.entities.Entity {
 	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 	@Column(name = "series_id")
 	private Long seriesId;
@@ -30,10 +30,12 @@ public class Coordinate {
 		return timestamp;
 	}
 
+	@Override
 	public Long getId() {
 		return id;
 	}
 
+	@Override
 	public void setId(Long id) {
 		this.id = id;
 	}

@@ -1,10 +1,25 @@
 package controllers;
 
-import static controllers.ResponseWrapper.okAsWrappedJsonObject;
+import static controllers.ResponseHelper.okAsWrappedJsonArray;
+import static controllers.ResponseHelper.okAsWrappedJsonObject;
+import static controllers.ResponseHelper.setResponseLocationFromRequest;
+import interactors.VizRule;
 
-import javax.persistence.EntityManager;
+import java.util.List;
+
 import javax.ws.rs.PathParam;
 
+import models.entities.Viz;
+import models.entities.filters.Filter;
+import models.view.VizInput;
+import play.data.Form;
+import play.db.jpa.JPA;
+import play.db.jpa.Transactional;
+import play.mvc.Controller;
+import play.mvc.Http.RequestBody;
+import play.mvc.Result;
+
+import com.fasterxml.jackson.databind.JsonNode;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiImplicitParam;
 import com.wordnik.swagger.annotations.ApiImplicitParams;
@@ -13,43 +28,24 @@ import com.wordnik.swagger.annotations.ApiParam;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
 
-import models.entities.Viz;
-import models.entities.VizInput;
-import play.data.Form;
-import play.db.jpa.JPA;
-import play.db.jpa.Transactional;
-import play.mvc.Controller;
-import play.mvc.Http.Context;
-import play.mvc.Http.Request;
-import play.mvc.Result;
-
-@Api(value = "/vizs", description = "Endpoint for Vizs")
+@Api(value = "/vizs", description = "Endpoints for Vizs", hidden = false)
 public class ApiViz extends Controller {
 	private static final String ex = "vizs.json";
 	private static final String exBody = "See an example of body at "
-			+ "<a href='assets/examples/api/" + ex + "'>"+ ex + "</a> ";
-	public static final String type = "models.entities.VizInput";
-	
+			+ "<a href='assets/examples/api/" + ex + "'>" + ex + "</a> ";
+	public static final String inputType = "models.view.VizInput";
+
 	public static Form<VizInput> vizForm = Form.form(VizInput.class);
-	
-	@ApiOperation(
-		httpMethod = "POST", 
-		nickname = "create",
+
+	@ApiOperation(httpMethod = "POST", nickname = "create", value = "Creates a new Viz", 
 		notes = "This endpoint creates a Viz using submitted JSON object in body "
 		+ "and returns the URI via the 'Location' Header in the response. "
-		+ "Currently, no content returns in the body. ",
-		value = "Creates a new Viz"
-	)
-	@ApiResponses(value = {
-		@ApiResponse(code = CREATED, message = "Successful creation")
-	})
-	@ApiImplicitParams({
-		@ApiImplicitParam(
-			required = true,
-			value = exBody,
-			dataType = type,
-			paramType = "body"
-		) 
+		+ "Currently, no content returns in the body. ")
+	@ApiResponses({ 
+		@ApiResponse(code = OK, message = "(Not used yet)"),
+		@ApiResponse(code = CREATED, message = "Success") })
+	@ApiImplicitParams({ 
+		@ApiImplicitParam(required = true, value = exBody, dataType = inputType, paramType = "body")
 	})
 	@Transactional
 	public static Result post() {
@@ -59,108 +55,117 @@ public class ApiViz extends Controller {
 		return created();
 	}
 
-	public static long create(VizInput input) {
-		final EntityManager em = JPA.em();
-		final Viz data = input.toViz();
-		em.persist(data);
-		return data.getId();
+	public static long create(VizInput data) {
+		return makeRule().create(data);
 	}
 
-	@ApiOperation(
-		httpMethod = "GET", 
-		nickname = "read", 
-		value = "Returns the Viz by ID"
-	)
-	@ApiResponses(value = {
-		@ApiResponse(code = OK, message = "Successful retrieval")
-	})
+	@ApiOperation(httpMethod = "GET", nickname = "read", value = "Returns the Viz by ID")
+	@ApiResponses({ @ApiResponse(code = OK, message = "Success") })
 	@Transactional
 	public static Result read(
 			@ApiParam(value = "ID of the Viz", required = true) 
 			@PathParam("id") 
-			long id
-	) {
-		Viz data = JPA.em().find(Viz.class, id);
-		return okAsWrappedJsonObject(data, null);
+			long id) {
+		Viz data = makeRule().read(id);
+		Filter filter = null;
+		return okAsWrappedJsonObject(data, filter);
 	}
-	
-	@ApiOperation(
-		httpMethod = "PUT", 
-		nickname = "update",
+
+	@ApiOperation(httpMethod = "GET", nickname = "find", value = "Finds all Vizs")
+	@ApiResponses({ @ApiResponse(code = OK, message = "Success") })
+	@Transactional
+	public static Result find() {
+		Filter filter = null;
+		List<Viz> data = makeRule().query(filter);
+		return okAsWrappedJsonArray(data, filter);
+	}
+
+	@ApiOperation(httpMethod = "GET", nickname = "readUiSetting", value = "Returns the UI Setting of the Viz by ID")
+	@ApiResponses({ @ApiResponse(code = OK, message = "Success") ,
+					@ApiResponse(code = NOT_FOUND, message = "Viz with the ID not found") })
+	@Transactional
+	public static Result readUiSetting(
+			@ApiParam(value = "ID of the Viz", required = true) 
+			@PathParam("id") 
+			long id) {
+		Viz data = makeRule().read(id);
+		if (data == null)
+			return notFound("Viz with ID=" + id + " not found!");
+		String uiSetting = data.getUiSetting();
+		return ok(String.valueOf(uiSetting));
+	}
+
+	@ApiOperation(httpMethod = "PUT", nickname = "update", value = "Updates the Viz", 
 		notes = "This endpoint does full update the given Viz "
 		+ "idientified by 'id' with submitted JSON object in body "
 		+ "and returns the URI via the 'Location' Header in the response. "
-		+ "Currently, no content in the body. ",
-		value = "Updates the Viz"
-	)
-	@ApiResponses(value = {
-		@ApiResponse(code = NO_CONTENT, message = "The Viz updated")
-	})
-	@ApiImplicitParams({
-		@ApiImplicitParam(
-			required = true,
-			value = exBody,
-			dataType = type,
-			paramType = "body"
-		) 
-	})
+		+ "Currently, no content in the body. ")
+	@ApiResponses({
+		@ApiResponse(code = OK, message = "(Not used yet)"),
+		@ApiResponse(code = NO_CONTENT, message = "Success") })
+	@ApiImplicitParams({ 
+		@ApiImplicitParam(required = true, value = exBody, dataType = inputType, paramType = "body") })
 	@Transactional
 	public static Result put(
-			@ApiParam(value = "ID of the Viz", required = true) 
-			@PathParam("id") 
-			long id
-	) {
+			@ApiParam(value = "ID of the Viz", required = true) @PathParam("id") long id) {
 		final VizInput input = vizForm.bindFromRequest().get();
-		final Viz data = input.toViz();
+		final Viz data = makeRule().toViz(input);
 		update(id, data);
 		setResponseLocationFromRequest();
 		return noContent();
 	}
 
-	public static void update(long id, Viz data) {
-		final EntityManager em = JPA.em();
-		Viz original = em.find(Viz.class, id);
-		data.setId(original.getId());
-		em.merge(data);
-	}
-	
-	@ApiOperation(
-			httpMethod = "DELETE", 
-			nickname = "delete",
-			notes = "This endpoint deletes the given Viz idientified by 'id' "
+	//
+	@ApiOperation(httpMethod = "PUT", nickname = "updateUiSetting", value = "Updates UI Setting", 
+			notes = "This endpoint does full update only the given UI Setting "
+			+ "of the ViZ idientified by 'id' with submitted JSON object in body "
 			+ "and returns the URI via the 'Location' Header in the response. "
-			+ "Currently, no content in the body. ",
-			value = "Deletes the Viz"
-	)
-	@ApiResponses(value = {
-		@ApiResponse(code = NO_CONTENT, message = "The Viz updated")
-	})
+			+ "Currently, no content in the body. ")
+		@ApiResponses({
+			@ApiResponse(code = OK, message = "(Not used yet)"),
+			@ApiResponse(code = NO_CONTENT, message = "Success") })
+		@ApiImplicitParams({ 
+			@ApiImplicitParam(required = true, paramType = "body") })
+		@Transactional
+		public static Result putUiSetting(
+				@ApiParam(value = "ID of the Viz", required = true) @PathParam("id") long id) {
+			RequestBody body = request().body();
+			final JsonNode root = body.asJson();
+			String json = root.toString();
+			makeRule().updateUiSetting(id, json);
+			setResponseLocationFromRequest();
+			return noContent();
+		}
+	public static void update(long id, Viz data) {
+		makeRule().update(id, data);
+	}
+
+	@ApiOperation(httpMethod = "DELETE", nickname = "delete", value = "Deletes the Viz", 
+		notes = "This endpoint deletes the given Viz idientified by 'id' "
+		+ "and returns the URI via the 'Location' Header in the response. "
+		+ "Currently, no content in the body. ")
+	@ApiResponses({ 
+		@ApiResponse(code = OK, message = "(Not used yet)"),
+		@ApiResponse(code = NO_CONTENT, message = "Success") })
 	@Transactional
 	public static Result delete(
-			@ApiParam(value = "ID of the Viz", required = true)
-			@PathParam("id")
-			long id
-	) {
+			@ApiParam(value = "ID of the Viz", required = true) 
+			@PathParam("id") 
+			long id) {
 		deleteById(id);
 		setResponseLocationFromRequest();
 		return noContent();
 	}
 
 	public static void deleteById(long id) {
-		final EntityManager em = JPA.em();
-		Viz data = em.find(Viz.class, id);
-		em.remove(data);
-	}
-	
-	private static void setResponseLocationFromRequest(String... tails) {
-		String url = makeUriFromRequest();
-		for (String tail : tails)
-			url += "/" + tail;
-		response().setHeader(LOCATION, url);
+		makeRule().delete(id);
 	}
 
-	private static String makeUriFromRequest() {
-		Request request = Context.current().request();
-		return request.getHeader(ORIGIN) + request.path();
+	private static VizRule makeRule() {
+		return Factory.makeVizRule(JPA.em());
+	}
+
+	public static VizInput from(Viz data) {
+		return makeRule().fromViz(data);
 	}
 }
