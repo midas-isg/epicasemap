@@ -15,7 +15,7 @@ import javax.persistence.ManyToMany;
 @Entity
 public class Viz implements models.entities.Entity {
 	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 	private String name;
 	@ManyToMany(fetch = FetchType.LAZY)

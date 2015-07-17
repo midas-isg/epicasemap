@@ -8,7 +8,7 @@ import javax.persistence.Id;
 @Entity
 public class Series implements models.entities.Entity {
 	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 	private String name;
 	private String description;

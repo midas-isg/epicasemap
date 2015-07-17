@@ -28,4 +28,5 @@ public class ApiLocation extends Controller {
 		Location result = JPA.em().find(Location.class, id);
 		return ResponseHelper.okAsWrappedJsonObject(result, filter);
 	}
+
 }
