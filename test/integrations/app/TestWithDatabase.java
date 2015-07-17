@@ -31,7 +31,7 @@ public class TestWithDatabase {
     		testReadCoordinate(em, id);
     		testReadSeries(em, 1L);
     		testReadLocation(em, 1L);
-    		testReadSeriesData(em, 5575L);
+    		testReadSeriesData(em, 1L);
     	};
     	App.newWithTestDb().runWithTransaction(callback);
     }
