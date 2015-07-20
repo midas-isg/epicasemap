@@ -3,8 +3,6 @@ package interactors;
 import java.io.File;
 import java.util.Map;
 
-import org.apache.commons.csv.CSVFormat;
-
 public class CSVFile {
 	public static final String APOLLO_ID_FORMAT = "apolloIdFormat";
 	public static final String COORDINATE_FORMAT = "coordinateFormat";
@@ -38,12 +36,10 @@ public class CSVFile {
 		this.metaData = metaData;
 	}
 
-	public CSVFormat getCSVFormat() {
-		char del = getMetaData().get("delimiter")[0].charAt(0); // TODO: change
+	public char getDelimiter() {
+		return getMetaData().get("delimiter")[0].charAt(0); // TODO: change
 																// string to
 																// constant
-		return CSVFormat.newFormat(del);
-
 	}
 
 	public String getFileFormat() {

@@ -16,95 +16,126 @@ import org.joda.time.DateTime;
 import play.db.jpa.JPA;
 
 public class CSVFilePersister {
+	// private SeriesRule seriesRule = Factory.makeSeriesRule(em)
 
-	public static boolean persistCSVFile(CSVFile dataFile) {
+	public long persistCSVFile(CSVFile dataFile) {
 
 		// TODO: should return a msg
-		long serieId = createSeries(dataFile);
-		CSVParser parser = CSVFileParser.parser(dataFile);
-		return persistRecords(serieId, dataFile.getFileFormat(), parser);
+		Series series = persist(createSeries(dataFile));
+		CSVFileParser csvParser = new CSVFileParser();
+		CSVParser parser = csvParser.parse(dataFile);
+		if(persistRecords(series, dataFile.getFileFormat(), parser))
+			return series.getId();
+		else
+			return 0L;
 
 	}
 
-	private static boolean persistRecords(long serieId, String fileFormat,
+	private boolean persistRecords(Series series, String fileFormat,
 			CSVParser parser) throws NumberFormatException {
 		Iterator<CSVRecord> records = parser.iterator();
 		while (records.hasNext()) {
 			CSVRecord record = records.next();
-			if (persistRecord(serieId, fileFormat, record) == 0) {
+			if (persistRecord(series, fileFormat, record) == 0) {
 				return false;
 			}
 		}
 		return true;
 	}
 
-	private static long persistRecord(long serieId, String fileFormat,
+	private long persistRecord(Series series, String fileFormat,
 			CSVRecord record) throws NumberFormatException {
 
-		long locId = 0;
-
-		if (fileFormat.equals(CSVFile.APOLLO_ID_FORMAT)) {
-
-			locId = createLocation(Long.parseLong(record
-					.get(CSVFile.APOLLO_ID_HEADER)));
-
-		} else if (fileFormat.equals(CSVFile.COORDINATE_FORMAT)) {
-
-			locId = createLocation(Double.parseDouble(record
-					.get(CSVFile.LATITUDE_HEADER)),
-					Double.parseDouble(record
-							.get(CSVFile.LONGITUDE_HEADER)));
-		}
-		long seriesDataId = createSeriesData(serieId, locId,
-				DateTime.parse(record.get(CSVFile.TIME_HEADER)).toDate(),
-				Double.parseDouble(record.get(CSVFile.VALUE_HEADER)));
+		long seriesDataId = persist(csvRecordToSeriesData(series, record,
+				fileFormat));
 
 		return seriesDataId;
 	}
-	
-	private static long createSeries(CSVFile dataFile) {
+
+	private  SeriesData csvRecordToSeriesData(Series series,
+			CSVRecord record, String fileFormat) throws NumberFormatException {
+		Location location = createLocationFromCSVRecord(record, fileFormat);
+		return createSeriesData(series, location,
+				DateTime.parse(record.get(CSVFile.TIME_HEADER)).toDate(),
+				Double.parseDouble(record.get(CSVFile.VALUE_HEADER)));
+	}
+
+	private Location createLocationFromCSVRecord(CSVRecord record, String fileFormat)
+			throws NumberFormatException {
+		Location location = null;
+
+		if (fileFormat.equals(CSVFile.APOLLO_ID_FORMAT)) {
+
+			location = persist(createLocation(Long.parseLong(record
+					.get(CSVFile.APOLLO_ID_HEADER))));
+
+		} else if (fileFormat.equals(CSVFile.COORDINATE_FORMAT)) {
+
+			location = persist(createLocation(
+					Double.parseDouble(record.get(CSVFile.LATITUDE_HEADER)),
+					Double.parseDouble(record.get(CSVFile.LONGITUDE_HEADER))));
+		}
+		return location;
+	}
+
+	Series createSeries(CSVFile dataFile) {
 		return createSeries(dataFile.getTitle(), dataFile.getDescription());
 	}
 
-	private static long createLocation(long apolloId) {
-		final EntityManager em = JPA.em();
+	Location createLocation(long apolloId) {
 		final Location loc = new Location();
 		loc.setAlsId(apolloId);
-		
-		em.persist(loc);
-		return loc.getId();
+		return loc;
 	}
 
-	private static long createSeries(String title, String desc) {
-		final EntityManager em = JPA.em();
-		final Series serie = new Series();
-		serie.setName(title);
-		serie.setDescription(desc);
-		em.persist(serie);
-		return serie.getId();
+	private  Series createSeries(String title, String desc) {
+		final Series series = new Series();
+		series.setTitle(title);
+		series.setDescription(desc);
+		return series;
 	}
 
-	private static long createLocation(Double latitude,
-			Double longitude) {
+	Location createLocation(Double latitude, Double longitude) {
 
-		final EntityManager em = JPA.em();
 		final Location loc = new Location();
 		loc.setLatitude(latitude);
 		loc.setLongitude(longitude);
-		em.persist(loc);
-		return loc.getId();
+		return loc;
 	}
 
-	private static long createSeriesData(long serieId, long locId, Date time,
-			double value) {
-		final EntityManager em = JPA.em();
+	SeriesData createSeriesData(Series series, Location location,
+			Date time, double value) {
+
 		final SeriesData seriesData = new SeriesData();
-		Location loc = JPA.em().find(Location.class, locId);
-		seriesData.setLocation(loc);
-		Series series = JPA.em().find(Series.class, serieId);
+		seriesData.setLocation(location);
 		seriesData.setSeries(series);
 		seriesData.setTimestamp(time);
 		seriesData.setValue(value);
+		return seriesData;
+	}
+
+	/*
+	 * private  long persist(Entity entity) { EntityRule rule =
+	 * Factory.makeEntityRule(JPA.em()); return rule.save(entity); }
+	 */
+
+	private  Series persist(final Series series) {
+		// SeriesRule seriesRule = Factory.makeSeriesRule(JPA.em());
+
+		final EntityManager em = JPA.em();
+		em.persist(series);
+		// seriesRule.create(serie);
+		return series;
+	}
+
+	private  Location persist(final Location location) {
+		final EntityManager em = JPA.em();
+		em.persist(location); // TODO: use FActory.makeRule
+		return location;
+	}
+
+	private  long persist(final SeriesData seriesData) {
+		final EntityManager em = JPA.em();
 		em.persist(seriesData);
 		return seriesData.getId();
 	}
