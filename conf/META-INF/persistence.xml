@@ -8,7 +8,7 @@
         <provider>org.hibernate.ejb.HibernatePersistence</provider>  
            <non-jta-data-source>DefaultDS</non-jta-data-source>  
            <properties>  
-               <!-- <property name="hibernate.dialect" value="org.hibernate.spatial.dialect.postgis.PostgisDialect" />  -->
+                <!-- <property name="hibernate.dialect" value="org.hibernate.spatial.dialect.postgis.PostgisDialect" />  -->
                 <property name="hibernate.connection.driver_class" value="org.postgresql.Driver" />  
 
                 <property name="hibernate.connection.pool_size" value="5" />  
@@ -34,15 +34,5 @@
 <!-- NEVER USE create, it will truncate all data  <property name="hibernate.hbm2ddl.auto" value="create" /> -->
            </properties>  
       </persistence-unit>
-
-
-
-
-
-
-
-
-
-
 
  </persistence>

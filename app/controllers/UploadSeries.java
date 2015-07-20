@@ -4,12 +4,10 @@ import interactors.CSVFile;
 import interactors.CSVFilePersister;
 import interactors.CSVFileValidator;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 
-import play.libs.Json;
 import play.mvc.Controller;
 import play.mvc.Http.Context;
 import play.mvc.Http.MultipartFormData;
@@ -27,16 +25,9 @@ public class UploadSeries extends Controller {
 			setResponseLocationFromRequest(seriesId + "");
 			return created();
 		} else {
-			/*Object response = errorsAsResponse(errors);
-			return badRequest(Json.toJson(response));*/
 			return badRequest(errors);
 		}
 
-	}
-
-	private static Object errorsAsResponse(String errors) {
-		Map<String, String> response = new HashMap<String, String>();
-		return response.put("errors", errors);
 	}
 
 	private static long create(CSVFile dataFile) {

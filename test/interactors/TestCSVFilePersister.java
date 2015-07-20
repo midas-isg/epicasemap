@@ -26,11 +26,11 @@ public class TestCSVFilePersister {
 		runWithTransaction(() -> testPersistFile());
 	}
 
-	public void testPersistFile() {
+	private void testPersistFile() {
 		CSVFile dataFile = createTestDataFileWithApolloIdFormat();
 		CSVFilePersister persister = new CSVFilePersister();
 		assertThat(persister.persistCSVFile(dataFile) == 1L);
-		
+
 		dataFile = createTestDataFileWithCoordianteFormat();
 		persister = new CSVFilePersister();
 		assertThat(persister.persistCSVFile(dataFile) == 1L);
@@ -41,13 +41,13 @@ public class TestCSVFilePersister {
 	public void testCSVFileToSeriesEntityObject() {
 		CSVFile dataFile = createTestDataFileWithApolloIdFormat();
 		Series series = SeriesObjectFromCSVFile(dataFile);
-		assertThat(series.getTitle().equals("serie1"));
-		assertThat(series.getDescription().equals("desc"));
-		
+		assertAreEqual(series.getTitle(), "serie1");
+		assertAreEqual(series.getDescription(), "desc");
+
 		dataFile = createTestDataFileWithCoordianteFormat();
 		series = SeriesObjectFromCSVFile(dataFile);
-		assertAreEqual(series.getTitle(),"serie1");
-		assertAreEqual(series.getDescription(),"desc");
+		assertAreEqual(series.getTitle(), "serie1");
+		assertAreEqual(series.getDescription(), "desc");
 	}
 
 	@Test
@@ -64,7 +64,7 @@ public class TestCSVFilePersister {
 		assertThat(seriesData.getValue().equals(1));
 		assertThat(seriesData.getTimestamp().equals(
 				DateTime.parse("2015-01-01").toDate()));
-		
+
 		seriesData = getSeriesDataFromCSVRecordwithCoordinateFormat();
 		assertThat(seriesData.getValue().equals(1));
 		assertThat(seriesData.getTimestamp().equals(
@@ -86,7 +86,7 @@ public class TestCSVFilePersister {
 				Double.parseDouble(csvRecord.get(CSVFile.VALUE_HEADER)));
 		return seriesData;
 	}
-	
+
 	private SeriesData getSeriesDataFromCSVRecordwithCoordinateFormat()
 			throws NumberFormatException {
 		CSVFile dataFile = createTestDataFileWithCoordianteFormat();
@@ -110,14 +110,14 @@ public class TestCSVFilePersister {
 				.get(CSVFile.APOLLO_ID_HEADER)));
 		return location;
 	}
-	
+
 	private Location getLocationObjectFromCSVRecordWithCoordinate()
 			throws NumberFormatException {
 		CSVRecord csvRecord = getCSVrecordWithCoordinateFormat();
 		CSVFilePersister persister = new CSVFilePersister();
-		Location location = persister.createLocation(Double.parseDouble(csvRecord
-				.get(CSVFile.LATITUDE_HEADER)),Double.parseDouble(csvRecord
-						.get(CSVFile.LONGITUDE_HEADER)));
+		Location location = persister.createLocation(
+				Double.parseDouble(csvRecord.get(CSVFile.LATITUDE_HEADER)),
+				Double.parseDouble(csvRecord.get(CSVFile.LONGITUDE_HEADER)));
 		return location;
 	}
 
@@ -134,7 +134,7 @@ public class TestCSVFilePersister {
 		return parser.iterator().next();
 
 	}
-	
+
 	private CSVRecord getCSVrecordWithCoordinateFormat() {
 		CSVFile dataFile = createTestDataFileWithCoordianteFormat();
 		CSVFileParser fileParser = new CSVFileParser();
@@ -147,14 +147,15 @@ public class TestCSVFilePersister {
 		File csvFile = new File("test/resources/test_apolloId_format.txt");
 		Map<String, String[]> metaData = new HashMap<String, String[]>();
 		metaData.put("title", new String[] { "serie1" });
-		metaData.put("format", new String[] { CSVFile.APOLLO_ID_FORMAT});
+		metaData.put("format", new String[] { CSVFile.APOLLO_ID_FORMAT });
 		metaData.put("delimiter", new String[] { "," });
-		metaData.put("headers", new String[] { CSVFile.TIME_HEADER, CSVFile.APOLLO_ID_HEADER, CSVFile.VALUE_HEADER });
+		metaData.put("headers", new String[] { CSVFile.TIME_HEADER,
+				CSVFile.APOLLO_ID_HEADER, CSVFile.VALUE_HEADER });
 		metaData.put("description", new String[] { "desc" });
 		CSVFile dataFile = new CSVFile(csvFile, metaData);
 		return dataFile;
 	}
-	
+
 	private CSVFile createTestDataFileWithCoordianteFormat() {
 
 		File csvFile = new File("test/resources/test_coordinate_format.txt");
@@ -162,7 +163,9 @@ public class TestCSVFilePersister {
 		metaData.put("title", new String[] { "serie1" });
 		metaData.put("format", new String[] { CSVFile.COORDINATE_FORMAT });
 		metaData.put("delimiter", new String[] { "," });
-		metaData.put("headers", new String[] { CSVFile.TIME_HEADER, CSVFile.LATITUDE_HEADER,CSVFile.LONGITUDE_HEADER, CSVFile.VALUE_HEADER });
+		metaData.put("headers", new String[] { CSVFile.TIME_HEADER,
+				CSVFile.LATITUDE_HEADER, CSVFile.LONGITUDE_HEADER,
+				CSVFile.VALUE_HEADER });
 		metaData.put("description", new String[] { "desc" });
 		CSVFile dataFile = new CSVFile(csvFile, metaData);
 		return dataFile;

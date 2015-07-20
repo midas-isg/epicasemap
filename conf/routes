@@ -15,16 +15,18 @@ GET     /api.json*path              controllers.ApiHelpController.getResource(pa
 # API
 GET     /api/series                 controllers.ApiSeries.get()
 GET     /api/series/:id             controllers.ApiSeries.read(id:Long)
+
 GET     /api/series/:id/time-coordinate   controllers.ApiTimeCoordinateSeries.get(id:Long, startInclusive?=null, endExclusive?=null, limit:java.lang.Integer?=null, offset:Int?=0)
+
 GET     /api/locations/:id          controllers.ApiLocation.read(id:Long)
 
+GET     /api/vizs                   controllers.ApiViz.find()
 POST	/api/vizs					controllers.ApiViz.post()
 GET     /api/vizs/:id               controllers.ApiViz.read(id:Long)
 PUT     /api/vizs/:id               controllers.ApiViz.put(id:Long)
 DELETE  /api/vizs/:id               controllers.ApiViz.delete(id:Long)
-
-POST	/api/upload					controllers.UploadSeries.upload()
-
+PUT     /api/vizs/:id/ui-setting	controllers.ApiViz.putUiSetting(id:Long)
+GET     /api/vizs/:id/ui-setting    controllers.ApiViz.readUiSetting(id:Long)
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.at(path="/public", file)

@@ -1,21 +1,22 @@
 package integrations.app.controllers;
 
-import static com.fasterxml.jackson.databind.node.JsonNodeType.ARRAY;
-import static com.fasterxml.jackson.databind.node.JsonNodeType.NULL;
+import static java.util.Arrays.asList;
 import static org.fest.assertions.Assertions.assertThat;
 import static play.test.Helpers.contentAsString;
 import static suites.Helper.assertAreEqual;
-import static suites.Helper.assertNodeType;
+import static suites.Helper.assertArrayNode;
+import static suites.Helper.assertTextNode;
+import static suites.Helper.detachThenAssertWithDatabase;
 import integrations.app.App;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import javax.persistence.EntityManager;
 
 import models.entities.Series;
 import models.entities.Viz;
-import models.entities.VizInput;
+import models.view.VizInput;
 
 import org.junit.Test;
 
@@ -29,7 +30,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import controllers.ApiViz;
 
 public class TestViz {
-    private static void runWithTransaction(Callback0 callback) {
+	private static void runWithTransaction(Callback0 callback) {
 		App.newWithInMemoryDbWithDbOpen().runWithTransaction(callback);
 	}
 
@@ -40,13 +41,13 @@ public class TestViz {
 		em.detach(data);
 		return data;
 	}
-	
+
 	@Test
-	public void correctTypeName() throws Exception {
-		assertAreEqual(ApiViz.type, VizInput.class.getName());
+	public void correctInputTypeName() throws Exception {
+		assertAreEqual(ApiViz.inputType, VizInput.class.getName());
 	}
-	
-    @Test
+
+	@Test
 	public void create() {
 		runWithTransaction(() -> testCreate());
 	}
@@ -75,32 +76,25 @@ public class TestViz {
 		});
 	}
 
-    @Test
-    public void crud() {
+	@Test
+	public void crud() {
 		runWithTransaction(() -> testCrud());
-    }
-    
-    @Test
+	}
+
+	@Test
 	public void createComplex() throws Exception {
-    	Viz data = new Viz();
+		Viz data = new Viz();
 		runWithTransaction(() -> {
 			Series s1 = TestSeries.persistThenDetachNewSeries();
 			List<Series> list = asList(s1);
 			data.setAllSeries(list);
+			data.setAllSeries2(Collections.emptyList());
 			data.setTitle("complex");
 			final long id = actCreate(data);
 			data.setId(id);
 		});
-		
-		runWithTransaction(() -> detachThenAssertWithDatabase(data));
-	}
-    
-    
-	private <T> List<T> asList(@SuppressWarnings("unchecked") T... ts) {
-		List<T> list = new ArrayList<>();
-		for (T t : ts)
-			list.add(t);
-		return list;
+
+		runWithTransaction(() -> detachAndAssertWithDatabase(data));
 	}
 
 	private void testCrud() {
@@ -118,43 +112,36 @@ public class TestViz {
 	private Viz testCreate(Viz newData) {
 		final long id = actCreate(newData);
 		newData.setId(id);
-		detachThenAssertWithDatabase(newData);
+		detachAndAssertWithDatabase(newData);
 		return newData;
 	}
 
-	private void detachThenAssertWithDatabase(Viz expected) {
+	private void detachAndAssertWithDatabase(Viz expected) {
 		detachThenAssertWithDatabase(expected.getId(), expected);
 	}
 
 	private long actCreate(Viz newData) {
-		VizInput input = VizInput.from(newData);
+		VizInput input = ApiViz.from(newData);
 		return ApiViz.create(input);
 	}
 
 	private void testRead(Viz expected) {
 		long id = expected.getId();
-		
+
 		final Result response = ApiViz.read(id);
-		
+
 		final String content = contentAsString(response);
 		final JsonNode root = Json.parse(content);
 		final JsonNode data = root.get("result");
 		assertAreEqual(data.get("id").asLong(), id);
-		assertTextNode(data.get("name"), expected.getTitle());
-		assertArrayNode(data.get("allSeries"), expected.getAllSeries(), Series.class);
-	}
-
-	private <T> void assertArrayNode(JsonNode actualList, List<T> expected, Class<T> clazz) {
-		assertNodeType(actualList, ARRAY);
-		for (int i = 0; i < expected.size(); i++) {
-			Object actual = Json.fromJson(actualList.get(i), clazz);
-			assertAreEqual(actual, expected.get(i));
-		}
+		assertTextNode(data.get("title"), expected.getTitle());
+		assertArrayNode(data.get("allSeries"), expected.getAllSeries(),
+				Series.class);
 	}
 
 	private void testUpdate(long id) {
 		Viz dataToUpdate = new Viz();
-		dataToUpdate.setTitle("name");
+		dataToUpdate.setTitle("title");
 		ApiViz.update(id, dataToUpdate);
 		detachThenAssertWithDatabase(id, dataToUpdate);
 	}
@@ -165,20 +152,5 @@ public class TestViz {
 		final EntityManager em = JPA.em();
 		Viz del = em.find(Viz.class, id);
 		assertThat(del).isNull();
-	}
-
-	private void detachThenAssertWithDatabase(long id, Viz expected) {
-		EntityManager em = JPA.em();
-		em.detach(expected);
-		
-		Viz found = em.find(Viz.class, id);
-		assertAreEqual(found, expected);
-	}
-
-	private void assertTextNode(JsonNode actual, String expected) {
-		if (expected == null)
-			assertNodeType(actual, NULL);
-		else 
-			assertAreEqual(actual.asText(), expected);
 	}
 }

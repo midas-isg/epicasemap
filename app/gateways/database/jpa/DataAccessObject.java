@@ -2,13 +2,14 @@ package gateways.database.jpa;
 
 import java.util.List;
 
+import models.entities.Entity;
 import models.entities.filters.Filter;
 
-public class DataAccessObject<T> {
+public class DataAccessObject<T extends Entity> {
 	private Class<T> clazz;
 	private JpaAdaptor adaptor;
 	
-	public DataAccessObject( Class<T> clazz, JpaAdaptor adaptor){
+	public DataAccessObject(Class<T> clazz, JpaAdaptor adaptor){
 		this.clazz = clazz;
 		this.adaptor = adaptor;
 	}
@@ -20,8 +21,18 @@ public class DataAccessObject<T> {
 	public List<T> findAll() {
 		return query(null);		
 	}
+	public T create(T data){
+		return adaptor.create(data);
+	}
+	public T read(long id) {
+		return adaptor.read(clazz, id);		
+	}
 	
-	public T find(long id) {
-		return adaptor.find(clazz, id);		
+	public T update(long id, T data) {
+		return adaptor.update(clazz, id, data);
+	}
+
+	public void delete(long id) {
+		adaptor.delete(clazz, id);
 	}
 }

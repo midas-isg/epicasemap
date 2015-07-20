@@ -1,7 +1,6 @@
 package integrations.app;
 
 import static org.fest.assertions.Assertions.assertThat;
-import static play.test.Helpers.fakeApplication;
 import static play.test.Helpers.running;
 import gateways.configuration.AppKey;
 import interactors.ConfRule;
@@ -24,6 +23,6 @@ public class TestConf {
 				assertThat(value).as("Conf key=" + key.key()).isNotEmpty();
 			}
         };
-		running(fakeApplication(), block);
+		running(App.newWithInMemoryDb(null).getFakeApp(), block);
     }
 }
