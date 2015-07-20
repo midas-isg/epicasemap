@@ -32,7 +32,7 @@ public class VizInput {
 	}
 
 	private VizInput fromViz(Viz data) {
-		setName(data.getName());
+		setName(data.getTitle());
 		setSeriesIds(toIds(data.getAllSeries()));
 		return this;
 	}
@@ -48,7 +48,7 @@ public class VizInput {
 
 	public Viz toViz() {
 		Viz result = new Viz();
-		result.setName(getName());
+		result.setTitle(getName());
 		final List<Long> ids = getSeriesIds();
 		if (ids == null)
 			return result;

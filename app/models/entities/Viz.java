@@ -13,10 +13,27 @@ import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 
 @Entity
-public class Viz {
-	@Id @GeneratedValue(strategy = GenerationType.AUTO)
+public class Viz extends MetaData{
+	
 	private Long id;
-	private String name;
+	
+	private List<Series> allSeries;
+	
+	public Viz(){
+		allSeries = new ArrayList<>();
+	}
+	
+
+	@Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+	public Long getId() {
+		return id;
+	}
+
+
+	public void setId(Long id) {
+		this.id = id;
+	}
+	
 	@ManyToMany(fetch = FetchType.LAZY)
 	@JoinTable(
 			name = "viz_series", 
@@ -27,28 +44,6 @@ public class Viz {
 					@JoinColumn(name = "series_id", nullable = false)
 			}
 	)
-	private List<Series> allSeries;
-	
-	public Viz(){
-		allSeries = new ArrayList<>();
-	}
-	
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
 	public List<Series> getAllSeries() {
 		return allSeries;
 	}
@@ -63,8 +58,8 @@ public class Viz {
 		int result = 1;
 		result = prime * result
 				+ ((allSeries == null) ? 0 : allSeries.hashCode());
-		result = prime * result + ((id == null) ? 0 : id.hashCode());
-		result = prime * result + ((name == null) ? 0 : name.hashCode());
+		result = prime * result + ((this.getId() == null) ? 0 : this.getId().hashCode());
+		result = prime * result + ((this.getTitle() == null) ? 0 : this.getTitle().hashCode());
 		return result;
 	}
 
@@ -82,15 +77,15 @@ public class Viz {
 				return false;
 		} else if (!equals_toHandleHibenateBug(allSeries, other.allSeries))
 			return false;
-		if (id == null) {
-			if (other.id != null)
+		if (this.getId() == null) {
+			if (other.getId() != null)
 				return false;
-		} else if (!id.equals(other.id))
+		} else if (!this.getId().equals(other.getId()))
 			return false;
-		if (name == null) {
-			if (other.name != null)
+		if (this.getTitle() == null) {
+			if (other.getTitle() != null)
 				return false;
-		} else if (!name.equals(other.name))
+		} else if (!this.getTitle().equals(other.getTitle()))
 			return false;
 		return true;
 	}
@@ -110,7 +105,7 @@ public class Viz {
 
 	@Override
 	public String toString() {
-		return "Viz [id=" + id + ", name=" + name + ", allSeries=" + allSeries
+		return "Viz [id=" + this.getId() + ", name=" + this.getTitle() + ", allSeries=" + allSeries
 				+ "]";
 	}
 }

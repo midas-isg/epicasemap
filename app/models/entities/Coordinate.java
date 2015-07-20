@@ -13,7 +13,7 @@ import javax.persistence.Table;
 @Table(name = "series_view")
 public class Coordinate {
 	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 	@Column(name = "series_id")
 	private Long seriesId;

@@ -8,7 +8,7 @@ import javax.persistence.Id;
 
 @Entity
 public class Location {
-	@Id @GeneratedValue(strategy = GenerationType.AUTO)
+	@Id @GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 	private String label;
 	@Column(name = "als_id")

@@ -12,7 +12,7 @@ import javax.persistence.Table;
 @Entity
 @Table(name = "series_data")
 public class SeriesData {
-	@Id @GeneratedValue(strategy = GenerationType.AUTO)
+	@Id @GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 	@ManyToOne
 	private Series series;
