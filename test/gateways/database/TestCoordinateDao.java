@@ -27,7 +27,7 @@ public class TestCoordinateDao {
 	@Test
 	public void find() throws Exception {
 		long id = 1L;
-		sut.find(id);
-		verify(mock).find(Coordinate.class, id);
+		sut.read(id);
+		verify(mock).read(Coordinate.class, id);
 	}
 }

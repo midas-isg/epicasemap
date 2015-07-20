@@ -4,7 +4,7 @@ import static com.fasterxml.jackson.databind.node.JsonNodeType.NULL;
 import static com.fasterxml.jackson.databind.node.JsonNodeType.STRING;
 import static org.fest.assertions.Assertions.assertThat;
 import static suites.Helper.assertNodeType;
-import static suites.Helper.testJsonResponse;
+import static suites.Helper.testJsonObjectResponse;
 import static suites.Helper.testJsonResponseMin;
 
 import java.util.Iterator;
@@ -19,7 +19,7 @@ public class SeriesEndpointTester {
 	}
 
 	private void testRead() {
-		JsonNode root = testJsonResponse(url() + "/1");
+		JsonNode root = testJsonObjectResponse(url() + "/1");
 		assertDefaultFilter(root.get("filter"));
 		assertSeriesObject(root.get("result"));
 	}
@@ -43,7 +43,7 @@ public class SeriesEndpointTester {
 	private void assertSeriesObject(JsonNode node) {
 		Iterator<String> fields = node.fieldNames();
 		final String idKey = "id";
-		final String nameKey = "name";
+		final String nameKey = "title";
 		final String desKey = "description";
 		assertThat(fields).containsOnly(idKey, nameKey, desKey);
 		assertThat(node.get(idKey).asLong()).isPositive();

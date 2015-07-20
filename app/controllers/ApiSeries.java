@@ -19,45 +19,35 @@ import com.wordnik.swagger.annotations.ApiParam;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
 
-@Api(value = "/series", description = "Endpoint for series")
+@Api(value = "/series", description = "Endpoints for Series")
 public class ApiSeries extends Controller {
-	@ApiOperation(
-			httpMethod = "GET", 
-			nickname = "find", 
-			value = "Returns all series" 
-	)
-	@ApiResponses(value = {
-			@ApiResponse(code = OK, message = "Successful retrieval"),
-	})
+	@ApiOperation(httpMethod = "GET", nickname = "list", value = "Lists all Series")
+	@ApiResponses({ @ApiResponse(code = OK, message = "Success") })
 	@Transactional
-	public static Result get(){
+	public static Result get() {
 		Filter filter = null;
 		List<Series> results = find(filter);
-		return ResponseWrapper.okAsWrappedJsonArray(results, filter);
+		return ResponseHelper.okAsWrappedJsonArray(results, filter);
 	}
 
 	@Transactional
 	public static List<Series> find(Filter filter) {
-		SeriesRule rule = Factory.makeSeriesRule(JPA.em());
-		return rule.query(filter);
+		return makeRule().query(filter);
 	}
-	
-	@ApiOperation(
-			httpMethod = "GET", 
-			nickname = "read", 
-			value = "Returns a series by ID" 
-	)
-	@ApiResponses(value = {
-			@ApiResponse(code = OK, message = "Successful retrieval"),
-	})
+
+	@ApiOperation(httpMethod = "GET", nickname = "read", value = "Returns the Series by ID")
+	@ApiResponses({ @ApiResponse(code = OK, message = "Success") })
 	@Transactional
 	public static Result read(
-			@ApiParam(value = "ID of the series", required = true) 
-			@PathParam("id") 
-			long id){
+			@ApiParam(value = "ID of the series", required = true)
+			@PathParam("id")
+			long id) {
+		Series result = makeRule().read(id);
 		Filter filter = null;
-		SeriesRule rule = Factory.makeSeriesRule(JPA.em());
-		Series result = rule.read(id, filter);;
-		return ResponseWrapper.okAsWrappedJsonObject(result, filter);
+		return ResponseHelper.okAsWrappedJsonObject(result, filter);
+	}
+
+	public static SeriesRule makeRule() {
+		return Factory.makeSeriesRule(JPA.em());
 	}
 }

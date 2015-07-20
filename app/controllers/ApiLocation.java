@@ -15,24 +15,18 @@ import com.wordnik.swagger.annotations.ApiParam;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
 
-@Api(value = "/locations", description = "Endpoint for locations")
+@Api(value = "/locations", description = "Endpoints for Locations")
 public class ApiLocation extends Controller {
-	@ApiOperation(
-			httpMethod = "GET", 
-			nickname = "read", 
-			value = "Returns a location by ID"
-	)
-	@ApiResponses(value = {
-			@ApiResponse(code = OK, message = "Successful retrieval")
-	})
+	@ApiOperation(httpMethod = "GET", nickname = "read", value = "Returns the Location by ID")
+	@ApiResponses({ @ApiResponse(code = OK, message = "Success") })
 	@Transactional
 	public static Result read(
 			@ApiParam(value = "ID of the location", required = true) 
 			@PathParam("id") 
-			long id
-	){
+			long id) {
 		Filter filter = null;
 		Location result = JPA.em().find(Location.class, id);
-		return ResponseWrapper.okAsWrappedJsonObject(result, filter);
+		return ResponseHelper.okAsWrappedJsonObject(result, filter);
 	}
+
 }

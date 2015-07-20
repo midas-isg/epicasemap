@@ -6,40 +6,47 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
 @Entity
-//@AttributeOverrides({ @AttributeOverride(name = "id", column = @Column(name = "id")) })
-public class Series extends MetaData {
-	
-	private Long id;
-
+public class Series implements models.entities.Entity {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
+	private String title;
+	private String description;
+
+	@Override
 	public Long getId() {
 		return id;
 	}
 
-	// @Override
+	@Override
 	public void setId(Long id) {
 		this.id = id;
 	}
-	
-	/*@Override @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-	public Long getId() {
-		return super.getId();
-	}*/
 
+	public String getTitle() {
+		return title;
+	}
+
+	public void setTitle(String title) {
+		this.title = title;
+	}
+
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
+	}
 
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime
-				* result
-				+ ((this.getDescription() == null) ? 0 : this.getDescription()
-						.hashCode());
 		result = prime * result
-				+ ((this.getId() == null) ? 0 : this.getId().hashCode());
-		result = prime * result
-				+ ((this.getTitle() == null) ? 0 : this.getTitle().hashCode());
+				+ ((description == null) ? 0 : description.hashCode());
+		result = prime * result + ((id == null) ? 0 : id.hashCode());
+		result = prime * result + ((title == null) ? 0 : title.hashCode());
 		return result;
 	}
 
@@ -52,28 +59,27 @@ public class Series extends MetaData {
 		if (getClass() != obj.getClass())
 			return false;
 		Series other = (Series) obj;
-		if (this.getDescription() == null) {
-			if (other.getDescription() != null)
+		if (description == null) {
+			if (other.description != null)
 				return false;
-		} else if (!this.getDescription().equals(other.getDescription()))
+		} else if (!description.equals(other.description))
 			return false;
-		if (this.getId() == null) {
-			if (other.getId() != null)
+		if (id == null) {
+			if (other.id != null)
 				return false;
-		} else if (!this.getId().equals(other.getId()))
+		} else if (!id.equals(other.id))
 			return false;
-		if (this.getTitle() == null) {
-			if (other.getTitle() != null)
+		if (title == null) {
+			if (other.title != null)
 				return false;
-		} else if (!this.getTitle().equals(other.getTitle()))
+		} else if (!title.equals(other.title))
 			return false;
 		return true;
 	}
 
 	@Override
 	public String toString() {
-		return "Series [id=" + this.getId() + ", name=" + this.getTitle()
-				+ ", description=" + this.getDescription() + "]";
+		return "Series [id=" + id + ", name=" + title + ", description="
+				+ description + "]";
 	}
-
 }
