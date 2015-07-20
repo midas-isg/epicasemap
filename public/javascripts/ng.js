@@ -61,7 +61,6 @@ app.controller('viz', function($scope, api) {
     loadVizs();
     loadAllSeries();
     $scope.$watch('model', function() { updateAllSeries($scope.model); });
-    $scope.$watch('working', function(val, oldVal) { console.log('working: ' + oldVal + ' -> ' + val); });
     loadVizHavingGivenId();
     
     $scope.addNew = function() {
@@ -80,51 +79,10 @@ app.controller('viz', function($scope, api) {
 		})[key] || 0;
 	};
 	$scope.submit = function(callback) {
-		var body = buildBody($scope.model);
-		save(body, callback);
-
-		function buildBody(model) {
-			var body = _.omit(model, 'allSeries', 'allSeries2');
-			body.seriesIds = toSeriesIds('s1');
-			body.series2Ids = toSeriesIds('s2');
-			return body;
-			
-			function toSeriesIds(key){
-				var seriesObjects = filterByKey();
-				return mapById();
-
-				function filterByKey() {
-					return _.filter($scope.allSeries, function(it) { 
-						return it[key]; 
-					});
-				}
-
-				function mapById() {
-					return _.map(seriesObjects, function(it) { return it.id; });
-				}
-			}
-		}
-		
-		function save(body, callback) {
-			callback = callback || loadModel;
-			if ($scope.form.$pristine){
-				callback();
-			} else {
-				$scope.working = true;
-				api.save('vizs', body).then(wrapCallback(callback));
-				
-				function wrapCallback(fn) {
-					return function() {
-						$scope.working = false;
-						return fn.apply(this, arguments);
-					};
-				}
-			}
-			function loadModel(location) {
-				location && api.get(location).then(function(rsp) {
-					$scope.model = rsp.data.result;
-				});
-			}
+		if ($scope.form.$dirty) {
+			save(callback);
+		} else if (callback) {
+			callback();
 		}
 	};
 	$scope.submitThenClose = function() { $scope.submit(close);	};
@@ -150,7 +108,6 @@ app.controller('viz', function($scope, api) {
 	function close(){
 		loadVizs();
 		$scope.dialog.close();
-		$scope.working = false;
 	}
 	
 	function loadVizs(){
@@ -169,10 +126,10 @@ app.controller('viz', function($scope, api) {
 	}
 	
 	function updateAllSeries(viz){
-		if (!viz || !$scope.allSeries)
-			return;
-		check(viz.allSeries.map(byId), 's1');
-		check(viz.allSeries2.map(byId), 's2');
+		if (viz && $scope.allSeries){
+			check(viz.allSeries.map(byId), 's1');
+			check(viz.allSeries2.map(byId), 's2');
+		}
 		if ($scope.form.isNew)
 			$scope.form.$setDirty();
 		else
@@ -199,5 +156,43 @@ app.controller('viz', function($scope, api) {
 					alert('Viz with ID=' + id + " was not found!");
 			});
 		}
+	}
+	
+	function buildBody(model) {
+		var body = _.omit(model, 'allSeries', 'allSeries2');
+		body.seriesIds = toSeriesIds('s1');
+		body.series2Ids = toSeriesIds('s2');
+		return body;
+		
+		function toSeriesIds(key){
+			var seriesObjects = filterByKey();
+			return mapById();
+
+			function filterByKey() {
+				return _.filter($scope.allSeries, function(it) { 
+					return it[key]; 
+				});
+			}
+
+			function mapById() {
+				return _.map(seriesObjects, function(it) { return it.id; });
+			}
+		}
+	}
+	
+	function save(callback){
+		var body = buildBody($scope.model);
+		$scope.working = true;
+		api.save('vizs', body).then(function(location) {
+			$scope.working = false;
+			$scope.form.isNew = false;
+			if (callback){
+				callback();
+			} else {
+				api.get(location).then(function(rsp) {
+					$scope.model = rsp.data.result;
+				});
+			}
+		});
 	}
 });
