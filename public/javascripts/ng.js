@@ -56,7 +56,7 @@ app.service("api", function($http, $q, $location) {
 	}
 });
 
-app.controller('viz', function($scope, api) {
+app.controller('Viz', function($scope, api) {
 	$scope.dialog = document.getElementById('viz');
     loadVizs();
     loadAllSeries();
