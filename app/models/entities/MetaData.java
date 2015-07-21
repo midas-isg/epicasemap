@@ -15,9 +15,9 @@ public abstract class MetaData {
 	private String description;
 	private String creator;
 	private String publisher;
+	private String license;
 	private String version;
 	private String isVersionOf;
-	private String format;
 
 	// @Id //@GeneratedValue//(strategy = GenerationType.IDENTITY)
 	// public Long getId() {
@@ -58,6 +58,14 @@ public abstract class MetaData {
 		this.publisher = publisher;
 	}
 
+	public String getLicense() {
+		return license;
+	}
+
+	public void setLicense(String license) {
+		this.license = license;
+	}
+
 	public String getVersion() {
 		return version;
 	}
@@ -74,13 +82,4 @@ public abstract class MetaData {
 	public void setIsVersionOf(String isVersionOf) {
 		this.isVersionOf = isVersionOf;
 	}
-
-	public String getFormat() {
-		return format;
-	}
-
-	public void setFormat(String format) {
-		this.format = format;
-	}
-
 }

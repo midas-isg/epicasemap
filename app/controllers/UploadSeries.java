@@ -9,43 +9,26 @@ import java.util.Map;
 import java.util.StringJoiner;
 
 import play.mvc.Controller;
-import play.mvc.Http.Context;
 import play.mvc.Http.MultipartFormData;
-import play.mvc.Http.Request;
 import play.mvc.Result;
 
 public class UploadSeries extends Controller {
 
-	public static Result upload() {
+	public static Result upload(long seriesId) {
 
 		CSVFile dataFile = getFileObject(request().body().asMultipartFormData());
 		String errors = validate(dataFile);
 		if (errors.equals("")) {
-			long seriesId = create(dataFile);
-			setResponseLocationFromRequest(seriesId + "");
+			create(dataFile, seriesId);
 			return created();
 		} else {
 			return badRequest(errors);
 		}
-
 	}
 
-	private static long create(CSVFile dataFile) {
+	private static boolean create(CSVFile dataFile, long seriesId) {
 		CSVFilePersister persister = new CSVFilePersister();
-		long seriesId = persister.persistCSVFile(dataFile);
-		return seriesId;
-	}
-
-	private static void setResponseLocationFromRequest(String... tails) {
-		String url = makeUriFromRequest();
-		for (String tail : tails)
-			url += "/" + tail;
-		response().setHeader(LOCATION, url);
-	}
-
-	private static String makeUriFromRequest() {
-		Request request = Context.current().request();
-		return request.getHeader(ORIGIN) + request.path();
+		return persister.persistCSVFile(dataFile, seriesId);
 	}
 
 	private static String validate(CSVFile dataFile) {

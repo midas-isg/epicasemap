@@ -8,6 +8,8 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.validation.constraints.AssertTrue;
+
 import models.entities.Location;
 import models.entities.Series;
 import models.entities.SeriesData;
@@ -29,11 +31,11 @@ public class TestCSVFilePersister {
 	private void testPersistFile() {
 		CSVFile dataFile = createTestDataFileWithApolloIdFormat();
 		CSVFilePersister persister = new CSVFilePersister();
-		assertThat(persister.persistCSVFile(dataFile) == 1L);
+		assertThat(persister.persistCSVFile(dataFile,1)).isTrue();
 
 		dataFile = createTestDataFileWithCoordianteFormat();
 		persister = new CSVFilePersister();
-		assertThat(persister.persistCSVFile(dataFile) == 1L);
+		assertThat(persister.persistCSVFile(dataFile,1)).isTrue();
 
 	}
 

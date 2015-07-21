@@ -3,10 +3,7 @@ package interactors;
 import java.util.Date;
 import java.util.Iterator;
 
-import javax.persistence.EntityManager;
-
 import models.entities.Location;
-import models.entities.Series;
 import models.entities.SeriesData;
 
 import org.apache.commons.csv.CSVParser;
@@ -14,70 +11,69 @@ import org.apache.commons.csv.CSVRecord;
 import org.joda.time.DateTime;
 
 import play.db.jpa.JPA;
+import controllers.Factory;
 
 public class CSVFilePersister {
 
-	public long persistCSVFile(CSVFile dataFile) {
+	public boolean persistCSVFile(CSVFile dataFile, long seriesId) {
 
-		Series series = persist(createSeries(dataFile));
 		CSVFileParser csvParser = new CSVFileParser();
 		CSVParser parser = csvParser.parse(dataFile);
-		if (persistRecords(series, dataFile.getFileFormat(), parser))
-			return series.getId();
-		else
-			return 0L;
-
+		return persistRecords(seriesId, dataFile.getFileFormat(), parser);
+		
 	}
 
-	private boolean persistRecords(Series series, String fileFormat,
+	private boolean persistRecords(long seriesId, String fileFormat,
 			CSVParser parser) throws NumberFormatException {
 		Iterator<CSVRecord> records = parser.iterator();
 		while (records.hasNext()) {
 			CSVRecord record = records.next();
-			if (persistRecord(series, fileFormat, record) == 0) {
+			if (persistRecord(seriesId, fileFormat, record) == 0) {
 				return false;
 			}
 		}
 		return true;
 	}
 
-	private long persistRecord(Series series, String fileFormat,
+	private long persistRecord(long seriesId, String fileFormat,
 			CSVRecord record) throws NumberFormatException {
 
-		long seriesDataId = persist(csvRecordToSeriesData(series, record,
-				fileFormat));
-
-		return seriesDataId;
+		SeriesData seriesData = csvRecordToSeriesData(seriesId, record,
+				fileFormat);
+		return persist(seriesData);
 	}
 
-	private SeriesData csvRecordToSeriesData(Series series, CSVRecord record,
+	private SeriesData csvRecordToSeriesData(long seriesId, CSVRecord record,
 			String fileFormat) throws NumberFormatException {
-		Location location = createLocationFromCSVRecord(record, fileFormat);
-		return createSeriesData(series, location,
-				DateTime.parse(record.get(CSVFile.TIME_HEADER)).toDate(),
-				Double.parseDouble(record.get(CSVFile.VALUE_HEADER)));
+		long locId = createLocationFromCSVRecord(record, fileFormat);
+		return createSeriesData(seriesId, locId, getTimeStamp(record),
+				getValue(record));
 	}
 
-	private Location createLocationFromCSVRecord(CSVRecord record,
+	private double getValue(CSVRecord record) throws NumberFormatException {
+		return Double.parseDouble(record.get(CSVFile.VALUE_HEADER));
+	}
+
+	private Date getTimeStamp(CSVRecord record) {
+		return DateTime.parse(record.get(CSVFile.TIME_HEADER)).toDate();
+	}
+
+	private long createLocationFromCSVRecord(CSVRecord record,
 			String fileFormat) throws NumberFormatException {
-		Location location = null;
+		long locId = 0L;
 
 		if (fileFormat.equals(CSVFile.APOLLO_ID_FORMAT)) {
 
-			location = persist(createLocation(Long.parseLong(record
+			locId = persist(createLocation(Long.parseLong(record
 					.get(CSVFile.APOLLO_ID_HEADER))));
 
 		} else if (fileFormat.equals(CSVFile.COORDINATE_FORMAT)) {
 
-			location = persist(createLocation(
+			locId = persist(createLocation(
 					Double.parseDouble(record.get(CSVFile.LATITUDE_HEADER)),
 					Double.parseDouble(record.get(CSVFile.LONGITUDE_HEADER))));
 		}
-		return location;
-	}
-
-	Series createSeries(CSVFile dataFile) {
-		return createSeries(dataFile.getTitle(), dataFile.getDescription());
+		return locId;
 	}
 
 	Location createLocation(long apolloId) {
@@ -86,14 +82,7 @@ public class CSVFilePersister {
 		return loc;
 	}
 
-	private Series createSeries(String title, String desc) {
-		final Series series = new Series();
-		series.setTitle(title);
-		series.setDescription(desc);
-		return series;
-	}
-
-	Location createLocation(Double latitude, Double longitude) {
+	Location createLocation(double latitude, double longitude) {
 
 		final Location loc = new Location();
 		loc.setLatitude(latitude);
@@ -101,34 +90,32 @@ public class CSVFilePersister {
 		return loc;
 	}
 
-	SeriesData createSeriesData(Series series, Location location, Date time,
+	SeriesData createSeriesData(long seriesId, long locId, Date time,
 			double value) {
 
 		final SeriesData seriesData = new SeriesData();
-		seriesData.setLocation(location);
-		seriesData.setSeries(series);
+		seriesData.setLocation(makeLocationRule().read(locId));
+		seriesData.setSeries(makeSeriesRule().read(seriesId));
 		seriesData.setTimestamp(time);
 		seriesData.setValue(value);
 		return seriesData;
 	}
 
-	private Series persist(final Series series) {
+	private SeriesRule makeSeriesRule() {
+		return Factory.makeSeriesRule(JPA.em());
 
-		final EntityManager em = JPA.em();
-		em.persist(series);
-		return series;
 	}
 
-	private Location persist(final Location location) {
-		final EntityManager em = JPA.em();
-		em.persist(location);
-		return location;
+	private LocationRule makeLocationRule() {
+		return Factory.makeLocationRule(JPA.em());
+	}
+
+	private long persist(final Location location) {
+		return makeLocationRule().create(location);
 	}
 
 	private long persist(final SeriesData seriesData) {
-		final EntityManager em = JPA.em();
-		em.persist(seriesData);
-		return seriesData.getId();
+		return Factory.makeSeriesDataRule(JPA.em()).create(seriesData);
 	}
 
 }

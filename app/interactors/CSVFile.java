@@ -47,15 +47,6 @@ public class CSVFile {
 												// constant
 	}
 
-	public String getTitle() {
-		return metaData.get("title")[0]; // TODO: change string to constant
-	}
-
-	public String getDescription() {
-		return (metaData.get("description")[0] == null) ? "" : metaData
-				.get("description")[0]; // TODO: change string to constant
-	}
-
 	public String[] getHeaders() {
 		return metaData.get("headers");
 	}
