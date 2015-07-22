@@ -4,12 +4,13 @@
 	@script_asset("external_packages/angular-1.4.3.js")
 	@script_asset("external_packages/underscore-min-1.8.3.js")
 	@script_asset("javascripts/ng/app-api.js")
+	@script_asset("javascripts/ng/controllers/vizs.js")
 	@script_asset("javascripts/ng/controllers/viz.js")
 	<base href="/">
 }
 
 @main("Viz Management", imports) {
-	<article ng-app='app' ng-controller='Viz'>
+	<article ng-app='app' ng-controller='Vizs'>
 		@vizManagement()
 	</article>
 }
@@ -45,75 +46,5 @@
 			</tbody>
 		</table>
 	</section>
-	@vizModal("Viz Editor")
-}
-
-
-@vizModal(header:String) = {
-  <div class="modal fade" id="modal" role="dialog">
-    <div class="modal-dialog modal-lg">
-    
-      <!-- Modal content-->
-      <div class="modal-content">
-        <div class="modal-header">
-          <button type="button" class="close" ng-click='close()'  data-keyboard='true'>@bs_icon("off")</button>
-          <h4 class="modal-title">@header</h4>
-        </div>
-        <div class="modal-body">
- 			@vizEditor()
-	    </div>
-        <div class="modal-footer">
-		<button title="Save the Viz" class='btn-large btn-primary' 
-		ng-click='submit()' ng-disabled='working' >
-			@bs_icon("save") Save
-		</button>
-		<button title="Save the Viz & Close the dialog" class='btn-large  btn-primary' 
-		ng-click="submitThenClose()" ng-disabled='working'>
-			@bs_icon("save") Save & @bs_icon("off") Close
-		</button>
-		<button title="Delete the Viz & Close the dialog" class='btn-large btn-danger' 
-		ng-click='removeThenClose()' ng-show='model.id' ng-disabled='working'>
-			@bs_icon("trash") Delete & @bs_icon("off") Close
-      </div>
-      
-    </div>
-  </div>
-}
-@vizEditor() = {
-	@filters("series", "Series", Seq(Seq("id", "ID"), Seq("name", "Name")))
-	<form name='form'>
-		<label>ID: </label> {{model.id}}
-		<h2>Enter metadata</h2>
-		<label>Name:  </label>
-		<input id='name' type='text' ng-model='model.name'  autofocus>
-		<h2>Select series <small>as Series 1 and Series 2</small></h2>
-		<div>
-			<div id='filterPlaceholderNotToCountAsPartOfForm'></div>
-			<button class='btn-large' ng-click='toggle()'>{{lable()}}</button>
-			All {{count(allSeries)}} series
-		</div>
-		<table class='table table-striped table-condensed table-hover'>
-			<thead><tr>
-					<th>S1</th>
-					<th>S2</th>
-					<th>ID</th>
-					<th>Name</th>
-			</tr></thead>
-			<tbody>
-				<tr class='active' ng-show='isShown(series)'
-				 ng-repeat=@filter_repeat("series in allSeries", "series") >
-					<td><input type='checkbox' ng-model='series.s1'></td>
-					<td><input type='checkbox' ng-model='series.s2'></td>
-					<td>{{series.id}}</td>
-					<td>{{series.name}}</td>
-				</tr>
-			</tbody>
-		</table>
-		<h1>Review</h1>
-		<div>ID: {{model.id}} <br>
-		Name: {{model.name}} <br>
-		Series 1: {{countBy('s1')}} series <br>
-		Series 2: {{countBy('s2')}} series <br>
-		</div>
-	</form>
+	@viz_dialog("Viz Editor")
 }
