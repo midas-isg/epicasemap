@@ -26,6 +26,9 @@ app.controller('Viz', function($scope, $rootScope, api) {
     $rootScope.$on('editViz', function(event, viz) {
     	edit(viz);
 	});
+    $rootScope.$on('loadSeries', function(event) {
+    	loadAllSeries();
+	});
 
 	function edit(viz) {
 		var isNew = viz.id ? false : true;
@@ -61,6 +64,9 @@ app.controller('Viz', function($scope, $rootScope, api) {
 	$scope.lable = function() {
 		return $scope.showAll ? 'Hide series not selected' :'Show all series';
 	};
+	$scope.editSeries = function(series){
+		$rootScope.$emit('editSeries', series);
+	}
 	
 	function close(){
 		$scope.form.$setPristine();
@@ -105,7 +111,7 @@ app.controller('Viz', function($scope, $rootScope, api) {
 			api.read('vizs', id).then(function(rsp){
 				var viz = rsp.data.result;
 				if (viz)
-					$scope.edit(viz);
+					edit(viz);
 				else
 					alert('Viz with ID=' + id + " was not found!");
 			});

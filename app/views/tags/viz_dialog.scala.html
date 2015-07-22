@@ -1,10 +1,8 @@
 @import tags._
 
 @* Viz modal dialog *@
-
-@bs_modal("modal", "Viz", "Viz Editor", "close()"){
-	@vizEditor()
-}{
+@()
+@bs_modal("modal", "Viz", "Viz Editor", "close()")(editor()){
 	<button title="Save the Viz" class='btn-large btn-primary' 
 	ng-click='submit()' ng-disabled='working' >
 		@bs_icon("save") Save
@@ -18,8 +16,9 @@
 		@bs_icon("trash") Delete & @bs_icon("off") Close
 	</button>
 }
+@series_dialog()
 
-@vizEditor() = {
+@editor() = {
 	@filters("series", "Series", Seq(Seq("id", "ID"), Seq("name", "Name")))
 	<form name='form'>
 		<label>ID: </label> {{model.id}}
@@ -42,10 +41,15 @@
 			<tbody>
 				<tr class='active' ng-show='isShown(series)'
 				 ng-repeat=@filter_repeat("series in allSeries", "series") >
-					<td><input type='checkbox' ng-model='series.s1'></td>
-					<td><input type='checkbox' ng-model='series.s2'></td>
+					<td><input title='check to include the Series as Series 1' type='checkbox' ng-model='series.s1'></td>
+					<td><input title='check to include the Series as Series 2' type='checkbox' ng-model='series.s2'></td>
 					<td>{{series.id}}</td>
-					<td>{{series.name}}</td>
+					<td>
+						<button title='edit' class='btn btn-xs' ng-click='editSeries(series)'>
+							@bs_icon("edit")
+						</button> 
+						{{series.name}}
+					</td>
 				</tr>
 			</tbody>
 		</table>
