@@ -1,21 +1,10 @@
 @import tags._
 
-@(header:String)
 @* Viz modal dialog *@
 
- <div class="modal fade" id="modal" role="dialog" ng-controller='Viz'>
-   <div class="modal-dialog modal-lg">
-   
-     <!-- Modal content-->
-     <div class="modal-content">
-       <div class="modal-header">
-         <button type="button" class="close" ng-click='close()'  data-keyboard='true'>@bs_icon("off")</button>
-         <h4 class="modal-title">@header</h4>
-       </div>
-       <div class="modal-body">
-			@vizEditor()
-    </div>
-       <div class="modal-footer">
+@bs_modal("modal", "Viz", "Viz Editor", "close()"){
+	@vizEditor()
+}{
 	<button title="Save the Viz" class='btn-large btn-primary' 
 	ng-click='submit()' ng-disabled='working' >
 		@bs_icon("save") Save
@@ -27,10 +16,8 @@
 	<button title="Delete the Viz & Close the dialog" class='btn-large btn-danger' 
 	ng-click='removeThenClose()' ng-show='model.id' ng-disabled='working'>
 		@bs_icon("trash") Delete & @bs_icon("off") Close
-     </div>
-     
-   </div>
- </div>
+	</button>
+}
 
 @vizEditor() = {
 	@filters("series", "Series", Seq(Seq("id", "ID"), Seq("name", "Name")))

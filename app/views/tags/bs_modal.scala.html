@@ -1,0 +1,24 @@
+@import tags._
+
+@(id:String, controller:String, header:String, closeExpression:String)(body: Html)(footer: Html)
+/* Bootstrap (BS) modal dialog with AngularJS */
+
+<div class="modal fade" id='@id' role="dialog" ng-controller='@controller'>
+	<div class="modal-dialog modal-lg">
+		<div class="modal-content">
+       		<div class="modal-header">
+         		<button type="button" class="close" data-keyboard='true' 
+         		ng-click='@closeExpression' >
+         			@bs_icon("off")
+         		</button>
+         		<h4 class="modal-title">@header</h4>
+       		</div>
+       		<div class="modal-body">
+				@body
+    		</div>
+       		<div class="modal-footer">
+       			@footer
+  			</div>
+  		</div>
+  	</div>
+</div>
