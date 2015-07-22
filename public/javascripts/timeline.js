@@ -22,10 +22,11 @@ timeline.js
 		this.detailChart = null;
 		this.dataset = [];
 		this.earliestDate = new Date();
-		this.zeroTime(this.earliestDate);
 		
 		this.latestDate = new Date(0);
 		this.zeroTime(this.latestDate);
+		
+		this.seriesList;
 		
 		this.playBack = false;
 		this.seriesToLoad = [1, 259];
@@ -54,6 +55,8 @@ timeline.js
 
 	MagicMap.prototype.start = function() {
 		var i;
+		
+		this.getSeriesList();
 		
 		for(i = 0; i < this.seriesToLoad.length; i++) {
 			this.load(this.seriesToLoad[i]);
@@ -89,6 +92,11 @@ timeline.js
 			return MAGIC_MAP.updatePlaybackInterface();
 		});
 		
+		$("#toggle-details-button").click(function() {
+			$("#detail-container *").toggle();
+			$("#toggle-details-button span").toggleClass("glyphicon-minus").toggleClass("glyphicon-plus");
+		});
+		
 		
 		//TODO: refactor palette click code without causing closure issues
 		$("#palette-0").click(function() {
@@ -110,6 +118,21 @@ timeline.js
 		});
 		
 		return;
+	}
+	
+	MagicMap.prototype.getSeriesList = function() {
+		var URL = CONTEXT + "/api/series",
+		thisMap = this;
+		
+		$.ajax({
+			url: URL,
+			success: function(result) {
+				return thisMap.seriesList = result.results;
+			},
+			error: function() {
+				return;
+			}
+		});
 	}
 	
 	MagicMap.prototype.setColorPalette = function(palette) {
@@ -155,7 +178,7 @@ timeline.js
 	}
 
 	MagicMap.prototype.load = function(seriesID) {
-		var URL = CONTEXT + "/api/series/" + seriesID + "/time-coordinate";
+		var URL = CONTEXT + "/api/series/" + seriesID + "/time-coordinate",
 		thisMap = this;
 		
 		$.ajax({
