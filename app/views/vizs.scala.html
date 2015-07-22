@@ -34,7 +34,7 @@
 				<tr class='active' ng-repeat=@filter_repeat("viz in vizs", "viz")>
 					<td>{{viz.id}}</td>
 					<td>
-						<button class='btn btn-xs' ng-click='edit(viz)'>
+						<button title='edit' class='btn btn-xs' ng-click='edit(viz)'>
 							@bs_icon("edit")
 						</button> 
 						{{viz.name}}
@@ -48,27 +48,6 @@
 	@vizModal("Viz Editor")
 }
 
-@vizDialog() = {
-	<dialog id='viz' class='container'>  <!-- TODO: only Chrome-35 supported -->
-		@vizEditor()
-		<button title="Close the dialog" class='btn-large' 
-		ng-click='close()'>
-			@bs_icon("off") Close
-		</button>
-		<button title="Save the Viz" class='btn-large btn-primary' 
-		ng-click='submit()' ng-disabled='working' >
-			@bs_icon("save") Save
-		</button>
-		<button title="Save the Viz & Close the dialog" class='btn-large  btn-primary' 
-		ng-click="submitThenClose()" ng-disabled='working' >
-			@bs_icon("save") Save & @bs_icon("off") Close
-		</button>
-		<button title="Delete the Viz & Close the dialog" class='btn-large btn-danger' 
-		ng-click='removeThenClose()' ng-show='model.id' ng-disabled='working' >
-			@bs_icon("trash") Delete & @bs_icon("off") Close
-		</button>
-	</dialog>
-}
 
 @vizModal(header:String) = {
   <div class="modal fade" id="modal" role="dialog">
@@ -101,7 +80,6 @@
   </div>
 }
 @vizEditor() = {
-	<h1>Viz Editor</h1>
 	@filters("series", "Series", Seq(Seq("id", "ID"), Seq("name", "Name")))
 	<form name='form'>
 		<label>ID: </label> {{model.id}}
