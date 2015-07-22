@@ -1,12 +1,30 @@
 "use strict"
 
+$(document).ready(function() {
+	$("#filterPlaceholderNotToCountAsPartOfForm").replaceWith($("#seriesFilter"));
+});
+
 app.controller('Viz', function($scope, api) {
-	$scope.dialog = document.getElementById('viz');
+	$scope.dialog = $('#modal');
     loadVizs();
     loadAllSeries();
     $scope.$watch('model', function() { updateAllSeries($scope.model); });
     loadVizHavingGivenId();
-    
+    $scope.dialog.on('hide.bs.modal', function (e) {
+		var isOK = true;
+		if ($scope.form.$dirty)
+			isOK = confirm("Changes are not saved. \nOK = Close without save");
+		if (isOK) {
+			loadVizs();
+		} else {
+			e.preventDefault();
+        	e.stopImmediatePropagation();
+        }
+    });
+    $scope.dialog.on('shown.bs.modal', function (e) {
+    	$scope.dialog.find('form').find(':input:enabled:visible:first').focus();
+    });
+
     $scope.addNew = function() {
     	$scope.edit({allSeries:[], allSeries2:[]}, true);
 	};
@@ -14,7 +32,7 @@ app.controller('Viz', function($scope, api) {
 		$scope.model = viz;
 		$scope.showAll = isNew || false;
 		$scope.form.isNew = isNew;
-		$scope.dialog.showModal();
+		$scope.dialog.modal();
 	};
 	$scope.count = function(array) { return array && array.length || 0;	};
 	$scope.countBy = function(key) {
@@ -31,15 +49,11 @@ app.controller('Viz', function($scope, api) {
 	};
 	$scope.submitThenClose = function() { $scope.submit(close);	};
 	$scope.removeThenClose = function() {
-		if (confirm("About to delete this Viz. \nOK = Delete")) 
+		if (confirm("About to delete this Viz. \nOK = Delete"))
 			api.remove('vizs', $scope.model.id).then(close);
 	};
 	$scope.close = function() {
-		var isOK = true;
-		if ($scope.form.$dirty)
-			isOK = confirm("Changes are not saved. \nOK = Close without save");
-		if (isOK) 
-			close();
+		$scope.dialog.modal('hide');
 	};
 	$scope.isShown = function(series) {
 		return $scope.showAll || series.s1 || series.s2;
@@ -50,8 +64,8 @@ app.controller('Viz', function($scope, api) {
 	};
 	
 	function close(){
-		loadVizs();
-		$scope.dialog.close();
+		$scope.form.$setPristine();
+		$scope.close();
 	}
 	
 	function loadVizs(){
