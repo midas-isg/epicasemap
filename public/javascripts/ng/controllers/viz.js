@@ -4,9 +4,8 @@ $(document).ready(function() {
 	$("#filterPlaceholderNotToCountAsPartOfForm").replaceWith($("#seriesFilter"));
 });
 
-app.controller('Viz', function($scope, api) {
+app.controller('Viz', function($scope, $rootScope, api) {
 	$scope.dialog = $('#modal');
-    loadVizs();
     loadAllSeries();
     $scope.$watch('model', function() { updateAllSeries($scope.model); });
     loadVizHavingGivenId();
@@ -24,17 +23,17 @@ app.controller('Viz', function($scope, api) {
     $scope.dialog.on('shown.bs.modal', function (e) {
     	$scope.dialog.find('form').find(':input:enabled:visible:first').focus();
     });
+    $rootScope.$on('editViz', function(event, viz) {
+    	edit(viz);
+	});
 
-    $scope.addNew = function() {
-    	$scope.edit({allSeries:[], allSeries2:[]}, true);
-	};
-	$scope.edit = function(viz, isNew) {
+	function edit(viz) {
+		var isNew = viz.id ? false : true;
 		$scope.model = viz;
-		$scope.showAll = isNew || false;
+		$scope.showAll = isNew;
 		$scope.form.isNew = isNew;
 		$scope.dialog.modal();
 	};
-	$scope.count = function(array) { return array && array.length || 0;	};
 	$scope.countBy = function(key) {
 		return _.countBy($scope.allSeries, function(s) {
 			return s[key] ? key : 'others';
@@ -69,10 +68,7 @@ app.controller('Viz', function($scope, api) {
 	}
 	
 	function loadVizs(){
-		api.find('vizs').then(function(rsp) {
-			$scope.vizs = rsp.data.results;
-			$scope.vizOrder = $scope.vizOrder || 'id';
-		});
+		$rootScope.$emit('loadVizs');
 	}
 	
 	function loadAllSeries(){
