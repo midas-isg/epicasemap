@@ -9,7 +9,6 @@ app.controller('Viz', function($scope, $rootScope, api) {
 	$scope.dialog = $('#modal');
     loadAllSeries();
     $scope.$watch('model', function() { updateAllSeries($scope.model); });
-    loadVizHavingGivenId();
     $scope.dialog.on('hide.bs.modal', function (e) {
 		var isOK = true;
 		if ($scope.form.$dirty)
@@ -109,20 +108,6 @@ app.controller('Viz', function($scope, $rootScope, api) {
 		}
 	}
 
-	function loadVizHavingGivenId(){
-	    var urlQuery = api.getUrlQuery();
-		var id = urlQuery && urlQuery.id;
-		if (id){
-			api.read('vizs', id).then(function(rsp){
-				var viz = rsp.data.result;
-				if (viz)
-					edit(viz);
-				else
-					alert('Viz with ID=' + id + " was not found!");
-			});
-		}
-	}
-	
 	function edit(viz) {
 		var isNew = viz.id ? false : true;
 		$scope.model = viz;
