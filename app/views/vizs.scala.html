@@ -1,11 +1,7 @@
 @import tags._
 
 @imports = {
-	<base href="/">
-	@script_asset("external_packages/angular-1.4.3.js")
-	@script_asset("external_packages/underscore-min-1.8.3.js")
-	@script_asset("javascripts/ng/app-api.js")
-
+	@ng_imports()
 	@script_asset("javascripts/ng/controllers/vizs.js")
 	@script_asset("javascripts/ng/controllers/viz.js")
 	@script_asset("javascripts/ng/controllers/series.js")
@@ -13,7 +9,8 @@
 
 @main("Viz Management", imports) {
 	<article ng-app='app' ng-controller='Vizs'>
-		@metadata_manager("Viz", "Vizs", "viz", "vizs")
+		@metadata_manager("Viz", "Vizs", "viz")
 		@viz_dialog()
 	</article>
 }
+

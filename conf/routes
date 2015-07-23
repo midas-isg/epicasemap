@@ -5,6 +5,7 @@
 # Home page
 GET     /                           controllers.Application.index()
 GET     /manage/vizs                controllers.Application.manageVizs()
+GET     /manage/series              controllers.Application.manageSeries()
 
 
 # Swagger API documentation

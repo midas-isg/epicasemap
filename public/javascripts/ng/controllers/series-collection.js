@@ -1,26 +1,26 @@
 "use strict"
 
-app.controller('Vizs', function($scope, $rootScope, api) {
-	var urlPath = 'vizs';
-	
+app.controller('SeriesCollection', function($scope, $rootScope, api) {
+	var urlPath = 'series';
 	loadModelHavingGivenId();
-    loadVizs();
-    $rootScope.$on('loadVizs', function(event) {
-    	loadVizs();
+
+	loadSeries();
+    $rootScope.$on('loadSeries', function(event) {
+    	loadSeries();
 	});
 
     $scope.addNew = function() {
     	$scope.edit({allSeries:[], allSeries2:[]});
 	};
-	$scope.edit = function(viz) {
-		$rootScope.$emit('editViz', viz);
+	$scope.edit = function(series) {
+		$rootScope.$emit('editSeries', series);
 	};
 	$scope.count = function(array) { return array && array.length || 0;	};
 	
-	function loadVizs(){
+	function loadSeries(){
 		api.find(urlPath).then(function(rsp) {
 			$scope.models = rsp.data.results;
-			$scope.vizOrder = $scope.vizOrder || 'id';
+			$scope.seriesOrder = $scope.seriesOrder || 'id';
 		});
 	}
 	
@@ -33,7 +33,7 @@ app.controller('Vizs', function($scope, $rootScope, api) {
 				if (model)
 					$scope.edit(model);
 				else
-					alert('Viz with ID=' + id + " was not found!");
+					alert('Series with ID=' + id + " was not found!");
 			});
 		}
 	}

@@ -1,6 +1,6 @@
-@(singular:String, plural:String, prefix:String, models:String)
+@(singular:String, plural:String, prefix:String)
 <section>
-	<h3>You have {{count(@models)}} @plural
+	<h3>You have {{count(models)}} @plural
 		<small><button title='Add new @singular' class='btn btn-xs' ng-click='addNew()'>
 			@bs_icon("plus")
 		</button></small>
@@ -13,7 +13,7 @@
 				<th>Edit</th>
 		</tr></thead>
 		<tbody>
-			<tr class='active' ng-repeat=@filter_repeat("it in " + models, prefix)>
+			<tr class='active' ng-repeat=@filter_repeat("it in models" , prefix)>
 				<td>{{it.id}}</td>
 				<td>{{it.name}}</td>
 				<td>
