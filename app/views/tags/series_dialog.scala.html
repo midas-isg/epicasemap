@@ -2,25 +2,10 @@
 
 @* Series modal dialog *@
 @()
-@bs_modal("seriesModal", "Series", "Series Editor", "close()")(editor()){
-	<button title="Save the Viz" class='btn-large btn-primary' 
-	ng-click='submit()' ng-disabled='working' >
-		@bs_icon("save") Save
-	</button>
-	<button title="Save the Viz & Close the dialog" class='btn-large  btn-primary' 
-	ng-click="submitThenClose()" ng-disabled='working'>
-		@bs_icon("save") Save & @bs_icon("remove") Close
-	</button>
-	<button title="Delete the Viz & Close the dialog" class='btn-large btn-danger' 
-	ng-click='removeThenClose()' ng-show='model.id' ng-disabled='working'>
-		@bs_icon("trash") Delete & @bs_icon("remove") Close
-	</button>
-}
+@bs_modal("seriesModal", "Series", "Series Editor", "close()")(editor())(modal_buttons("Series"))
 
 @editor() = {
 	<form name='form'>
-		<label>ID: </label> {{model.id}}<br>
-		<label>Name:  </label>
-		<input id='name' type='text' ng-model='model.name'  autofocus>
+		@metadata_inputs()
 	</form>
 }

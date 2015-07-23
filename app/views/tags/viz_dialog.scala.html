@@ -2,28 +2,13 @@
 
 @* Viz modal dialog *@
 @()
-@bs_modal("modal", "Viz", "Viz Editor", "close()")(editor()){
-	<button title="Save the Viz" class='btn-large btn-primary' 
-	ng-click='submit()' ng-disabled='working' >
-		@bs_icon("save") Save
-	</button>
-	<button title="Save the Viz & Close the dialog" class='btn-large  btn-primary' 
-	ng-click="submitThenClose()" ng-disabled='working'>
-		@bs_icon("save") Save & @bs_icon("remove") Close
-	</button>
-	<button title="Delete the Viz & Close the dialog" class='btn-large btn-danger pull-left' 
-	ng-click='removeThenClose()' ng-show='model.id' ng-disabled='working'>
-		@bs_icon("trash") Delete & @bs_icon("remove") Close
-	</button>
-}
+@bs_modal("modal", "Viz", "Viz Editor", "close()")(editor())(modal_buttons("Viz"))
 @series_dialog()
 
 @editor() = {
 	@filters("series", "Series", Seq(Seq("id", "ID"), Seq("name", "Name")))
 	<form name='form'>
-		<label>ID: </label> {{model.id}}<br>
-		<label>Name:  </label>
-		<input id='name' type='text' ng-model='model.name'  autofocus><br>
+		@metadata_inputs()
 		<label># of selected Series in category A: </label> {{countBy('s1')}}<br>
 		<label># of selected Series in category B: </label> {{countBy('s2')}}<br>	
 		<h3>
@@ -64,3 +49,4 @@
 		</div>
 	</form>
 }
+
