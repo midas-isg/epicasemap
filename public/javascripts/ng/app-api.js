@@ -41,6 +41,14 @@ app.service("api", function($http, $q, $location) {
 	this.getUrlQuery = function() {
 		return $location.search();
 	}
+	this.toDateText = function(timestamp){
+		var d = new Date(timestamp),
+			MM = to2digits(d.getUTCMonth() + 1),
+			dd = to2digits(d.getUTCDate());
+		
+		return d.getUTCFullYear() + '-' + MM + '-' + dd;
+	}
+	
 	
 	function makeUrl(path, id){
 		var url = makeApiUrl() + path;
@@ -53,5 +61,10 @@ app.service("api", function($http, $q, $location) {
 		var path = CONTEXT + '/api/',
 			host = $location.absUrl().split(CONTEXT)[0];
 		return host + path.replace('//', '/');
+	}
+	
+	function to2digits(number){
+		var text = number.toString();
+		return number > 9 ? text : '0' + text;
 	}
 });
