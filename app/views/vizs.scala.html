@@ -18,30 +18,27 @@
 
 @vizManagement() = {
 	<section>
-		<h2>You have {{count(vizs)}} Vizs
-			<small><button title='Add new Viz' class='btn-large' ng-click='addNew()'>
+		<h3>You have {{count(vizs)}} Vizs
+			<small><button title='Add new Viz' class='btn btn-xs' ng-click='addNew()'>
 				@bs_icon("plus")
 			</button></small>
-		</h2>
+		</h3>
 		@filters("viz", "Vizs", Seq(Seq("id", "ID"), Seq("name", "Name")))
 		<table class='table table-striped table-condensed table-hover'>
 			<thead> <tr>
 					<th>ID</th>
 					<th>Name</th>
-					<th>|Series 1|</th>
-					<th>|Series 2|</th>
+					<th>Edit</th>
 			</tr></thead>
 			<tbody>
 				<tr class='active' ng-repeat=@filter_repeat("viz in vizs", "viz")>
 					<td>{{viz.id}}</td>
+					<td>{{viz.name}}</td>
 					<td>
 						<button title='edit' class='btn btn-xs' ng-click='edit(viz)'>
 							@bs_icon("edit")
 						</button> 
-						{{viz.name}}
 					</td>
-					<td>{{count(viz.allSeries)}}</td>
-					<td>{{count(viz.allSeries2)}}</td>
 				</tr>
 			</tbody>
 		</table>

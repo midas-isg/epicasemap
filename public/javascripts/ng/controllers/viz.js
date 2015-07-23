@@ -5,6 +5,7 @@ $(document).ready(function() {
 });
 
 app.controller('Viz', function($scope, $rootScope, api) {
+	$scope.view = {};
 	$scope.dialog = $('#modal');
     loadAllSeries();
     $scope.$watch('model', function() { updateAllSeries($scope.model); });
@@ -29,14 +30,6 @@ app.controller('Viz', function($scope, $rootScope, api) {
     $rootScope.$on('loadSeries', function(event) {
     	loadAllSeries();
 	});
-
-	function edit(viz) {
-		var isNew = viz.id ? false : true;
-		$scope.model = viz;
-		$scope.showAll = isNew;
-		$scope.form.isNew = isNew;
-		$scope.dialog.modal();
-	};
 	$scope.countBy = function(key) {
 		return _.countBy($scope.allSeries, function(s) {
 			return s[key] ? key : 'others';
@@ -66,6 +59,18 @@ app.controller('Viz', function($scope, $rootScope, api) {
 	};
 	$scope.editSeries = function(series){
 		$rootScope.$emit('editSeries', series);
+	}
+	$scope.invertA = function(){
+		invert('s1');
+	}
+	$scope.invertB = function(){
+		invert('s2');
+	}
+	
+	function invert(key){
+		$scope.allSeries.forEach(function (series) {
+			  return series[key] = ! series[key];
+		});
 	}
 	
 	function close(){
@@ -118,6 +123,14 @@ app.controller('Viz', function($scope, $rootScope, api) {
 		}
 	}
 	
+	function edit(viz) {
+		var isNew = viz.id ? false : true;
+		$scope.model = viz;
+		$scope.showAll = isNew;
+		$scope.form.isNew = isNew;
+		$scope.dialog.modal();
+	}
+
 	function buildBody(model) {
 		var body = _.omit(model, 'allSeries', 'allSeries2');
 		body.seriesIds = toSeriesIds('s1');
