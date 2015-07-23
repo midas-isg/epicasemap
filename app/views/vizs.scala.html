@@ -1,47 +1,19 @@
 @import tags._
 
 @imports = {
+	<base href="/">
 	@script_asset("external_packages/angular-1.4.3.js")
 	@script_asset("external_packages/underscore-min-1.8.3.js")
 	@script_asset("javascripts/ng/app-api.js")
+
 	@script_asset("javascripts/ng/controllers/vizs.js")
 	@script_asset("javascripts/ng/controllers/viz.js")
 	@script_asset("javascripts/ng/controllers/series.js")
-	<base href="/">
 }
 
 @main("Viz Management", imports) {
 	<article ng-app='app' ng-controller='Vizs'>
-		@vizManagement()
+		@metadata_manager("Viz", "Vizs", "viz", "vizs")
+		@viz_dialog()
 	</article>
-}
-
-@vizManagement() = {
-	<section>
-		<h3>You have {{count(vizs)}} Vizs
-			<small><button title='Add new Viz' class='btn btn-xs' ng-click='addNew()'>
-				@bs_icon("plus")
-			</button></small>
-		</h3>
-		@filters("viz", "Vizs", Seq(Seq("id", "ID"), Seq("name", "Name")))
-		<table class='table table-striped table-condensed table-hover'>
-			<thead> <tr>
-					<th>ID</th>
-					<th>Name</th>
-					<th>Edit</th>
-			</tr></thead>
-			<tbody>
-				<tr class='active' ng-repeat=@filter_repeat("viz in vizs", "viz")>
-					<td>{{viz.id}}</td>
-					<td>{{viz.name}}</td>
-					<td>
-						<button title='edit' class='btn btn-xs' ng-click='edit(viz)'>
-							@bs_icon("edit")
-						</button> 
-					</td>
-				</tr>
-			</tbody>
-		</table>
-	</section>
-	@viz_dialog()
 }
