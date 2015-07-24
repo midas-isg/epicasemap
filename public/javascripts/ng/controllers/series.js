@@ -100,7 +100,7 @@ app.controller('Series', function($scope, $rootScope, api) {
 		size = $scope.locationIds.size;
 		if (size > 50)
 			return;
-		_.toArray($scope.locationIds).forEach(function (it) {
+		$scope.locationIds.forEach(function (it) {
 			api.find(path + it).then(function(rsp) {
 				$scope.locations.set(it, rsp.data.result.label);
 				if ($scope.locations.size >= size){
