@@ -4,7 +4,9 @@ timeline.js
 
 (function() {
 	function MagicMap() {
-		var i;
+		var i,
+		vizID = getURLParameterByName("id"),
+		thisMap = this;
 		
 		L.mapbox.accessToken = 'pk.eyJ1IjoidHBzMjMiLCJhIjoiVHEzc0tVWSJ9.0oYZqcggp29zNZlCcb2esA';
 		this.map = L.mapbox.map('map', 'mapbox.streets'/*'mapbox.dark'*/, { worldCopyJump: true, bounceAtZoomLimits: false, zoom: 2, minZoom: 2})
@@ -26,13 +28,53 @@ timeline.js
 		this.latestDate = new Date(0);
 		this.zeroTime(this.latestDate);
 		
-		this.seriesList;
+		this.seriesList0;
+		this.seriesList1;
+		this.seriesDescriptions = {};
 		
 		this.playBack = false;
-		this.seriesToLoad = [1, 259];
 		this.set = [];
-		for(i = 0; i < this.seriesToLoad.length; i++) {
-			this.set.push({visiblePoints: []});
+		
+		if(vizID) {
+			this.loadVisualization(vizID);
+		}
+		else {
+			function getDescriptions(seriesToLoad) {
+				var URL = CONTEXT + "/api/series/",
+				i,
+				j;
+				
+				thisMap.seriesToLoad = seriesToLoad.slice();
+				
+				for(j = 0; j < thisMap.seriesToLoad.length; j++) {
+					$.ajax({
+						url: URL + thisMap.seriesToLoad[j],
+						success: function(result) {
+							thisMap.seriesDescriptions[result.result.id] = {
+								name: result.result.name,
+								description: result.result.description
+							};
+							
+							seriesToLoad.shift();
+							if(seriesToLoad.length === 0) {
+								for(i = 0; i < thisMap.seriesToLoad.length; i++) {
+									thisMap.set.push({visiblePoints: []});
+									thisMap.load(thisMap.seriesToLoad[i]);
+								}
+							}
+							
+							return;
+						},
+						error: function() {
+							return;
+						}
+					});
+				}
+				
+				return;
+			}
+			
+			getDescriptions([1, 259]);
 		}
 		
 		this.setGradient = [];
@@ -52,16 +94,81 @@ timeline.js
 		
 		return this;
 	}
-
+	
+	MagicMap.prototype.loadVisualization = function(vizID) {
+		var URL = CONTEXT + "/api/vizs/" + vizID,
+		thisMap = this;
+		
+		$.ajax({
+			url: URL,
+			success: function(result) {
+				var h, i;
+				thisMap.seriesList0 = result.result.allSeries;
+				thisMap.seriesList1 = result.result.allSeries2;
+				
+				for(i = 0; i < thisMap.seriesList0.length; i++) {
+					thisMap.seriesDescriptions[thisMap.seriesList0[i].id] = {
+						name: thisMap.seriesList0[i].name,
+						description: thisMap.seriesList0[i].description
+					};
+				}
+				
+				for(i = 0; i < thisMap.seriesList1.length; i++) {
+					thisMap.seriesDescriptions[thisMap.seriesList1[i].id] = {
+						name: thisMap.seriesList1[i].name,
+						description: thisMap.seriesList1[i].description
+					};
+				}
+				
+				console.log(thisMap.seriesDescriptions);
+				
+				thisMap.seriesToLoad = [thisMap.seriesList0[0].id, thisMap.seriesList1[0].id];
+				for(i = 0; i < thisMap.seriesToLoad.length; i++) {
+					thisMap.set.push({visiblePoints: []});
+					thisMap.load(thisMap.seriesToLoad[i]);
+				}
+				
+				/*
+				for(h = 0; h < 2; h++) {
+					$("#series-options").append(
+						"<div>" +
+							"<h5>Select series " + h + "</h5>" +
+							"<select id='series-" + h + "' style='max-width: 100%;'>" +
+							"</select>" +
+						"</div>"
+					);
+					
+					for(i = 0; i < thisMap["seriesList" + h].length; i++) {
+						$("#series-" + h).append("<option value='" + thisMap["seriesList" + h][i].id + "'>" + thisMap["seriesList" + h][i].name +"</option>");
+					}
+					
+					$("#series-" + h).change(function() {
+						var id = $(this).val(),
+						k = $(this).attr("id").split("-")[1];
+console.log("series " + k + ": " + id);
+						
+						//TODO: EVERYTHING HAS TO BE RESET BECAUSE OF TIME ADJUSTMENTS! MAKE IT SO!
+						thisMap.set[k].visiblePoints.length = 0;
+						thisMap.seriesToLoad[k] = id;
+						
+						thisMap.load(thisMap.seriesToLoad[k]);
+						
+						return;
+					});
+				}
+				*/
+				
+				return;
+			},
+			error: function() {
+				return;
+			}
+		});
+		
+		return;
+	}
+	
 	MagicMap.prototype.start = function() {
-		var i;
-		
-		this.getSeriesList();
-		
-		for(i = 0; i < this.seriesToLoad.length; i++) {
-			this.load(this.seriesToLoad[i]);
-		}
-		
 		//legend stuff
 		this.closeTooltip;
 		//this.map.legendControl.addLegend(this.getLegendHTML());
@@ -118,21 +225,6 @@ timeline.js
 		});
 		
 		return;
-	}
-	
-	MagicMap.prototype.getSeriesList = function() {
-		var URL = CONTEXT + "/api/series",
-		thisMap = this;
-		
-		$.ajax({
-			url: URL,
-			success: function(result) {
-				return thisMap.seriesList = result.results;
-			},
-			error: function() {
-				return;
-			}
-		});
 	}
 	
 	MagicMap.prototype.setColorPalette = function(palette) {
@@ -197,7 +289,14 @@ timeline.js
 				
 				thisMap.zeroTime(lastDate);
 				
-				thisMap.dataset.push({seriesID: result.filter.equalities.seriesId, buffer: [{point: [], date: null}], maxValue: 0, frameAggregate: [0], frameOffset: 0});
+				thisMap.dataset.push({
+					seriesID: result.filter.equalities.seriesId,
+					name: thisMap.seriesDescriptions[result.filter.equalities.seriesId].name,
+					buffer: [{point: [], date: null}],
+					maxValue: 0,
+					frameAggregate: [0],
+					frameOffset: 0
+				});
 				
 				if(thisMap.earliestDate > lastDate) {
 					thisMap.earliestDate = new Date(lastDate);
@@ -308,7 +407,7 @@ timeline.js
 			
 			for(i = 0; i < MAGIC_MAP.dataset.length; i++) {
 				series.push({
-						name: "Series " + MAGIC_MAP.dataset[i].seriesID, //'Ebola References per Day',
+						name: MAGIC_MAP.dataset[i].name, //"Series " + MAGIC_MAP.dataset[i].seriesID,
 						pointStart: detailStart[i],
 						pointInterval: 86400000,//24 * 3600 * 1000,
 						data: detailSeries[i].detailData
@@ -398,7 +497,7 @@ timeline.js
 			for(i = 0; i < MAGIC_MAP.dataset.length; i++) {
 				dataSeries.push({
 						type: 'area',
-						name: MAGIC_MAP.dataset[i].seriesID, //'References per Day'
+						name: "Series " + i,
 						pointInterval: 86400000, //24 * 3600 * 1000,
 						pointStart: Date.UTC(MAGIC_MAP.dataset[i].buffer[0].date.getUTCFullYear(),
 									MAGIC_MAP.dataset[i].buffer[0].date.getUTCMonth(),
