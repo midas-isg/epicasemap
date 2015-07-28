@@ -9,8 +9,26 @@
 
 @main("Viz Management", imports) {
 	<article ng-app='app' ng-controller='Vizs'>
-		@metadata_manager("Viz", "Vizs", "viz")
+		@metadata_manager("Viz", "Vizs", "viz", 
+			Seq(
+				Seq(Html("action-2"), Html("Actions"), buttons())
+			)
+		)
 		@viz_dialog()
 	</article>
 }
 
+@buttons() = {
+	@button("play", "go(it)")
+	@button("edit", "edit(it)")
+}
+
+@button(glyph:String, expression:String, title:String=null) = {
+	<button title='@text(title, glyph)' class='btn btn-xs' ng-click='@expression'>
+		@bs_icon(glyph)
+	</button>
+}
+
+@text(a:String, b:String) = {
+	@if(a == null){@b}else{@a}
+}
