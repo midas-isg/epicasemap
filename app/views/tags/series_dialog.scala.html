@@ -1,45 +1,29 @@
 @import tags._
 
 @* Series modal dialog *@
-@()
+@(orders:Seq[Seq[String]] = Seq(
+			Seq("date", "Date"), 
+			Seq("value", "Value"),
+			Seq("location", "Location"),
+			Seq("latitude", "Latitude"), 
+			Seq("longitude", "Longitude"))
+)
 @bs_modal("seriesModal", "Series", "Series Editor", "close()")(editor())(modal_buttons("Series"))
 
 @editor() = {
 	<form name='form'>
 		@metadata_inputs()
 	</form>
-	<h3>
-		The Series contains {{count(coordinates)}} data from {{locationIds.size}} location(s) 
-		<small title='expand/collapse' ng-click='view.hideSeries = !view.hideSeries'>
-				<button class='btn btn-xs'>@bs_icon("expand")</button>
-		</small>
-	</h3>
-	<div ng-hide='view.hideSeries'>
-		@filters("data", "data", Seq(
-			Seq("date", "Date"), 
-			Seq("value", "Value"),
-			Seq("location", "Location"),
-			Seq("latitude", "Latitude"), 
-			Seq("longitude", "Longitude")
-		))
-		<table class='table table-striped table-condensed table-hover'>
-			<thead> <tr>
-					<th>Date</th>
-					<th>Value</th>
-					<th>Location</th>
-					<th>Latitude</th>
-					<th>Longitude</th>
-			</tr></thead>
-			<tbody>
-				<tr class='active' ng-repeat=@filter_repeat("it in coordinates", "data")>
-					<td>{{it.date}}</td>
-					<td>{{it.value}}</td>
-					<td>{{it.location}}</td>
-					<td>{{it.latitude}}</td>
-					<td>{{it.longitude}}</td>
-				</tr>
-			</tbody>
-		</table>
-		</div>
-	
+	@dataSection("view.hideData")
+}
+
+@dataSection(varName:String) = {
+	@section_expandable(varName){
+		<h3>
+			@span_expandable(varName, 
+			"The Series contains {{count(coordinates)}} data from {{locationIds.size}} location(s)")
+		</h3>
+	}{
+		@table_filterable("coordinates", "data", "data", orders)
+	}
 }

@@ -1,4 +1,4 @@
-"use strict"
+"use strict";
 
 var app = angular.module('app', [])
 .config(function($locationProvider) {
@@ -6,6 +6,17 @@ var app = angular.module('app', [])
 });
 
 app.service("api", function($http, $q, $location) {
+	$( document ).ready(resizeResizableTable);
+	$( window ).resize(resizeResizableTable);
+
+	function resizeResizableTable() {
+		var tc = $(".table-content-resizable");
+		var th = $(".table-header");
+		var height = $(window).height() - ($("body").height() - tc.height()) - 20;
+		var minHeight = $( "tr:first" ).height() * 3;
+		tc.css('max-height', Math.max(height, minHeight) + 'px');
+	}
+	
 	this.remove = function(path, id) {
 		var url = makeUrl(path, id), 
 			deferred = $q.defer();
@@ -58,9 +69,8 @@ app.service("api", function($http, $q, $location) {
 	}
 	
 	function makeApiUrl(){
-		var path = CONTEXT + '/api/',
-			host = $location.absUrl().split(CONTEXT)[0];
-		return host + path.replace('//', '/');
+		var path = CONTEXT + '/api/';
+		return path.replace('//', '/');
 	}
 	
 	function to2digits(number){
