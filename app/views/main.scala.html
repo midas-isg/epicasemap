@@ -8,10 +8,13 @@
 
 <html>
 	<head>
+		<base href="/">
 		<title>@title</title>
 		<script type="application/javascript">
 			var CONTEXT = '@Play.configuration.getString("application.context")';
 		</script>
+		
+		<script src='@routes.Assets.at("javascripts/common.js")'></script>
 		
 		<script src='@routes.Assets.at("external_packages/jquery-1.11.2.min.js")'></script>
 		<script src='@routes.Assets.at("external_packages/bootstrap-3.3.4/js/bootstrap.min.js")'></script>
