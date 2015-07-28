@@ -1,0 +1,29 @@
+@import tags._
+
+@* Series modal dialog *@
+@(orders:Seq[Seq[String]] = Seq(
+			Seq("date", "Date"), 
+			Seq("value", "Value"),
+			Seq("location", "Location"),
+			Seq("latitude", "Latitude"), 
+			Seq("longitude", "Longitude"))
+)
+@bs_modal("seriesModal", "Series", "Series Editor", "close()")(editor())(modal_buttons("Series"))
+
+@editor() = {
+	<form name='form'>
+		@metadata_inputs()
+	</form>
+	@dataSection("view.hideData")
+}
+
+@dataSection(varName:String) = {
+	@section_expandable(varName){
+		<h3>
+			@span_expandable(varName, 
+			"The Series contains {{count(coordinates)}} data from {{locationIds.size}} location(s)")
+		</h3>
+	}{
+		@table_filterable("coordinates", "data", "data", orders)
+	}
+}
