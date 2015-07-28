@@ -11,6 +11,16 @@ body {
 	height: 600px;
 }
 
+.ramp {
+	float:left;
+	padding: 5px;
+	cursor: pointer;
+}
+
+.ramp.selected {
+	background-color: #000080;
+}
+
 .map-legend .swatch {
 	width:20px;
 	height:20px;
