@@ -38,6 +38,9 @@ app.controller('Series', function($scope, $rootScope, api) {
 	$scope.close = function() {
 		$scope.dialog.modal('hide');
 	};
+	$scope.isShown = function(series){
+		return true;
+	};
 	
 	function edit(series) {
 		var isNew = series.id ? false : true;

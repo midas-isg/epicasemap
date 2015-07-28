@@ -52,9 +52,8 @@ app.controller('Viz', function($scope, $rootScope, api) {
 	$scope.isShown = function(series) {
 		return $scope.showAll || series.s1 || series.s2;
 	};
-	$scope.toggle = function() { $scope.showAll = ! $scope.showAll;	};
-	$scope.lable = function() {
-		return $scope.showAll ? 'Hide series not selected' :'Show all series';
+	$scope.isHidden = function(series) {
+		return ! $scope.isShown(series);
 	};
 	$scope.editSeries = function(series){
 		$rootScope.$emit('editSeries', series);
@@ -68,8 +67,9 @@ app.controller('Viz', function($scope, $rootScope, api) {
 	
 	function invert(key){
 		$scope.allSeries.forEach(function (series) {
-			  return series[key] = ! series[key];
+			  series[key] = ! series[key];
 		});
+		$scope.form.$setDirty();
 	}
 	
 	function close(){

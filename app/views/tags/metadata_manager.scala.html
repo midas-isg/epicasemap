@@ -1,3 +1,5 @@
+@import tags._
+
 @(singular:String, plural:String, prefix:String)
 <section>
 	<h3>You have {{count(models)}} @plural
@@ -5,23 +7,14 @@
 			@bs_icon("plus")
 		</button></small>
 	</h3>
-	@filters(prefix, plural, Seq(Seq("id", "ID"), Seq("name", "Name")))
-	<table class='table table-striped table-condensed table-hover'>
-		<thead> <tr>
-				<th>ID</th>
-				<th>Name</th>
-				<th>Edit</th>
-		</tr></thead>
-		<tbody>
-			<tr class='active' ng-repeat=@filter_repeat("it in models" , prefix)>
-				<td>{{it.id}}</td>
-				<td>{{it.name}}</td>
-				<td>
-					<button title='edit' class='btn btn-xs' ng-click='edit(it)'>
-						@bs_icon("edit")
-					</button> 
-				</td>
-			</tr>
-		</tbody>
-	</table>
+	@table_filterable("models", prefix, plural, 
+			Seq(Seq("id", "ID"), Seq("name", "Name")),
+			Seq(Seq(Html("action-1"), Html("Edit"), buttonEdit()))
+	)
 </section>
+
+@buttonEdit() = {
+	<button title='edit' class='btn btn-xs' ng-click='edit(it)'>
+		@bs_icon("edit")
+	</button>
+}

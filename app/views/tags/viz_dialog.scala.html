@@ -1,7 +1,14 @@
-@import tags._
+@import tags._ 
 
 @* Viz modal dialog *@
-@()
+@(
+	orders:Seq[Seq[String]] =Seq(Seq("id", "ID"), Seq("name", "Name")),
+	more:Seq[Seq[Html]] =Seq(
+		Seq(Html("a"), Html("A"), Html("<input title='check to include the Series as A' type='checkbox' ng-model='it.s1'>")),
+		Seq(Html("b"), Html("B"), Html("<input title='check to include the Series as B' type='checkbox' ng-model='it.s2'>")),
+		Seq(Html("action-1"), Html("Edit"), Html("<button title='edit' class='btn btn-xs' ng-click='editSeries(it)'><span class = 'glyphicon glyphicon-edit' aria-hidden='true'></span></button>"))
+	)
+)
 @bs_modal("modal", "Viz", "Viz Editor", "close()")(editor())(modal_buttons("Viz"))
 @series_dialog()
 
@@ -11,42 +18,31 @@
 		@metadata_inputs()
 		<label># of selected Series in category A: </label> {{countBy('s1')}}<br>
 		<label># of selected Series in category B: </label> {{countBy('s2')}}<br>	
-		<h3>
-			Selected Series 
-			<small title='expand/collapse' ng-click='view.hideSeries = !view.hideSeries'>
-				<button class='btn btn-xs'>@bs_icon("expand")</button>
-			</small>
-		</h3>
-		<div ng-hide='view.hideSeries'>
-			<div id='filterPlaceholderNotToCountAsPartOfForm'></div>
-			<button title='invert Series in category A selection' class='btn btn-xs' ng-click='invertA()'>invert A</button>
-			<button title='invert Series in category B selection' class='btn btn-xs' ng-click='invertB()'>invert B</button>
-			<button class='btn btn-xs pull-right' ng-click='toggle()'>{{lable()}}</button>
-			You have {{count(allSeries)}} series available to select
-			<table class='table table-striped table-condensed table-hover'>
-				<thead><tr>
-						<th>ID</th>
-						<th>Name</th>
-						<th>A</th>
-						<th>B</th>
-						<th>Edit</th>
-				</tr></thead>
-				<tbody>
-					<tr class='active' ng-show='isShown(series)'
-					 ng-repeat=@filter_repeat("series in allSeries", "series") >
-						<td>{{series.id}}</td>
-						<td>{{series.name}}</td>
-						<td><input title='check to include the Series as Series 1' type='checkbox' ng-model='series.s1'></td>
-						<td><input title='check to include the Series as Series 2' type='checkbox' ng-model='series.s2'></td>
-						<td>
-							<button title='edit' class='btn btn-xs' ng-click='editSeries(series)'>
-								@bs_icon("edit")
-							</button> 
-						</td>
-					</tr>
-				</tbody>
-			</table>
-		</div>
+		@selectedSeriesSection("view.hideSeries")
 	</form>
 }
 
+@selectedSeriesSection(varName:String) = {
+	@section_expandable(varName){
+		<h3>@span_expandable(varName, "Selected Series")</h3>
+	}{
+		<div id='filterPlaceholderNotToCountAsPartOfForm'></div>
+		@buttonInvert("A")
+		@buttonInvert("B")
+		@buttonHideSeries("showAll")
+		You have {{count(allSeries)}} series available to select
+		@table_scollarable_content("allSeries", "series", orders, more)
+	}
+}
+
+@buttonInvert(cat:String) = {
+	<button title='invert Series in category @cat selection' class='btn btn-xs' 
+	ng-click='invert@{cat}()'>invert @cat</button>
+}
+
+@buttonHideSeries(varName:String) = {
+	<button class='btn btn-xs pull-right' ng-click='@varName = !@varName'>
+		@span_if(varName, Html("Hide series not selected"), "i.e. show only selected series")
+		@span_if("!" + varName, Html("Show all series"), "show all series (both selected and not selected)")
+	</button>
+}

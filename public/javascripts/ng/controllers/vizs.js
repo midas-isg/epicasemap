@@ -1,8 +1,8 @@
-"use strict"
+"use strict";
 
 app.controller('Vizs', function($scope, $rootScope, api) {
 	var urlPath = 'vizs';
-	
+
 	loadModelHavingGivenId();
     loadVizs();
     $rootScope.$on('loadVizs', function(event) {
