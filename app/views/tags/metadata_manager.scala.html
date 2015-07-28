@@ -1,6 +1,6 @@
 @import tags._
 
-@(singular:String, plural:String, prefix:String)
+@(singular:String, plural:String, prefix:String, more:Seq[Seq[Html]] = null)
 <section>
 	<h3>You have {{count(models)}} @plural
 		<small><button title='Add new @singular' class='btn btn-xs' ng-click='addNew()'>
@@ -9,7 +9,11 @@
 	</h3>
 	@table_filterable("models", prefix, plural, 
 			Seq(Seq("id", "ID"), Seq("name", "Name")),
-			Seq(Seq(Html("action-1"), Html("Edit"), buttonEdit()))
+			if(more == null){
+				Seq(Seq(Html("action-1"), Html("Edit"), buttonEdit()))
+			} else {
+				more
+			})
 	)
 </section>
 

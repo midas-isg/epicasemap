@@ -16,7 +16,9 @@ app.controller('Vizs', function($scope, $rootScope, api) {
 		$rootScope.$emit('editViz', viz);
 	};
 	$scope.count = function(array) { return array && array.length || 0;	};
-	
+	$scope.go = function(viz) {
+		window.open(CONTEXT + '?id=' + viz.id, '_top');
+	};
 	function loadVizs(){
 		api.find(urlPath).then(function(rsp) {
 			$scope.models = rsp.data.results;
