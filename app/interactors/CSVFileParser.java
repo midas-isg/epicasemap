@@ -16,23 +16,21 @@ public class CSVFileParser {
 
 	public CSVParser parse(CSVFile dataFile) {
 
-		return  parse(dataFile.getDelimiter(), dataFile.getHeaders(),
-				dataFile.getFile());
+		return parse(dataFile.getDelimiter(), dataFile.getFile());
 
 	}
 
-	private CSVParser parse(char delimiter, String[] headers,
-			File file) {
+	private CSVParser parse(char delimiter, File file) {
 		CSVParser csvParser = null;
 		CSVFormat csvFormat = CSVFormat.newFormat(delimiter);
 		try {
 			csvParser = csvFormat
-					.withHeader(headers)
+					.withHeader()
 					.withIgnoreEmptyLines(Ignore_Empty_Lines)
 					.withIgnoreSurroundingSpaces(Ignore_Surrounding_Spaces)
 					.withSkipHeaderRecord(Skip_Header_Record)
 					.parse(new FileReader(file));
-			//csvParser.close(); //TODO: does it need to be closed??
+			// csvParser.close(); //TODO: does it need to be closed??
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

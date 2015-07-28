@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
@@ -18,12 +19,44 @@ public class CSVFileValidator {
 		CSVFileParser csvParser = new CSVFileParser();
 		CSVParser parser = csvParser.parse(dataFile);
 		Map<Long, List<String>> errors = new HashMap<Long, List<String>>();
-		List<String> recordErr = new ArrayList<String>();
+		List<String> errorList = new ArrayList<String>();
 		Iterator<CSVRecord> records = parser.iterator();
-		while (records.hasNext()) {
-			if (!(recordErr = getRecordErrors(records.next(),
-					dataFile.getFileFormat())).isEmpty()) {
-				errors.put(parser.getCurrentLineNumber(), recordErr);
+		if ((errorList = getFileConsistencyError(parser, dataFile)).isEmpty()) {
+			while (records.hasNext()) {
+				if (!(errorList = getRecordErrors(records.next(),
+						dataFile.getFileFormat())).isEmpty()) {
+					errors.put(parser.getCurrentLineNumber(), errorList);
+				}
+			}
+		} else {
+			errors.put(parser.getCurrentLineNumber(), errorList);
+		}
+		return errors;
+	}
+
+	private List<String> getFileConsistencyError(CSVParser parser, CSVFile dataFile) {
+		// TODO:
+		List<String> errors = new ArrayList<String>();
+		addErrorToList(errors, validateFileHeaders(parser, dataFile));
+		addErrorToList(errors, validateDelimiter(parser, dataFile));
+		return errors;
+
+	}
+
+	private List<String> validateDelimiter(CSVParser parser, CSVFile dataFile) {
+		//TODO:
+		List<String> errors = new ArrayList<String>();
+		return errors;
+	}
+
+	private List<String> validateFileHeaders(CSVParser parser, CSVFile dataFile) {
+		List<String> errors = new ArrayList<String>();
+		Set<String> fileHeaderSet = parser.getHeaderMap().keySet();
+		Set<String> expectedHeaderSet = dataFile.getHeaders();
+		for (String header : fileHeaderSet) {
+			if (!expectedHeaderSet.contains(header)) {
+				addErrorToList(errors, "\"" + header + "\"" + " header is not allowed in "
+						+ dataFile.getFileFormat() + " format.");
 			}
 		}
 		return errors;
@@ -52,6 +85,10 @@ public class CSVFileValidator {
 		if (err != "")
 			errors.add(err);
 	}
+	private void addErrorToList(List<String> errors1, List<String> errors2) {
+		if (!errors2.isEmpty())
+			errors1.addAll(errors2);
+	}
 
 	private String getLocationValueError(CSVRecord record, String fileFormat) {
 
@@ -65,6 +102,7 @@ public class CSVFileValidator {
 						+ record.get(CSVFile.APOLLO_ID_HEADER)
 						+ " is not valid.";
 			}
+			break;
 
 		case CSVFile.COORDINATE_FORMAT:
 
@@ -78,6 +116,8 @@ public class CSVFileValidator {
 						+ record.get(CSVFile.LONGITUDE_HEADER)
 						+ " is not valid.";
 			}
+
+			break;
 		}
 		return errorMsg;
 	}
