@@ -9,7 +9,7 @@ import javax.persistence.MappedSuperclass;
 //@Table(name = "meta_data")  
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 @MappedSuperclass
-public abstract class MetaData {
+public abstract class MetaData implements models.entities.Entity{
 
 	private String title;
 	private String description;

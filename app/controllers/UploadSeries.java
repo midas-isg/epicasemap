@@ -8,20 +8,34 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 
+import play.Logger;
+import play.db.jpa.Transactional;
 import play.mvc.Controller;
-import play.mvc.Http.MultipartFormData;
+import play.mvc.Http.Request;
 import play.mvc.Result;
+import views.html.uploadForm;
 
 public class UploadSeries extends Controller {
 
-	public static Result upload(long seriesId) {
+	public static Result uploadForm() {
+		return ok(uploadForm.render());
+	}
 
-		CSVFile dataFile = getFileObject(request().body().asMultipartFormData());
+	@Transactional
+	public static Result upload(long seriesId, String delimiter,
+			String fileFormat) {
+
+		Logger.debug(seriesId + "");
+		Logger.debug(delimiter);
+		Logger.debug(fileFormat);
+		CSVFile dataFile = getFileObject(request(), delimiter, fileFormat);
 		String errors = validate(dataFile);
+
 		if (errors.equals("")) {
 			create(dataFile, seriesId);
 			return created();
 		} else {
+			Logger.debug(errors);
 			return badRequest(errors);
 		}
 	}
@@ -43,16 +57,22 @@ public class UploadSeries extends Controller {
 		for (Long line : errors.keySet()) {
 			sj = new StringJoiner("\n");
 			for (String str : errors.get(line)) {
-				sj.add(line + ": " + str);
+				sj.add("Line "+line + ": " + str);
 			}
 			stringErrors += sj.toString() + "\n";
 		}
 		return stringErrors;
 	}
 
-	private static CSVFile getFileObject(MultipartFormData body) {
+	private static CSVFile getFileObject(Request request, String delimiter,
+			String fileFormat) {
 
-		return new CSVFile(body.getFile("csvFile").getFile(),
-				body.asFormUrlEncoded());
+		CSVFile csvFile = new CSVFile();
+		csvFile.setFile(request.body().asMultipartFormData().getFiles().get(0)
+				.getFile());
+		csvFile.setDelimiter(delimiter);
+		csvFile.setFileFormat(fileFormat);
+		return csvFile;
+
 	}
 }
