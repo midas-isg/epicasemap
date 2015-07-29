@@ -2,18 +2,15 @@ package interactors;
 
 import static org.fest.assertions.Assertions.assertThat;
 import integrations.app.App;
-
-import java.io.File;
-
 import models.entities.Location;
 import models.entities.SeriesData;
 
-import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.joda.time.DateTime;
 import org.junit.Test;
 
 import play.libs.F.Callback0;
+import suites.CSVFileHelper;
 
 public class TestCSVFilePersister {
 
@@ -23,13 +20,17 @@ public class TestCSVFilePersister {
 	}
 
 	private void testPersistFile() {
-		CSVFile dataFile = createTestDataFileWithApolloIdFormat();
-		CSVFilePersister persister = new CSVFilePersister();
-		assertThat(persister.persistCSVFile(dataFile,1)).isTrue();
+		CSVFileHelper helper = new CSVFileHelper();
+		CSVFile dataFile = helper.createTestDataFileWithApolloIdFormat();
+		helper.setStdToFileHeaderMap(dataFile);
 
-		dataFile = createTestDataFileWithCoordianteFormat();
+		CSVFilePersister persister = new CSVFilePersister();
+		assertThat(persister.persistCSVFile(dataFile, 1)).isTrue();
+
+		dataFile = helper.createTestDataFileWithCoordianteFormat();
+		helper.setStdToFileHeaderMap(dataFile);
 		persister = new CSVFilePersister();
-		assertThat(persister.persistCSVFile(dataFile,1)).isTrue();
+		assertThat(persister.persistCSVFile(dataFile, 1)).isTrue();
 
 	}
 
@@ -39,7 +40,7 @@ public class TestCSVFilePersister {
 		Location location = getLocationObjectFromCSVRecordWithApolloId();
 		long id = location.getAlsId();
 		assertThat(id).isEqualTo(1);
-		
+
 		location = getLocationObjectFromCSVRecordWithCoordinate();
 		Double lat = location.getLatitude();
 		assertThat(lat).isEqualTo(1.1);
@@ -47,7 +48,7 @@ public class TestCSVFilePersister {
 		assertThat(lon).isEqualTo(-1.1);
 
 	}
-	
+
 	@Test
 	public void testCSVRecordToSeriesDataEntityObject() {
 		runWithTransaction(() -> csvRecordToSeriesDataEntityObject());
@@ -69,81 +70,60 @@ public class TestCSVFilePersister {
 	private SeriesData getSeriesDataFromCSVRecordwithApollloFormat()
 			throws NumberFormatException {
 
-		CSVRecord csvRecord = getCSVrecordWithApolloIdFormat();
+		CSVFileHelper helper = new CSVFileHelper();
+		CSVFile dataFile = helper.createTestDataFileWithApolloIdFormat();
+		CSVRecord csvRecord = helper.getCSVRecord(dataFile);
 		CSVFilePersister persister = new CSVFilePersister();
-		SeriesData seriesData = persister.createSeriesData(1, 1,
-				DateTime.parse(csvRecord.get(CSVFile.TIME_HEADER)).toDate(),
-				Double.parseDouble(csvRecord.get(CSVFile.VALUE_HEADER)));
+
+		SeriesData seriesData = persister.createSeriesData(1, 1, DateTime
+				.parse(get(csvRecord, CSVFile.TIME_HEADER, dataFile)).toDate(),
+				Double.parseDouble(get(csvRecord, CSVFile.VALUE_HEADER,
+						dataFile)));
 		return seriesData;
+	}
+
+	private String get(CSVRecord csvRecord, String header, CSVFile dataFile) {
+		return csvRecord.get(dataFile.stdHeaderToFileHeader(header));
 	}
 
 	private SeriesData getSeriesDataFromCSVRecordwithCoordinateFormat()
 			throws NumberFormatException {
-		
-		CSVRecord csvRecord = getCSVrecordWithCoordinateFormat();
+		CSVFileHelper helper = new CSVFileHelper();
+		CSVFile dataFile = helper.createTestDataFileWithCoordianteFormat();
+		CSVRecord csvRecord = helper.getCSVRecord(dataFile);
+
 		CSVFilePersister persister = new CSVFilePersister();
-		SeriesData seriesData = persister.createSeriesData(1, 1,
-				DateTime.parse(csvRecord.get(CSVFile.TIME_HEADER)).toDate(),
-				Double.parseDouble(csvRecord.get(CSVFile.VALUE_HEADER)));
+		SeriesData seriesData = persister.createSeriesData(1, 1, DateTime
+				.parse(get(csvRecord, CSVFile.TIME_HEADER, dataFile)).toDate(),
+				Double.parseDouble(get(csvRecord, CSVFile.VALUE_HEADER,
+						dataFile)));
 		return seriesData;
 	}
 
 	private Location getLocationObjectFromCSVRecordWithApolloId()
 			throws NumberFormatException {
-		CSVRecord csvRecord = getCSVrecordWithApolloIdFormat();
+
+		CSVFileHelper helper = new CSVFileHelper();
+		CSVFile dataFile = helper.createTestDataFileWithApolloIdFormat();
+		CSVRecord csvRecord = helper.getCSVRecord(dataFile);
 		CSVFilePersister persister = new CSVFilePersister();
-		Location location = persister.createLocation(Long.parseLong(csvRecord
-				.get(CSVFile.APOLLO_ID_HEADER)));
+		Location location = persister.createLocation(Long.parseLong(get(
+				csvRecord, CSVFile.APOLLO_ID_HEADER, dataFile)));
 		return location;
 	}
 
 	private Location getLocationObjectFromCSVRecordWithCoordinate()
 			throws NumberFormatException {
-		CSVRecord csvRecord = getCSVrecordWithCoordinateFormat();
+
+		CSVFileHelper helper = new CSVFileHelper();
+		CSVFile dataFile = helper.createTestDataFileWithCoordianteFormat();
+		CSVRecord csvRecord = helper.getCSVRecord(dataFile);
 		CSVFilePersister persister = new CSVFilePersister();
-		Location location = persister.createLocation(
-				Double.parseDouble(csvRecord.get(CSVFile.LATITUDE_HEADER)),
-				Double.parseDouble(csvRecord.get(CSVFile.LONGITUDE_HEADER)));
+		Location location = persister.createLocation(Double.parseDouble(get(
+				csvRecord, CSVFile.LATITUDE_HEADER, dataFile)),
+				Double.parseDouble(get(csvRecord, CSVFile.LONGITUDE_HEADER,
+						dataFile)));
 		return location;
-	}
-
-	private CSVRecord getCSVrecordWithApolloIdFormat() {
-		CSVFile dataFile = createTestDataFileWithApolloIdFormat();
-		CSVFileParser fileParser = new CSVFileParser();
-		CSVParser parser = fileParser.parse(dataFile);
-		return parser.iterator().next();
-
-	}
-
-	private CSVRecord getCSVrecordWithCoordinateFormat() {
-		CSVFile dataFile = createTestDataFileWithCoordianteFormat();
-		CSVFileParser fileParser = new CSVFileParser();
-		CSVParser parser = fileParser.parse(dataFile);
-		return parser.iterator().next();
-
-	}
-
-	private CSVFile createTestDataFileWithApolloIdFormat() {
-		File csvFile = new File("test/resources/test_apolloId_format.txt");
-		String fileFormat = CSVFile.APOLLO_ID_FORMAT;
-		String delimiter = "," ;
-		CSVFile dataFile = new CSVFile();
-		dataFile.setFile(csvFile);
-		dataFile.setDelimiter(delimiter);
-		dataFile.setFileFormat(fileFormat);
-		return dataFile;
-	}
-
-	private CSVFile createTestDataFileWithCoordianteFormat() {
-
-		File csvFile = new File("test/resources/test_coordinate_format.txt");
-		String fileFormat = CSVFile.COORDINATE_FORMAT;
-		String delimiter = "," ;
-		CSVFile dataFile = new CSVFile();
-		dataFile.setFile(csvFile);
-		dataFile.setDelimiter(delimiter);
-		dataFile.setFileFormat(fileFormat);
-		return dataFile;
 	}
 
 	private static void runWithTransaction(Callback0 callback) {

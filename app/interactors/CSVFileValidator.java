@@ -14,17 +14,18 @@ import org.joda.time.DateTime;
 
 public class CSVFileValidator {
 
-	public Map<Long, List<String>> getFileErrors(CSVFile dataFile) {
+	public Map<Long, List<String>> validate(CSVFile dataFile) {
 
 		CSVFileParser csvParser = new CSVFileParser();
 		CSVParser parser = csvParser.parse(dataFile);
 		Map<Long, List<String>> errors = new HashMap<Long, List<String>>();
 		List<String> errorList = new ArrayList<String>();
-		Iterator<CSVRecord> records = parser.iterator();
 		if ((errorList = getFileConsistencyError(parser, dataFile)).isEmpty()) {
+			mapFileHeadersToStdHeaders(parser, dataFile);
+			Iterator<CSVRecord> records = parser.iterator();
 			while (records.hasNext()) {
-				if (!(errorList = getRecordErrors(records.next(),
-						dataFile.getFileFormat())).isEmpty()) {
+				if (!(errorList = getRecordErrors(records.next(), dataFile))
+						.isEmpty()) {
 					errors.put(parser.getCurrentLineNumber(), errorList);
 				}
 			}
@@ -34,7 +35,22 @@ public class CSVFileValidator {
 		return errors;
 	}
 
-	private List<String> getFileConsistencyError(CSVParser parser, CSVFile dataFile) {
+	private void mapFileHeadersToStdHeaders(CSVParser parser, CSVFile dataFile) {
+		Map<String, String> result = new HashMap<String, String>();
+		Set<String> fileHeaderSet = parser.getHeaderMap().keySet();
+		Set<String> stdHeaderSet = dataFile.getHeaders();
+		for (String fileHeader : fileHeaderSet) {
+			for (String stdHeader : stdHeaderSet) {
+				if (fileHeader.equalsIgnoreCase(stdHeader)) {
+					result.put(stdHeader, fileHeader);
+				}
+			}
+		}
+		dataFile.setStdHeaderToFileHeaderMap(result);
+	}
+
+	private List<String> getFileConsistencyError(CSVParser parser,
+			CSVFile dataFile) {
 		// TODO:
 		List<String> errors = new ArrayList<String>();
 		addErrorToList(errors, validateFileHeaders(parser, dataFile));
@@ -44,7 +60,7 @@ public class CSVFileValidator {
 	}
 
 	private List<String> validateDelimiter(CSVParser parser, CSVFile dataFile) {
-		//TODO:
+		// TODO:
 		List<String> errors = new ArrayList<String>();
 		return errors;
 	}
@@ -54,21 +70,23 @@ public class CSVFileValidator {
 		Set<String> fileHeaderSet = parser.getHeaderMap().keySet();
 		Set<String> expectedHeaderSet = dataFile.getHeaders();
 		for (String header : fileHeaderSet) {
-			if (!expectedHeaderSet.contains(header)) {
-				addErrorToList(errors, "\"" + header + "\"" + " header is not allowed in "
-						+ dataFile.getFileFormat() + " format.");
+			if (!expectedHeaderSet.contains(header.toLowerCase())) {
+				addErrorToList(errors,
+						"\"" + header + "\"" + " header is not allowed in "
+								+ dataFile.getFileFormat() + " format.");
 			}
+
 		}
 		return errors;
 	}
 
-	private List<String> getRecordErrors(CSVRecord record, String fileFormat) {
+	private List<String> getRecordErrors(CSVRecord record, CSVFile dataFile) {
 
 		List<String> errors = new ArrayList<String>();
 		addErrorToList(errors, getConsistencyError(record));
-		addErrorToList(errors, getDateTimeError(record));
-		addErrorToList(errors, getValueError(record));
-		addErrorToList(errors, getLocationValueError(record, fileFormat));
+		addErrorToList(errors, getDateTimeError(record, dataFile));
+		addErrorToList(errors, getValueError(record, dataFile));
+		addErrorToList(errors, getLocationValueError(record, dataFile));
 
 		return errors;
 	}
@@ -85,35 +103,39 @@ public class CSVFileValidator {
 		if (err != "")
 			errors.add(err);
 	}
+
 	private void addErrorToList(List<String> errors1, List<String> errors2) {
 		if (!errors2.isEmpty())
 			errors1.addAll(errors2);
 	}
 
-	private String getLocationValueError(CSVRecord record, String fileFormat) {
+	private String getLocationValueError(CSVRecord record, CSVFile dataFile) {
 
 		String errorMsg = "";
+		String header;
 
-		switch (fileFormat) {
+		switch (dataFile.getFileFormat()) {
 		case CSVFile.APOLLO_ID_FORMAT:
 
-			if (!NumberUtils.isNumber(record.get(CSVFile.APOLLO_ID_HEADER))) {
-				errorMsg = CSVFile.APOLLO_ID_HEADER + ": "
-						+ record.get(CSVFile.APOLLO_ID_HEADER)
+			header = dataFile.stdHeaderToFileHeader(CSVFile.APOLLO_ID_HEADER);
+
+			if (!NumberUtils.isNumber(record.get(header))) {
+				errorMsg = header + ": " + record.get(header)
 						+ " is not valid.";
 			}
 			break;
 
 		case CSVFile.COORDINATE_FORMAT:
 
-			if (!NumberUtils.isNumber(record.get(CSVFile.LATITUDE_HEADER))) {
-				errorMsg = CSVFile.LATITUDE_HEADER + ": "
-						+ record.get(CSVFile.LATITUDE_HEADER)
+			header = dataFile.stdHeaderToFileHeader(CSVFile.LATITUDE_HEADER);
+
+			if (!NumberUtils.isNumber(record.get(header))) {
+				errorMsg = header + ": " + record.get(header)
 						+ " is not valid. ";
 			}
-			if (!NumberUtils.isNumber(record.get(CSVFile.LONGITUDE_HEADER))) {
-				errorMsg += CSVFile.LONGITUDE_HEADER + ": "
-						+ record.get(CSVFile.LONGITUDE_HEADER)
+			header = dataFile.stdHeaderToFileHeader(CSVFile.LONGITUDE_HEADER);
+			if (!NumberUtils.isNumber(record.get(header))) {
+				errorMsg += header + ": " + record.get(header)
 						+ " is not valid.";
 			}
 
@@ -122,21 +144,22 @@ public class CSVFileValidator {
 		return errorMsg;
 	}
 
-	private String getValueError(CSVRecord record) {
+	String getValueError(CSVRecord record, CSVFile dataFile) {
 		String errorMsg = "";
-		if (!NumberUtils.isNumber(record.get(CSVFile.VALUE_HEADER))) {
-			errorMsg = CSVFile.VALUE_HEADER + ": "
-					+ record.get(CSVFile.VALUE_HEADER) + " is not valid.";
+		String header = dataFile.stdHeaderToFileHeader(CSVFile.VALUE_HEADER);
+		if (!NumberUtils.isNumber(record.get(header))) {
+			errorMsg = header + ": " + record.get(header) + " is not valid.";
 		}
 		return errorMsg;
 	}
 
-	private String getDateTimeError(CSVRecord record) {
+	String getDateTimeError(CSVRecord record, CSVFile dataFile) {
 		String errorMsg = "";
+		String header = dataFile.stdHeaderToFileHeader(CSVFile.TIME_HEADER);
 		try {
-			DateTime.parse(record.get(CSVFile.TIME_HEADER));
+			DateTime.parse(record.get(header));
 		} catch (IllegalArgumentException e) {
-			errorMsg = CSVFile.TIME_HEADER + ": " + e.getMessage();
+			errorMsg = header + ": " + e.getMessage();
 		}
 		return errorMsg;
 	}

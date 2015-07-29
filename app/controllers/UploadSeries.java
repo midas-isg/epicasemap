@@ -47,7 +47,7 @@ public class UploadSeries extends Controller {
 
 	private static String validate(CSVFile dataFile) {
 		CSVFileValidator validator = new CSVFileValidator();
-		Map<Long, List<String>> errors = validator.getFileErrors(dataFile);
+		Map<Long, List<String>> errors = validator.validate(dataFile);
 		return joinErrorsAsString(errors);
 	}
 

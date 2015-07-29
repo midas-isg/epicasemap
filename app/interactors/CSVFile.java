@@ -1,9 +1,8 @@
 package interactors;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 public class CSVFile {
@@ -18,28 +17,16 @@ public class CSVFile {
 	private File file;
 	private char delimiter;
 	private String fileFormat;
+	
+	private Map<String,String> stdHeaderToFileHeaderMap;
 
 	public File getFile() {
 		return file;
 	}
 
 	public void setFile(File file) {
-		try {
-			setFirstLineToLowerCase(file);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		this.file = file;
-	}
 
-	private void setFirstLineToLowerCase(File file)
-			throws IOException {
-		RandomAccessFile raf = new RandomAccessFile(file, "rw");
-		String firstLine = raf.readLine();
-		raf.seek(0);
-		raf.writeBytes(firstLine.toLowerCase());
-		raf.close();
+		this.file = file;
 	}
 
 	public char getDelimiter() {
@@ -72,6 +59,14 @@ public class CSVFile {
 			break;
 		}
 		return result;
+	}
+
+	public void setStdHeaderToFileHeaderMap(Map<String, String> stdHeaderToFileHeaderMap) {
+		this.stdHeaderToFileHeaderMap = stdHeaderToFileHeaderMap;		
+	}
+	
+	public String stdHeaderToFileHeader(String header){
+		return stdHeaderToFileHeaderMap.get(header);
 	}
 
 }
