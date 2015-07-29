@@ -1,5 +1,6 @@
 package interactors;
 
+import java.io.IOException;
 import java.util.Date;
 import java.util.Iterator;
 
@@ -18,7 +19,13 @@ public class CSVFilePersister {
 	public boolean persistCSVFile(CSVFile dataFile, long seriesId) {
 
 		CSVFileParser csvParser = new CSVFileParser();
-		CSVParser parser = csvParser.parse(dataFile);
+		CSVParser parser = null;
+		try {
+			parser = csvParser.parse(dataFile);
+		} catch (IllegalArgumentException | IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		return persistRecords(seriesId, dataFile, parser);
 
 	}

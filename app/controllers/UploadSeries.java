@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 
-import play.Logger;
 import play.db.jpa.Transactional;
 import play.mvc.Controller;
 import play.mvc.Http.Request;
@@ -25,9 +24,6 @@ public class UploadSeries extends Controller {
 	public static Result upload(long seriesId, String delimiter,
 			String fileFormat) {
 
-		Logger.debug(seriesId + "");
-		Logger.debug(delimiter);
-		Logger.debug(fileFormat);
 		CSVFile dataFile = getFileObject(request(), delimiter, fileFormat);
 		String errors = validate(dataFile);
 
@@ -35,7 +31,6 @@ public class UploadSeries extends Controller {
 			create(dataFile, seriesId);
 			return created();
 		} else {
-			Logger.debug(errors);
 			return badRequest(errors);
 		}
 	}

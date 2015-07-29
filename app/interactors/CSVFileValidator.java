@@ -1,5 +1,7 @@
 package interactors;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -16,10 +18,13 @@ public class CSVFileValidator {
 
 	public Map<Long, List<String>> validate(CSVFile dataFile) {
 
-		CSVFileParser csvParser = new CSVFileParser();
-		CSVParser parser = csvParser.parse(dataFile);
 		Map<Long, List<String>> errors = new HashMap<Long, List<String>>();
 		List<String> errorList = new ArrayList<String>();
+		CSVParser parser = getParseErrors(dataFile, errorList);
+		if (!errorList.isEmpty()) {
+			errors.put(1L, errorList);
+			return errors;
+		}
 		if ((errorList = getFileConsistencyError(parser, dataFile)).isEmpty()) {
 			mapFileHeadersToStdHeaders(parser, dataFile);
 			Iterator<CSVRecord> records = parser.iterator();
@@ -33,6 +38,21 @@ public class CSVFileValidator {
 			errors.put(parser.getCurrentLineNumber(), errorList);
 		}
 		return errors;
+	}
+
+	private CSVParser getParseErrors(CSVFile dataFile, List<String> errorList) {
+		CSVFileParser csvParser = new CSVFileParser();
+		CSVParser parser = null;
+		try {
+			parser = csvParser.parse(dataFile);
+		} catch (IllegalArgumentException e) {
+			errorList.add(e.getMessage());
+		} catch (FileNotFoundException e) {
+			errorList.add(e.getMessage());
+		} catch (IOException e) {
+			errorList.add(e.getMessage());
+		}
+		return parser;
 	}
 
 	private void mapFileHeadersToStdHeaders(CSVParser parser, CSVFile dataFile) {
@@ -51,7 +71,6 @@ public class CSVFileValidator {
 
 	private List<String> getFileConsistencyError(CSVParser parser,
 			CSVFile dataFile) {
-		// TODO:
 		List<String> errors = new ArrayList<String>();
 		addErrorToList(errors, validateFileHeaders(parser, dataFile));
 		addErrorToList(errors, validateDelimiter(parser, dataFile));
@@ -60,19 +79,25 @@ public class CSVFileValidator {
 	}
 
 	private List<String> validateDelimiter(CSVParser parser, CSVFile dataFile) {
-		// TODO:
 		List<String> errors = new ArrayList<String>();
 		return errors;
 	}
 
-	private List<String> validateFileHeaders(CSVParser parser, CSVFile dataFile) {
+	List<String> validateFileHeaders(CSVParser parser, CSVFile dataFile) {
 		List<String> errors = new ArrayList<String>();
 		Set<String> fileHeaderSet = parser.getHeaderMap().keySet();
 		Set<String> expectedHeaderSet = dataFile.getHeaders();
+		if (fileHeaderSet.size() != expectedHeaderSet.size()) {
+			addErrorToList(errors,
+					"number of columns is " + fileHeaderSet.size()
+							+ ". should be " + expectedHeaderSet.size() + ".");
+		}
 		for (String header : fileHeaderSet) {
 			if (!expectedHeaderSet.contains(header.toLowerCase())) {
-				addErrorToList(errors,
-						"\"" + header + "\"" + " header is not allowed in "
+				addErrorToList(
+						errors,
+						"\"" + header + "\""
+								+ " column name is not allowed in "
 								+ dataFile.getFileFormat() + " format.");
 			}
 
@@ -83,7 +108,7 @@ public class CSVFileValidator {
 	private List<String> getRecordErrors(CSVRecord record, CSVFile dataFile) {
 
 		List<String> errors = new ArrayList<String>();
-		addErrorToList(errors, getConsistencyError(record));
+		addErrorToList(errors, getRecordSizeError(record, dataFile));
 		addErrorToList(errors, getDateTimeError(record, dataFile));
 		addErrorToList(errors, getValueError(record, dataFile));
 		addErrorToList(errors, getLocationValueError(record, dataFile));
@@ -91,10 +116,11 @@ public class CSVFileValidator {
 		return errors;
 	}
 
-	private String getConsistencyError(CSVRecord record) {
+	String getRecordSizeError(CSVRecord record, CSVFile dataFile) {
 		String errorMsg = "";
-		if (!record.isConsistent()) {
-			errorMsg = "The record size does not match the header size.";
+		if (record.size() != dataFile.getHeaders().size()) {
+			errorMsg = "row has " + record.size() + " columns. should have "
+					+ dataFile.getHeaders().size() + " columns.";
 		}
 		return errorMsg;
 	}
@@ -109,7 +135,7 @@ public class CSVFileValidator {
 			errors1.addAll(errors2);
 	}
 
-	private String getLocationValueError(CSVRecord record, CSVFile dataFile) {
+	String getLocationValueError(CSVRecord record, CSVFile dataFile) {
 
 		String errorMsg = "";
 		String header;

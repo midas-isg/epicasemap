@@ -14,30 +14,22 @@ public class CSVFileParser {
 	private static boolean Ignore_Surrounding_Spaces = true;
 	private static boolean Skip_Header_Record = true;
 
-	public CSVParser parse(CSVFile dataFile) {
+	public CSVParser parse(CSVFile dataFile) throws IllegalArgumentException, FileNotFoundException, IOException {
 
 		return parse(dataFile.getDelimiter(), dataFile.getFile());
 
 	}
 
-	private CSVParser parse(char delimiter, File file) {
+	private CSVParser parse(char delimiter, File file) throws IllegalArgumentException, FileNotFoundException, IOException{
 		CSVParser csvParser = null;
 		CSVFormat csvFormat = CSVFormat.newFormat(delimiter);
-		try {
 			csvParser = csvFormat
 					.withHeader()
 					.withIgnoreEmptyLines(Ignore_Empty_Lines)
 					.withIgnoreSurroundingSpaces(Ignore_Surrounding_Spaces)
 					.withSkipHeaderRecord(Skip_Header_Record)
 					.parse(new FileReader(file));
-			// csvParser.close(); //TODO: does it need to be closed??
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+	
 		return csvParser;
 	}
 
