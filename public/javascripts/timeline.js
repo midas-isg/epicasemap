@@ -10,7 +10,7 @@ timeline.js
 		
 		L.mapbox.accessToken = 'pk.eyJ1IjoidHBzMjMiLCJhIjoiVHEzc0tVWSJ9.0oYZqcggp29zNZlCcb2esA';
 		this.map = L.mapbox.map('map', 'mapbox.streets'/*'mapbox.dark'*/, { worldCopyJump: true, bounceAtZoomLimits: false, zoom: 2, minZoom: 2})
-			.setView([37.8, -96], 4);
+			.setView([30, 0], 2);
 
 		//this.popup = new L.Popup({ autoPan: false }),
 		this.heat = []; //null;
@@ -79,9 +79,16 @@ timeline.js
 		}
 		
 		this.setGradient = [];
+		/*
 		this.colorSet = [
 			['#1b9e77', '#d95f02', '#7570b3', '#e7298a', '#66a61e'],
 			['#a6cee3', '#1f78b4', '#b2df8a', "#33a02c", "#fb9a99"],
+			['#66c2a5', '#fc8d62', '#8da0cb', "#e78ac3", "#a6d854"]
+		];
+		*/
+		this.colorSet = [
+			['#1b9e77', '#d95f02', '#7570b3', '#e7298a', '#66a61e'],
+			["#33a02c", '#1f78b4', '#b2df8a', '#a6cee3', "#fb9a99"],
 			['#66c2a5', '#fc8d62', '#8da0cb', "#e78ac3", "#a6d854"]
 		];
 		
@@ -207,19 +214,10 @@ console.log("series " + k + ": " + id);
 		
 		$("#toggle-details-button").click(function() {
 			$("#detail-container *").toggle();
-			$("#toggle-details-button span").toggleClass("glyphicon-minus").toggleClass("glyphicon-plus");
 		});
 		
 		$("#toggle-controls-button").click(function() {
 			$('#control-panel').toggle();
-			thisMap.showControlPanel = !thisMap.showControlPanel;
-			
-			if(thisMap.showControlPanel) {
-				$("#visualization").css("float", "left");
-			}
-			else {
-				$("#visualization").css("float", "none");
-			}
 			
 			return;
 		});
@@ -456,7 +454,7 @@ console.log("series " + k + ": " + id);
 					reflow: false,
 					marginLeft: 50,
 					//marginRight: 20,
-					backgroundColor: "rgba(255, 255, 255, 0.1)", //null,
+					backgroundColor: "rgba(128, 128, 128, 0.1)", //null,
 					style: {
 						//position: 'absolute'
 					}
@@ -531,7 +529,7 @@ console.log("series " + k + ": " + id);
 			for(i = 0; i < MAGIC_MAP.dataset.length; i++) {
 				dataSeries.push({
 						type: 'area',
-						name: "Series " + i,
+						name: String.fromCharCode(i + 65) + ": " + MAGIC_MAP.dataset[i].name,
 						pointInterval: 86400000, //24 * 3600 * 1000,
 						pointStart: Date.UTC(MAGIC_MAP.dataset[i].buffer[0].date.getUTCFullYear(),
 									MAGIC_MAP.dataset[i].buffer[0].date.getUTCMonth(),
@@ -663,9 +661,13 @@ console.log("series " + k + ": " + id);
 					//, crosshairs: true
 				},
 				legend: {
+					layout: 'vertical',
+					align: 'left',
+					verticalAlign: 'top',
+					floating: true,
 					enabled: true,
 					padding: 0,
-					maxHeight: 8,
+					y: 25,
 					itemStyle: {
 						fontSize: "8px"
 					}
