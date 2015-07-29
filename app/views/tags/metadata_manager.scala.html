@@ -8,7 +8,7 @@
 		</button></small>
 	</h3>
 	@table_filterable("models", prefix, plural, 
-			Seq(Seq("id", "ID"), Seq("title", "Title")),
+			Seq(Seq("id", "ID"), Seq("title", "Title"), Seq("version", "Version")),
 			if(more == null){
 				Seq(Seq(Html("action-1"), Html("Edit"), buttonEdit()))
 			} else {
