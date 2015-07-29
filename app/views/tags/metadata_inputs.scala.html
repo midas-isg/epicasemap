@@ -1,6 +1,14 @@
 @* metadata inputs usually used as children of form element *@
-@()
+@(labelSize:Int=2)
+@form_group_readonly("ID", "{{model.id}}", "ID", labelSize)
+@formGroup("name", "Name", "text", "Enter Name", labelSize)
 
-<label>ID: </label> {{model.id}}<br>
-<label>Name:  </label>
-<input id='name' type='text' ng-model='model.name'  autofocus><br>
+
+@formGroup(id:String, label:String, inputType:String, placeholder:String, labelSize:Int=2) = {
+  <div class='form-group input-group-sm'>
+    <label class='control-label col-sm-@labelSize' for='@id'>@label:</label>
+    <div class='col-sm-@(12-labelSize)'>
+      <input ng-model='model.@id'  type='@inputType' class='form-control' id='@id' placeholder='@placeholder'>
+    </div>
+  </div>
+}

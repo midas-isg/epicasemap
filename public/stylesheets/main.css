@@ -74,5 +74,5 @@ table {
 .col-a{width:2em;}
 .col-b{width:2em;}
 
-/* width by ID */
-#name{width:80%;}
+/* form */
+.input-group-sm{margin-bottom:0px}
