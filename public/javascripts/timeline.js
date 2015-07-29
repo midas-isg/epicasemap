@@ -24,13 +24,14 @@ timeline.js
 		this.detailChart = null;
 		this.dataset = [];
 		this.earliestDate = new Date();
-		
 		this.latestDate = new Date(0);
 		this.zeroTime(this.latestDate);
 		
 		this.seriesList0;
 		this.seriesList1;
 		this.seriesDescriptions = {};
+		
+		this.showControlPanel = true;
 		
 		this.playBack = false;
 		this.set = [];
@@ -120,7 +121,7 @@ timeline.js
 					};
 				}
 				
-				console.log(thisMap.seriesDescriptions);
+				//console.log(thisMap.seriesDescriptions);
 				
 				thisMap.seriesToLoad = [thisMap.seriesList0[0].id, thisMap.seriesList1[0].id];
 				for(i = 0; i < thisMap.seriesToLoad.length; i++) {
@@ -147,11 +148,15 @@ timeline.js
 						k = $(this).attr("id").split("-")[1];
 console.log("series " + k + ": " + id);
 						
-						//TODO: EVERYTHING HAS TO BE RESET BECAUSE OF TIME ADJUSTMENTS! MAKE IT SO!
+						//TODO: frameOffset ISN'T BEING UPDATED!
 						thisMap.set[k].visiblePoints.length = 0;
-						thisMap.seriesToLoad[k] = id;
+						thisMap.seriesToLoad[k] = [id];
 						
-						thisMap.load(thisMap.seriesToLoad[k]);
+						//recalculate earliest & latest dates (refactor block to external call -calculate from 0 and length-1 indexes)
+						thisMap.latestDate = new Date(0);
+						thisMap.earliestDate = new Date();
+						
+						thisMap.load(id, k);
 						
 						return;
 					});
@@ -169,6 +174,7 @@ console.log("series " + k + ": " + id);
 	}
 	
 	MagicMap.prototype.start = function() {
+		thisMap = this;
 		//legend stuff
 		this.closeTooltip;
 		//this.map.legendControl.addLegend(this.getLegendHTML());
@@ -204,6 +210,19 @@ console.log("series " + k + ": " + id);
 			$("#toggle-details-button span").toggleClass("glyphicon-minus").toggleClass("glyphicon-plus");
 		});
 		
+		$("#toggle-controls-button").click(function() {
+			$('#control-panel').toggle();
+			thisMap.showControlPanel = !thisMap.showControlPanel;
+			
+			if(thisMap.showControlPanel) {
+				$("#visualization").css("float", "left");
+			}
+			else {
+				$("#visualization").css("float", "none");
+			}
+			
+			return;
+		});
 		
 		//TODO: refactor palette click code without causing closure issues
 		$("#palette-0").click(function() {
@@ -269,9 +288,33 @@ console.log("series " + k + ": " + id);
 		return;
 	}
 
-	MagicMap.prototype.load = function(seriesID) {
+	MagicMap.prototype.load = function(seriesID, index) {
 		var URL = CONTEXT + "/api/series/" + seriesID + "/time-coordinate",
+		currentDataset = {
+			seriesID: seriesID,
+			name: "name",
+			buffer: [{point: [], date: null}],
+			maxValue: 0,
+			frameAggregate: [0],
+			frameOffset: 0
+		},
 		thisMap = this;
+		
+		if(!index && (index !== 0)) {
+			this.dataset.push(currentDataset);
+		}
+		else {
+			this.dataset[index] = {
+				seriesID: seriesID,
+				name: "name",
+				buffer: [{point: [], date: null}],
+				maxValue: 0,
+				frameAggregate: [0],
+				frameOffset: 0
+			}
+			
+			currentDataset = this.dataset[index];
+		}
 		
 		$.ajax({
 			url: URL,
@@ -284,19 +327,11 @@ console.log("series " + k + ": " + id);
 				lastDate = new Date(result.results[0].timestamp),
 				emptyDate,
 				inputDate,
-				deltaTime,
-				datasetID = thisMap.dataset.length;
+				deltaTime;
 				
 				thisMap.zeroTime(lastDate);
 				
-				thisMap.dataset.push({
-					seriesID: result.filter.equalities.seriesId,
-					name: thisMap.seriesDescriptions[result.filter.equalities.seriesId].name,
-					buffer: [{point: [], date: null}],
-					maxValue: 0,
-					frameAggregate: [0],
-					frameOffset: 0
-				});
+				currentDataset.name = thisMap.seriesDescriptions[seriesID].name;
 				
 				if(thisMap.earliestDate > lastDate) {
 					thisMap.earliestDate = new Date(lastDate);
@@ -315,27 +350,26 @@ console.log("series " + k + ": " + id);
 						deltaTime = inputDate.valueOf() - lastDate.valueOf();
 						
 						while(deltaTime >= threshold) {
-							thisMap.dataset[datasetID].buffer.push({point: [], date: null});
+							currentDataset.buffer.push({point: [], date: null});
 							frame++;
 							filler++;
 							emptyDate = new Date(emptyDate.valueOf() + threshold);
-							thisMap.dataset[datasetID].buffer[frame].date = emptyDate;
-							thisMap.dataset[datasetID].frameAggregate[frame] = 0;
+							currentDataset.buffer[frame].date = emptyDate;
+							currentDataset.frameAggregate[frame] = 0;
 							
 							deltaTime -= threshold;
 						}
 						
-						thisMap.dataset[datasetID].buffer[frame].point.push({latitude: result.results[i].latitude, longitude: result.results[i].longitude, value: result.results[i].value});
-						thisMap.dataset[datasetID].buffer[frame].date = inputDate;
+						currentDataset.buffer[frame].point.push({latitude: result.results[i].latitude, longitude: result.results[i].longitude, value: result.results[i].value});
+						currentDataset.buffer[frame].date = inputDate;
 						
-						//thisMap.dataset[datasetID].buffer[frame].value = result.results[i].value; //TODO: make this per point to control radius!
-						thisMap.dataset[datasetID].frameAggregate[frame] += result.results[i].value;
+						currentDataset.frameAggregate[frame] += result.results[i].value;
 						
-						if(thisMap.dataset[datasetID].maxValue < result.results[i].value) {
-							thisMap.dataset[datasetID].maxValue = result.results[i].value;
+						if(currentDataset.maxValue < result.results[i].value) {
+							currentDataset.maxValue = result.results[i].value;
 						}
 						
-						lastDate = thisMap.dataset[datasetID].buffer[frame].date;
+						lastDate = currentDataset.buffer[frame].date;
 					}
 					else {
 						skipped++;
@@ -345,20 +379,20 @@ console.log("series " + k + ": " + id);
 				console.log("Skipped " + skipped + " malformed entries");
 				console.log(filler + " days occurred without reports in this timespan");
 				console.log("Total Frames: " + frame + 1);
-				console.log("Buffer length: " + thisMap.dataset[datasetID].buffer.length);
+				console.log("Buffer length: " + currentDataset.buffer.length);
 				
-				if(thisMap.latestDate < thisMap.dataset[datasetID].buffer[frame].date) {
-					thisMap.latestDate = thisMap.dataset[datasetID].buffer[frame].date;
+				if(thisMap.latestDate < currentDataset.buffer[frame].date) {
+					thisMap.latestDate = currentDataset.buffer[frame].date;
 				}
 				
 				thisMap.seriesToLoad.shift();
-				if(thisMap.seriesToLoad.length == 0) {
+				if(thisMap.seriesToLoad.length === 0) {
 					thisMap.frameCount = Math.floor((thisMap.latestDate.valueOf() - thisMap.earliestDate.valueOf()) / threshold) + 1;
 					
 					for(i = 0; i < thisMap.dataset.length; i++) {
 						deltaTime = thisMap.dataset[i].buffer[0].date.valueOf() - thisMap.earliestDate.valueOf();
 						
-						if(deltaTime != 0) {
+						if(deltaTime !== 0) {
 							thisMap.dataset[i].frameOffset = Math.floor(deltaTime / threshold);
 						}
 					}
