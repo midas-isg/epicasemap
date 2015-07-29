@@ -11,7 +11,7 @@
 @bs_modal("seriesModal", "Series", "Series Editor", "close()")(editor())(modal_buttons("Series"))
 
 @editor() = {
-	<form name='form'>
+	<form name='form' class="form-horizontal" role="form">
 		@metadata_inputs()
 	</form>
 	@dataSection("view.hideData")

@@ -12,14 +12,23 @@
 @bs_modal("modal", "Viz", "Viz Editor", "close()")(editor())(modal_buttons("Viz"))
 @series_dialog()
 
-@editor() = {
+@editor(labelSize:Int=3) = {
 	@filters("series", "Series", Seq(Seq("id", "ID"), Seq("name", "Name")))
-	<form name='form'>
-		@metadata_inputs()
-		<label># of selected Series in category A: </label> {{countBy('s1')}}<br>
-		<label># of selected Series in category B: </label> {{countBy('s2')}}<br>	
+	<form name='form' class="form-horizontal" role="form">
+		@metadata_inputs(labelSize)
+		@category("A", "s1", labelSize)
+		@category("B", "s2", labelSize)
 		@selectedSeriesSection("view.hideSeries")
 	</form>
+}
+
+@category(cat:String, key:String, labelSize:Int) = {
+	@form_group_readonly(
+		"# selected Series as " + cat, 
+		"{{countBy('" + key +"')}}", 
+		"the number of selected Series in category " + cat, 
+		labelSize
+	)
 }
 
 @selectedSeriesSection(varName:String) = {
