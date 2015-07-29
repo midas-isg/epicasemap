@@ -1,0 +1,9 @@
+@* Clickable header to expand or collapse the section controlled by @varName.
+	@heading should be created from span_togglable() inside h1 - h6 tag*@
+@(varName:String)(heading:Html)(content:Html)
+<section>
+	@heading
+	<div ng-hide='@varName'>
+		@content
+	</div>
+</section>
