@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+<script>
+(function() {
+	var path,
+	serviceRoot,
+	mySeries,
+	formData;
+	
+	$(document).ready(function() {
+		path = "http://localhost:9000";
+		serviceRoot = path + "/epidemap/";
+		mySeries = new Series();
+		window.MY_SERIES = mySeries;
+		
+		$("#form").submit(function(e) {
+			
+			formData = new FormData($(this)[0]);
+			console.log("inside submit()");
+			var postURL = serviceRoot + "api/series";
+		
+			MY_SERIES.populate();
+			console.log(MY_SERIES.series);
+	
+			$.ajax({
+				url: postURL,
+				data: MY_SERIES.series,
+				type: 'POST',
+				async: false,
+				success: function (data,status,xhr) {
+					var location = xhr.getResponseHeader('Location');
+					console.log(xhr.getAllResponseHeaders());
+					var str = location.split("/");
+					var seriesId = str[str.length-1];
+					FileUpload(seriesId);	
+				},
+				error: function (data, status) {
+					console.log("error in submit()");
+				
+				}
+			});
+	
+			return;
+		});
+		
+		return;
+	});
+	
+	function Series() {
+		console.log("inside Series");
+		this.series = {};
+	}
+	
+	Series.prototype.populate = function() {
+	console.log("inside populate()");
+		this.series['title'] = $("#title").val().trim();
+		this.series['description'] = $("#description").val().trim();
+		this.series['creator'] = $("#creator").val().trim();
+		this.series['publisher'] = $("#publisher").val().trim();
+		this.series['license'] = $("#license").val().trim();
+		this.series['version'] = $("#version").val().trim();
+		this.series['isVersionOf'] = $("#isVersionOf").val().trim();
+		
+		return this.series;
+	}
+	
+	function FileUpload(seriesId) {
+		console.log("inside FileUpload");
+		var postURL = serviceRoot + "api/fileUpload/" + seriesId + "/" + encodeURIComponent($("#delimiter").val()) + "/" + encodeURIComponent($("#format").val());
+		console.log(postURL);
+		
+		$.ajax({
+		url: postURL,
+		data: formData,
+		type: 'POST',
+		async: false,
+		mimeType:"multipart/form-data",
+		contentType: false,
+		cache: false,
+		processData:false,
+		success: function (data,status,xhr) {
+			console.log("success in FileUpload()",status);
+		},
+		error: function(error, status) {
+  			console.log(error.responseText,status);
+		}
+		});
+	
+		return;
+	}
+	
+	return;
+})();
+
+</script>
+</head>
+<body>
+
+<form id="form" name="form" enctype="multipart/form-data">
+
+		<p>
+		<label>Title	</label>
+		<input type="text" id="title" placeholder="title" value="title"/>
+		</p>
+
+		<p>
+		<label>Description</label>
+		<input type="text" id="description" placeholder="description" value="description"/>
+		</p>
+
+		<p>
+		<label>Creator</label>
+		<input type="text" id="creator" placeholder="creator" value="creator"/>
+		</p>
+
+		<p>
+		<label>Publisher</label>
+		<input type="text" id="publisher" placeholder="publisher" value="publisher"/>
+		</p>
+
+		<p>
+		<label>License</label>
+		<input type="text" id="license" placeholder="license" value="license"/>
+		</p>
+
+		<p>
+		<label>Version</label>
+		<input type="text" id="version" placeholder="version" value="version"/>
+		</p>
+
+		<p>
+		<label>IsVersionOf	</label>
+		<input type="text" id="isVersionOf" placeholder="isVersionOf" value="isVersionOf"/>
+		</p>
+		
+		<p>
+		<label>Format</label>
+		<select id="format">
+			<option value="apolloIdFormat">apollo_id</option>
+			<option value="coordinateFormat">coordinate</option>
+		</select>
+		</p>
+
+		<p>
+		<label>Delimiter</label>
+		<select id="delimiter">
+			<option value=",">comma(,)</option>
+			<option value="	">Tab</option>
+			<option value="|">Bar(|)</option>
+		</select>
+		</p>
+	
+	<p>
+	<input type="file" name="csv_file" id="csv_file" /></p>
+	<input type="submit"/>
+</form>
+
+</body>
+</html>

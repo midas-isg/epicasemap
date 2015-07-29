@@ -6,12 +6,10 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
 @Entity
-public class Series implements models.entities.Entity {
+public class Series extends MetaData {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
-	private String name;
-	private String description;
 
 	@Override
 	public Long getId() {
@@ -23,12 +21,12 @@ public class Series implements models.entities.Entity {
 		this.id = id;
 	}
 
-	public String getName() {
-		return name;
+/*	public String getTitle() {
+		return title;
 	}
 
-	public void setName(String name) {
-		this.name = name;
+	public void setTitle(String title) {
+		this.title = title;
 	}
 
 	public String getDescription() {
@@ -37,16 +35,16 @@ public class Series implements models.entities.Entity {
 
 	public void setDescription(String description) {
 		this.description = description;
-	}
+	}*/
 
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result
-				+ ((description == null) ? 0 : description.hashCode());
+				+ ((this.getDescription() == null) ? 0 : this.getDescription().hashCode());
 		result = prime * result + ((id == null) ? 0 : id.hashCode());
-		result = prime * result + ((name == null) ? 0 : name.hashCode());
+		result = prime * result + ((this.getTitle() == null) ? 0 : this.getTitle().hashCode());
 		return result;
 	}
 
@@ -59,27 +57,27 @@ public class Series implements models.entities.Entity {
 		if (getClass() != obj.getClass())
 			return false;
 		Series other = (Series) obj;
-		if (description == null) {
-			if (other.description != null)
+		if (this.getDescription() == null) {
+			if (other.getDescription() != null)
 				return false;
-		} else if (!description.equals(other.description))
+		} else if (!this.getDescription().equals(other.getDescription()))
 			return false;
 		if (id == null) {
 			if (other.id != null)
 				return false;
 		} else if (!id.equals(other.id))
 			return false;
-		if (name == null) {
-			if (other.name != null)
+		if (this.getTitle() == null) {
+			if (other.getTitle() != null)
 				return false;
-		} else if (!name.equals(other.name))
+		} else if (!this.getTitle().equals(other.getTitle()))
 			return false;
 		return true;
 	}
 
 	@Override
 	public String toString() {
-		return "Series [id=" + id + ", name=" + name + ", description="
-				+ description + "]";
+		return "Series [id=" + id + ", title=" + this.getTitle() + ", description="
+				+ this.getDescription() + "]";
 	}
 }

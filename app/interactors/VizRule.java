@@ -34,7 +34,7 @@ public class VizRule extends CrudRule<Viz> {
 		if (input == null)
 			return null;
 		Viz result = new Viz();
-		result.setName(input.getName());
+		result.setTitle(input.getName());
 		final List<Long> ids = input.getSeriesIds();
 		result.setAllSeries(toAllSeries(ids));
 		final List<Long> id2s = input.getSeries2Ids();
@@ -56,7 +56,7 @@ public class VizRule extends CrudRule<Viz> {
 			return null;
 		
 		VizInput input = new VizInput();
-		input.setName(data.getName());
+		input.setName(data.getTitle());
 		input.setSeriesIds(toIds(data.getAllSeries()));
 		input.setSeries2Ids(toIds(data.getAllSeries2()));
 		input.setUiSetting(data.getUiSetting());
