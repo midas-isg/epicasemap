@@ -19,59 +19,67 @@ public class CSVFilePersister {
 
 		CSVFileParser csvParser = new CSVFileParser();
 		CSVParser parser = csvParser.parse(dataFile);
-		return persistRecords(seriesId, dataFile.getFileFormat(), parser);
-		
+		return persistRecords(seriesId, dataFile, parser);
+
 	}
 
-	private boolean persistRecords(long seriesId, String fileFormat,
+	private boolean persistRecords(long seriesId, CSVFile dataFile,
 			CSVParser parser) throws NumberFormatException {
 		Iterator<CSVRecord> records = parser.iterator();
 		while (records.hasNext()) {
 			CSVRecord record = records.next();
-			if (persistRecord(seriesId, fileFormat, record) == 0) {
+			if (persistRecord(seriesId, dataFile, record) == 0) {
 				return false;
 			}
 		}
 		return true;
 	}
 
-	private long persistRecord(long seriesId, String fileFormat,
-			CSVRecord record) throws NumberFormatException {
+	private long persistRecord(long seriesId, CSVFile dataFile, CSVRecord record)
+			throws NumberFormatException {
 
 		SeriesData seriesData = csvRecordToSeriesData(seriesId, record,
-				fileFormat);
+				dataFile);
 		return persist(seriesData);
 	}
 
 	private SeriesData csvRecordToSeriesData(long seriesId, CSVRecord record,
-			String fileFormat) throws NumberFormatException {
-		long locId = createLocationFromCSVRecord(record, fileFormat);
-		return createSeriesData(seriesId, locId, getTimeStamp(record),
-				getValue(record));
+			CSVFile dataFile) throws NumberFormatException {
+		long locId = createLocationFromCSVRecord(record, dataFile);
+		return createSeriesData(seriesId, locId,
+				getTimeStamp(record, dataFile), getValue(record, dataFile));
 	}
 
-	private double getValue(CSVRecord record) throws NumberFormatException {
-		return Double.parseDouble(record.get(CSVFile.VALUE_HEADER));
+	private double getValue(CSVRecord record, CSVFile dataFile)
+			throws NumberFormatException {
+		String header = dataFile.stdHeaderToFileHeader(CSVFile.VALUE_HEADER);
+
+		return Double.parseDouble(record.get(header));
 	}
 
-	private Date getTimeStamp(CSVRecord record) {
-		return DateTime.parse(record.get(CSVFile.TIME_HEADER)).toDate();
+	private Date getTimeStamp(CSVRecord record, CSVFile dataFile) {
+		String header = dataFile.stdHeaderToFileHeader(CSVFile.TIME_HEADER);
+		return DateTime.parse(record.get(header)).toDate();
 	}
 
-	private long createLocationFromCSVRecord(CSVRecord record,
-			String fileFormat) throws NumberFormatException {
+	private long createLocationFromCSVRecord(CSVRecord record, CSVFile dataFile)
+			throws NumberFormatException {
 		long locId = 0L;
+		String header;
+		String fileFormat = dataFile.getFileFormat();
 
 		if (fileFormat.equals(CSVFile.APOLLO_ID_FORMAT)) {
-
-			locId = persist(createLocation(Long.parseLong(record
-					.get(CSVFile.APOLLO_ID_HEADER))));
+			header = dataFile.stdHeaderToFileHeader(CSVFile.APOLLO_ID_HEADER);
+			locId = persist(createLocation(Long.parseLong(record.get(header))));
 
 		} else if (fileFormat.equals(CSVFile.COORDINATE_FORMAT)) {
+			String lat = dataFile
+					.stdHeaderToFileHeader(CSVFile.LATITUDE_HEADER);
+			String lon = dataFile
+					.stdHeaderToFileHeader(CSVFile.LONGITUDE_HEADER);
 
-			locId = persist(createLocation(
-					Double.parseDouble(record.get(CSVFile.LATITUDE_HEADER)),
-					Double.parseDouble(record.get(CSVFile.LONGITUDE_HEADER))));
+			locId = persist(createLocation(Double.parseDouble(record.get(lat)),
+					Double.parseDouble(record.get(lon))));
 		}
 		return locId;
 	}
