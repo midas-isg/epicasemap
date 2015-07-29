@@ -1,0 +1,9 @@
+@* Clickable span to toggle @varName.*@
+
+@(varName:String, text:String, titleIf:String="expand", titleElse:String="collapse")
+<span ng-click='@varName = !@varName'>
+	<small>
+		@span_if(varName, bs_icon("triangle-right"), titleIf)
+		@span_if("!" + varName, bs_icon("triangle-bottom"), titleElse)
+	</small>@text
+</span>

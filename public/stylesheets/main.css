@@ -49,3 +49,30 @@ a:hover {
 .navbar .navbar-brand {
 	color: #ffffff;
 }
+
+/* table scrollable content */
+table {
+    table-layout:fixed;
+}
+
+.table-header{
+    margin-bottom: 0px;
+}
+.table-content {
+  max-height: 300px;
+  overflow-y:scroll;
+  margin-bottom: 10px;
+}
+
+/* column width */
+.col-scroll{width:17px;}
+.col-id{width:4em;}
+.col-action-1{width:2.5em;}
+.col-action-2{width:5em;}
+.col-date{width:7em;}
+.col-value{width:10em;}
+.col-a{width:2em;}
+.col-b{width:2em;}
+
+/* width by ID */
+#name{width:80%;}
