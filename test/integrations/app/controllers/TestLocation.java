@@ -25,7 +25,7 @@ public class TestLocation {
 	private static Location persistNewLocation() {
 		EntityManager em = JPA.em();
 		theData = new Location();
-		theData.setId(1L);
+		//theData.setId(1L);
 		em.persist(theData);
 		return theData;
 	}
