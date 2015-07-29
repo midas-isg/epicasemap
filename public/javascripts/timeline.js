@@ -31,7 +31,7 @@ timeline.js
 		this.seriesList1;
 		this.seriesDescriptions = {};
 		
-		this.showControlPanel = true;
+		this.showControlPanel = false;
 		
 		this.playBack = false;
 		this.set = [];
@@ -217,7 +217,7 @@ console.log("series " + k + ": " + id);
 		});
 		
 		$("#toggle-controls-button").click(function() {
-			$('#control-panel').toggle();
+			$("#control-panel").toggle();
 			
 			return;
 		});
@@ -519,6 +519,10 @@ console.log("series " + k + ": " + id);
 					enabled: false
 				}
 			}).highcharts(); // return chart
+			
+			$("#toggle-details-button").click();
+			
+			return;
 		}
 
 		// create the master chart
