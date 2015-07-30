@@ -24,8 +24,8 @@
 			"The Series contains {{count(coordinates)}} data from {{locationIds.size}} location(s)")
 		</h3>
 	}{
-		<button title="Replace existing data with the uploaded data" class='btn-large' ng-click='uploadNewData(model.id)'>
-			@bs_icon("upload") Upload data
+		<button title="Open the dialog to upload data" class='btn-large' ng-click='uploadNewData(model.id)'>
+			@bs_icon("upload") Upload data ...
 		</button>
 		@table_filterable("coordinates", "data", "data", orders)
 	}
