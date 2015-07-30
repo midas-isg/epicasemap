@@ -1,4 +1,4 @@
-@bs_modal("dataModal", "SeriesData", "Series Data Uploader", "closeDialog()")(uploader())(Html(""))
+@bs_modal("dataModal", "SeriesData", "Series Data Uploader", "closeDialog()")(uploader())(footer())
 
 @uploader() = {
 	<form id="form" name="form" enctype="multipart/form-data">
@@ -20,8 +20,15 @@
 		</p>
 	
 	<p>
-		<input type="file" name="csv_file" id="csv_file" />
+		<input type="file" app-file-model="dataFile" id="data-file" />
 	</p>
-	<input type="submit"/>
 	</form>
+}
+
+@footer() = {
+	<button title="Replace the existing data with the data in the uploaded file & Close the dialog" 
+	class='btn-large btn-danger pull-left' 
+	ng-click='uploadThenClose()' ng-disabled='! dataFile'>
+	@bs_icon("upload") Upload & @bs_icon("remove") Close
+	</button>
 }

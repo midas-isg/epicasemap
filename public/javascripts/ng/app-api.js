@@ -5,6 +5,21 @@ var app = angular.module('app', [])
 	  $locationProvider.html5Mode(true).hashPrefix('!');
 });
 
+app.directive('appFileModel', function ($parse) {
+    return {
+        restrict: 'A',
+        link: function(scope, element, attrs) {
+            var model = $parse(attrs.appFileModel);
+            
+            element.bind('change', function(){
+                scope.$apply(function(){
+                    model.assign(scope, element[0].files[0]);
+                });
+            });
+        }
+    };
+});
+
 app.service("api", function($http, $q, $location) {
 	$( document ).ready(resizeResizableTable);
 	$( window ).resize(resizeResizableTable);
@@ -59,7 +74,18 @@ app.service("api", function($http, $q, $location) {
 		
 		return d.getUTCFullYear() + '-' + MM + '-' + dd;
 	}
-	
+    this.uploadFile = function(file, path){
+        var fd = new FormData(),
+        	deferred = $q.defer();
+        fd.append('file', file);
+        $http.post(makeUrl(path), fd, {
+            transformRequest: angular.identity,
+            headers: {'Content-Type': undefined}
+        }).then(function(data){
+        	deferred.resolve(data);
+        });
+        return deferred.promise;
+    }
 	
 	function makeUrl(path, id){
 		var url = makeApiUrl() + path;
