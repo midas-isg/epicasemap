@@ -41,24 +41,67 @@ app.controller('Series', function($scope, $rootScope, api) {
 	$scope.isShown = function(series){
 		return true;
 	};
-	
+	$scope.dataModal = $('#dataModal');
+	$scope.uploadNewData = function(seriesId){
+		$scope.seriesId = seriesId;
+		$scope.dataModal.modal();
+		$("#form").submit(function(e) {
+			var formData = new FormData($(this)[0]);
+			console.log("inside submit()");
+			$scope.upload(formData);
+		});
+
+	}
+	$scope.closeDialog = function(){
+		$scope.dataModal.modal('hide');
+	};
+	$scope.upload = function(formData){
+		FileUpload($scope.seriesId);
+		
+		function FileUpload(seriesId) {
+			console.log("inside FileUpload");
+			var postURL = "/epidemap/api/fileUpload/" + seriesId + "/" + encodeURIComponent($("#delimiter").val()) + "/" + encodeURIComponent($("#format").val());
+			console.log(postURL);
+			
+			$.ajax({
+			url: postURL,
+			data: formData,
+			type: 'POST',
+			async: false,
+			mimeType:"multipart/form-data",
+			contentType: false,
+			cache: false,
+			processData:false,
+			success: function (data,status,xhr) {
+				$scope.closeDialog();
+				console.log("success in FileUpload()",status);
+				loadCoordinates($scope.model.id);
+				$("#csv_file").replaceWith($("#csv_file").clone(true));
+			},
+			error: function(error, status) {
+	  			console.log(error.responseText,status);
+			}
+			});
+		}
+	};
+
 	function edit(series) {
 		var isNew = series.id ? false : true;
 		$scope.model = series;
 		$scope.form.isNew = isNew;
 		loadCoordinates($scope.model.id);
 		$scope.dialog.modal();
-
-		function loadCoordinates(seriesId){
-			var path = 'series/' + seriesId + '/time-coordinate';
-			api.find(path).then(function(rsp) {
-				$scope.coordinates =  rsp.data.results;
-				populateAdditionInfo($scope.coordinates);
-				$scope.dataOrder = $scope.dataOrder || 'date';
-			});
-		}
 	};
 	
+	function loadCoordinates(seriesId){
+		var path = 'series/' + seriesId + '/time-coordinate';
+		api.find(path).then(function(rsp) {
+			$scope.coordinates =  rsp.data.results;
+			populateAdditionInfo($scope.coordinates);
+			$scope.dataOrder = $scope.dataOrder || 'date';
+		});
+	}
+
 	function close(){
 		$scope.form.$setPristine();
 		$scope.coordinates = [];
@@ -98,7 +141,6 @@ app.controller('Series', function($scope, $rootScope, api) {
 			it.date = api.toDateText(it.timestamp);
 			$scope.locationIds.add(it.locationId);
 		});
-		console.log($scope.locationIds);
 
 		size = $scope.locationIds.size;
 		if (size > 50)
