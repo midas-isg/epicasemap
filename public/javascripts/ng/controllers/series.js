@@ -22,6 +22,9 @@ app.controller('Series', function($scope, $rootScope, api) {
     $rootScope.$on('editSeries', function(event, series) {
     	edit(series);
 	});
+    $rootScope.$on('loadCoordinates', function(event, seriesId) {
+    	loadCoordinates(seriesId);
+	});
 
 	$scope.submit = function(callback) {
 		if ($scope.form.$dirty) {
@@ -41,49 +44,10 @@ app.controller('Series', function($scope, $rootScope, api) {
 	$scope.isShown = function(series){
 		return true;
 	};
-	$scope.dataModal = $('#dataModal');
-	$scope.uploadNewData = function(seriesId){
-		$scope.seriesId = seriesId;
-		$scope.dataModal.modal();
-		$("#form").submit(function(e) {
-			var formData = new FormData($(this)[0]);
-			console.log("inside submit()");
-			$scope.upload(formData);
-		});
-
-	}
-	$scope.closeDialog = function(){
-		$scope.dataModal.modal('hide');
+    $scope.uploadNewData = function(seriesId) {
+    	$rootScope.$emit('uploadNewSeriesData', seriesId);
 	};
-	$scope.upload = function(formData){
-		FileUpload($scope.seriesId);
-		
-		function FileUpload(seriesId) {
-			console.log("inside FileUpload");
-			var postURL = "/epidemap/api/fileUpload/" + seriesId + "/" + encodeURIComponent($("#delimiter").val()) + "/" + encodeURIComponent($("#format").val());
-			console.log(postURL);
-			
-			$.ajax({
-			url: postURL,
-			data: formData,
-			type: 'POST',
-			async: false,
-			mimeType:"multipart/form-data",
-			contentType: false,
-			cache: false,
-			processData:false,
-			success: function (data,status,xhr) {
-				$scope.closeDialog();
-				console.log("success in FileUpload()",status);
-				loadCoordinates($scope.model.id);
-				$("#csv_file").replaceWith($("#csv_file").clone(true));
-			},
-			error: function(error, status) {
-	  			console.log(error.responseText,status);
-			}
-			});
-		}
-	};
+	
 
 	function edit(series) {
 		var isNew = series.id ? false : true;
