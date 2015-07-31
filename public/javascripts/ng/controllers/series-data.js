@@ -24,11 +24,9 @@ app.controller('SeriesData', function($scope, $rootScope, api) {
 	
 	function uploadThenClose(){
 		var seriesId = $scope.seriesId;
-		var postURL = "fileUpload/" + seriesId + "/" + encodeURIComponent($("#delimiter").val()) + "/" + encodeURIComponent($("#format").val());
+		var path = "fileUpload/" + seriesId + "/" + encodeURIComponent($("#delimiter").val()) + "/" + encodeURIComponent($("#format").val());
         var file = $scope.dataFile;
-        // console.log('file is ' );
-        // console.dir(file);
-        api.uploadFile(file, postURL).then(function(rsp) {
+        api.uploadFile(path, file).then(function(rsp) {
 			$scope.closeDialog();
 			loadCoordinates($scope.seriesId);
 
