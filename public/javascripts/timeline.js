@@ -128,6 +128,8 @@ timeline.js
 				thisMap.seriesList0 = result.result.allSeries;
 				thisMap.seriesList1 = result.result.allSeries2;
 				
+				$("#title").text(result.result.name);
+				
 				for(i = 0; i < thisMap.seriesList0.length; i++) {
 					thisMap.seriesDescriptions[thisMap.seriesList0[i].id] = {
 						name: thisMap.seriesList0[i].name,
@@ -704,7 +706,7 @@ console.log("series " + k + ": " + id);
 					padding: 0,
 					y: 25,
 					itemStyle: {
-						fontSize: "8px"
+						fontSize: "12px"
 					}
 				},
 				credits: {
