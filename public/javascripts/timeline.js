@@ -269,14 +269,12 @@ console.log("series " + k + ": " + id);
 			}
 		});
 		
-		/*
-		$('#visualization').resize(function () {
+		$(window).resize(function() {
 			thisMap.detailChart.reflow();
 			thisMap.masterChart.reflow();
 			
 			return;
 		});
-		*/
 		
 		return;
 	}
