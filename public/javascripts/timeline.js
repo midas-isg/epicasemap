@@ -124,24 +124,22 @@ timeline.js
 		$.ajax({
 			url: URL,
 			success: function(result) {
-				var h, i;
+				var h,
+				i,
+				seriesDisplayCount = 2;
+				
 				thisMap.seriesList0 = result.result.allSeries;
 				thisMap.seriesList1 = result.result.allSeries2;
 				
 				$("#title").text(result.result.name);
 				
-				for(i = 0; i < thisMap.seriesList0.length; i++) {
-					thisMap.seriesDescriptions[thisMap.seriesList0[i].id] = {
-						name: thisMap.seriesList0[i].name,
-						description: thisMap.seriesList0[i].description
-					};
-				}
-				
-				for(i = 0; i < thisMap.seriesList1.length; i++) {
-					thisMap.seriesDescriptions[thisMap.seriesList1[i].id] = {
-						name: thisMap.seriesList1[i].name,
-						description: thisMap.seriesList1[i].description
-					};
+				for(h = 0; h < seriesDisplayCount; h++) {
+					for(i = 0; i < thisMap["seriesList" + h].length; i++) {
+						thisMap.seriesDescriptions[thisMap["seriesList" + h][i].id] = {
+							name: thisMap["seriesList" + h][i].name,
+							description: thisMap["seriesList" + h][i].description
+						};
+					}
 				}
 				
 				//console.log(thisMap.seriesDescriptions);
@@ -152,11 +150,11 @@ timeline.js
 					thisMap.load(thisMap.seriesToLoad[i]);
 				}
 				
-				/*
-				for(h = 0; h < 2; h++) {
+				/**/
+				for(h = 0; h < seriesDisplayCount; h++) {
 					$("#series-options").append(
 						"<div>" +
-							"<h5>Select series " + h + "</h5>" +
+							"<h5>Select series " + String.fromCharCode(h + 65) + "</h5>" +
 							"<select id='series-" + h + "' style='max-width: 100%;'>" +
 							"</select>" +
 						"</div>"
@@ -168,23 +166,29 @@ timeline.js
 					
 					$("#series-" + h).change(function() {
 						var id = $(this).val(),
+						l,
 						k = $(this).attr("id").split("-")[1];
 console.log("series " + k + ": " + id);
 						
-						//TODO: frameOffset ISN'T BEING UPDATED!
-						thisMap.set[k].visiblePoints.length = 0;
-						thisMap.seriesToLoad[k] = [id];
-						
-						//recalculate earliest & latest dates (refactor block to external call -calculate from 0 and length-1 indexes)
+						//TODO: recalculate frameOffset, earliest & latest dates after loading is finished
+						//(refactor block to external call -calculate from 0 and length-1 indexes)
 						thisMap.latestDate = new Date(0);
 						thisMap.earliestDate = new Date();
 						
-						thisMap.load(id, k);
+						thisMap.seriesToLoad = [];
+						for(l = 0; l < seriesDisplayCount; l++) {
+							thisMap.seriesToLoad.push($("#series-" + l).val());
+						}
+						
+						for(l = 0; l < thisMap.seriesToLoad.length; l++) {
+							thisMap.set[k].visiblePoints.length = 0;
+							thisMap.load(thisMap.seriesToLoad[l], l);
+						}
 						
 						return;
 					});
 				}
-				*/
+				/**/
 				
 				return;
 			},
@@ -205,7 +209,7 @@ console.log("series " + k + ": " + id);
 		$("#reset-button").click(function() {
 			var i;
 			
-			console.log("Buffer:");
+			//console.log("Buffer:");
 			//console.log(MAGIC_MAP.dataset[].buffer);
 			MAGIC_MAP.loadBuffer();
 			
