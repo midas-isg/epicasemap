@@ -74,7 +74,7 @@ app.service("api", function($http, $q, $location) {
 		
 		return d.getUTCFullYear() + '-' + MM + '-' + dd;
 	}
-    this.uploadFile = function(file, path){
+    this.uploadFile = function(path, file){
         var fd = new FormData(),
         	deferred = $q.defer();
         fd.append('file', file);
