@@ -2,8 +2,6 @@ package interactors;
 
 import static org.fest.assertions.Assertions.assertThat;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -17,7 +15,7 @@ import suites.CSVFileHelper;
 public class TestCSVFileValidator {
 
 	@Test
-	public void testGetDateTimeError() {
+	public void testGetDateTimeError() throws Exception {
 		CSVFileValidator validator = new CSVFileValidator();
 		CSVFileHelper helper = new CSVFileHelper();
 		CSVFile dataFile = helper
@@ -30,7 +28,7 @@ public class TestCSVFileValidator {
 	}
 
 	@Test
-	public void testGetValueError() {
+	public void testGetValueError() throws Exception {
 		CSVFileValidator validator = new CSVFileValidator();
 		CSVFileHelper helper = new CSVFileHelper();
 		CSVFile dataFile = helper
@@ -42,7 +40,7 @@ public class TestCSVFileValidator {
 	}
 
 	@Test
-	public void testGetLocationValueError() {
+	public void testGetLocationValueError() throws Exception {
 		CSVFileValidator validator = new CSVFileValidator();
 		CSVFileHelper helper = new CSVFileHelper();
 		CSVFile dataFile = helper
@@ -54,7 +52,7 @@ public class TestCSVFileValidator {
 	}
 	
 	@Test
-	public void testGetRecordSizeError() {
+	public void testGetRecordSizeError() throws Exception {
 		CSVFileValidator validator = new CSVFileValidator();
 		CSVFileHelper helper = new CSVFileHelper();
 		CSVFile dataFile = helper.createTestDataFileWithApolloIdFormatWithErrors();
@@ -65,7 +63,7 @@ public class TestCSVFileValidator {
 	}
 	
 	@Test
-	public void testValidateFileHeader() throws IllegalArgumentException, FileNotFoundException, IOException {
+	public void testValidateFileHeader() throws Exception {
 		CSVFileValidator validator = new CSVFileValidator();
 		CSVFileHelper helper = new CSVFileHelper();
 		CSVFile dataFile = helper.createTestDataFileWithApolloIdFormatWithErrors();
@@ -100,7 +98,7 @@ public class TestCSVFileValidator {
 	}
 	
 	@Test
-	public void testGetLocationValueErrorForCoordinateFormat() {
+	public void testGetLocationValueErrorForCoordinateFormat() throws Exception {
 		CSVFileValidator validator = new CSVFileValidator();
 		CSVFileHelper helper = new CSVFileHelper();
 		CSVFile dataFile = helper

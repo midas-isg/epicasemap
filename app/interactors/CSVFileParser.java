@@ -1,7 +1,6 @@
 package interactors;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 
@@ -14,21 +13,25 @@ public class CSVFileParser {
 	private static boolean Ignore_Surrounding_Spaces = true;
 	private static boolean Skip_Header_Record = true;
 
-	public CSVParser parse(CSVFile dataFile) throws IllegalArgumentException, FileNotFoundException, IOException {
+	public CSVParser parse(CSVFile dataFile) throws Exception {
 
 		return parse(dataFile.getDelimiter(), dataFile.getFile());
 
 	}
 
-	private CSVParser parse(char delimiter, File file) throws IllegalArgumentException, FileNotFoundException, IOException{
+	private CSVParser parse(char delimiter, File file) throws Exception {
 		CSVParser csvParser = null;
 		CSVFormat csvFormat = CSVFormat.newFormat(delimiter);
-			csvParser = csvFormat
-					.withHeader()
-					.withIgnoreEmptyLines(Ignore_Empty_Lines)
-					.withIgnoreSurroundingSpaces(Ignore_Surrounding_Spaces)
-					.withSkipHeaderRecord(Skip_Header_Record)
-					.parse(new FileReader(file));
+			try {
+				csvParser = csvFormat
+						.withHeader()
+						.withIgnoreEmptyLines(Ignore_Empty_Lines)
+						.withIgnoreSurroundingSpaces(Ignore_Surrounding_Spaces)
+						.withSkipHeaderRecord(Skip_Header_Record)
+						.parse(new FileReader(file));
+			} catch (IOException e) {
+				throw new Exception(e);
+			}
 	
 		return csvParser;
 	}
