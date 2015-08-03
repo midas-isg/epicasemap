@@ -1,7 +1,5 @@
 package interactors;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -45,11 +43,7 @@ public class CSVFileValidator {
 		CSVParser parser = null;
 		try {
 			parser = csvParser.parse(dataFile);
-		} catch (IllegalArgumentException e) {
-			errorList.add(e.getMessage());
-		} catch (FileNotFoundException e) {
-			errorList.add(e.getMessage());
-		} catch (IOException e) {
+		} catch (Exception e) {
 			errorList.add(e.getMessage());
 		}
 		return parser;

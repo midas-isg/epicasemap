@@ -59,9 +59,39 @@ public class JpaAdaptor {
 	}
 	
 	private <T> TypedQuery<T> buildQuery(Class<T> clazz, Filter filter) {
-		if (filter == null || ! (filter instanceof TimestampRange))
+		if (filter == null)
 			return buildQuery(clazz);
-		return buildQuery(clazz, (TimestampRange) filter); 
+		if (filter instanceof TimestampRange)
+			return buildQuery(clazz, (TimestampRange) filter); 
+		return buildQuery_(clazz, filter);
+
+	}
+	
+	private <T> TypedQuery<T> buildQuery_(Class<T> clazz, Filter filter) {
+		CriteriaQuery<T> criteriaQuery = createCriteriaQuery(clazz);
+		Root<T> root = criteriaQuery.from(clazz);
+		CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
+		List<Predicate> predicates = new ArrayList<>();
+	
+		Map<String, Object> map = filter.getEqualities();
+		for (Entry<String, Object> pair : map.entrySet()){
+			final Object value = pair.getValue();
+			if (value == null)
+				continue;
+			final Path<?> path = root.get(pair.getKey());
+			Predicate p = criteriaBuilder.equal(path, value);
+			predicates.add(p);
+		}
+		
+		criteriaQuery.where(predicates.toArray(new Predicate[predicates.size()]));
+		final LinkedHashMap<String, Filter.Order> orders = filter.getOrder();
+		for (Entry<String, Filter.Order> pair : orders.entrySet()){
+			final Path<Object> path = root.get(pair.getKey());
+			final Order order = toOrder(criteriaBuilder, path, pair.getValue());
+			criteriaQuery.orderBy(order);
+		}
+		TypedQuery<T> query = em.createQuery(criteriaQuery);
+		return query;
 	}
 	
 	private <T> TypedQuery<T> buildQuery(Class<T> clazz, TimestampRange filter) {

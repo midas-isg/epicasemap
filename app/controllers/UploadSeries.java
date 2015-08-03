@@ -3,11 +3,16 @@ package controllers;
 import interactors.CSVFile;
 import interactors.CSVFilePersister;
 import interactors.CSVFileValidator;
+import interactors.CoordinateRule;
+import interactors.SeriesDataRule;
 
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 
+import models.entities.Coordinate;
+import models.entities.CoordinateFilter;
+import play.db.jpa.JPA;
 import play.db.jpa.Transactional;
 import play.mvc.Controller;
 import play.mvc.Http.Request;
@@ -22,8 +27,9 @@ public class UploadSeries extends Controller {
 
 	@Transactional
 	public static Result upload(long seriesId, String delimiter,
-			String fileFormat) {
+			String fileFormat) throws Exception {
 
+		deleteExisitingSeriesData(seriesId);
 		CSVFile dataFile = getFileObject(request(), delimiter, fileFormat);
 		String errors = validate(dataFile);
 
@@ -35,7 +41,32 @@ public class UploadSeries extends Controller {
 		}
 	}
 
-	private static boolean create(CSVFile dataFile, long seriesId) {
+	private static void deleteExisitingSeriesData(Long seriesId) {
+		CoordinateFilter filter = buildSeriesDataFilter(seriesId);
+		for (Coordinate data : makeCoordinateRule().query(filter)) {
+			makeSeriesDataRule().delete(data.getId());
+		}
+	}
+
+	private static SeriesDataRule makeSeriesDataRule() {
+		return Factory.makeSeriesDataRule(JPA.em());
+	}
+
+	private static CoordinateFilter buildSeriesDataFilter(Long seriesId) {
+
+		CoordinateFilter filter = new CoordinateFilter();
+		filter.setSeriesId(seriesId);
+		filter.setOffset(0);
+		return filter;
+
+	}
+
+	private static CoordinateRule makeCoordinateRule() {
+		return Factory.makeCoordinateRule(JPA.em());
+	}
+
+	private static boolean create(CSVFile dataFile, Long seriesId)
+			throws Exception {
 		CSVFilePersister persister = new CSVFilePersister();
 		return persister.persistCSVFile(dataFile, seriesId);
 	}
@@ -52,7 +83,7 @@ public class UploadSeries extends Controller {
 		for (Long line : errors.keySet()) {
 			sj = new StringJoiner("\n");
 			for (String str : errors.get(line)) {
-				sj.add("Line "+line + ": " + str);
+				sj.add("Line " + line + ": " + str);
 			}
 			stringErrors += sj.toString() + "\n";
 		}

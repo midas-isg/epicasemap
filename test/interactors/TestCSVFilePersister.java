@@ -1,6 +1,7 @@
 package interactors;
 
 import static org.fest.assertions.Assertions.assertThat;
+import static suites.Helper.assertAreEqual;
 import integrations.app.App;
 import models.entities.Location;
 import models.entities.SeriesData;
@@ -9,8 +10,10 @@ import org.apache.commons.csv.CSVRecord;
 import org.joda.time.DateTime;
 import org.junit.Test;
 
+import play.db.jpa.JPA;
 import play.libs.F.Callback0;
 import suites.CSVFileHelper;
+import controllers.Factory;
 
 public class TestCSVFilePersister {
 
@@ -19,23 +22,23 @@ public class TestCSVFilePersister {
 		runWithTransaction(() -> testPersistFile());
 	}
 
-	private void testPersistFile() {
+	private void testPersistFile() throws Exception {
 		CSVFileHelper helper = new CSVFileHelper();
 		CSVFile dataFile = helper.createTestDataFileWithApolloIdFormat();
 		helper.setStdToFileHeaderMap(dataFile);
 
 		CSVFilePersister persister = new CSVFilePersister();
-		assertThat(persister.persistCSVFile(dataFile, 1)).isTrue();
+		assertThat(persister.persistCSVFile(dataFile, 1L)).isTrue();
 
 		dataFile = helper.createTestDataFileWithCoordianteFormat();
 		helper.setStdToFileHeaderMap(dataFile);
 		persister = new CSVFilePersister();
-		assertThat(persister.persistCSVFile(dataFile, 1)).isTrue();
+		assertThat(persister.persistCSVFile(dataFile, 1L)).isTrue();
 
 	}
 
 	@Test
-	public void testCSVRecordToLocationEntityObject() {
+	public void testCSVRecordToLocationEntityObject() throws Exception {
 
 		Location location = getLocationObjectFromCSVRecordWithApolloId();
 		long id = location.getAlsId();
@@ -48,13 +51,33 @@ public class TestCSVFilePersister {
 		assertThat(lon).isEqualTo(-1.1);
 
 	}
+	
+	@Test
+	public void testCreateLocationIfNotExists() {
+		runWithTransaction(() -> createLocationIfNotExists());
+	}
+	
+	private void createLocationIfNotExists() throws Exception{
+		CSVFilePersister persister = new CSVFilePersister();
+		Location location = getLocationObjectFromCSVRecordWithApolloId();
+		Long alsId = location.getAlsId();
+		
+		Long exsitingLocId = persist(location);
+		Long locId = persister.createLocationFromApolloIdIfNotExists(alsId);
+		
+		assertAreEqual(locId, exsitingLocId);
+		
+		locId = persister.createLocationFromApolloIdIfNotExists(987654321L);
+		
+		assertThat(locId).isNotEqualTo(exsitingLocId);
+	}
 
 	@Test
 	public void testCSVRecordToSeriesDataEntityObject() {
 		runWithTransaction(() -> csvRecordToSeriesDataEntityObject());
 	}
 
-	private void csvRecordToSeriesDataEntityObject() {
+	private void csvRecordToSeriesDataEntityObject() throws Exception {
 		SeriesData seriesData = getSeriesDataFromCSVRecordwithApollloFormat();
 		assertThat(seriesData.getValue()).isEqualTo(1);
 		assertThat(seriesData.getTimestamp()).isEqualTo(
@@ -68,14 +91,14 @@ public class TestCSVFilePersister {
 	}
 
 	private SeriesData getSeriesDataFromCSVRecordwithApollloFormat()
-			throws NumberFormatException {
+			throws Exception {
 
 		CSVFileHelper helper = new CSVFileHelper();
 		CSVFile dataFile = helper.createTestDataFileWithApolloIdFormat();
 		CSVRecord csvRecord = helper.getCSVRecord(dataFile);
 		CSVFilePersister persister = new CSVFilePersister();
 
-		SeriesData seriesData = persister.createSeriesData(1, 1, DateTime
+		SeriesData seriesData = persister.createSeriesData(1L, 1L, DateTime
 				.parse(get(csvRecord, CSVFile.TIME_HEADER, dataFile)).toDate(),
 				Double.parseDouble(get(csvRecord, CSVFile.VALUE_HEADER,
 						dataFile)));
@@ -87,13 +110,13 @@ public class TestCSVFilePersister {
 	}
 
 	private SeriesData getSeriesDataFromCSVRecordwithCoordinateFormat()
-			throws NumberFormatException {
+			throws Exception {
 		CSVFileHelper helper = new CSVFileHelper();
 		CSVFile dataFile = helper.createTestDataFileWithCoordianteFormat();
 		CSVRecord csvRecord = helper.getCSVRecord(dataFile);
 
 		CSVFilePersister persister = new CSVFilePersister();
-		SeriesData seriesData = persister.createSeriesData(1, 1, DateTime
+		SeriesData seriesData = persister.createSeriesData(1L, 1L, DateTime
 				.parse(get(csvRecord, CSVFile.TIME_HEADER, dataFile)).toDate(),
 				Double.parseDouble(get(csvRecord, CSVFile.VALUE_HEADER,
 						dataFile)));
@@ -101,7 +124,7 @@ public class TestCSVFilePersister {
 	}
 
 	private Location getLocationObjectFromCSVRecordWithApolloId()
-			throws NumberFormatException {
+			throws Exception {
 
 		CSVFileHelper helper = new CSVFileHelper();
 		CSVFile dataFile = helper.createTestDataFileWithApolloIdFormat();
@@ -113,7 +136,7 @@ public class TestCSVFilePersister {
 	}
 
 	private Location getLocationObjectFromCSVRecordWithCoordinate()
-			throws NumberFormatException {
+			throws Exception {
 
 		CSVFileHelper helper = new CSVFileHelper();
 		CSVFile dataFile = helper.createTestDataFileWithCoordianteFormat();
@@ -124,6 +147,10 @@ public class TestCSVFilePersister {
 				Double.parseDouble(get(csvRecord, CSVFile.LONGITUDE_HEADER,
 						dataFile)));
 		return location;
+	}
+	
+	private Long persist(final Location location) {
+		return Factory.makeLocationRule(JPA.em()).create(location);
 	}
 
 	private static void runWithTransaction(Callback0 callback) {
