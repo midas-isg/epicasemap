@@ -99,7 +99,7 @@ public class VizEndpointTester {
 		final String url = urlWithId(pair.id);
 		final String name = "update name";
 		final VizInput data = pair.input;
-		data.setName(name);
+		data.setTitle(name);
 		final WSResponse update = WS.url(url).put(toJson(data)).get(timeout);
 		assertAreEqual(update.getStatus(), NO_CONTENT);
 	}
@@ -113,7 +113,7 @@ public class VizEndpointTester {
 		assertThat(all.size()).isGreaterThanOrEqualTo(2);
 		input.setSeriesIds(toList(all.subList(0, 1), it -> it.getId()));
 		input.setSeries2Ids(toList(all.subList(0, 2), it -> it.getId()));
-		input.setName("Test first 2 Series");
+		input.setTitle("Test first 2 Series");
 		input.setUiSetting("{}");
 		final JsonNode root = Json.toJson(input);
 		final String json = root + "";

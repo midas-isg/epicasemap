@@ -2,8 +2,10 @@ package models.view;
 
 import java.util.List;
 
-public class VizInput {
-	private String name;
+import models.entities.MetaData;
+
+public class VizInput extends MetaData {
+	private Long id;
 	private List<Long> seriesIds;
 	private List<Long> series2Ids;
 	private String uiSetting;
@@ -14,14 +16,6 @@ public class VizInput {
 
 	public void setSeriesIds(List<Long> seriesIds) {
 		this.seriesIds = seriesIds;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
 	}
 
 	public List<Long> getSeries2Ids() {
@@ -41,9 +35,12 @@ public class VizInput {
 	}
 
 	@Override
-	public String toString() {
-		return "VizInput [name=" + name + ", seriesIds=" + seriesIds
-				+ ", series2Ids=" + series2Ids + ", uiSetting=" + uiSetting
-				+ "]";
+	public Long getId() {
+		return id;
+	}
+
+	@Override
+	public void setId(Long id) {
+		this.id = id;
 	}
 }

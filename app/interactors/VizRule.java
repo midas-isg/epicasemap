@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import models.entities.MetaData;
 import models.entities.Series;
 import models.entities.Viz;
 import models.entities.filters.Filter;
@@ -34,13 +35,24 @@ public class VizRule extends CrudRule<Viz> {
 		if (input == null)
 			return null;
 		Viz result = new Viz();
-		result.setTitle(input.getName());
+		copy(result, input);
 		final List<Long> ids = input.getSeriesIds();
 		result.setAllSeries(toAllSeries(ids));
 		final List<Long> id2s = input.getSeries2Ids();
 		result.setAllSeries2(toAllSeries(id2s));
 		result.setUiSetting(input.getUiSetting());
 		return result;
+	}
+
+	private void copy(MetaData dest, MetaData src) {
+		dest.setId(src.getId());
+		dest.setCreator(src.getCreator());
+		dest.setDescription(src.getDescription());
+		dest.setIsVersionOf(src.getIsVersionOf());
+		dest.setLicense(src.getLicense());
+		dest.setPublisher(src.getPublisher());
+		dest.setTitle(src.getTitle());
+		dest.setVersion(src.getVersion());
 	}
 
 	private List<Series> toAllSeries(List<Long> ids) {
@@ -56,7 +68,7 @@ public class VizRule extends CrudRule<Viz> {
 			return null;
 		
 		VizInput input = new VizInput();
-		input.setName(data.getTitle());
+		copy(data, input);
 		input.setSeriesIds(toIds(data.getAllSeries()));
 		input.setSeries2Ids(toIds(data.getAllSeries2()));
 		input.setUiSetting(data.getUiSetting());

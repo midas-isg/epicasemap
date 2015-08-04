@@ -1,7 +1,7 @@
 @* Buttons as a footer of a dialog *@
 @(model:String)
 <button title="Save the @model" class='btn-large btn-primary' 
-ng-click='submit()' ng-disabled='working' >
+ng-click='submit()' ng-disabled='form.$pristine || working' >
 	@bs_icon("save") Save
 </button>
 <button title="Save the @model & Close the dialog" class='btn-large  btn-primary' 

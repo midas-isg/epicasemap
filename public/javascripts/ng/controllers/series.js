@@ -40,6 +40,13 @@ app.controller('Series', function($scope, $rootScope, api) {
 	};
 	$scope.close = function() {
 		$scope.dialog.modal('hide');
+		resetView();
+		
+		function resetView(){
+			$scope.form.$setPristine();
+			$scope.coordinates = [];
+			$scope.locationIds = new Set();
+		}
 	};
 	$scope.isShown = function(series){
 		return true;
@@ -47,17 +54,16 @@ app.controller('Series', function($scope, $rootScope, api) {
     $scope.uploadNewData = function(seriesId) {
     	$rootScope.$emit('uploadNewSeriesData', seriesId);
 	};
-	
 
 	function edit(series) {
-		var isNew = series.id ? false : true;
 		$scope.model = series;
-		$scope.form.isNew = isNew;
-		loadCoordinates($scope.model.id);
+		loadCoordinates(series.id);
 		$scope.dialog.modal();
 	};
 	
 	function loadCoordinates(seriesId){
+		if (! seriesId)
+			return;
 		var path = 'series/' + seriesId + '/time-coordinate';
 		api.find(path).then(function(rsp) {
 			$scope.coordinates =  rsp.data.results;
@@ -68,10 +74,9 @@ app.controller('Series', function($scope, $rootScope, api) {
 
 	function close(){
 		$scope.form.$setPristine();
-		$scope.coordinates = [];
 		$scope.close();
 	}
-	
+
 	function loadSeries(){
 		$rootScope.$emit('loadSeries');
 	}
@@ -85,7 +90,6 @@ app.controller('Series', function($scope, $rootScope, api) {
 		$scope.working = true;
 		api.save('series', body).then(function(location) {
 			$scope.working = false;
-			$scope.form.isNew = false;
 			if (callback){
 				callback();
 			} else {
