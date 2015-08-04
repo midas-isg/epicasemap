@@ -5,6 +5,8 @@ timeline.js
 (function() {
 	function MagicMap() {
 		var i,
+		j,
+		temp,
 		vizID = getURLParameterByName("id"),
 		thisMap = this;
 		
@@ -12,7 +14,6 @@ timeline.js
 		this.map = L.mapbox.map('map', 'mapbox.streets'/*'mapbox.dark'*/, { worldCopyJump: true, bounceAtZoomLimits: false, zoom: 2, minZoom: 2})
 			.setView([30, 0], 2);
 
-		//this.popup = new L.Popup({ autoPan: false }),
 		this.heat = []; //null;
 		this.paused = false;
 		this.frame;
@@ -92,13 +93,26 @@ timeline.js
 			['#66c2a5', '#fc8d62', '#8da0cb', "#e78ac3", "#a6d854"]
 		];
 		
-		this.colors = this.colorSet[0];
+		this.paletteSelection = 0;
+		this.colors = this.colorSet[this.paletteSelection];
 		
 		for(i = 0; i < this.colors.length; i++) {
 			this.setGradient.push({
 				0.0: this.colors[i]
 			});
 		}
+		
+		/*
+		for(i = 0; i < this.colorSet.length; i++) {
+			$("#ramps").append("<div id='palette-" + i + "' class='ramp'><svg width='15' height='75'></svg></div>");
+			
+			temp = this.colorSet[i];
+			for(j = 0; j < temp.length; j++) {
+				$("#palette-" + i + " svg").append("<rect style='fill: " + temp[j] + ";' width='15' height='15' y='" + (15 * j) + "'></rect>");
+			}
+		}
+		$("#palette-0").addClass("selected");
+		*/
 		
 		return this;
 	}
@@ -110,22 +124,22 @@ timeline.js
 		$.ajax({
 			url: URL,
 			success: function(result) {
-				var h, i;
+				var h,
+				i,
+				seriesDisplayCount = 2;
+				
 				thisMap.seriesList0 = result.result.allSeries;
 				thisMap.seriesList1 = result.result.allSeries2;
 				
-				for(i = 0; i < thisMap.seriesList0.length; i++) {
-					thisMap.seriesDescriptions[thisMap.seriesList0[i].id] = {
-						name: thisMap.seriesList0[i].name,
-						description: thisMap.seriesList0[i].description
-					};
-				}
+				$("#title").text(result.result.name);
 				
-				for(i = 0; i < thisMap.seriesList1.length; i++) {
-					thisMap.seriesDescriptions[thisMap.seriesList1[i].id] = {
-						name: thisMap.seriesList1[i].name,
-						description: thisMap.seriesList1[i].description
-					};
+				for(h = 0; h < seriesDisplayCount; h++) {
+					for(i = 0; i < thisMap["seriesList" + h].length; i++) {
+						thisMap.seriesDescriptions[thisMap["seriesList" + h][i].id] = {
+							name: thisMap["seriesList" + h][i].name,
+							description: thisMap["seriesList" + h][i].description
+						};
+					}
 				}
 				
 				//console.log(thisMap.seriesDescriptions);
@@ -136,11 +150,11 @@ timeline.js
 					thisMap.load(thisMap.seriesToLoad[i]);
 				}
 				
-				/*
-				for(h = 0; h < 2; h++) {
+				/**/
+				for(h = 0; h < seriesDisplayCount; h++) {
 					$("#series-options").append(
 						"<div>" +
-							"<h5>Select series " + h + "</h5>" +
+							"<h5>Select series " + String.fromCharCode(h + 65) + "</h5>" +
 							"<select id='series-" + h + "' style='max-width: 100%;'>" +
 							"</select>" +
 						"</div>"
@@ -152,23 +166,29 @@ timeline.js
 					
 					$("#series-" + h).change(function() {
 						var id = $(this).val(),
+						l,
 						k = $(this).attr("id").split("-")[1];
 console.log("series " + k + ": " + id);
 						
-						//TODO: frameOffset ISN'T BEING UPDATED!
-						thisMap.set[k].visiblePoints.length = 0;
-						thisMap.seriesToLoad[k] = [id];
-						
-						//recalculate earliest & latest dates (refactor block to external call -calculate from 0 and length-1 indexes)
+						//TODO: recalculate frameOffset, earliest & latest dates after loading is finished
+						//(refactor block to external call -calculate from 0 and length-1 indexes)
 						thisMap.latestDate = new Date(0);
 						thisMap.earliestDate = new Date();
 						
-						thisMap.load(id, k);
+						thisMap.seriesToLoad = [];
+						for(l = 0; l < seriesDisplayCount; l++) {
+							thisMap.seriesToLoad.push($("#series-" + l).val());
+						}
+						
+						for(l = 0; l < thisMap.seriesToLoad.length; l++) {
+							thisMap.set[k].visiblePoints.length = 0;
+							thisMap.load(thisMap.seriesToLoad[l], l);
+						}
 						
 						return;
 					});
 				}
-				*/
+				/**/
 				
 				return;
 			},
@@ -182,9 +202,6 @@ console.log("series " + k + ": " + id);
 	
 	MagicMap.prototype.start = function() {
 		thisMap = this;
-		//legend stuff
-		this.closeTooltip;
-		//this.map.legendControl.addLegend(this.getLegendHTML());
 		
 		document.getElementById('body').onkeyup = this.handleInput;
 		setInterval(this.loop, 0);
@@ -192,7 +209,7 @@ console.log("series " + k + ": " + id);
 		$("#reset-button").click(function() {
 			var i;
 			
-			console.log("Buffer:");
+			//console.log("Buffer:");
 			//console.log(MAGIC_MAP.dataset[].buffer);
 			MAGIC_MAP.loadBuffer();
 			
@@ -213,7 +230,15 @@ console.log("series " + k + ": " + id);
 		});
 		
 		$("#toggle-details-button").click(function() {
+			var i;
+			
 			$("#detail-container *").toggle();
+			
+			for(i = 0; i < thisMap.set.length; i++) {
+				thisMap.detailChart.series[i].update({color: thisMap.colors[i]}, true);
+			}
+			
+			return;
 		});
 		
 		$("#toggle-controls-button").click(function() {
@@ -225,20 +250,30 @@ console.log("series " + k + ": " + id);
 		//TODO: refactor palette click code without causing closure issues
 		$("#palette-0").click(function() {
 			if(!$("#palette-0").hasClass("selected")) {
+				MAGIC_MAP.paletteSelection = 0;
 				MAGIC_MAP.setColorPalette(0);
 			}
 		});
 		
 		$("#palette-1").click(function() {
 			if(!$("#palette-1").hasClass("selected")) {
+				MAGIC_MAP.paletteSelection = 1;
 				MAGIC_MAP.setColorPalette(1);
 			}
 		});
 		
 		$("#palette-2").click(function() {
 			if(!$("#palette-2").hasClass("selected")) {
+				MAGIC_MAP.paletteSelection = 2;
 				MAGIC_MAP.setColorPalette(2);
 			}
+		});
+		
+		$(window).resize(function() {
+			thisMap.detailChart.reflow();
+			thisMap.masterChart.reflow();
+			
+			return;
 		});
 		
 		return;
@@ -673,7 +708,7 @@ console.log("series " + k + ": " + id);
 					padding: 0,
 					y: 25,
 					itemStyle: {
-						fontSize: "8px"
+						fontSize: "12px"
 					}
 				},
 				credits: {
@@ -940,89 +975,6 @@ console.log((endFrame - startFrame) + " frames");
 		return;
 	}
 
-	MagicMap.prototype.getStyle = function(feature) {
-		thisMap = this;
-		
-		return {
-			weight: 2,
-			opacity: 0.1,
-			color: 'black',
-			fillOpacity: 0.7,
-			fillColor: thisMap.getColor(feature.properties.density)
-		};
-	}
-
-	// get color depending on population density value
-	MagicMap.prototype.getColor = function(d) {
-		return d > 42 ? '#000000' :
-			d > 35  ? '#c000c0' :
-			d > 28  ? '#0000ff' :
-			d > 21  ? '#00ffff' :
-			d > 14   ? '#00ff00' :
-			d > 7   ? '#ffff00' :
-			'#ff0000';
-	}
-
-	/*
-	MagicMap.prototype.onEachFeature = function(feature, layer) {
-		layer.on({
-			mousemove: mousemove,
-			mouseout: mouseout,
-			click: zoomToFeature
-		});
-	}
-
-	MagicMap.prototype.mousemove = function(e) {
-		var layer = e.target;
-
-		this.popup.setLatLng(e.latlng);
-		this.popup.setContent('<div class="marker-title">' + layer.feature.properties.name + '</div>' +
-			layer.feature.properties.density + ' people per square mile');
-
-		if (!this.popup._map) this.popup.openOn(this.map);
-		window.clearTimeout(this.closeTooltip);
-
-		// highlight feature
-		layer.setStyle({
-			weight: 3,
-			opacity: 0.3,
-			fillOpacity: 0.9
-		});
-
-		if (!L.Browser.ie && !L.Browser.opera) {
-			layer.bringToFront();
-		}
-	}
-
-	MagicMap.prototype.mouseout = function(e) {
-		statesLayer.resetStyle(e.target);
-		this.closeTooltip = window.setTimeout(function() {
-			this.map.closePopup();
-		}, 100);
-	}
-
-	MagicMap.prototype.zoomToFeature = function(e) {
-		this.map.fitBounds(e.target.getBounds());
-	}
-	*/
-
-	MagicMap.prototype.getLegendHTML = function() {
-		var grades = [0, 7, 14, 21, 28, 35, 42],
-		labels = [],
-		from, to;
-
-		for (var i = 0; i < grades.length; i++) {
-		from = grades[i];
-		to = grades[i + 1];
-
-		labels.push(
-			'<li><span class="swatch" style="background:' + this.getColor(from + 1) + '"></span> ' +
-			from + (to ? '&ndash;' + to : '+')) + '</li>';
-		}
-
-		return '<span>Age of reports (days)</span><ul>' + labels.join('') + '</ul>';
-	}
-	
 	/* helper to zero-out the time of a Date object (it's bad practice to modify standard JavaScript objects) */
 	MagicMap.prototype.zeroTime = function(dateTime) {
 		dateTime.setUTCHours(0);
