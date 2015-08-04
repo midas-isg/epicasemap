@@ -1,0 +1,14 @@
+@import tags._
+
+@imports = {
+  <!-- include source files here... -->
+  @script_asset("javascripts/src/Player.js")
+  @script_asset("javascripts/src/Song.js")
+
+  <!-- include spec files here... -->
+  @script_asset("javascripts/spec/SpecHelper.js")
+  @script_asset("javascripts/spec/PlayerSpec.js")
+}
+
+@tests.test("Example", imports){
+}

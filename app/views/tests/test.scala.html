@@ -1,0 +1,50 @@
+@import tags._ 
+
+@import play.api.Play.current 
+@import play.api.Play
+
+@(title: String, imports: Html = Html(""))(content: Html)
+
+<!DOCTYPE html>
+
+<html>
+<head>
+<meta charset="utf-8">
+
+<title>@title - Jasmine Spec Runner v2.3.4</title>
+<script type="application/javascript">
+	var CONTEXT = '@Play.configuration.getString("application.context")';
+</script>
+
+<link rel="shortcut icon" type="image/png"	href='@routes.Assets.at("external_packages/jasmine-2.3.4/jasmine_favicon.png")'>
+<link rel="stylesheet" href='@routes.Assets.at("external_packages/jasmine-2.3.4/jasmine.css")'>
+@script_asset("external_packages/jasmine-2.3.4/jasmine.js")
+@script_asset("external_packages/jasmine-2.3.4/jasmine-html.js")
+@script_asset("external_packages/jasmine-2.3.4/boot.js")
+
+<!-- page-specific -->
+@imports
+</head>
+
+<body>
+	<footer id="footer"
+		style="clear: both; margin-left: auto; margin-right: auto; text-align: center;">
+		@Application.info()
+
+		<div style="margin-left: auto; margin-right: auto;">
+			<p>This work was funded by awards R01GM101151 and U24GM110707
+				from the National Institute for General Medical Sciences (NIGMS).
+				The work does not represent the view of NIGMS.</p>
+			<p>BY USING THE Apollo Location Services YOU AGREE THAT NO
+				WARRANTIES OF ANY KIND ARE MADE BY THE UNIVERSITY OF PITTSBURGH
+				(UNIVERSITY) WITH RESPECT TO THE DATA PROVIDED IN THE Apollo
+				Location Services OR ANY USE THEREOF, AND THE UNIVERSITY HEREBY
+				DISCLAIM THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+				PARTICULAR PURPOSE AND NON-INFRINGEMENT. THE UNIVERSITY SHALL NOT BE
+				LIABLE FOR ANY CLAIMS, LOSSES OR DAMAGES OF ANY KIND ARISING FROM
+				THE DATA PROVIDED IN THE Apollo Location Services OR ANY USE
+				THEREOF.</p>
+		</div>
+	</footer>
+</body>
+</html>

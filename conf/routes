@@ -10,6 +10,9 @@ GET     /manage/series              controllers.Application.manageSeries()
 # Test Upload Form
 GET		/uploadForm					controllers.UploadSeries.uploadForm()
 
+# Test page
+GET     /test/example               controllers.Test.example()
+
 # Swagger API documentation
 GET     /api                        controllers.Application.swagger
 GET     /api.json                   controllers.ApiHelpController.getResources
