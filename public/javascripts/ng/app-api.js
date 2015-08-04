@@ -78,7 +78,7 @@ app.service("api", function($http, $q, $location) {
         var fd = new FormData(),
         	deferred = $q.defer();
         fd.append('file', file);
-        $http.post(makeUrl(path), fd, {
+        $http.put(makeUrl(path), fd, {
             transformRequest: angular.identity,
             headers: {'Content-Type': undefined}
         }).then(function(data){

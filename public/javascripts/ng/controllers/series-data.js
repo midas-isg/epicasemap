@@ -39,10 +39,17 @@ app.controller('SeriesData', function($scope, $rootScope, api) {
 		});
 
         function makePath(){
+        	return 'series/' + $scope.seriesId + '/data?' +
+        	'delimiter=' + encodeURIComponent($scope.delimiter) + 
+        	'&format=' + encodeURIComponent($scope.format);
+        }
+        
+        function makePath_old(){
         	return "fileUpload/" + $scope.seriesId + 
         	"/" + encodeURIComponent($scope.delimiter) + 
         	"/" + encodeURIComponent($scope.format);
         }
+
         function loadCoordinates(seriesId) {
         	$rootScope.$emit('loadCoordinates', seriesId);
     	}
