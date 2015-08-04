@@ -29,23 +29,31 @@ public class UploadSeries extends Controller {
 	public static Result upload(long seriesId, String delimiter,
 			String fileFormat) throws Exception {
 
-		deleteExisitingSeriesData(seriesId);
+		Long deletedDataSize = deleteExisitingSeriesData(seriesId);
 		CSVFile dataFile = getFileObject(request(), delimiter, fileFormat);
 		String errors = validate(dataFile);
 
 		if (errors.equals("")) {
-			create(dataFile, seriesId);
-			return created();
+			Long createdDataSize = create(dataFile, seriesId);
+			return created(makeMsg(deletedDataSize, createdDataSize));
 		} else {
 			return badRequest(errors);
 		}
 	}
 
-	private static void deleteExisitingSeriesData(Long seriesId) {
+	private static String makeMsg(Long deletedDataSize, Long createdDataSize) {
+		String msg = deletedDataSize + " existing item(s) deleted." + "\n"
+				+ createdDataSize + " new item(s) created.";
+		return msg;
+	}
+
+	private static Long deleteExisitingSeriesData(Long seriesId) {
 		CoordinateFilter filter = buildSeriesDataFilter(seriesId);
-		for (Coordinate data : makeCoordinateRule().query(filter)) {
+		List<Coordinate> seriesData = makeCoordinateRule().query(filter);
+		for (Coordinate data : seriesData) {
 			makeSeriesDataRule().delete(data.getId());
 		}
+		return (long) seriesData.size();
 	}
 
 	private static SeriesDataRule makeSeriesDataRule() {
@@ -65,7 +73,7 @@ public class UploadSeries extends Controller {
 		return Factory.makeCoordinateRule(JPA.em());
 	}
 
-	private static boolean create(CSVFile dataFile, Long seriesId)
+	private static Long create(CSVFile dataFile, Long seriesId)
 			throws Exception {
 		CSVFilePersister persister = new CSVFilePersister();
 		return persister.persistCSVFile(dataFile, seriesId);

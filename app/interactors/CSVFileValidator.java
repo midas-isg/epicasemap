@@ -135,9 +135,9 @@ public class CSVFileValidator {
 		String header;
 
 		switch (dataFile.getFileFormat()) {
-		case CSVFile.APOLLO_ID_FORMAT:
+		case CSVFile.ALS_ID_FORMAT:
 
-			header = dataFile.stdHeaderToFileHeader(CSVFile.APOLLO_ID_HEADER);
+			header = dataFile.stdHeaderToFileHeader(CSVFile.ALS_ID_HEADER);
 
 			if (!NumberUtils.isNumber(record.get(header))) {
 				errorMsg = header + ": " + record.get(header)

@@ -19,7 +19,7 @@ public class TestCSVFileValidator {
 		CSVFileValidator validator = new CSVFileValidator();
 		CSVFileHelper helper = new CSVFileHelper();
 		CSVFile dataFile = helper
-				.createTestDataFileWithApolloIdFormatWithErrors();
+				.createTestDataFileWithAlsIdFormatWithErrors();
 		CSVRecord record = helper.getCSVRecord(dataFile);
 		String error = validator.getDateTimeError(record, dataFile);
 		assertThat(error).isEqualTo(
@@ -32,7 +32,7 @@ public class TestCSVFileValidator {
 		CSVFileValidator validator = new CSVFileValidator();
 		CSVFileHelper helper = new CSVFileHelper();
 		CSVFile dataFile = helper
-				.createTestDataFileWithApolloIdFormatWithErrors();
+				.createTestDataFileWithAlsIdFormatWithErrors();
 		CSVRecord record = helper.getCSVRecord(dataFile);
 		String error = validator.getValueError(record, dataFile);
 		assertThat(error).isEqualTo("VALUE: b is not valid.");
@@ -44,10 +44,10 @@ public class TestCSVFileValidator {
 		CSVFileValidator validator = new CSVFileValidator();
 		CSVFileHelper helper = new CSVFileHelper();
 		CSVFile dataFile = helper
-				.createTestDataFileWithApolloIdFormatWithErrors();
+				.createTestDataFileWithAlsIdFormatWithErrors();
 		CSVRecord record = helper.getCSVRecord(dataFile);
 		String error = validator.getLocationValueError(record, dataFile);
-		assertThat(error).isEqualTo("apollo id: a is not valid.");
+		assertThat(error).isEqualTo("als_id: a is not valid.");
 
 	}
 	
@@ -55,7 +55,7 @@ public class TestCSVFileValidator {
 	public void testGetRecordSizeError() throws Exception {
 		CSVFileValidator validator = new CSVFileValidator();
 		CSVFileHelper helper = new CSVFileHelper();
-		CSVFile dataFile = helper.createTestDataFileWithApolloIdFormatWithErrors();
+		CSVFile dataFile = helper.createTestDataFileWithAlsIdFormatWithErrors();
 		CSVRecord record = helper.getCSVRecord(dataFile);
 		String error = validator.getRecordSizeError(record,dataFile);
 		assertThat(error).isEqualTo("row has 4 columns. should have 3 columns.");
@@ -66,22 +66,22 @@ public class TestCSVFileValidator {
 	public void testValidateFileHeader() throws Exception {
 		CSVFileValidator validator = new CSVFileValidator();
 		CSVFileHelper helper = new CSVFileHelper();
-		CSVFile dataFile = helper.createTestDataFileWithApolloIdFormatWithErrors();
+		CSVFile dataFile = helper.createTestDataFileWithAlsIdFormatWithErrors();
 		CSVFileParser fileParser = new CSVFileParser();
 		CSVParser parser = fileParser.parse(dataFile);
 		List<String> error = validator.validateFileHeaders(parser,dataFile);
-		List<String> expected = Arrays.asList("number of columns is 4. should be 3.","\"lat\" column name is not allowed in apolloIdFormat format.");
+		List<String> expected = Arrays.asList("number of columns is 4. should be 3.","\"lat\" column name is not allowed in alsIdFormat format.");
 		assertThat(error).isEqualTo(expected);
 		
 	}
 	
 	@Test
-	public void testValidateApolloIdFormatted() {
+	public void testValidateAlsIdFormatted() {
 		CSVFileValidator validator = new CSVFileValidator();
 		CSVFileHelper helper = new CSVFileHelper();
-		CSVFile dataFile = helper.createTestDataFileWithApolloIdFormatWithErrors();
+		CSVFile dataFile = helper.createTestDataFileWithAlsIdFormatWithErrors();
 		Map<Long, List<String>> error = validator.validate(dataFile);
-		List<String> expected = Arrays.asList("number of columns is 4. should be 3.","\"lat\" column name is not allowed in apolloIdFormat format.");
+		List<String> expected = Arrays.asList("number of columns is 4. should be 3.","\"lat\" column name is not allowed in alsIdFormat format.");
 		assertThat(error.get(1L)).isEqualTo(expected);
 		
 	}

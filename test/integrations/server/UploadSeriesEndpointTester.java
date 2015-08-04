@@ -14,8 +14,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.Test;
-
 import play.libs.ws.WS;
 import play.libs.ws.WSRequestHolder;
 import play.libs.ws.WSResponse;
@@ -35,7 +33,6 @@ public class UploadSeriesEndpointTester {
 		return () -> newInstance().testUpload();
 	}
 
-	@Test
 	public void testUpload() {
 
 		WSResponse resp = postMultiPartFormData();
@@ -47,7 +44,7 @@ public class UploadSeriesEndpointTester {
 		response = postDataWithCoordinateFormat();
 		assertStatus(response, CREATED);
 
-		response = postDataWithApolloIdFormatWithTab();
+		response = postDataWithAlsIdFormatWithTab();
 		assertStatus(response, CREATED);
 
 		response = postDataWithErrorWithApolloIdFormat();
@@ -59,14 +56,14 @@ public class UploadSeriesEndpointTester {
 	}
 
 	private WSResponse postMultiPartFormData() {
-		String url = buildUrl(seriesId, "%2C", CSVFile.APOLLO_ID_FORMAT);
+		String url = buildUrl(seriesId, "%2C", CSVFile.ALS_ID_FORMAT);
 		String boundary = "--xyz123--";
 		
 		String body = boundary + "\r\n" + 
 		"Content-Disposition: form-data; name=\"csv_file\"; filename=\"a.txt\"" + "\r\n" +
 		"Content-Type: text/plain" + "\r\n" + "\r\n" + 
 		
-		"time,apollo id,VALUE" + "\r\n" +
+		"time,als_id,VALUE" + "\r\n" +
 		"2015-01-01,1,1234567" + "\r\n" + 
 		"--" + boundary + "--";
 		
@@ -79,9 +76,9 @@ public class UploadSeriesEndpointTester {
 		return resp;
 	}
 
-	private WSResponse postDataWithApolloIdFormatWithTab() {
-		File file = new File("test/resources/test_apolloId_format_tab.txt");
-		String url = buildUrl(seriesId, "%09", CSVFile.APOLLO_ID_FORMAT);
+	private WSResponse postDataWithAlsIdFormatWithTab() {
+		File file = new File("test/resources/test_alsId_format_tab.txt");
+		String url = buildUrl(seriesId, "%09", CSVFile.ALS_ID_FORMAT);
 		WSResponse response = postMultiPartRequest(file, url);
 		return response;
 	}
@@ -101,8 +98,8 @@ public class UploadSeriesEndpointTester {
 			throws RuntimeException {
 		WSResponse response;
 		File file = new File(
-				"test/resources/test_apolloId_format_with_errors.txt");
-		String url = buildUrl(seriesId, "%2C", CSVFile.APOLLO_ID_FORMAT);
+				"test/resources/test_alsId_format_with_errors.txt");
+		String url = buildUrl(seriesId, "%2C", CSVFile.ALS_ID_FORMAT);
 		response = postMultiPartRequest(file, url);
 		return response;
 	}
@@ -117,8 +114,8 @@ public class UploadSeriesEndpointTester {
 	}
 
 	private WSResponse postDataWithApolloIdFormat() throws RuntimeException {
-		File file = new File("test/resources/test_apolloId_format.txt");
-		String url = buildUrl(seriesId, "%2C", CSVFile.APOLLO_ID_FORMAT);
+		File file = new File("test/resources/test_alsId_format.txt");
+		String url = buildUrl(seriesId, "%2C", CSVFile.ALS_ID_FORMAT);
 		WSResponse response = postMultiPartRequest(file, url);
 		return response;
 	}
