@@ -81,7 +81,7 @@
 		cache: false,
 		processData:false,
 		success: function (data,status,xhr) {
-			console.log("success in FileUpload()",status);
+			console.log(data.responseText,status);
 		},
 		error: function(error, status) {
   			console.log(error.responseText,status);
@@ -138,7 +138,7 @@
 		<p>
 		<label>Format</label>
 		<select id="format">
-			<option value="apolloIdFormat">apollo_id</option>
+			<option value="alsIdFormat">als_id</option>
 			<option value="coordinateFormat">coordinate</option>
 		</select>
 		</p>

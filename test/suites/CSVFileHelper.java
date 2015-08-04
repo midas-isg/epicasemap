@@ -23,9 +23,9 @@ public class CSVFileHelper {
 		return parser.iterator().next();
 	}
 
-	public CSVFile createTestDataFileWithApolloIdFormat() {
-		File csvFile = new File("test/resources/test_apolloId_format.txt");
-		String fileFormat = CSVFile.APOLLO_ID_FORMAT;
+	public CSVFile createTestDataFileWithAlsIdFormat() {
+		File csvFile = new File("test/resources/test_alsId_format.txt");
+		String fileFormat = CSVFile.ALS_ID_FORMAT;
 		String delimiter = ",";
 		CSVFile dataFile = creatDataFile(csvFile, fileFormat, delimiter);
 		return dataFile;
@@ -68,10 +68,10 @@ public class CSVFileHelper {
 
 	}
 
-	public CSVFile createTestDataFileWithApolloIdFormatWithErrors() {
+	public CSVFile createTestDataFileWithAlsIdFormatWithErrors() {
 		File csvFile = new File(
-				"test/resources/test_apolloId_format_with_errors.txt");
-		String fileFormat = CSVFile.APOLLO_ID_FORMAT;
+				"test/resources/test_alsId_format_with_errors.txt");
+		String fileFormat = CSVFile.ALS_ID_FORMAT;
 		String delimiter = ",";
 		CSVFile dataFile = creatDataFile(csvFile, fileFormat, delimiter);
 		return dataFile;

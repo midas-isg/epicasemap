@@ -24,23 +24,27 @@ public class TestCSVFilePersister {
 
 	private void testPersistFile() throws Exception {
 		CSVFileHelper helper = new CSVFileHelper();
-		CSVFile dataFile = helper.createTestDataFileWithApolloIdFormat();
+		CSVFile dataFile = helper.createTestDataFileWithAlsIdFormat();
 		helper.setStdToFileHeaderMap(dataFile);
+		Long expected = 5L;
+		Long seriesId = 1L;
 
 		CSVFilePersister persister = new CSVFilePersister();
-		assertThat(persister.persistCSVFile(dataFile, 1L)).isTrue();
+		Long created = persister.persistCSVFile(dataFile, seriesId);
+		assertThat(created).isEqualTo(expected);
 
 		dataFile = helper.createTestDataFileWithCoordianteFormat();
 		helper.setStdToFileHeaderMap(dataFile);
 		persister = new CSVFilePersister();
-		assertThat(persister.persistCSVFile(dataFile, 1L)).isTrue();
+		created = persister.persistCSVFile(dataFile, seriesId);
+		assertThat(created).isEqualTo(expected);
 
 	}
 
 	@Test
 	public void testCSVRecordToLocationEntityObject() throws Exception {
 
-		Location location = getLocationObjectFromCSVRecordWithApolloId();
+		Location location = getLocationObjectFromCSVRecordWithAlsId();
 		long id = location.getAlsId();
 		assertThat(id).isEqualTo(1);
 
@@ -59,15 +63,15 @@ public class TestCSVFilePersister {
 	
 	private void createLocationIfNotExists() throws Exception{
 		CSVFilePersister persister = new CSVFilePersister();
-		Location location = getLocationObjectFromCSVRecordWithApolloId();
+		Location location = getLocationObjectFromCSVRecordWithAlsId();
 		Long alsId = location.getAlsId();
 		
 		Long exsitingLocId = persist(location);
-		Long locId = persister.createLocationFromApolloIdIfNotExists(alsId);
+		Long locId = persister.createLocationFromAlsIdIfNotExists(alsId);
 		
 		assertAreEqual(locId, exsitingLocId);
 		
-		locId = persister.createLocationFromApolloIdIfNotExists(987654321L);
+		locId = persister.createLocationFromAlsIdIfNotExists(987654321L);
 		
 		assertThat(locId).isNotEqualTo(exsitingLocId);
 	}
@@ -94,7 +98,7 @@ public class TestCSVFilePersister {
 			throws Exception {
 
 		CSVFileHelper helper = new CSVFileHelper();
-		CSVFile dataFile = helper.createTestDataFileWithApolloIdFormat();
+		CSVFile dataFile = helper.createTestDataFileWithAlsIdFormat();
 		CSVRecord csvRecord = helper.getCSVRecord(dataFile);
 		CSVFilePersister persister = new CSVFilePersister();
 
@@ -123,15 +127,15 @@ public class TestCSVFilePersister {
 		return seriesData;
 	}
 
-	private Location getLocationObjectFromCSVRecordWithApolloId()
+	private Location getLocationObjectFromCSVRecordWithAlsId()
 			throws Exception {
 
 		CSVFileHelper helper = new CSVFileHelper();
-		CSVFile dataFile = helper.createTestDataFileWithApolloIdFormat();
+		CSVFile dataFile = helper.createTestDataFileWithAlsIdFormat();
 		CSVRecord csvRecord = helper.getCSVRecord(dataFile);
 		CSVFilePersister persister = new CSVFilePersister();
 		Location location = persister.createLocation(Long.parseLong(get(
-				csvRecord, CSVFile.APOLLO_ID_HEADER, dataFile)));
+				csvRecord, CSVFile.ALS_ID_HEADER, dataFile)));
 		return location;
 	}
 
