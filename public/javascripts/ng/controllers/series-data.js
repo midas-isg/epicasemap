@@ -34,8 +34,7 @@ app.controller('SeriesData', function($scope, $rootScope, api) {
 			$scope.closeDialog();
 			loadCoordinates($scope.seriesId);
 
-			$("#data-file").replaceWith($("#data-file").clone(true));
-			delete($scope.dataFile);
+			delete $scope.dataFile;
 		});
 
         function makePath(){

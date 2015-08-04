@@ -19,14 +19,15 @@
 
 @dataSection(varName:String) = {
 	@section_expandable(varName){
-		<h3>
+		<h4>
 			@span_expandable(varName, 
 			"The Series contains {{count(coordinates)}} data from {{locationIds.size}} location(s)")
-		</h3>
-	}{
-		<button title="Open the dialog to upload data" class='btn-large' ng-click='uploadNewData(model.id)'>
+		<button title="Open the dialog to upload data" class='btn btn-large' 
+		ng-click='uploadNewData(model.id)' ng-disabled ='! model.id'>
 			@bs_icon("upload") Upload data ...
 		</button>
+		</h4>
+	}{
 		@table_filterable("coordinates", "data", "data", orders)
 	}
 }
