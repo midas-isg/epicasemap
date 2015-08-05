@@ -22,6 +22,9 @@ app.controller('Series', function($scope, $rootScope, api) {
     $rootScope.$on('editSeries', function(event, series) {
     	edit(series);
 	});
+    $rootScope.$on('loadCoordinates', function(event, seriesId) {
+    	loadCoordinates(seriesId);
+	});
 
 	$scope.submit = function(callback) {
 		if ($scope.form.$dirty) {
@@ -37,34 +40,43 @@ app.controller('Series', function($scope, $rootScope, api) {
 	};
 	$scope.close = function() {
 		$scope.dialog.modal('hide');
+		resetView();
+		
+		function resetView(){
+			$scope.form.$setPristine();
+			$scope.coordinates = [];
+			$scope.locationIds = new Set();
+		}
 	};
 	$scope.isShown = function(series){
 		return true;
 	};
-	
-	function edit(series) {
-		var isNew = series.id ? false : true;
-		$scope.model = series;
-		$scope.form.isNew = isNew;
-		loadCoordinates($scope.model.id);
-		$scope.dialog.modal();
+    $scope.uploadNewData = function(seriesId) {
+    	$rootScope.$emit('uploadNewSeriesData', seriesId);
+	};
 
-		function loadCoordinates(seriesId){
-			var path = 'series/' + seriesId + '/time-coordinate';
-			api.find(path).then(function(rsp) {
-				$scope.coordinates =  rsp.data.results;
-				populateAdditionInfo($scope.coordinates);
-				$scope.dataOrder = $scope.dataOrder || 'date';
-			});
-		}
+	function edit(series) {
+		$scope.model = series;
+		loadCoordinates(series.id);
+		$scope.dialog.modal();
 	};
 	
+	function loadCoordinates(seriesId){
+		if (! seriesId)
+			return;
+		var path = 'series/' + seriesId + '/time-coordinate';
+		api.find(path).then(function(rsp) {
+			$scope.coordinates =  rsp.data.results;
+			populateAdditionInfo($scope.coordinates);
+			$scope.dataOrder = $scope.dataOrder || 'date';
+		});
+	}
+
 	function close(){
 		$scope.form.$setPristine();
-		$scope.coordinates = [];
 		$scope.close();
 	}
-	
+
 	function loadSeries(){
 		$rootScope.$emit('loadSeries');
 	}
@@ -78,7 +90,6 @@ app.controller('Series', function($scope, $rootScope, api) {
 		$scope.working = true;
 		api.save('series', body).then(function(location) {
 			$scope.working = false;
-			$scope.form.isNew = false;
 			if (callback){
 				callback();
 			} else {
@@ -98,7 +109,6 @@ app.controller('Series', function($scope, $rootScope, api) {
 			it.date = api.toDateText(it.timestamp);
 			$scope.locationIds.add(it.locationId);
 		});
-		console.log($scope.locationIds);
 
 		size = $scope.locationIds.size;
 		if (size > 50)

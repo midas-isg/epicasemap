@@ -1,0 +1,5 @@
+@(label:String, value:String, title:String, labelSize:Int=1)
+<div class='form-group input-group-sm'>
+	<label title='@title' class='control-label col-sm-@labelSize'>@label:</label>
+	<div class='col-sm-@(12-labelSize) form-control-static'>@value</div>
+</div>

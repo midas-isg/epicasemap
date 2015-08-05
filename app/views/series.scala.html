@@ -4,12 +4,14 @@
 	@ng_imports()
 	@script_asset("javascripts/ng/controllers/series-collection.js")
 	@script_asset("javascripts/ng/controllers/series.js")
+	@script_asset("javascripts/ng/controllers/series-data.js")
 }
 
 @main("Series Management", imports) {
 	<article ng-app='app' ng-controller='SeriesCollection'>
 		@metadata_manager("Series", "Series", "series")
 		@series_dialog()
+		@series_data_dialog()
 	</article>
 }
 

@@ -1,0 +1,34 @@
+@bs_modal("dataModal", "SeriesData", "Series Data Uploader", "closeDialog()")(uploader())(footer())
+
+@uploader() = {
+	<form id="form" name="form" enctype="multipart/form-data">
+		<p>
+		<label>Format</label>
+		<select ng-model='format' ng-init='format = "apolloIdFormat"'>
+			<option value="apolloIdFormat">apollo_id</option>
+			<option value="coordinateFormat">coordinate</option>
+		</select>
+		</p>
+
+		<p>
+		<label>Delimiter</label>
+		<select ng-model='delimiter' ng-init='delimiter = ","'>
+			<option value=",">comma (,)</option>
+			<option value="	">Tab (	)</option>
+			<option value="|">Bar (|)</option>
+		</select>
+		</p>
+	
+	<p>
+		<input type="file" app-file-model="dataFile" id="data-file" />
+	</p>
+	</form>
+}
+
+@footer() = {
+	<button title="Replace the existing data with the data in the uploaded file & Close the dialog" 
+	class='btn-large btn-danger pull-left' 
+	ng-click='uploadThenClose()' ng-disabled='! dataFile'>
+	@bs_icon("upload") Upload & @bs_icon("remove") Close
+	</button>
+}
