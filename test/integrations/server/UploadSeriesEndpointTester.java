@@ -26,7 +26,7 @@ import com.ning.http.multipart.Part;
 public class UploadSeriesEndpointTester {
 
 	private static final int timeout = 100_000;
-	private final String basePath = "/api/fileUpload/";
+	private final String basePath = "/api/series/";
 	private final long seriesId = 1;
 
 	public static Runnable test() {
@@ -35,39 +35,39 @@ public class UploadSeriesEndpointTester {
 
 	public void testUpload() {
 
-		WSResponse resp = postMultiPartFormData();
+		WSResponse resp = uploadMultiPartFormData();
 		assertStatus(resp, CREATED);
 
-		WSResponse response = postDataWithAlsIdFormat(seriesId);
+		WSResponse response = uploadDataWithAlsIdFormat(seriesId);
 		assertStatus(response, CREATED);
 
-		response = postDataWithAlsIdFormat(seriesId);
+		response = uploadDataWithAlsIdFormat(seriesId);
 		assertBody(response, "5 existing item(s) deleted.\n"
 				+ "5 new item(s) created.");
 
-		response = postDataWithCoordinateFormat(seriesId);
+		response = uploadDataWithCoordinateFormat(seriesId);
 		assertStatus(response, CREATED);
 
-		response = postDataWithCoordinateFormat(seriesId);
+		response = uploadDataWithCoordinateFormat(seriesId);
 		assertBody(response, "5 existing item(s) deleted.\n"
 				+ "5 new item(s) created.");
 
-		response = postDataWithAlsIdFormatWithTab(seriesId);
+		response = uploadDataWithAlsIdFormatWithTab(seriesId);
 		assertStatus(response, CREATED);
 
-		response = postDataWithErrorWithAlsIdFormat(seriesId);
+		response = uploadDataWithErrorWithAlsIdFormat(seriesId);
 		assertStatus(response, BAD_REQUEST);
 		assertBody(response, "Line 1: number of columns is 4. should be 3.\n"
 				+ "Line 1: \"lat\" column name is not allowed in alsIdFormat format.\n");
 		
-		response = postDataWithErrorWithCoordinateFormat(seriesId);
+		response = uploadDataWithErrorWithCoordinateFormat(seriesId);
 		assertStatus(response, BAD_REQUEST);
 		assertBody(response, "Line 1: number of columns is 5. should be 4.\n"
 				+ "Line 1: \"error\" column name is not allowed in coordinateFormat format.\n");
 
 	}
 
-	private WSResponse postMultiPartFormData() {
+	private WSResponse uploadMultiPartFormData() {
 		String url = buildUrl(seriesId, "%2C", SeriesDataFile.ALS_ID_FORMAT);
 		String boundary = "--xyz123--";
 
@@ -84,73 +84,73 @@ public class UploadSeriesEndpointTester {
 				"multipart/form-data; boundary=" + boundary);
 		requestHolder
 				.setHeader("content-length", String.valueOf(body.length()));
-		WSResponse resp = requestHolder.post(body).get(timeout);
+		WSResponse resp = requestHolder.put(body).get(timeout);
 		return resp;
 	}
 
-	private WSResponse postDataWithAlsIdFormatWithTab(long seriesId) {
+	private WSResponse uploadDataWithAlsIdFormatWithTab(long seriesId) {
 		File file = new File(
 				"test/resources/input-files/test_alsId_format_tab.txt");
 		String url = buildUrl(seriesId, "%09", SeriesDataFile.ALS_ID_FORMAT);
-		WSResponse response = postMultiPartRequest(file, url);
+		WSResponse response = uploadMultiPartRequest(file, url);
 		return response;
 	}
 
-	private WSResponse postDataWithErrorWithCoordinateFormat(long seriesId)
+	private WSResponse uploadDataWithErrorWithCoordinateFormat(long seriesId)
 			throws RuntimeException {
 		WSResponse response;
 
 		File file = new File(
 				"test/resources/input-files/test_coordinate_format_with_errors.txt");
 		String url = buildUrl(seriesId, "%2C", SeriesDataFile.COORDINATE_FORMAT);
-		response = postMultiPartRequest(file, url);
+		response = uploadMultiPartRequest(file, url);
 		return response;
 	}
 
-	private WSResponse postDataWithErrorWithAlsIdFormat(long seriesId)
+	private WSResponse uploadDataWithErrorWithAlsIdFormat(long seriesId)
 			throws RuntimeException {
 		WSResponse response;
 		File file = new File(
 				"test/resources/input-files/test_alsId_format_with_errors.txt");
 		String url = buildUrl(seriesId, "%2C", SeriesDataFile.ALS_ID_FORMAT);
-		response = postMultiPartRequest(file, url);
+		response = uploadMultiPartRequest(file, url);
 		return response;
 	}
 
-	private WSResponse postDataWithCoordinateFormat(Long seriesId)
+	private WSResponse uploadDataWithCoordinateFormat(Long seriesId)
 			throws RuntimeException {
 		WSResponse response;
 
 		File file = new File(
 				"test/resources/input-files/test_coordinate_format.txt");
 		String url = buildUrl(seriesId, "%2C", SeriesDataFile.COORDINATE_FORMAT);
-		response = postMultiPartRequest(file, url);
+		response = uploadMultiPartRequest(file, url);
 		return response;
 	}
 
-	private WSResponse postDataWithAlsIdFormat(Long seriesId)
+	private WSResponse uploadDataWithAlsIdFormat(Long seriesId)
 			throws RuntimeException {
 		File file = new File("test/resources/input-files/test_alsId_format.txt");
 		String url = buildUrl(seriesId, "%2C", SeriesDataFile.ALS_ID_FORMAT);
-		WSResponse response = postMultiPartRequest(file, url);
+		WSResponse response = uploadMultiPartRequest(file, url);
 		return response;
 	}
 
 	private String buildUrl(long id, String delimiter, String format) {
-		String url = Server.makeTestUrl(basePath) + id + "/" + delimiter + "/"
-				+ format;
+		String url = Server.makeTestUrl(basePath) + id + "/data?" ;
+		url += "delimiter=" + delimiter;
+		url += "&format=" + format;
 		return url;
 	}
 
-	private WSResponse postMultiPartRequest(File file, String url)
+	private WSResponse uploadMultiPartRequest(File file, String url)
 			throws RuntimeException {
 		MultipartRequestEntity multiPartReqE = buildMultiPartReqEntity(file);
 
 		InputStream reqIS = multiPartToInputStream(multiPartReqE);
 		WSRequestHolder req = WS.url(url).setContentType(
 				multiPartReqE.getContentType());
-		// req.post(reqIS).map(...);
-		WSResponse response = req.post(reqIS).get(timeout);
+		WSResponse response = req.put(reqIS).get(timeout);
 		return response;
 	}
 
