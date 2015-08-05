@@ -15,19 +15,19 @@ import org.joda.time.DateTime;
 import play.db.jpa.JPA;
 import controllers.Factory;
 
-public class CSVFilePersister {
+public class SeriesDataFilePersister {
 
-	public Long persistCSVFile(CSVFile dataFile, Long seriesId)
+	public Long persistCSVFile(SeriesDataFile dataFile, Long seriesId)
 			throws Exception {
 
-		CSVFileParser csvParser = new CSVFileParser();
+		SeriesDataFileParser csvParser = new SeriesDataFileParser();
 		CSVParser parser = null;
 		parser = csvParser.parse(dataFile);
 		return persistRecords(seriesId, dataFile, parser);
 
 	}
 
-	private Long persistRecords(Long seriesId, CSVFile dataFile,
+	private Long persistRecords(Long seriesId, SeriesDataFile dataFile,
 			CSVParser parser) throws Exception {
 		Long counter = 0L;
 		Iterator<CSVRecord> records = parser.iterator();
@@ -43,7 +43,7 @@ public class CSVFilePersister {
 		return !result;
 	}
 
-	private boolean persistRecord(Long seriesId, CSVFile dataFile,
+	private boolean persistRecord(Long seriesId, SeriesDataFile dataFile,
 			CSVRecord record) throws Exception {
 
 		SeriesData seriesData = csvRecordToSeriesData(seriesId, record,
@@ -53,34 +53,34 @@ public class CSVFilePersister {
 	}
 
 	private SeriesData csvRecordToSeriesData(Long seriesId, CSVRecord record,
-			CSVFile dataFile) throws Exception {
+			SeriesDataFile dataFile) throws Exception {
 		Long locId = createLocationFromCSVRecord(record, dataFile);
 		return createSeriesData(seriesId, locId,
 				getTimeStamp(record, dataFile), getValue(record, dataFile));
 	}
 
-	private Double getValue(CSVRecord record, CSVFile dataFile)
+	private Double getValue(CSVRecord record, SeriesDataFile dataFile)
 			throws Exception {
-		String header = dataFile.stdHeaderToFileHeader(CSVFile.VALUE_HEADER);
+		String header = dataFile.stdHeaderToFileHeader(SeriesDataFile.VALUE_HEADER);
 
 		return stringToDouble(record.get(header));
 	}
 
-	private Date getTimeStamp(CSVRecord record, CSVFile dataFile) {
-		String header = dataFile.stdHeaderToFileHeader(CSVFile.TIME_HEADER);
+	private Date getTimeStamp(CSVRecord record, SeriesDataFile dataFile) {
+		String header = dataFile.stdHeaderToFileHeader(SeriesDataFile.TIME_HEADER);
 		return DateTime.parse(record.get(header)).toDate();
 	}
 
-	private Long createLocationFromCSVRecord(CSVRecord record, CSVFile dataFile)
+	private Long createLocationFromCSVRecord(CSVRecord record, SeriesDataFile dataFile)
 			throws Exception {
 		Long locId = null;
 		String fileFormat = dataFile.getFileFormat();
 
-		if (fileFormat.equals(CSVFile.ALS_ID_FORMAT)) {
+		if (fileFormat.equals(SeriesDataFile.ALS_ID_FORMAT)) {
 			Long alsId = getAlsId(record, dataFile);
 			locId = createLocationFromAlsIdIfNotExists(alsId);
 
-		} else if (fileFormat.equals(CSVFile.COORDINATE_FORMAT)) {
+		} else if (fileFormat.equals(SeriesDataFile.COORDINATE_FORMAT)) {
 			Double lat = getLatitude(record, dataFile);
 			Double lon = getLongitude(record, dataFile);
 			locId = createLocationFromCoordinateIfNotExists(lat, lon);
@@ -88,10 +88,10 @@ public class CSVFilePersister {
 		return locId;
 	}
 
-	private Double getLongitude(CSVRecord record, CSVFile dataFile)
+	private Double getLongitude(CSVRecord record, SeriesDataFile dataFile)
 			throws Exception {
 		String lonHeader = dataFile
-				.stdHeaderToFileHeader(CSVFile.LONGITUDE_HEADER);
+				.stdHeaderToFileHeader(SeriesDataFile.LONGITUDE_HEADER);
 		Double lon = stringToDouble(record.get(lonHeader));
 		return lon;
 	}
@@ -100,18 +100,18 @@ public class CSVFilePersister {
 		return Double.parseDouble(header);
 	}
 
-	private Double getLatitude(CSVRecord record, CSVFile dataFile)
+	private Double getLatitude(CSVRecord record, SeriesDataFile dataFile)
 			throws Exception {
 		String latHeader = dataFile
-				.stdHeaderToFileHeader(CSVFile.LATITUDE_HEADER);
+				.stdHeaderToFileHeader(SeriesDataFile.LATITUDE_HEADER);
 		Double lat = stringToDouble(record.get(latHeader));
 		return lat;
 	}
 
-	private Long getAlsId(CSVRecord record, CSVFile dataFile)
+	private Long getAlsId(CSVRecord record, SeriesDataFile dataFile)
 			throws Exception {
 		String header;
-		header = dataFile.stdHeaderToFileHeader(CSVFile.ALS_ID_HEADER);
+		header = dataFile.stdHeaderToFileHeader(SeriesDataFile.ALS_ID_HEADER);
 		Long alsId = stringToLong(record.get(header));
 		return alsId;
 	}
@@ -120,7 +120,7 @@ public class CSVFilePersister {
 		return Long.parseLong(header);
 	}
 
-	private Long createLocationFromCoordinateIfNotExists(Double lat, Double lon) {
+	Long createLocationFromCoordinateIfNotExists(Double lat, Double lon) {
 		Long locId;
 		if ((locId = findLocation(lat, lon)) != null) {
 			return locId;

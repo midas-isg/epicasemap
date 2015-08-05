@@ -1,8 +1,8 @@
 package controllers;
 
-import interactors.CSVFile;
-import interactors.CSVFilePersister;
-import interactors.CSVFileValidator;
+import interactors.SeriesDataFile;
+import interactors.SeriesDataFilePersister;
+import interactors.SeriesDataFileValidator;
 import interactors.CoordinateRule;
 import interactors.SeriesDataRule;
 
@@ -30,7 +30,7 @@ public class UploadSeries extends Controller {
 			String fileFormat) throws Exception {
 
 		Long deletedDataSize = deleteExisitingSeriesData(seriesId);
-		CSVFile dataFile = getFileObject(request(), delimiter, fileFormat);
+		SeriesDataFile dataFile = getFileObject(request(), delimiter, fileFormat);
 		String errors = validate(dataFile);
 
 		if (errors.equals("")) {
@@ -73,14 +73,14 @@ public class UploadSeries extends Controller {
 		return Factory.makeCoordinateRule(JPA.em());
 	}
 
-	private static Long create(CSVFile dataFile, Long seriesId)
+	private static Long create(SeriesDataFile dataFile, Long seriesId)
 			throws Exception {
-		CSVFilePersister persister = new CSVFilePersister();
+		SeriesDataFilePersister persister = new SeriesDataFilePersister();
 		return persister.persistCSVFile(dataFile, seriesId);
 	}
 
-	private static String validate(CSVFile dataFile) {
-		CSVFileValidator validator = new CSVFileValidator();
+	private static String validate(SeriesDataFile dataFile) {
+		SeriesDataFileValidator validator = new SeriesDataFileValidator();
 		Map<Long, List<String>> errors = validator.validate(dataFile);
 		return joinErrorsAsString(errors);
 	}
@@ -98,10 +98,10 @@ public class UploadSeries extends Controller {
 		return stringErrors;
 	}
 
-	private static CSVFile getFileObject(Request request, String delimiter,
+	private static SeriesDataFile getFileObject(Request request, String delimiter,
 			String fileFormat) {
 
-		CSVFile csvFile = new CSVFile();
+		SeriesDataFile csvFile = new SeriesDataFile();
 		csvFile.setFile(request.body().asMultipartFormData().getFiles().get(0)
 				.getFile());
 		csvFile.setDelimiter(delimiter);

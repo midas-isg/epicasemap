@@ -12,30 +12,30 @@ import org.junit.Test;
 
 import play.db.jpa.JPA;
 import play.libs.F.Callback0;
-import suites.CSVFileHelper;
+import suites.SeriesDataFileHelper;
 import controllers.Factory;
 
-public class TestCSVFilePersister {
+public class TestSeriesDataFilePersister {
 
 	@Test
-	public void testPersistCSVFile() {
-		runWithTransaction(() -> testPersistFile());
+	public void testPersistSeriesDataFile() {
+		runWithTransaction(() -> testPersistSeriesData());
 	}
 
-	private void testPersistFile() throws Exception {
-		CSVFileHelper helper = new CSVFileHelper();
-		CSVFile dataFile = helper.createTestDataFileWithAlsIdFormat();
+	private void testPersistSeriesData() throws Exception {
+		SeriesDataFileHelper helper = new SeriesDataFileHelper();
+		SeriesDataFile dataFile = helper.createTestSeriesDataFileWithAlsIdFormat();
 		helper.setStdToFileHeaderMap(dataFile);
 		Long expected = 5L;
 		Long seriesId = 1L;
 
-		CSVFilePersister persister = new CSVFilePersister();
+		SeriesDataFilePersister persister = new SeriesDataFilePersister();
 		Long created = persister.persistCSVFile(dataFile, seriesId);
 		assertThat(created).isEqualTo(expected);
 
-		dataFile = helper.createTestDataFileWithCoordianteFormat();
+		dataFile = helper.createTestSeriesDataFileWithCoordianteFormat();
 		helper.setStdToFileHeaderMap(dataFile);
-		persister = new CSVFilePersister();
+		persister = new SeriesDataFilePersister();
 		created = persister.persistCSVFile(dataFile, seriesId);
 		assertThat(created).isEqualTo(expected);
 
@@ -62,17 +62,26 @@ public class TestCSVFilePersister {
 	}
 	
 	private void createLocationIfNotExists() throws Exception{
-		CSVFilePersister persister = new CSVFilePersister();
+		SeriesDataFilePersister persister = new SeriesDataFilePersister();
 		Location location = getLocationObjectFromCSVRecordWithAlsId();
 		Long alsId = location.getAlsId();
 		
 		Long exsitingLocId = persist(location);
 		Long locId = persister.createLocationFromAlsIdIfNotExists(alsId);
-		
 		assertAreEqual(locId, exsitingLocId);
 		
 		locId = persister.createLocationFromAlsIdIfNotExists(987654321L);
+		assertThat(locId).isNotEqualTo(exsitingLocId);
 		
+		location = getLocationObjectFromCSVRecordWithCoordinate();
+		Double lat = location.getLatitude();
+		Double lon = location.getLongitude();
+		exsitingLocId = persist(location);
+		
+		locId = persister.createLocationFromCoordinateIfNotExists(lat,lon);
+		assertAreEqual(locId,exsitingLocId);
+		
+		locId = persister.createLocationFromCoordinateIfNotExists(987654321.0,-987654321.0);
 		assertThat(locId).isNotEqualTo(exsitingLocId);
 	}
 
@@ -97,32 +106,32 @@ public class TestCSVFilePersister {
 	private SeriesData getSeriesDataFromCSVRecordwithApollloFormat()
 			throws Exception {
 
-		CSVFileHelper helper = new CSVFileHelper();
-		CSVFile dataFile = helper.createTestDataFileWithAlsIdFormat();
+		SeriesDataFileHelper helper = new SeriesDataFileHelper();
+		SeriesDataFile dataFile = helper.createTestSeriesDataFileWithAlsIdFormat();
 		CSVRecord csvRecord = helper.getCSVRecord(dataFile);
-		CSVFilePersister persister = new CSVFilePersister();
+		SeriesDataFilePersister persister = new SeriesDataFilePersister();
 
 		SeriesData seriesData = persister.createSeriesData(1L, 1L, DateTime
-				.parse(get(csvRecord, CSVFile.TIME_HEADER, dataFile)).toDate(),
-				Double.parseDouble(get(csvRecord, CSVFile.VALUE_HEADER,
+				.parse(get(csvRecord, SeriesDataFile.TIME_HEADER, dataFile)).toDate(),
+				Double.parseDouble(get(csvRecord, SeriesDataFile.VALUE_HEADER,
 						dataFile)));
 		return seriesData;
 	}
 
-	private String get(CSVRecord csvRecord, String header, CSVFile dataFile) {
+	private String get(CSVRecord csvRecord, String header, SeriesDataFile dataFile) {
 		return csvRecord.get(dataFile.stdHeaderToFileHeader(header));
 	}
 
 	private SeriesData getSeriesDataFromCSVRecordwithCoordinateFormat()
 			throws Exception {
-		CSVFileHelper helper = new CSVFileHelper();
-		CSVFile dataFile = helper.createTestDataFileWithCoordianteFormat();
+		SeriesDataFileHelper helper = new SeriesDataFileHelper();
+		SeriesDataFile dataFile = helper.createTestSeriesDataFileWithCoordianteFormat();
 		CSVRecord csvRecord = helper.getCSVRecord(dataFile);
 
-		CSVFilePersister persister = new CSVFilePersister();
+		SeriesDataFilePersister persister = new SeriesDataFilePersister();
 		SeriesData seriesData = persister.createSeriesData(1L, 1L, DateTime
-				.parse(get(csvRecord, CSVFile.TIME_HEADER, dataFile)).toDate(),
-				Double.parseDouble(get(csvRecord, CSVFile.VALUE_HEADER,
+				.parse(get(csvRecord, SeriesDataFile.TIME_HEADER, dataFile)).toDate(),
+				Double.parseDouble(get(csvRecord, SeriesDataFile.VALUE_HEADER,
 						dataFile)));
 		return seriesData;
 	}
@@ -130,25 +139,25 @@ public class TestCSVFilePersister {
 	private Location getLocationObjectFromCSVRecordWithAlsId()
 			throws Exception {
 
-		CSVFileHelper helper = new CSVFileHelper();
-		CSVFile dataFile = helper.createTestDataFileWithAlsIdFormat();
+		SeriesDataFileHelper helper = new SeriesDataFileHelper();
+		SeriesDataFile dataFile = helper.createTestSeriesDataFileWithAlsIdFormat();
 		CSVRecord csvRecord = helper.getCSVRecord(dataFile);
-		CSVFilePersister persister = new CSVFilePersister();
+		SeriesDataFilePersister persister = new SeriesDataFilePersister();
 		Location location = persister.createLocation(Long.parseLong(get(
-				csvRecord, CSVFile.ALS_ID_HEADER, dataFile)));
+				csvRecord, SeriesDataFile.ALS_ID_HEADER, dataFile)));
 		return location;
 	}
 
 	private Location getLocationObjectFromCSVRecordWithCoordinate()
 			throws Exception {
 
-		CSVFileHelper helper = new CSVFileHelper();
-		CSVFile dataFile = helper.createTestDataFileWithCoordianteFormat();
+		SeriesDataFileHelper helper = new SeriesDataFileHelper();
+		SeriesDataFile dataFile = helper.createTestSeriesDataFileWithCoordianteFormat();
 		CSVRecord csvRecord = helper.getCSVRecord(dataFile);
-		CSVFilePersister persister = new CSVFilePersister();
+		SeriesDataFilePersister persister = new SeriesDataFilePersister();
 		Location location = persister.createLocation(Double.parseDouble(get(
-				csvRecord, CSVFile.LATITUDE_HEADER, dataFile)),
-				Double.parseDouble(get(csvRecord, CSVFile.LONGITUDE_HEADER,
+				csvRecord, SeriesDataFile.LATITUDE_HEADER, dataFile)),
+				Double.parseDouble(get(csvRecord, SeriesDataFile.LONGITUDE_HEADER,
 						dataFile)));
 		return location;
 	}
