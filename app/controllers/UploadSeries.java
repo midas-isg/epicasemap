@@ -17,13 +17,8 @@ import play.db.jpa.Transactional;
 import play.mvc.Controller;
 import play.mvc.Http.Request;
 import play.mvc.Result;
-import views.html.uploadForm;
 
 public class UploadSeries extends Controller {
-
-	public static Result uploadForm() {
-		return ok(uploadForm.render());
-	}
 
 	@Transactional
 	public static Result upload(long seriesId, String delimiter,
