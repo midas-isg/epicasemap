@@ -1,9 +1,13 @@
-package interactors;
+package interactors.series_data_file;
+
+import interactors.LocationRule;
+import interactors.SeriesRule;
 
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
+import models.SeriesDataFile;
 import models.entities.Location;
 import models.entities.LocationFilter;
 import models.entities.SeriesData;
@@ -15,12 +19,12 @@ import org.joda.time.DateTime;
 import play.db.jpa.JPA;
 import controllers.Factory;
 
-public class SeriesDataFilePersister {
+public class Persister {
 
 	public Long persistCSVFile(SeriesDataFile dataFile, Long seriesId)
 			throws Exception {
 
-		SeriesDataFileParser csvParser = new SeriesDataFileParser();
+		Parser csvParser = new Parser();
 		CSVParser parser = null;
 		parser = csvParser.parse(dataFile);
 		return persistRecords(seriesId, dataFile, parser);

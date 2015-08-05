@@ -1,10 +1,14 @@
-package interactors;
+package interactors.series_data_file;
 
 import static org.fest.assertions.Assertions.assertThat;
+import interactors.series_data_file.Parser;
+import interactors.series_data_file.Validator;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+
+import models.SeriesDataFile;
 
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
@@ -16,7 +20,7 @@ public class TestSeriesDataFileValidator {
 
 	@Test
 	public void testGetDateTimeError() throws Exception {
-		SeriesDataFileValidator validator = new SeriesDataFileValidator();
+		Validator validator = new Validator();
 		SeriesDataFileHelper helper = new SeriesDataFileHelper();
 		SeriesDataFile dataFile = helper
 				.createTestSeriesDataFileWithAlsIdFormatWithErrors();
@@ -29,7 +33,7 @@ public class TestSeriesDataFileValidator {
 
 	@Test
 	public void testGetValueError() throws Exception {
-		SeriesDataFileValidator validator = new SeriesDataFileValidator();
+		Validator validator = new Validator();
 		SeriesDataFileHelper helper = new SeriesDataFileHelper();
 		SeriesDataFile dataFile = helper
 				.createTestSeriesDataFileWithAlsIdFormatWithErrors();
@@ -41,7 +45,7 @@ public class TestSeriesDataFileValidator {
 
 	@Test
 	public void testGetLocationValueError() throws Exception {
-		SeriesDataFileValidator validator = new SeriesDataFileValidator();
+		Validator validator = new Validator();
 		SeriesDataFileHelper helper = new SeriesDataFileHelper();
 		SeriesDataFile dataFile = helper
 				.createTestSeriesDataFileWithAlsIdFormatWithErrors();
@@ -53,7 +57,7 @@ public class TestSeriesDataFileValidator {
 	
 	@Test
 	public void testGetRecordSizeError() throws Exception {
-		SeriesDataFileValidator validator = new SeriesDataFileValidator();
+		Validator validator = new Validator();
 		SeriesDataFileHelper helper = new SeriesDataFileHelper();
 		SeriesDataFile dataFile = helper.createTestSeriesDataFileWithAlsIdFormatWithErrors();
 		CSVRecord record = helper.getCSVRecord(dataFile);
@@ -64,10 +68,10 @@ public class TestSeriesDataFileValidator {
 	
 	@Test
 	public void testValidateFileHeader() throws Exception {
-		SeriesDataFileValidator validator = new SeriesDataFileValidator();
+		Validator validator = new Validator();
 		SeriesDataFileHelper helper = new SeriesDataFileHelper();
 		SeriesDataFile dataFile = helper.createTestSeriesDataFileWithAlsIdFormatWithErrors();
-		SeriesDataFileParser fileParser = new SeriesDataFileParser();
+		Parser fileParser = new Parser();
 		CSVParser parser = fileParser.parse(dataFile);
 		List<String> error = validator.validateFileHeaders(parser,dataFile);
 		List<String> expected = Arrays.asList("number of columns is 4. should be 3.","\"lat\" column name is not allowed in alsIdFormat format.");
@@ -77,7 +81,7 @@ public class TestSeriesDataFileValidator {
 	
 	@Test
 	public void testValidateAlsIdFormatted() {
-		SeriesDataFileValidator validator = new SeriesDataFileValidator();
+		Validator validator = new Validator();
 		SeriesDataFileHelper helper = new SeriesDataFileHelper();
 		SeriesDataFile dataFile = helper.createTestSeriesDataFileWithAlsIdFormatWithErrors();
 		Map<Long, List<String>> error = validator.validate(dataFile);
@@ -88,7 +92,7 @@ public class TestSeriesDataFileValidator {
 	
 	@Test
 	public void testValidateCoordinateFormatted() {
-		SeriesDataFileValidator validator = new SeriesDataFileValidator();
+		Validator validator = new Validator();
 		SeriesDataFileHelper helper = new SeriesDataFileHelper();
 		SeriesDataFile dataFile = helper.createTestSeriesDataFileWithCoordinateFormatWithErrors();
 		Map<Long, List<String>> error = validator.validate(dataFile);
@@ -99,7 +103,7 @@ public class TestSeriesDataFileValidator {
 	
 	@Test
 	public void testGetLocationValueErrorForCoordinateFormat() throws Exception {
-		SeriesDataFileValidator validator = new SeriesDataFileValidator();
+		Validator validator = new Validator();
 		SeriesDataFileHelper helper = new SeriesDataFileHelper();
 		SeriesDataFile dataFile = helper
 				.createTestSeriesDataFileWithCoordinateFormatWithErrors();

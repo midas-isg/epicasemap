@@ -1,8 +1,10 @@
-package interactors;
+package interactors.series_data_file;
 
 import static org.fest.assertions.Assertions.assertThat;
 import static suites.Helper.assertAreEqual;
 import integrations.app.App;
+import interactors.series_data_file.Persister;
+import models.SeriesDataFile;
 import models.entities.Location;
 import models.entities.SeriesData;
 
@@ -29,13 +31,13 @@ public class TestSeriesDataFilePersister {
 		Long expected = 5L;
 		Long seriesId = 1L;
 
-		SeriesDataFilePersister persister = new SeriesDataFilePersister();
+		Persister persister = new Persister();
 		Long created = persister.persistCSVFile(dataFile, seriesId);
 		assertThat(created).isEqualTo(expected);
 
 		dataFile = helper.createTestSeriesDataFileWithCoordianteFormat();
 		helper.setStdToFileHeaderMap(dataFile);
-		persister = new SeriesDataFilePersister();
+		persister = new Persister();
 		created = persister.persistCSVFile(dataFile, seriesId);
 		assertThat(created).isEqualTo(expected);
 
@@ -62,7 +64,7 @@ public class TestSeriesDataFilePersister {
 	}
 	
 	private void createLocationIfNotExists() throws Exception{
-		SeriesDataFilePersister persister = new SeriesDataFilePersister();
+		Persister persister = new Persister();
 		Location location = getLocationObjectFromCSVRecordWithAlsId();
 		Long alsId = location.getAlsId();
 		
@@ -109,7 +111,7 @@ public class TestSeriesDataFilePersister {
 		SeriesDataFileHelper helper = new SeriesDataFileHelper();
 		SeriesDataFile dataFile = helper.createTestSeriesDataFileWithAlsIdFormat();
 		CSVRecord csvRecord = helper.getCSVRecord(dataFile);
-		SeriesDataFilePersister persister = new SeriesDataFilePersister();
+		Persister persister = new Persister();
 
 		SeriesData seriesData = persister.createSeriesData(1L, 1L, DateTime
 				.parse(get(csvRecord, SeriesDataFile.TIME_HEADER, dataFile)).toDate(),
@@ -128,7 +130,7 @@ public class TestSeriesDataFilePersister {
 		SeriesDataFile dataFile = helper.createTestSeriesDataFileWithCoordianteFormat();
 		CSVRecord csvRecord = helper.getCSVRecord(dataFile);
 
-		SeriesDataFilePersister persister = new SeriesDataFilePersister();
+		Persister persister = new Persister();
 		SeriesData seriesData = persister.createSeriesData(1L, 1L, DateTime
 				.parse(get(csvRecord, SeriesDataFile.TIME_HEADER, dataFile)).toDate(),
 				Double.parseDouble(get(csvRecord, SeriesDataFile.VALUE_HEADER,
@@ -142,7 +144,7 @@ public class TestSeriesDataFilePersister {
 		SeriesDataFileHelper helper = new SeriesDataFileHelper();
 		SeriesDataFile dataFile = helper.createTestSeriesDataFileWithAlsIdFormat();
 		CSVRecord csvRecord = helper.getCSVRecord(dataFile);
-		SeriesDataFilePersister persister = new SeriesDataFilePersister();
+		Persister persister = new Persister();
 		Location location = persister.createLocation(Long.parseLong(get(
 				csvRecord, SeriesDataFile.ALS_ID_HEADER, dataFile)));
 		return location;
@@ -154,7 +156,7 @@ public class TestSeriesDataFilePersister {
 		SeriesDataFileHelper helper = new SeriesDataFileHelper();
 		SeriesDataFile dataFile = helper.createTestSeriesDataFileWithCoordianteFormat();
 		CSVRecord csvRecord = helper.getCSVRecord(dataFile);
-		SeriesDataFilePersister persister = new SeriesDataFilePersister();
+		Persister persister = new Persister();
 		Location location = persister.createLocation(Double.parseDouble(get(
 				csvRecord, SeriesDataFile.LATITUDE_HEADER, dataFile)),
 				Double.parseDouble(get(csvRecord, SeriesDataFile.LONGITUDE_HEADER,

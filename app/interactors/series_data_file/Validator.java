@@ -1,4 +1,4 @@
-package interactors;
+package interactors.series_data_file;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -7,12 +7,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import models.SeriesDataFile;
+
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.lang.math.NumberUtils;
 import org.joda.time.DateTime;
 
-public class SeriesDataFileValidator {
+public class Validator {
 
 	public Map<Long, List<String>> validate(SeriesDataFile dataFile) {
 
@@ -39,7 +41,7 @@ public class SeriesDataFileValidator {
 	}
 
 	private CSVParser getParseErrors(SeriesDataFile dataFile, List<String> errorList) {
-		SeriesDataFileParser csvParser = new SeriesDataFileParser();
+		Parser csvParser = new Parser();
 		CSVParser parser = null;
 		try {
 			parser = csvParser.parse(dataFile);

@@ -1,12 +1,13 @@
 package suites;
 
-import interactors.SeriesDataFile;
-import interactors.SeriesDataFileParser;
+import interactors.series_data_file.Parser;
 
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+
+import models.SeriesDataFile;
 
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
@@ -16,7 +17,7 @@ public class SeriesDataFileHelper {
 	public CSVRecord getCSVRecord(SeriesDataFile dataFile) throws Exception {
 		SeriesDataFileHelper helper = new SeriesDataFileHelper();
 		helper.setStdToFileHeaderMap(dataFile);
-		SeriesDataFileParser fileParser = new SeriesDataFileParser();
+		Parser fileParser = new Parser();
 		CSVParser parser = null;
 		parser = fileParser.parse(dataFile);
 
@@ -55,7 +56,7 @@ public class SeriesDataFileHelper {
 
 	public void setStdToFileHeaderMap(SeriesDataFile dataFile) throws Exception {
 		Map<String, String> result = new HashMap<String, String>();
-		SeriesDataFileParser csvParser = new SeriesDataFileParser();
+		Parser csvParser = new Parser();
 		CSVParser parser = null;
 		parser = csvParser.parse(dataFile);
 
