@@ -1,13 +1,15 @@
-package interactors;
+package interactors.series_data_file;
 
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 
+import models.SeriesDataFile;
+
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 
-public class SeriesDataFileParser {
+public class Parser {
 
 	private static boolean Ignore_Empty_Lines = true;
 	private static boolean Ignore_Surrounding_Spaces = true;

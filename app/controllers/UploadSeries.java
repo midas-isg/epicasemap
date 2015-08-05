@@ -1,15 +1,15 @@
 package controllers;
 
-import interactors.SeriesDataFile;
-import interactors.SeriesDataFilePersister;
-import interactors.SeriesDataFileValidator;
 import interactors.CoordinateRule;
 import interactors.SeriesDataRule;
+import interactors.series_data_file.Persister;
+import interactors.series_data_file.Validator;
 
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 
+import models.SeriesDataFile;
 import models.entities.Coordinate;
 import models.entities.CoordinateFilter;
 import play.db.jpa.JPA;
@@ -70,12 +70,12 @@ public class UploadSeries extends Controller {
 
 	private static Long create(SeriesDataFile dataFile, Long seriesId)
 			throws Exception {
-		SeriesDataFilePersister persister = new SeriesDataFilePersister();
+		Persister persister = new Persister();
 		return persister.persistCSVFile(dataFile, seriesId);
 	}
 
 	private static String validate(SeriesDataFile dataFile) {
-		SeriesDataFileValidator validator = new SeriesDataFileValidator();
+		Validator validator = new Validator();
 		Map<Long, List<String>> errors = validator.validate(dataFile);
 		return joinErrorsAsString(errors);
 	}
