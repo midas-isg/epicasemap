@@ -94,10 +94,7 @@ app.controller('Viz', function($scope, $rootScope, api) {
 			check(viz.allSeries.map(byId), 's1');
 			check(viz.allSeries2.map(byId), 's2');
 		}
-		if ($scope.form.isNew)
-			$scope.form.$setDirty();
-		else
-			$scope.form.$setPristine();
+		$scope.form.$setPristine();
 
 		function byId(series) { return series.id; }
 		
@@ -112,7 +109,6 @@ app.controller('Viz', function($scope, $rootScope, api) {
 		var isNew = viz.id ? false : true;
 		$scope.model = viz;
 		$scope.showAll = isNew;
-		$scope.form.isNew = isNew;
 		$scope.dialog.modal();
 	}
 
@@ -143,7 +139,6 @@ app.controller('Viz', function($scope, $rootScope, api) {
 		$scope.working = true;
 		api.save('vizs', body).then(function(location) {
 			$scope.working = false;
-			$scope.form.isNew = false;
 			if (callback){
 				callback();
 			} else {

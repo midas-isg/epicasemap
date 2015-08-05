@@ -10,6 +10,10 @@ GET     /manage/series              controllers.Application.manageSeries()
 # Test Upload Form
 GET		/uploadForm					controllers.UploadSeries.uploadForm()
 
+# Test page
+GET     /test/example               controllers.Test.example()
+GET     /test/acceptance            controllers.Test.acceptance()
+
 # Swagger API documentation
 GET     /api                        controllers.Application.swagger
 GET     /api.json                   controllers.ApiHelpController.getResources
@@ -18,10 +22,13 @@ GET     /api.json*path              controllers.ApiHelpController.getResource(pa
 
 # API
 GET     /api/series                 controllers.ApiSeries.get()
-GET     /api/series/:id             controllers.ApiSeries.read(id:Long)
 POST    /api/series                 controllers.ApiSeries.post()
+GET     /api/series/:id             controllers.ApiSeries.read(id:Long)
+PUT		/api/series/:id             controllers.ApiSeries.put(id:Long)
+DELETE	/api/series/:id             controllers.ApiSeries.delete(id:Long)
 
 GET     /api/series/:id/time-coordinate   controllers.ApiTimeCoordinateSeries.get(id:Long, startInclusive?=null, endExclusive?=null, limit:java.lang.Integer?=null, offset:Int?=0)
+PUT		/api/series/:id/data		controllers.UploadSeries.upload(id:Long,delimiter:String,format:String)
 
 GET     /api/locations/:id          controllers.ApiLocation.read(id:Long)
 
@@ -32,8 +39,6 @@ PUT     /api/vizs/:id               controllers.ApiViz.put(id:Long)
 DELETE  /api/vizs/:id               controllers.ApiViz.delete(id:Long)
 PUT     /api/vizs/:id/ui-setting	controllers.ApiViz.putUiSetting(id:Long)
 GET     /api/vizs/:id/ui-setting    controllers.ApiViz.readUiSetting(id:Long)
-
-POST	/api/fileUpload/:id/:delimiter/:format		controllers.UploadSeries.upload(id:Long,delimiter:String,format:String)
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.at(path="/public", file)

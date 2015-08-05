@@ -2,7 +2,7 @@
 
 @* Viz modal dialog *@
 @(
-	orders:Seq[Seq[String]] =Seq(Seq("id", "ID"), Seq("name", "Name")),
+	orders:Seq[Seq[String]] =Seq(Seq("id", "ID"), Seq("title", "Title"), Seq("version", "Version")),
 	more:Seq[Seq[Html]] =Seq(
 		Seq(Html("a"), Html("A"), Html("<input title='check to include the Series as A' type='checkbox' ng-model='it.s1'>")),
 		Seq(Html("b"), Html("B"), Html("<input title='check to include the Series as B' type='checkbox' ng-model='it.s2'>")),
@@ -10,21 +10,29 @@
 	)
 )
 @bs_modal("modal", "Viz", "Viz Editor", "close()")(editor())(modal_buttons("Viz"))
-@series_dialog()
 
-@editor() = {
-	@filters("series", "Series", Seq(Seq("id", "ID"), Seq("name", "Name")))
-	<form name='form'>
-		@metadata_inputs()
-		<label># of selected Series in category A: </label> {{countBy('s1')}}<br>
-		<label># of selected Series in category B: </label> {{countBy('s2')}}<br>	
+@editor(labelSize:Int=3) = {
+	@filters("series", "Series", orders)
+	<form name='form' class="form-horizontal" role="form">
+		@metadata_inputs(labelSize)
+		@category("A", "s1", labelSize)
+		@category("B", "s2", labelSize)
 		@selectedSeriesSection("view.hideSeries")
 	</form>
 }
 
+@category(cat:String, key:String, labelSize:Int) = {
+	@form_group_readonly(
+		"# selected Series as " + cat, 
+		"{{countBy('" + key +"')}}", 
+		"the number of selected Series in category " + cat, 
+		labelSize
+	)
+}
+
 @selectedSeriesSection(varName:String) = {
 	@section_expandable(varName){
-		<h3>@span_expandable(varName, "Selected Series")</h3>
+		<h4>@span_expandable(varName, "Selected Series")</h4>
 	}{
 		<div id='filterPlaceholderNotToCountAsPartOfForm'></div>
 		@buttonInvert("A")

@@ -1,0 +1,16 @@
+@import tags._ 
+
+@imports = {
+	<!-- include source files here... -->
+	@script_asset("javascripts/ng/controllers/vizs.js")
+	@script_asset("javascripts/ng/controllers/viz.js")
+	@script_asset("javascripts/ng/controllers/series.js")
+	@script_asset("javascripts/ng/controllers/series-data.js")
+	
+	
+	<!-- include spec files here... -->
+	@script_asset("javascripts/spec/vizs-spec.js")
+} 
+	
+@tests.test("Example",imports){ 
+}
