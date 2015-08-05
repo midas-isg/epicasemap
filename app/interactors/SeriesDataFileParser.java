@@ -7,13 +7,13 @@ import java.io.IOException;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 
-public class CSVFileParser {
+public class SeriesDataFileParser {
 
 	private static boolean Ignore_Empty_Lines = true;
 	private static boolean Ignore_Surrounding_Spaces = true;
 	private static boolean Skip_Header_Record = true;
 
-	public CSVParser parse(CSVFile dataFile) throws Exception {
+	public CSVParser parse(SeriesDataFile dataFile) throws Exception {
 
 		return parse(dataFile.getDelimiter(), dataFile.getFile());
 
@@ -35,5 +35,4 @@ public class CSVFileParser {
 	
 		return csvParser;
 	}
-
 }

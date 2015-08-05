@@ -3,7 +3,7 @@ package integrations.server;
 import static play.mvc.Http.Status.BAD_REQUEST;
 import static play.mvc.Http.Status.CREATED;
 import static suites.Helper.assertAreEqual;
-import interactors.CSVFile;
+import interactors.SeriesDataFile;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -27,7 +27,7 @@ public class UploadSeriesEndpointTester {
 
 	private static final int timeout = 100_000;
 	private final String basePath = "/api/fileUpload/";
-	private final long seriesId = 123456789;
+	private final long seriesId = 1;
 
 	public static Runnable test() {
 		return () -> newInstance().testUpload();
@@ -38,84 +38,100 @@ public class UploadSeriesEndpointTester {
 		WSResponse resp = postMultiPartFormData();
 		assertStatus(resp, CREATED);
 
-		WSResponse response = postDataWithApolloIdFormat();
+		WSResponse response = postDataWithAlsIdFormat(seriesId);
 		assertStatus(response, CREATED);
 
-		response = postDataWithCoordinateFormat();
+		response = postDataWithAlsIdFormat(seriesId);
+		assertBody(response, "5 existing item(s) deleted.\n"
+				+ "5 new item(s) created.");
+
+		response = postDataWithCoordinateFormat(seriesId);
 		assertStatus(response, CREATED);
 
-		response = postDataWithAlsIdFormatWithTab();
+		response = postDataWithCoordinateFormat(seriesId);
+		assertBody(response, "5 existing item(s) deleted.\n"
+				+ "5 new item(s) created.");
+
+		response = postDataWithAlsIdFormatWithTab(seriesId);
 		assertStatus(response, CREATED);
 
-		response = postDataWithErrorWithApolloIdFormat();
+		response = postDataWithErrorWithAlsIdFormat(seriesId);
 		assertStatus(response, BAD_REQUEST);
-
-		response = postDataWithErrorWithCoordinateFormat();
+		assertBody(response, "Line 1: number of columns is 4. should be 3.\n"
+				+ "Line 1: \"lat\" column name is not allowed in alsIdFormat format.\n");
+		
+		response = postDataWithErrorWithCoordinateFormat(seriesId);
 		assertStatus(response, BAD_REQUEST);
+		assertBody(response, "Line 1: number of columns is 5. should be 4.\n"
+				+ "Line 1: \"error\" column name is not allowed in coordinateFormat format.\n");
 
 	}
 
 	private WSResponse postMultiPartFormData() {
-		String url = buildUrl(seriesId, "%2C", CSVFile.ALS_ID_FORMAT);
+		String url = buildUrl(seriesId, "%2C", SeriesDataFile.ALS_ID_FORMAT);
 		String boundary = "--xyz123--";
-		
-		String body = boundary + "\r\n" + 
-		"Content-Disposition: form-data; name=\"csv_file\"; filename=\"a.txt\"" + "\r\n" +
-		"Content-Type: text/plain" + "\r\n" + "\r\n" + 
-		
-		"time,als_id,VALUE" + "\r\n" +
-		"2015-01-01,1,1234567" + "\r\n" + 
-		"--" + boundary + "--";
-		
+
+		String body = boundary
+				+ "\r\n"
+				+ "Content-Disposition: form-data; name=\"csv_file\"; filename=\"a.txt\""
+				+ "\r\n" + "Content-Type: text/plain" + "\r\n" + "\r\n" +
+
+				"time,als_id,VALUE" + "\r\n" + "2015-01-01,1,1234567" + "\r\n"
+				+ "--" + boundary + "--";
+
 		WSRequestHolder requestHolder = WS.url(url);
 		requestHolder.setHeader("content-type",
 				"multipart/form-data; boundary=" + boundary);
-		requestHolder.setHeader("content-length",
-				String.valueOf(body.length()));
+		requestHolder
+				.setHeader("content-length", String.valueOf(body.length()));
 		WSResponse resp = requestHolder.post(body).get(timeout);
 		return resp;
 	}
 
-	private WSResponse postDataWithAlsIdFormatWithTab() {
-		File file = new File("test/resources/test_alsId_format_tab.txt");
-		String url = buildUrl(seriesId, "%09", CSVFile.ALS_ID_FORMAT);
+	private WSResponse postDataWithAlsIdFormatWithTab(long seriesId) {
+		File file = new File(
+				"test/resources/input-files/test_alsId_format_tab.txt");
+		String url = buildUrl(seriesId, "%09", SeriesDataFile.ALS_ID_FORMAT);
 		WSResponse response = postMultiPartRequest(file, url);
 		return response;
 	}
 
-	private WSResponse postDataWithErrorWithCoordinateFormat()
+	private WSResponse postDataWithErrorWithCoordinateFormat(long seriesId)
 			throws RuntimeException {
 		WSResponse response;
 
 		File file = new File(
-				"test/resources/test_coordinate_format_with_errors.txt");
-		String url = buildUrl(seriesId, "%2C", CSVFile.COORDINATE_FORMAT);
+				"test/resources/input-files/test_coordinate_format_with_errors.txt");
+		String url = buildUrl(seriesId, "%2C", SeriesDataFile.COORDINATE_FORMAT);
 		response = postMultiPartRequest(file, url);
 		return response;
 	}
 
-	private WSResponse postDataWithErrorWithApolloIdFormat()
+	private WSResponse postDataWithErrorWithAlsIdFormat(long seriesId)
 			throws RuntimeException {
 		WSResponse response;
 		File file = new File(
-				"test/resources/test_alsId_format_with_errors.txt");
-		String url = buildUrl(seriesId, "%2C", CSVFile.ALS_ID_FORMAT);
+				"test/resources/input-files/test_alsId_format_with_errors.txt");
+		String url = buildUrl(seriesId, "%2C", SeriesDataFile.ALS_ID_FORMAT);
 		response = postMultiPartRequest(file, url);
 		return response;
 	}
 
-	private WSResponse postDataWithCoordinateFormat() throws RuntimeException {
+	private WSResponse postDataWithCoordinateFormat(Long seriesId)
+			throws RuntimeException {
 		WSResponse response;
 
-		File file = new File("test/resources/test_coordinate_format.txt");
-		String url = buildUrl(seriesId, "%2C", CSVFile.COORDINATE_FORMAT);
+		File file = new File(
+				"test/resources/input-files/test_coordinate_format.txt");
+		String url = buildUrl(seriesId, "%2C", SeriesDataFile.COORDINATE_FORMAT);
 		response = postMultiPartRequest(file, url);
 		return response;
 	}
 
-	private WSResponse postDataWithApolloIdFormat() throws RuntimeException {
-		File file = new File("test/resources/test_alsId_format.txt");
-		String url = buildUrl(seriesId, "%2C", CSVFile.ALS_ID_FORMAT);
+	private WSResponse postDataWithAlsIdFormat(Long seriesId)
+			throws RuntimeException {
+		File file = new File("test/resources/input-files/test_alsId_format.txt");
+		String url = buildUrl(seriesId, "%2C", SeriesDataFile.ALS_ID_FORMAT);
 		WSResponse response = postMultiPartRequest(file, url);
 		return response;
 	}
@@ -170,6 +186,10 @@ public class UploadSeriesEndpointTester {
 
 	private void assertStatus(WSResponse wsResponse, int expected) {
 		assertAreEqual(wsResponse.getStatus(), expected);
+	}
+
+	private void assertBody(WSResponse wsResponse, String expected) {
+		assertAreEqual(wsResponse.getBody(), expected);
 	}
 
 	private static UploadSeriesEndpointTester newInstance() {

@@ -5,7 +5,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class CSVFile {
+public class SeriesDataFile {
 	public static final String ALS_ID_FORMAT = "alsIdFormat";
 	public static final String COORDINATE_FORMAT = "coordinateFormat";
 	public static final String TIME_HEADER = "time";
