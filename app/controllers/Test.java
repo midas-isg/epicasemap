@@ -20,6 +20,10 @@ public class Test extends Controller {
         return ok(views.html.tests.example.render());
     }
 
+    public static Result acceptance() {
+        return ok(views.html.tests.acceptance.render());
+    }
+
    public static String info() {
         return "Copyright 2015 - University of Pittsburgh, " 
         		+ appVersion + ", " + dbName;

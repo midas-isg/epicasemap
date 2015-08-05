@@ -12,6 +12,7 @@ GET		/uploadForm					controllers.UploadSeries.uploadForm()
 
 # Test page
 GET     /test/example               controllers.Test.example()
+GET     /test/acceptance            controllers.Test.acceptance()
 
 # Swagger API documentation
 GET     /api                        controllers.Application.swagger
