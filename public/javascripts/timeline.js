@@ -7,7 +7,6 @@ timeline.js
 		var i,
 		j,
 		temp,
-		vizID = getURLParameterByName("id"),
 		thisMap = this;
 		
 		L.mapbox.accessToken = 'pk.eyJ1IjoidHBzMjMiLCJhIjoiVHEzc0tVWSJ9.0oYZqcggp29zNZlCcb2esA';
@@ -28,17 +27,29 @@ timeline.js
 		this.latestDate = new Date(0);
 		this.zeroTime(this.latestDate);
 		
-		this.seriesList0;
-		this.seriesList1;
+		this.vizID = getURLParameterByName("id")
+		
+		this.uiSettings = {
+			series: [{index: -1, color: 0}],
+			colorPalette: 0,
+			bBox: [[], []],
+			timeSelection: {
+				start: null,
+				end: null
+			}
+		};
+		
+		this.seriesList = [];
 		this.seriesDescriptions = {};
+		this.seriesToLoad = [];
 		
 		this.showControlPanel = false;
 		
 		this.playBack = false;
 		this.set = [];
 		
-		if(vizID) {
-			this.loadVisualization(vizID);
+		if(this.vizID) {
+			this.loadVisualization(this.vizID);
 		}
 		else {
 			function getDescriptions(seriesToLoad) {
@@ -93,8 +104,8 @@ timeline.js
 			['#66c2a5', '#fc8d62', '#8da0cb', "#e78ac3", "#a6d854"]
 		];
 		
-		this.paletteSelection = 0;
-		this.colors = this.colorSet[this.paletteSelection];
+		this.uiSettings.colorPalette = 0;
+		this.colors = this.colorSet[this.uiSettings.colorPalette];
 		
 		for(i = 0; i < this.colors.length; i++) {
 			this.setGradient.push({
@@ -117,6 +128,34 @@ timeline.js
 		return this;
 	}
 	
+	MagicMap.prototype.saveVisualization = function() {
+		var URL = CONTEXT + "/api/vizs/" + this.vizID + "/ui-setting",
+		bounds = this.map.getBounds();
+		
+		if(this.vizID) {
+			this.uiSettings.bBox[0][0] = bounds.getSouth();
+			this.uiSettings.bBox[0][1] = bounds.getWest();
+			this.uiSettings.bBox[1][0] = bounds.getNorth();
+			this.uiSettings.bBox[1][1] = bounds.getEast();
+			
+			$.ajax({
+				url: URL,
+				type: "POST",
+				data: this.uiSettings,
+				success: function(result, status, xhr) {
+					alert("Save successful");
+					return;
+				},
+				error: function(xhr, status, error) {
+					alert(xhr + "\n" + status + "\n" + error);
+					return;
+				}
+			});
+		}
+		
+		return;
+	}
+	
 	MagicMap.prototype.loadVisualization = function(vizID) {
 		var URL = CONTEXT + "/api/vizs/" + vizID,
 		thisMap = this;
@@ -125,33 +164,39 @@ timeline.js
 			url: URL,
 			success: function(result) {
 				var h,
-				i,
-				seriesDisplayCount = 2;
+				i;
 				
-				thisMap.seriesList0 = result.result.allSeries;
-				thisMap.seriesList1 = result.result.allSeries2;
+				thisMap.seriesList[0] = result.result.allSeries;
+				h = 2;
+				while(result.result["allSeries" + h]) {
+					thisMap.seriesList.push(result.result["allSeries" + h]);
+					h++;
+				}
 				
 				$("#title").text(result.result.name);
 				
-				for(h = 0; h < seriesDisplayCount; h++) {
-					for(i = 0; i < thisMap["seriesList" + h].length; i++) {
-						thisMap.seriesDescriptions[thisMap["seriesList" + h][i].id] = {
-							name: thisMap["seriesList" + h][i].name,
-							description: thisMap["seriesList" + h][i].description
+				for(h = 0; h < thisMap.seriesList.length; h++) {
+					for(i = 0; i < thisMap.seriesList[h].length; i++) {
+						thisMap.seriesDescriptions[thisMap.seriesList[h][i].id] = {
+							name: thisMap.seriesList[h][i].name,
+							description: thisMap.seriesList[h][i].description
 						};
 					}
 				}
 				
 				//console.log(thisMap.seriesDescriptions);
 				
-				thisMap.seriesToLoad = [thisMap.seriesList0[0].id, thisMap.seriesList1[0].id];
+				for(h = 0; h < thisMap.seriesList.length; h++) {
+					thisMap.seriesToLoad.push(thisMap.seriesList[h][0].id);
+					thisMap.uiSettings.series[h] = {index: thisMap.seriesList[h][0].id, color: 0};
+				}
+				
 				for(i = 0; i < thisMap.seriesToLoad.length; i++) {
 					thisMap.set.push({visiblePoints: []});
 					thisMap.load(thisMap.seriesToLoad[i]);
 				}
 				
-				/**/
-				for(h = 0; h < seriesDisplayCount; h++) {
+				for(h = 0; h < thisMap.seriesList.length; h++) {
 					$("#series-options").append(
 						"<div>" +
 							"<h5>Select series " + String.fromCharCode(h + 65) + "</h5>" +
@@ -160,8 +205,8 @@ timeline.js
 						"</div>"
 					);
 					
-					for(i = 0; i < thisMap["seriesList" + h].length; i++) {
-						$("#series-" + h).append("<option value='" + thisMap["seriesList" + h][i].id + "'>" + thisMap["seriesList" + h][i].name +"</option>");
+					for(i = 0; i < thisMap.seriesList[h].length; i++) {
+						$("#series-" + h).append("<option value='" + thisMap.seriesList[h][i].id + "'>" + thisMap.seriesList[h][i].name +"</option>");
 					}
 					
 					$("#series-" + h).change(function() {
@@ -170,13 +215,15 @@ timeline.js
 						k = $(this).attr("id").split("-")[1];
 console.log("series " + k + ": " + id);
 						
+						thisMap.uiSettings.series[k].index = id;
+						
 						//TODO: recalculate frameOffset, earliest & latest dates after loading is finished
 						//(refactor block to external call -calculate from 0 and length-1 indexes)
 						thisMap.latestDate = new Date(0);
 						thisMap.earliestDate = new Date();
 						
 						thisMap.seriesToLoad = [];
-						for(l = 0; l < seriesDisplayCount; l++) {
+						for(l = 0; l < thisMap.seriesList.length; l++) {
 							thisMap.seriesToLoad.push($("#series-" + l).val());
 						}
 						
@@ -188,7 +235,21 @@ console.log("series " + k + ": " + id);
 						return;
 					});
 				}
-				/**/
+				
+				//TODO: load uiSettings
+				if(result.result.uiSetting) {
+					thisMap.uiSettings = result.result.uiSetting;
+					
+					thisMap.map.fitBounds(thisMap.uiSettings.bBox);
+					$("#palette-" + thisMap.uiSettings.colorPalette).click();
+					
+					for(i = 0; i < thisMap.uiSettings.series.length; i++) {
+						$("#series-" + i).val(thisMap.uiSettings.series[i]);
+						$("#series-" + i).change();
+					}
+					
+					thisMap.playSection(thisMap.uiSettings.start, thisMap.uiSettings.end);
+				}
 				
 				return;
 			},
@@ -250,23 +311,28 @@ console.log("series " + k + ": " + id);
 		//TODO: refactor palette click code without causing closure issues
 		$("#palette-0").click(function() {
 			if(!$("#palette-0").hasClass("selected")) {
-				MAGIC_MAP.paletteSelection = 0;
+				MAGIC_MAP.uiSettings.colorPalette = 0;
 				MAGIC_MAP.setColorPalette(0);
 			}
 		});
 		
 		$("#palette-1").click(function() {
 			if(!$("#palette-1").hasClass("selected")) {
-				MAGIC_MAP.paletteSelection = 1;
+				MAGIC_MAP.uiSettings.colorPalette = 1;
 				MAGIC_MAP.setColorPalette(1);
 			}
 		});
 		
 		$("#palette-2").click(function() {
 			if(!$("#palette-2").hasClass("selected")) {
-				MAGIC_MAP.paletteSelection = 2;
+				MAGIC_MAP.uiSettings.colorPalette = 2;
 				MAGIC_MAP.setColorPalette(2);
 			}
+		});
+		
+		$("#save-button").click(function() {
+			thisMap.saveVisualization();
+			return;
 		});
 		
 		$(window).resize(function() {
@@ -886,7 +952,9 @@ console.log("series " + k + ": " + id);
 	MagicMap.prototype.playSection = function(startFrame, endFrame) {
 		var i;
 		
-		//TODO: ensure startFrame and EndFrame hit all series throughout during visualization
+		this.uiSettings.timeSelection.start = startFrame;
+		this.uiSettings.timeSelection.end = endFrame;
+		
 		this.playBack = false;
 		this.paused = true;
 		this.updatePlaybackInterface();
