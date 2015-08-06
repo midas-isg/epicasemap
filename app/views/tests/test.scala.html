@@ -18,14 +18,13 @@
 
 <link rel="shortcut icon" type="image/png"	href='@routes.Assets.at("external_packages/jasmine-2.3.4/jasmine_favicon.png")'>
 <link rel="stylesheet" href='@routes.Assets.at("external_packages/jasmine-2.3.4/jasmine.css")'>
-<script src='@routes.Assets.at("external_packages/jquery-1.11.2.min.js")'></script>
+@scriptsFromMain
 
 @script_asset("external_packages/jasmine-2.3.4/jasmine.js")
 @script_asset("external_packages/jasmine-2.3.4/jasmine-html.js")
 @script_asset("external_packages/jasmine-2.3.4/boot.js")
 @ng_imports()
 @script_asset("external_packages/angular-mocks-1.4.3.js")
-
 <!-- page-specific -->
 @imports
 </head>
@@ -52,3 +51,8 @@
 	</footer>
 </body>
 </html>
+
+@scriptsFromMain = {
+	<script src='@routes.Assets.at("external_packages/jquery-1.11.2.min.js")'></script>
+	<script src='@routes.Assets.at("external_packages/bootstrap-3.3.4/js/bootstrap.min.js")'></script>
+}
