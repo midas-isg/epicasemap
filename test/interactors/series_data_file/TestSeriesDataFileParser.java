@@ -1,4 +1,4 @@
-package interactors;
+package interactors.series_data_file;
 
 import interactors.series_data_file.Parser;
 import models.SeriesDataFile;
