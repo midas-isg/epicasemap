@@ -46,12 +46,14 @@ timeline.js
 		this.showControlPanel = false;
 		
 		this.playBack = false;
-		this.set = [];
+		this.displaySet = [];
 		
 		if(this.vizID) {
 			this.loadVisualization(this.vizID);
 		}
 		else {
+			$("#save-button").hide();
+			
 			function getDescriptions(seriesToLoad) {
 				var URL = CONTEXT + "/api/series/",
 				i,
@@ -71,7 +73,7 @@ timeline.js
 							seriesToLoad.shift();
 							if(seriesToLoad.length === 0) {
 								for(i = 0; i < thisMap.seriesToLoad.length; i++) {
-									thisMap.set.push({visiblePoints: []});
+									thisMap.displaySet.push({visiblePoints: []});
 									thisMap.load(thisMap.seriesToLoad[i]);
 								}
 							}
@@ -140,8 +142,9 @@ timeline.js
 			
 			$.ajax({
 				url: URL,
-				type: "POST",
-				data: this.uiSettings,
+				type: "PUT",
+				data: JSON.stringify(this.uiSettings),
+				contentType: "application/json; charset=UTF-8",
 				success: function(result, status, xhr) {
 					alert("Save successful");
 					return;
@@ -186,13 +189,25 @@ timeline.js
 				
 				//console.log(thisMap.seriesDescriptions);
 				
-				for(h = 0; h < thisMap.seriesList.length; h++) {
-					thisMap.seriesToLoad.push(thisMap.seriesList[h][0].id);
-					thisMap.uiSettings.series[h] = {index: thisMap.seriesList[h][0].id, color: 0};
+				if(result.result.uiSetting) {
+					thisMap.uiSettings = JSON.parse(result.result.uiSetting);
+					
+					for(h = 0; h < thisMap.uiSettings.series.length; h++) {
+						thisMap.seriesToLoad.push(thisMap.uiSettings.series[h].index);
+					}
+					
+					thisMap.map.fitBounds(thisMap.uiSettings.bBox);
+					$("#palette-" + thisMap.uiSettings.colorPalette).click();
+				}
+				else {
+					for(h = 0; h < thisMap.seriesList.length; h++) {
+						thisMap.seriesToLoad.push(thisMap.seriesList[h][0].id);
+						thisMap.uiSettings.series[h] = {index: thisMap.seriesList[h][0].id, color: 0};
+					}
 				}
 				
 				for(i = 0; i < thisMap.seriesToLoad.length; i++) {
-					thisMap.set.push({visiblePoints: []});
+					thisMap.displaySet.push({visiblePoints: []});
 					thisMap.load(thisMap.seriesToLoad[i]);
 				}
 				
@@ -208,6 +223,8 @@ timeline.js
 					for(i = 0; i < thisMap.seriesList[h].length; i++) {
 						$("#series-" + h).append("<option value='" + thisMap.seriesList[h][i].id + "'>" + thisMap.seriesList[h][i].name +"</option>");
 					}
+					$("#series-" + h).val(thisMap.uiSettings.series[h].index);
+					$("#series-" + h).change();
 					
 					$("#series-" + h).change(function() {
 						var id = $(this).val(),
@@ -228,27 +245,12 @@ console.log("series " + k + ": " + id);
 						}
 						
 						for(l = 0; l < thisMap.seriesToLoad.length; l++) {
-							thisMap.set[k].visiblePoints.length = 0;
+							thisMap.displaySet[k].visiblePoints.length = 0;
 							thisMap.load(thisMap.seriesToLoad[l], l);
 						}
 						
 						return;
 					});
-				}
-				
-				//TODO: load uiSettings
-				if(result.result.uiSetting) {
-					thisMap.uiSettings = result.result.uiSetting;
-					
-					thisMap.map.fitBounds(thisMap.uiSettings.bBox);
-					$("#palette-" + thisMap.uiSettings.colorPalette).click();
-					
-					for(i = 0; i < thisMap.uiSettings.series.length; i++) {
-						$("#series-" + i).val(thisMap.uiSettings.series[i]);
-						$("#series-" + i).change();
-					}
-					
-					thisMap.playSection(thisMap.uiSettings.start, thisMap.uiSettings.end);
 				}
 				
 				return;
@@ -262,7 +264,7 @@ console.log("series " + k + ": " + id);
 	}
 	
 	MagicMap.prototype.start = function() {
-		thisMap = this;
+		var thisMap = this;
 		
 		document.getElementById('body').onkeyup = this.handleInput;
 		setInterval(this.loop, 0);
@@ -270,24 +272,27 @@ console.log("series " + k + ": " + id);
 		$("#reset-button").click(function() {
 			var i;
 			
-			//console.log("Buffer:");
-			//console.log(MAGIC_MAP.dataset[].buffer);
-			MAGIC_MAP.loadBuffer();
+			thisMap.uiSettings.start = null;
+			thisMap.uiSettings.end = null;
 			
-			for(i = 0; i < MAGIC_MAP.heat.length; i++) {
-				MAGIC_MAP.heat[i].redraw();
+			//console.log("Buffer:");
+			//console.log(thisMap.dataset[].buffer);
+			thisMap.loadBuffer();
+			
+			for(i = 0; i < thisMap.heat.length; i++) {
+				thisMap.heat[i].redraw();
 			}
 			
-			MAGIC_MAP.masterChart.xAxis[0].removePlotLine('date-line');
+			thisMap.masterChart.xAxis[0].removePlotLine('date-line');
 			
 			return;
 		});
 		
 		$("#playback-button").click(function() {
-			MAGIC_MAP.paused = !MAGIC_MAP.paused;
+			thisMap.paused = !thisMap.paused;
 			console.log(new Date());
 			
-			return MAGIC_MAP.updatePlaybackInterface();
+			return thisMap.updatePlaybackInterface();
 		});
 		
 		$("#toggle-details-button").click(function() {
@@ -295,7 +300,7 @@ console.log("series " + k + ": " + id);
 			
 			$("#detail-container *").toggle();
 			
-			for(i = 0; i < thisMap.set.length; i++) {
+			for(i = 0; i < thisMap.displaySet.length; i++) {
 				thisMap.detailChart.series[i].update({color: thisMap.colors[i]}, true);
 			}
 			
@@ -311,22 +316,22 @@ console.log("series " + k + ": " + id);
 		//TODO: refactor palette click code without causing closure issues
 		$("#palette-0").click(function() {
 			if(!$("#palette-0").hasClass("selected")) {
-				MAGIC_MAP.uiSettings.colorPalette = 0;
-				MAGIC_MAP.setColorPalette(0);
+				thisMap.uiSettings.colorPalette = 0;
+				thisMap.setColorPalette(0);
 			}
 		});
 		
 		$("#palette-1").click(function() {
 			if(!$("#palette-1").hasClass("selected")) {
-				MAGIC_MAP.uiSettings.colorPalette = 1;
-				MAGIC_MAP.setColorPalette(1);
+				thisMap.uiSettings.colorPalette = 1;
+				thisMap.setColorPalette(1);
 			}
 		});
 		
 		$("#palette-2").click(function() {
 			if(!$("#palette-2").hasClass("selected")) {
-				MAGIC_MAP.uiSettings.colorPalette = 2;
-				MAGIC_MAP.setColorPalette(2);
+				thisMap.uiSettings.colorPalette = 2;
+				thisMap.setColorPalette(2);
 			}
 		});
 		
@@ -363,7 +368,7 @@ console.log("series " + k + ": " + id);
 			});
 		}
 		
-		for(i = 0; i < this.set.length; i++) {
+		for(i = 0; i < this.displaySet.length; i++) {
 			this.detailChart.series[i].update({color: this.colors[i]}, true);
 			this.masterChart.series[i].update({color: this.colors[i]}, true);
 			
@@ -500,6 +505,10 @@ console.log("series " + k + ": " + id);
 					thisMap.packHeat();
 					thisMap.loadBuffer();
 					thisMap.paused = true;
+					
+					if(thisMap.uiSettings.start && thisMap.uiSettings.end) {
+						thisMap.playSection(thisMap.uiSettings.start, thisMap.uiSettings.end);
+					}
 					console.log("Finished loading. Unpause to begin.");
 				}
 				
@@ -847,10 +856,9 @@ console.log("series " + k + ": " + id);
 		this.masterChart.xAxis[0].removePlotBand('mask-before');
 		this.masterChart.xAxis[0].removePlotBand('mask-after');
 		
-		for(i = 0; i < this.set.length; i++) {
+		for(i = 0; i < this.displaySet.length; i++) {
 			//empty visiblePoints array
-			//while(this.set[i].visiblePoints.length > 0) { this.set[i].visiblePoints.pop(); }
-			this.set[i].visiblePoints.length = 0; //hopefully the old data is garbage collected!
+			this.displaySet[i].visiblePoints.length = 0; //hopefully the old data is garbage collected!
 		}
 		
 		$("#playback-button").removeClass("disabled");
@@ -870,9 +878,9 @@ console.log("series " + k + ": " + id);
 		if(this.reset) {
 			this.reset = false;
 			
-			for(i = 0; i < this.set.length; i++) {
+			for(i = 0; i < this.displaySet.length; i++) {
 				//empty visiblePoints array
-				this.set[i].visiblePoints.length = 0; //hopefully the old data is garbage collected!
+				this.displaySet[i].visiblePoints.length = 0; //hopefully the old data is garbage collected!
 			}
 		}
 		
@@ -884,7 +892,7 @@ console.log("series " + k + ": " + id);
 			if(this.dataset[setID].buffer[setFrame]) {
 				for(i = 0; i < this.dataset[setID].buffer[setFrame].point.length; i++) {
 					if(this.dataset[setID].buffer[setFrame].point[i].value > 0) {
-						this.set[setID].visiblePoints.push([this.dataset[setID].buffer[setFrame].point[i].latitude,
+						this.displaySet[setID].visiblePoints.push([this.dataset[setID].buffer[setFrame].point[i].latitude,
 							this.dataset[setID].buffer[setFrame].point[i].longitude,
 							0.7,
 							(this.dataset[setID].buffer[setFrame].point[i].value / this.dataset[setID].maxValue)]);
@@ -917,12 +925,12 @@ console.log("series " + k + ": " + id);
 			}
 			
 			if(this.playBack) {
-				for(i = 0; i < this.set[setID].visiblePoints.length; i++) {
-					if(this.set[setID].visiblePoints[i][2] > 0.00) {
-						this.set[setID].visiblePoints[i][2] -= 0.0231;
+				for(i = 0; i < this.displaySet[setID].visiblePoints.length; i++) {
+					if(this.displaySet[setID].visiblePoints[i][2] > 0.00) {
+						this.displaySet[setID].visiblePoints[i][2] -= 0.0231;
 					}
 					else {
-						this.set[setID].visiblePoints.splice(i, 1);
+						this.displaySet[setID].visiblePoints.splice(i, 1);
 						i--;
 					}
 				}
@@ -961,9 +969,9 @@ console.log("series " + k + ": " + id);
 		$("#playback-button").removeClass("disabled");
 		this.frame = startFrame;
 		
-		for(i = 0; i < this.set.length; i++) {
+		for(i = 0; i < this.displaySet.length; i++) {
 			//empty visiblePoints array
-			this.set[i].visiblePoints.length = 0; //hopefully the old data is garbage collected!
+			this.displaySet[i].visiblePoints.length = 0; //hopefully the old data is garbage collected!
 		}
 		
 console.log((endFrame - startFrame) + " frames");
@@ -986,7 +994,7 @@ console.log((endFrame - startFrame) + " frames");
 		
 		for(setID = 0; setID < this.dataset.length; setID++) {
 			if(!this.heat[setID]) {
-				this.heat.push(L.heatLayer(this.set[setID].visiblePoints,
+				this.heat.push(L.heatLayer(this.displaySet[setID].visiblePoints,
 					{
 						minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.1, //radius: 5,
 						gradient: this.setGradient[setID]
@@ -994,7 +1002,7 @@ console.log((endFrame - startFrame) + " frames");
 				).addTo(this.map));
 			}
 			else {
-				this.heat[setID].setLatLngs(this.set[setID].visiblePoints);
+				this.heat[setID].setLatLngs(this.displaySet[setID].visiblePoints);
 			}
 //console.log(this.heat[setID]._latlngs);
 		}
