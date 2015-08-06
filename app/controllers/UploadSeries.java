@@ -23,12 +23,12 @@ public class UploadSeries extends Controller {
 	@Transactional
 	public static Result upload(long seriesId, String delimiter,
 			String fileFormat) throws Exception {
-
-		Long deletedDataSize = deleteExisitingSeriesData(seriesId);
+		
 		SeriesDataFile dataFile = getFileObject(request(), delimiter, fileFormat);
 		String errors = validate(dataFile);
 
 		if (errors.equals("")) {
+			Long deletedDataSize = deleteExisitingSeriesData(seriesId);
 			Long createdDataSize = create(dataFile, seriesId);
 			return created(makeMsg(deletedDataSize, createdDataSize));
 		} else {
@@ -47,6 +47,7 @@ public class UploadSeries extends Controller {
 		List<Coordinate> seriesData = makeCoordinateRule().query(filter);
 		for (Coordinate data : seriesData) {
 			makeSeriesDataRule().delete(data.getId());
+			
 		}
 		return (long) seriesData.size();
 	}
