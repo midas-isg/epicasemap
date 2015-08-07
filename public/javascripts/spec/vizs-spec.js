@@ -1,23 +1,19 @@
-'use strict';
+(function(){ 'use strict';
+var theApi;
+var scope = {};
 
 workaroundForRealHttpCallsUsingNgMockAndNgMockE2E();
 
 describe('Controller: Vizs', function() {
-    var theApi;
-	var scope = {};
-    var addNew = 'addNew';
+	var vizs = initControllerUnderTestWithSubjects('Vizs', ['addNew']);
+	init('Vizs');
 
-    beforeEach(module('app'));
-    beforeEach(angular.mock.http.init);
-    afterEach(angular.mock.http.reset);
-    beforeEach(initController('Vizs'));
-    
-    describe('when ' + addNew + ' is invoked', function() {
+	describe(whenInvoke(vizs, 'addNew'), function() {
+		var viz = initControllerUnderTestWithSubjects('Viz', ['submit']);
     	beforeEach(initController('Viz'));
     	beforeEach(function(){
-    		expect(0).toBe(0);
     		scope.viz.form = {$setPristine: angular.noop};
-    		scope.vizs[addNew]();
+    		scope.vizs[vizs.addNew]();
     	});
     	
     	it('should pass a new Viz model to Viz controller', function() {
@@ -36,15 +32,15 @@ describe('Controller: Vizs', function() {
     		}
         });
     	
-        describe('when form is dirty and submit is invoked', function() {
+        describe(whenInvoke(viz, 'submit') + ' and form is dirty', function() {
         	var $scope;
         	beforeEach(function(){
         		$scope = scope.viz;
         		$scope.form.$dirty = true;
-        		$scope['submit']();
+        		$scope[viz.submit]();
         	});
         	
-        	it('should request Viz controller to persist the new Viz model', function(done) {
+        	it('should persist the new Viz model via Viz controller', function(done) {
         		$scope.$watch('model', function() {
         			var id = $scope.model.id;
         			if (id){
@@ -59,29 +55,55 @@ describe('Controller: Vizs', function() {
         	});
         });
     });
-    
-    function initController(name, key){
-    	key = key || name.toLowerCase();
-    	return inject(function ($rootScope, api, _$controller_, _$httpBackend_) {
-    		theApi = api;
-    		initHttpBackend(_$httpBackend_);
-    		scope[key] = $rootScope.$new();
-    		_$controller_(name, {
-                $scope: scope[key],
-                $rootScope: $rootScope,
-                api: api
-            });
-        })
-        
-        function initHttpBackend(httpBackend){
-    		var any = /.+\//;
-    		httpBackend.whenPOST(any).passThrough();
-    		httpBackend.whenGET(any).passThrough();
-    		httpBackend.whenPUT(any).passThrough();
-    		httpBackend.whenDELETE(any).passThrough();
-    	}
-    }
 });
+
+function whenInvoke(object, key){
+	return 'when ' + object[key] + ' of ' + object.controllerName + ' is invoked';
+}
+
+function initControllerUnderTestWithSubjects(controllerName, subjects){
+	var result = {controllerName: controllerName};
+	addTestSubjects(result, subjects);
+	return result;
+	
+	function addTestSubjects(object, subjects){
+		var i = 0, l = subjects.length, subject;
+		for (; i < l; i++){
+			subject = subjects[i];
+			object[subject] = subject;
+		}
+	}
+}
+
+
+function init(controllerName) {
+    beforeEach(module('app'));
+    beforeEach(angular.mock.http.init);
+    afterEach(angular.mock.http.reset);
+    beforeEach(initController(controllerName));
+}
+
+function initController(name, key){
+	key = key || name.toLowerCase();
+	return inject(function ($rootScope, api, _$controller_, _$httpBackend_) {
+		theApi = api;
+		initHttpBackend(_$httpBackend_);
+		scope[key] = $rootScope.$new();
+		_$controller_(name, {
+            $scope: scope[key],
+            $rootScope: $rootScope,
+            api: api
+        });
+    })
+    
+    function initHttpBackend(httpBackend){
+		var any = /.+\//;
+		httpBackend.whenPOST(any).passThrough();
+		httpBackend.whenGET(any).passThrough();
+		httpBackend.whenPUT(any).passThrough();
+		httpBackend.whenDELETE(any).passThrough();
+	}
+}
 
 function workaroundForRealHttpCallsUsingNgMockAndNgMockE2E(){
 	angular.mock.http = {};
@@ -118,3 +140,5 @@ function workaroundForRealHttpCallsUsingNgMockAndNgMockE2E(){
 	  }]);
 	};
 }
+
+})();
