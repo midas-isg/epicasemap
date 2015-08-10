@@ -1,8 +1,7 @@
 package interactors.series_data_file;
 
 import static org.fest.assertions.Assertions.assertThat;
-import interactors.series_data_file.Parser;
-import interactors.series_data_file.Validator;
+import integrations.server.Server;
 
 import java.util.Arrays;
 import java.util.List;
@@ -16,7 +15,7 @@ import org.junit.Test;
 
 import suites.SeriesDataFileHelper;
 
-public class TestSeriesDataFileValidator {
+public class TestValidator {
 
 	@Test
 	public void testGetDateTimeError() throws Exception {
@@ -24,7 +23,7 @@ public class TestSeriesDataFileValidator {
 		SeriesDataFileHelper helper = new SeriesDataFileHelper();
 		SeriesDataFile dataFile = helper
 				.createTestSeriesDataFileWithAlsIdFormatWithErrors();
-		CSVRecord record = helper.getCSVRecord(dataFile);
+		CSVRecord record = helper.getCSVParser(dataFile).iterator().next();
 		String error = validator.getDateTimeError(record, dataFile);
 		assertThat(error).isEqualTo(
 				"time: Invalid format: \"2015-01-\" is malformed at \"-\"");
@@ -37,21 +36,32 @@ public class TestSeriesDataFileValidator {
 		SeriesDataFileHelper helper = new SeriesDataFileHelper();
 		SeriesDataFile dataFile = helper
 				.createTestSeriesDataFileWithAlsIdFormatWithErrors();
-		CSVRecord record = helper.getCSVRecord(dataFile);
+		CSVRecord record = helper.getCSVParser(dataFile).iterator().next();
 		String error = validator.getValueError(record, dataFile);
 		assertThat(error).isEqualTo("VALUE: b is not valid.");
 
 	}
-
+	
 	@Test
-	public void testGetLocationValueError() throws Exception {
+	public void test() throws Exception {
+		Runnable test = testLocationError();
+		Server.run(test);
+	}
+
+	private void testGetLocationValueError() throws Exception {
 		Validator validator = new Validator();
 		SeriesDataFileHelper helper = new SeriesDataFileHelper();
 		SeriesDataFile dataFile = helper
 				.createTestSeriesDataFileWithAlsIdFormatWithErrors();
-		CSVRecord record = helper.getCSVRecord(dataFile);
+		
+		CSVParser parser = helper.getCSVParser(dataFile);
+		CSVRecord record = parser.iterator().next();
 		String error = validator.getLocationValueError(record, dataFile);
 		assertThat(error).isEqualTo("als_id: a is not valid.");
+		
+		record = parser.iterator().next();
+		error = validator.getLocationValueError(record, dataFile);
+		assertThat(error).isEqualTo("als_id: 1234567890 does not exist in ALS.");
 
 	}
 	
@@ -60,7 +70,7 @@ public class TestSeriesDataFileValidator {
 		Validator validator = new Validator();
 		SeriesDataFileHelper helper = new SeriesDataFileHelper();
 		SeriesDataFile dataFile = helper.createTestSeriesDataFileWithAlsIdFormatWithErrors();
-		CSVRecord record = helper.getCSVRecord(dataFile);
+		CSVRecord record = helper.getCSVParser(dataFile).iterator().next();
 		String error = validator.getRecordSizeError(record,dataFile);
 		assertThat(error).isEqualTo("row has 4 columns. should have 3 columns.");
 		
@@ -107,9 +117,26 @@ public class TestSeriesDataFileValidator {
 		SeriesDataFileHelper helper = new SeriesDataFileHelper();
 		SeriesDataFile dataFile = helper
 				.createTestSeriesDataFileWithCoordinateFormatWithErrors();
-		CSVRecord record = helper.getCSVRecord(dataFile);
+		CSVRecord record = helper.getCSVParser(dataFile).iterator().next();
 		String error = validator.getLocationValueError(record, dataFile);
 		assertThat(error).isEqualTo("latitude: a is not valid. longitude: b is not valid.");
+	}
+	
+	private static Runnable testLocationError() {
+		return () -> wrapped();
+	}
+
+	private static void wrapped() {
+		try {
+			newInstance().testGetLocationValueError();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+
+	private static TestValidator newInstance() {
+		return new TestValidator();
 	}
 
 }

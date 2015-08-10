@@ -10,18 +10,19 @@ import java.util.Set;
 import models.SeriesDataFile;
 
 import org.apache.commons.csv.CSVParser;
-import org.apache.commons.csv.CSVRecord;
 
 public class SeriesDataFileHelper {
 
-	public CSVRecord getCSVRecord(SeriesDataFile dataFile) throws Exception {
+	public CSVParser getCSVParser(SeriesDataFile dataFile) throws Exception {
 		SeriesDataFileHelper helper = new SeriesDataFileHelper();
 		helper.setStdToFileHeaderMap(dataFile);
 		Parser fileParser = new Parser();
 		CSVParser parser = null;
 		parser = fileParser.parse(dataFile);
 
-		return parser.iterator().next();
+		//return parser.iterator().next();
+		return parser;
+
 	}
 
 	public SeriesDataFile createTestSeriesDataFileWithAlsIdFormat() {

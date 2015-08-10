@@ -27,7 +27,7 @@ public class UploadSeriesEndpointTester {
 
 	private static final int timeout = 100_000;
 	private final String basePath = "/api/series/";
-	private final long seriesId = 1;
+	private final long seriesId = 1000_000L;
 
 	public static Runnable test() {
 		return () -> newInstance().testUpload();

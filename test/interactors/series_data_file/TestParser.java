@@ -8,7 +8,7 @@ import org.junit.Test;
 import static org.fest.assertions.Assertions.assertThat;
 import suites.SeriesDataFileHelper;
 
-public class TestSeriesDataFileParser {
+public class TestParser {
 
 	@Test
 	public void testParse() throws Exception{

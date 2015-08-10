@@ -1,5 +1,6 @@
 package interactors.series_data_file;
 
+import interactors.AlsResponseHelper;
 import interactors.LocationRule;
 import interactors.SeriesRule;
 
@@ -181,9 +182,17 @@ public class Persister {
 	}
 
 	Location createLocation(Long alsId) {
-		final Location loc = new Location();
-		loc.setAlsId(alsId);
+		Location loc = getLocationFromAls(alsId);
+		if (loc == null){
+			loc = new Location();
+			loc.setAlsId(alsId);
+		}
 		return loc;
+	}
+
+	private Location getLocationFromAls(Long alsId) {
+		AlsResponseHelper helper = new AlsResponseHelper();
+		return helper.getAlsLocation(alsId);
 	}
 
 	Location createLocation(Double latitude, Double longitude) {
