@@ -17,7 +17,10 @@ import play.libs.F.Callback0;
 import suites.SeriesDataFileHelper;
 import controllers.Factory;
 
-public class TestSeriesDataFilePersister {
+public class TestPersister {
+	
+	final static Long seriesId = 1000_000L;
+
 
 	@Test
 	public void testPersistSeriesDataFile() {
@@ -29,7 +32,7 @@ public class TestSeriesDataFilePersister {
 		SeriesDataFile dataFile = helper.createTestSeriesDataFileWithAlsIdFormat();
 		helper.setStdToFileHeaderMap(dataFile);
 		Long expected = 5L;
-		Long seriesId = 1L;
+		//Long seriesId = 1L;
 
 		Persister persister = new Persister();
 		Long created = persister.persistCSVFile(dataFile, seriesId);
@@ -110,10 +113,10 @@ public class TestSeriesDataFilePersister {
 
 		SeriesDataFileHelper helper = new SeriesDataFileHelper();
 		SeriesDataFile dataFile = helper.createTestSeriesDataFileWithAlsIdFormat();
-		CSVRecord csvRecord = helper.getCSVRecord(dataFile);
+		CSVRecord csvRecord = helper.getCSVParser(dataFile).iterator().next();
 		Persister persister = new Persister();
 
-		SeriesData seriesData = persister.createSeriesData(1L, 1L, DateTime
+		SeriesData seriesData = persister.createSeriesData(seriesId, 1L, DateTime
 				.parse(get(csvRecord, SeriesDataFile.TIME_HEADER, dataFile)).toDate(),
 				Double.parseDouble(get(csvRecord, SeriesDataFile.VALUE_HEADER,
 						dataFile)));
@@ -128,10 +131,10 @@ public class TestSeriesDataFilePersister {
 			throws Exception {
 		SeriesDataFileHelper helper = new SeriesDataFileHelper();
 		SeriesDataFile dataFile = helper.createTestSeriesDataFileWithCoordianteFormat();
-		CSVRecord csvRecord = helper.getCSVRecord(dataFile);
+		CSVRecord csvRecord = helper.getCSVParser(dataFile).iterator().next();
 
 		Persister persister = new Persister();
-		SeriesData seriesData = persister.createSeriesData(1L, 1L, DateTime
+		SeriesData seriesData = persister.createSeriesData(seriesId, 1L, DateTime
 				.parse(get(csvRecord, SeriesDataFile.TIME_HEADER, dataFile)).toDate(),
 				Double.parseDouble(get(csvRecord, SeriesDataFile.VALUE_HEADER,
 						dataFile)));
@@ -143,7 +146,7 @@ public class TestSeriesDataFilePersister {
 
 		SeriesDataFileHelper helper = new SeriesDataFileHelper();
 		SeriesDataFile dataFile = helper.createTestSeriesDataFileWithAlsIdFormat();
-		CSVRecord csvRecord = helper.getCSVRecord(dataFile);
+		CSVRecord csvRecord = helper.getCSVParser(dataFile).iterator().next();
 		Persister persister = new Persister();
 		Location location = persister.createLocation(Long.parseLong(get(
 				csvRecord, SeriesDataFile.ALS_ID_HEADER, dataFile)));
@@ -155,7 +158,7 @@ public class TestSeriesDataFilePersister {
 
 		SeriesDataFileHelper helper = new SeriesDataFileHelper();
 		SeriesDataFile dataFile = helper.createTestSeriesDataFileWithCoordianteFormat();
-		CSVRecord csvRecord = helper.getCSVRecord(dataFile);
+		CSVRecord csvRecord = helper.getCSVParser(dataFile).iterator().next();
 		Persister persister = new Persister();
 		Location location = persister.createLocation(Double.parseDouble(get(
 				csvRecord, SeriesDataFile.LATITUDE_HEADER, dataFile)),

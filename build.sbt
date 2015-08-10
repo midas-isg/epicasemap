@@ -17,7 +17,7 @@ libraryDependencies ++= Seq(
   // javaWs
 
   "com.wordnik" %% "swagger-play2" % "1.3.12",
-  "com.typesafe.play" %% "play-java-ws" % "2.3.9" % "test",
+  "com.typesafe.play" %% "play-java-ws" % "2.3.9",
   "postgresql" % "postgresql" % "9.1-901.jdbc4",
   "org.hibernate" % "hibernate-entitymanager" % "4.3.7.Final",
   javaJpa,

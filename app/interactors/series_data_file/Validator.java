@@ -1,5 +1,7 @@
 package interactors.series_data_file;
 
+import interactors.AlsResponseHelper;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -8,6 +10,7 @@ import java.util.Map;
 import java.util.Set;
 
 import models.SeriesDataFile;
+import models.entities.Location;
 
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
@@ -40,7 +43,8 @@ public class Validator {
 		return errors;
 	}
 
-	private CSVParser getParseErrors(SeriesDataFile dataFile, List<String> errorList) {
+	private CSVParser getParseErrors(SeriesDataFile dataFile,
+			List<String> errorList) {
 		Parser csvParser = new Parser();
 		CSVParser parser = null;
 		try {
@@ -51,7 +55,8 @@ public class Validator {
 		return parser;
 	}
 
-	private void mapFileHeadersToStdHeaders(CSVParser parser, SeriesDataFile dataFile) {
+	private void mapFileHeadersToStdHeaders(CSVParser parser,
+			SeriesDataFile dataFile) {
 		Map<String, String> result = new HashMap<String, String>();
 		Set<String> fileHeaderSet = parser.getHeaderMap().keySet();
 		Set<String> stdHeaderSet = dataFile.getHeaders();
@@ -74,7 +79,8 @@ public class Validator {
 
 	}
 
-	private List<String> validateDelimiter(CSVParser parser, SeriesDataFile dataFile) {
+	private List<String> validateDelimiter(CSVParser parser,
+			SeriesDataFile dataFile) {
 		List<String> errors = new ArrayList<String>();
 		return errors;
 	}
@@ -101,7 +107,8 @@ public class Validator {
 		return errors;
 	}
 
-	private List<String> getRecordErrors(CSVRecord record, SeriesDataFile dataFile) {
+	private List<String> getRecordErrors(CSVRecord record,
+			SeriesDataFile dataFile) {
 
 		List<String> errors = new ArrayList<String>();
 		addErrorToList(errors, getRecordSizeError(record, dataFile));
@@ -139,24 +146,30 @@ public class Validator {
 		switch (dataFile.getFileFormat()) {
 		case SeriesDataFile.ALS_ID_FORMAT:
 
-			header = dataFile.stdHeaderToFileHeader(SeriesDataFile.ALS_ID_HEADER);
+			header = dataFile
+					.stdHeaderToFileHeader(SeriesDataFile.ALS_ID_HEADER);
 
-			if (!NumberUtils.isNumber(record.get(header))) {
+			if (! isNumber(record.get(header))) {
 				errorMsg = header + ": " + record.get(header)
 						+ " is not valid.";
+			} else if(! existInAls(record.get(header))){
+				errorMsg = header + ": " + record.get(header)
+						+ " does not exist in ALS.";
 			}
 			break;
 
 		case SeriesDataFile.COORDINATE_FORMAT:
 
-			header = dataFile.stdHeaderToFileHeader(SeriesDataFile.LATITUDE_HEADER);
+			header = dataFile
+					.stdHeaderToFileHeader(SeriesDataFile.LATITUDE_HEADER);
 
-			if (!NumberUtils.isNumber(record.get(header))) {
+			if (! isNumber(record.get(header))) {
 				errorMsg = header + ": " + record.get(header)
 						+ " is not valid. ";
 			}
-			header = dataFile.stdHeaderToFileHeader(SeriesDataFile.LONGITUDE_HEADER);
-			if (!NumberUtils.isNumber(record.get(header))) {
+			header = dataFile
+					.stdHeaderToFileHeader(SeriesDataFile.LONGITUDE_HEADER);
+			if (! isNumber(record.get(header))) {
 				errorMsg += header + ": " + record.get(header)
 						+ " is not valid.";
 			}
@@ -166,10 +179,28 @@ public class Validator {
 		return errorMsg;
 	}
 
+	private boolean existInAls(String alsId) {
+		Location location = getAlsLocation(Long.parseLong(alsId));
+		if (location == null)
+			return false;
+		return true;
+	}
+
+	private Location getAlsLocation(long alsId) throws NumberFormatException {
+		AlsResponseHelper helper = new AlsResponseHelper();
+		Location location = helper.getAlsLocation(alsId);
+		return location;
+	}
+
+	private boolean isNumber(String val) {
+		return NumberUtils.isNumber(val);
+	}
+
 	String getValueError(CSVRecord record, SeriesDataFile dataFile) {
 		String errorMsg = "";
-		String header = dataFile.stdHeaderToFileHeader(SeriesDataFile.VALUE_HEADER);
-		if (!NumberUtils.isNumber(record.get(header))) {
+		String header = dataFile
+				.stdHeaderToFileHeader(SeriesDataFile.VALUE_HEADER);
+		if (!isNumber(record.get(header))) {
 			errorMsg = header + ": " + record.get(header) + " is not valid.";
 		}
 		return errorMsg;
@@ -177,7 +208,8 @@ public class Validator {
 
 	String getDateTimeError(CSVRecord record, SeriesDataFile dataFile) {
 		String errorMsg = "";
-		String header = dataFile.stdHeaderToFileHeader(SeriesDataFile.TIME_HEADER);
+		String header = dataFile
+				.stdHeaderToFileHeader(SeriesDataFile.TIME_HEADER);
 		try {
 			DateTime.parse(record.get(header));
 		} catch (IllegalArgumentException e) {
