@@ -1,7 +1,10 @@
-package interactors;
+package gateways.webservice;
 
 import static play.mvc.Http.Status.OK;
 import gateways.configuration.AppKey;
+import interactors.ClientRule;
+import interactors.ConfRule;
+import interactors.LocationCacheRule;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -23,6 +26,13 @@ public class AlsResponseHelper {
 	private static final String LONGITUDE = "longitude";
 	private static final String LATITUDE = "latitude";
 	
+	private static String baseUrl;
+	
+	static {
+		final ConfRule confRule = Factory.makeConfRule();
+		baseUrl = confRule.readString(AppKey.ALS_LOCATION_WS_URL.key());
+	}
+	
 	public Location getAlsLocation(Long id){
 		Location location = LocationCacheRule.read(id);
 		if(location == null){
@@ -43,15 +53,8 @@ public class AlsResponseHelper {
 	}
 
 	private ClientRule makeAlsClientRule() {
-		String baseUrl = readUrl();
 		return new ClientRule(baseUrl);
 		
-	}
-
-	private String readUrl() {
-		ConfRule confRule = Factory.makeConfRule();
-		String baseUrl = confRule.readString(AppKey.ALS_WS_URL.key());
-		return baseUrl;
 	}
 
 	public Location toLocation(WSResponse wsResponse) {

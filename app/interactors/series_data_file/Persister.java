@@ -1,6 +1,6 @@
 package interactors.series_data_file;
 
-import interactors.AlsResponseHelper;
+import gateways.webservice.AlsResponseHelper;
 import interactors.LocationRule;
 import interactors.SeriesRule;
 
