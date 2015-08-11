@@ -5,6 +5,9 @@ app.controller('Series', function($scope, $rootScope, api) {
 	$scope.coordinates = [];
 	
 	$scope.dialog = $('#seriesModal');
+	$scope.dialog.ready(function(){
+		$('#Series-btn-save-close').hide();
+	});
     $scope.dialog.on('hide.bs.modal', function (e) {
 		var isOK = true;
 		if ($scope.form.$dirty)
@@ -40,13 +43,6 @@ app.controller('Series', function($scope, $rootScope, api) {
 	};
 	$scope.close = function() {
 		$scope.dialog.modal('hide');
-		resetView();
-		
-		function resetView(){
-			$scope.form.$setPristine();
-			$scope.coordinates = [];
-			$scope.locationIds = new Set();
-		}
 	};
 	$scope.isShown = function(series){
 		return true;
@@ -57,8 +53,18 @@ app.controller('Series', function($scope, $rootScope, api) {
 
 	function edit(series) {
 		$scope.model = series;
+		resetView();
 		loadCoordinates(series.id);
 		$scope.dialog.modal();
+		
+		function resetView(){
+			if (series.id)
+				$scope.form.$setPristine();
+			else 
+				$scope.form.$setDirty();
+			$scope.coordinates = [];
+			$scope.locationIds = new Set();
+		}
 	};
 	
 	function loadCoordinates(seriesId){
@@ -86,6 +92,7 @@ app.controller('Series', function($scope, $rootScope, api) {
 	}
 	
 	function save(callback){
+		var toUpload = ! $scope.model.id;
 		var body = buildBody($scope.model);
 		$scope.working = true;
 		api.save('series', body).then(function(location) {
@@ -95,6 +102,8 @@ app.controller('Series', function($scope, $rootScope, api) {
 			} else {
 				api.get(location).then(function(rsp) {
 					$scope.model = rsp.data.result;
+					if(toUpload)
+						$scope.uploadNewData($scope.model.id);
 				});
 			}
 		});
@@ -117,7 +126,6 @@ app.controller('Series', function($scope, $rootScope, api) {
 			api.find(path + it).then(function(rsp) {
 				$scope.locations.set(it, rsp.data.result.label);
 				if ($scope.locations.size >= size){
-					console.log($scope.locations);
 					data.forEach(function (it) {
 						it.location = $scope.locations.get(it.locationId);
 					});
