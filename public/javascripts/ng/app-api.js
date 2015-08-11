@@ -37,6 +37,8 @@ app.service("api", function($http, $q, $location) {
 			deferred = $q.defer();
 		$http['delete'](url).then(function(data) {
 			deferred.resolve(data);
+		}, function(err){
+			deferred.resolve(err);
 		});
 		return deferred.promise;
 	};
@@ -73,7 +75,7 @@ app.service("api", function($http, $q, $location) {
 			dd = to2digits(d.getUTCDate());
 		
 		return d.getUTCFullYear() + '-' + MM + '-' + dd;
-	}
+	};
     this.uploadFile = function(path, file){
         var fd = new FormData(),
         	deferred = $q.defer();
@@ -85,7 +87,25 @@ app.service("api", function($http, $q, $location) {
         	deferred.resolve(data);
         });
         return deferred.promise;
-    }
+    };
+	this.alert = function($parent, message, classes){
+		this.removeAllAlerts($parent);
+		if (! classes)
+			classes = 'alert-warning';
+		aler($parent, message, classes);
+	}
+	this.removeAllAlerts = function($parent){
+		$parent.find('.alert').alert("close");
+	}
+	
+	function aler($parent, message, classes){
+		$parent.prepend(
+				'<div class="alert ' + classes + ' fade in"><strong>' + message + 
+				'</strong><small class="text-right"> @ ' + new Date()  +
+				'</small> <button type="button" class="close" data-dismiss="alert">&times;</button>' +
+		        '</div>'
+		);
+	}
 	
 	function makeUrl(path, id){
 		var url = makeApiUrl() + path;

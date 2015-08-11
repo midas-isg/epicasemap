@@ -5,6 +5,7 @@ app.controller('Series', function($scope, $rootScope, api) {
 	$scope.coordinates = [];
 	
 	$scope.dialog = $('#seriesModal');
+	$scope.dialogBody = $scope.dialog.find('.modal-body');
 	$scope.dialog.ready(function(){
 		$('#Series-btn-save-close').hide();
 	});
@@ -39,7 +40,13 @@ app.controller('Series', function($scope, $rootScope, api) {
 	$scope.submitThenClose = function() { $scope.submit(close);	};
 	$scope.removeThenClose = function() {
 		if (confirm("About to delete this Series. \nOK = Delete"))
-			api.remove('series', $scope.model.id).then(close);
+			api.remove('series', $scope.model.id).then(function(err){
+				if (! err){
+					close();
+				} else{
+					api.alert($scope.dialogBody, 'Error: The series could not be deleted!', 'alert-danger');
+				}
+			});
 	};
 	$scope.close = function() {
 		$scope.dialog.modal('hide');
@@ -64,6 +71,7 @@ app.controller('Series', function($scope, $rootScope, api) {
 				$scope.form.$setDirty();
 			$scope.coordinates = [];
 			$scope.locationIds = new Set();
+			api.removeAllAlerts($scope.dialogBody);
 		}
 	};
 	
@@ -97,11 +105,13 @@ app.controller('Series', function($scope, $rootScope, api) {
 		$scope.working = true;
 		api.save('series', body).then(function(location) {
 			$scope.working = false;
+			api.alert($scope.dialogBody, 'The series was saved.', 'alert-success');
 			if (callback){
 				callback();
 			} else {
 				api.get(location).then(function(rsp) {
 					$scope.model = rsp.data.result;
+					$scope.form.$setPristine();
 					if(toUpload)
 						$scope.uploadNewData($scope.model.id);
 				});
