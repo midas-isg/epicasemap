@@ -33,10 +33,7 @@ timeline.js
 			series: [{index: -1, color: 0}],
 			colorPalette: 0,
 			bBox: [[], []],
-			timeSelection: {
-				start: null,
-				end: null
-			}
+			timeSelectionEvent: null
 		};
 		
 		this.seriesList = [];
@@ -272,8 +269,7 @@ console.log("series " + k + ": " + id);
 		$("#reset-button").click(function() {
 			var i;
 			
-			thisMap.uiSettings.start = null;
-			thisMap.uiSettings.end = null;
+			thisMap.uiSettings.event = null;//TODO: remove if necessary
 			
 			//console.log("Buffer:");
 			//console.log(thisMap.dataset[].buffer);
@@ -481,7 +477,7 @@ console.log("series " + k + ": " + id);
 				}
 				console.log("Loaded " + (result.results.length - skipped) + " entries");
 				console.log("Skipped " + skipped + " malformed entries");
-				console.log(filler + " days occurred without reports in this timespan");
+				console.log(filler + " days occurred without incidents in this timespan");
 				console.log("Total Frames: " + frame + 1);
 				console.log("Buffer length: " + currentDataset.buffer.length);
 				
@@ -506,9 +502,11 @@ console.log("series " + k + ": " + id);
 					thisMap.loadBuffer();
 					thisMap.paused = true;
 					
-					if(thisMap.uiSettings.start && thisMap.uiSettings.end) {
-						thisMap.playSection(thisMap.uiSettings.start, thisMap.uiSettings.end);
+					//use timeline selection event object as parameter and trigger master-container/chart selection event
+					if(thisMap.uiSettings.timeSelectionEvent) {
+						thisMap.doSelection(thisMap.uiSettings.timeSelectionEvent);
 					}
+					
 					console.log("Finished loading. Unpause to begin.");
 				}
 				
@@ -666,70 +664,8 @@ console.log("series " + k + ": " + id);
 						// listen to the selection event on the master chart to update the
 						// extremes of the detail chart
 						selection: function(event) {
-							var extremesObject = event.xAxis[0],
-								min = extremesObject.min,
-								max = extremesObject.max,
-								detailSeries = [],
-								xAxis = this.xAxis[0],
-								minDate = new Date(extremesObject.min),
-								maxDate = new Date(extremesObject.max),
-								startFrame,
-								endFrame,
-								i;
+							MAGIC_MAP.doSelection(event);
 							
-							for(i = 0; i < this.series.length; i++) {
-								detailSeries.push({detailData: []});
-								
-								// reverse engineer the last part of the data
-								$.each(this.series[i].data, function() {
-									if((this.x >= min) && (this.x <= max)) {
-										detailSeries[i].detailData.push([this.x, this.y])
-									}
-								});
-							}
-							
-							// move the plot bands to reflect the new detail span
-							xAxis.removePlotBand('mask-before');
-							xAxis.addPlotBand({
-								id: 'mask-before',
-								from: Date.UTC(MAGIC_MAP.earliestDate.getUTCFullYear(),
-									MAGIC_MAP.earliestDate.getUTCMonth(),
-									MAGIC_MAP.earliestDate.getUTCDate()),
-								to: min,
-								color: 'rgba(128, 128, 128, 0.2)'
-							});
-
-							xAxis.removePlotBand('mask-after');
-							xAxis.addPlotBand({
-								id: 'mask-after',
-								from: max,
-								to: Date.UTC(MAGIC_MAP.latestDate.getUTCFullYear(),
-									MAGIC_MAP.latestDate.getUTCMonth(),
-									MAGIC_MAP.latestDate.getUTCDate()),
-								color: 'rgba(128, 128, 128, 0.2)'
-							});
-							
-							for(i = 0; i < MAGIC_MAP.detailChart.series.length; i++) {
-								MAGIC_MAP.detailChart.series[i].setData(detailSeries[i].detailData);
-							}
-							
-							MAGIC_MAP.zeroTime(minDate);
-							MAGIC_MAP.zeroTime(maxDate);
-							
-							startFrame = Math.floor((minDate - MAGIC_MAP.earliestDate) / 86400000);
-							endFrame = Math.floor((maxDate - MAGIC_MAP.earliestDate) / 86400000);
-							
-							if(startFrame < 0) {
-								startFrame = 0;
-							}
-							
-							if(endFrame > (MAGIC_MAP.frameCount - 1)) {
-								endFrame = (MAGIC_MAP.frameCount - 1);
-							}
-							
-							console.log(startFrame + "->" + endFrame);
-							MAGIC_MAP.playSection(startFrame, endFrame);
-
 							return false;
 						}
 					}
@@ -837,6 +773,82 @@ console.log("series " + k + ": " + id);
 		//TODO: transfer mouse events from detail container to map
 		//$('#detail-container').mousedown(function(event) { event.stopImmediatePropagation(); return $('.leaflet-layer').mousedown(); });
 		//$('#detail-container').mousemove(function(event) { event.stopImmediatePropagation(); return $('.leaflet-layer').mousemove(); });
+		
+		return;
+	}
+	
+	MagicMap.prototype.doSelection = function(event) {
+		var extremesObject = event.xAxis[0],
+			min = extremesObject.min,
+			max = extremesObject.max,
+			detailSeries = [],
+			xAxis = this.masterChart.xAxis[0],
+			minDate = new Date(extremesObject.min),
+			maxDate = new Date(extremesObject.max),
+			startFrame,
+			endFrame,
+			i;
+		
+		console.log("min: " + min);
+		console.log("min date: " + minDate);
+		console.log("max: " + max);
+		console.log("max date: " + maxDate);
+		
+		for(i = 0; i < this.masterChart.series.length; i++) {
+			detailSeries.push({detailData: []});
+			
+			// reverse engineer the last part of the data
+			$.each(this.masterChart.series[i].data, function() {
+				if((this.x >= min) && (this.x <= max)) {
+					detailSeries[i].detailData.push([this.x, this.y])
+				}
+			});
+		}
+		
+		// move the plot bands to reflect the new detail span
+		xAxis.removePlotBand('mask-before');
+		xAxis.addPlotBand({
+			id: 'mask-before',
+			from: Date.UTC(MAGIC_MAP.earliestDate.getUTCFullYear(),
+				MAGIC_MAP.earliestDate.getUTCMonth(),
+				MAGIC_MAP.earliestDate.getUTCDate()),
+			to: min,
+			color: 'rgba(128, 128, 128, 0.2)'
+		});
+
+		xAxis.removePlotBand('mask-after');
+		xAxis.addPlotBand({
+			id: 'mask-after',
+			from: max,
+			to: Date.UTC(MAGIC_MAP.latestDate.getUTCFullYear(),
+				MAGIC_MAP.latestDate.getUTCMonth(),
+				MAGIC_MAP.latestDate.getUTCDate()),
+			color: 'rgba(128, 128, 128, 0.2)'
+		});
+		
+		for(i = 0; i < MAGIC_MAP.detailChart.series.length; i++) {
+			MAGIC_MAP.detailChart.series[i].setData(detailSeries[i].detailData);
+		}
+		
+		MAGIC_MAP.zeroTime(minDate);
+		MAGIC_MAP.zeroTime(maxDate);
+		
+		startFrame = Math.floor((minDate - MAGIC_MAP.earliestDate) / 86400000);
+		endFrame = Math.floor((maxDate - MAGIC_MAP.earliestDate) / 86400000);
+		
+		if(startFrame < 0) {
+			startFrame = 0;
+		}
+		
+		if(endFrame > (MAGIC_MAP.frameCount - 1)) {
+			endFrame = (MAGIC_MAP.frameCount - 1);
+		}
+		
+		console.log("Selection: " + startFrame + "->" + endFrame);
+		MAGIC_MAP.playSection(startFrame, endFrame);
+		
+		MAGIC_MAP.uiSettings.timeSelectionEvent = {xAxis: []};
+		MAGIC_MAP.uiSettings.timeSelectionEvent.xAxis.push({min: event.xAxis[0].min, max: event.xAxis[0].max});
 		
 		return;
 	}
@@ -959,9 +971,6 @@ console.log("series " + k + ": " + id);
 	
 	MagicMap.prototype.playSection = function(startFrame, endFrame) {
 		var i;
-		
-		this.uiSettings.timeSelection.start = startFrame;
-		this.uiSettings.timeSelection.end = endFrame;
 		
 		this.playBack = false;
 		this.paused = true;
