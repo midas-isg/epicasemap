@@ -1,19 +1,34 @@
-package interactors;
+package models;
 
 import java.io.File;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class CSVFile {
-	public static final String APOLLO_ID_FORMAT = "apolloIdFormat";
+public class SeriesDataFile {
+	public static final String ALS_ID_FORMAT = "alsIdFormat";
 	public static final String COORDINATE_FORMAT = "coordinateFormat";
+	
 	public static final String TIME_HEADER = "time";
-	public static final String APOLLO_ID_HEADER = "apollo id";
+	public static final String ALS_ID_HEADER = "als_id";
 	public static final String VALUE_HEADER = "value";
 	public static final String LATITUDE_HEADER = "latitude";
 	public static final String LONGITUDE_HEADER = "longitude";
+	
+	private static Map<String, List<String>> format2UncommonColumns = new HashMap<>();
+	
+	static {
+		format2UncommonColumns.put(ALS_ID_FORMAT, list(ALS_ID_HEADER));
+		format2UncommonColumns.put(COORDINATE_FORMAT, list(LATITUDE_HEADER, LONGITUDE_HEADER));
+	}
 
+	private static List<String> list(String... strings){
+		return Arrays.asList(strings);
+	}
+	
 	private File file;
 	private char delimiter;
 	private String fileFormat;
@@ -49,15 +64,7 @@ public class CSVFile {
 		Set<String> result = new HashSet<String>();
 		result.add(TIME_HEADER);
 		result.add(VALUE_HEADER);
-		switch (getFileFormat()) {
-		case APOLLO_ID_FORMAT:
-			result.add(APOLLO_ID_HEADER);
-			break;
-		case COORDINATE_FORMAT:
-			result.add(LATITUDE_HEADER);
-			result.add(LONGITUDE_HEADER);
-			break;
-		}
+		result.addAll(format2UncommonColumns.get(getFileFormat()));
 		return result;
 	}
 

@@ -7,9 +7,6 @@ GET     /                           controllers.Application.index()
 GET     /manage/vizs                controllers.Application.manageVizs()
 GET     /manage/series              controllers.Application.manageSeries()
 
-# Test Upload Form
-GET		/uploadForm					controllers.UploadSeries.uploadForm()
-
 # Test page
 GET     /test/acceptance            controllers.Test.acceptance()
 
