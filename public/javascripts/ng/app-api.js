@@ -38,6 +38,7 @@ app.service("api", function($http, $q, $location) {
 		$http['delete'](url).then(function(data) {
 			deferred.resolve(data);
 		}, function(err){
+			err.errorMessage = err.statusText;
 			deferred.resolve(err);
 		});
 		return deferred.promise;

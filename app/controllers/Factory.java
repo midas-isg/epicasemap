@@ -34,7 +34,10 @@ public class Factory {
 
 	public static SeriesRule makeSeriesRule(EntityManager em) {
 		SeriesDao dao = new SeriesDao(em);
-		return new SeriesRule(dao);
+		final SeriesRule seriesRule = new SeriesRule(dao);
+		seriesRule.setCoordinateRule(makeCoordinateRule(em));
+		seriesRule.setSeriesDataRule(makeSeriesDataRule(em));
+		return seriesRule;
 	}
 
 	public static VizRule makeVizRule(EntityManager em) {

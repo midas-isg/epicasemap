@@ -1,7 +1,6 @@
 package controllers;
 
-import interactors.CoordinateRule;
-import interactors.SeriesDataRule;
+import interactors.SeriesRule;
 import interactors.series_data_file.Persister;
 import interactors.series_data_file.Validator;
 
@@ -10,8 +9,6 @@ import java.util.Map;
 import java.util.StringJoiner;
 
 import models.SeriesDataFile;
-import models.entities.Coordinate;
-import models.entities.CoordinateFilter;
 import play.db.jpa.JPA;
 import play.db.jpa.Transactional;
 import play.mvc.Controller;
@@ -28,45 +25,26 @@ public class UploadSeries extends Controller {
 		String errors = validate(dataFile);
 
 		if (errors.equals("")) {
-			Long deletedDataSize = deleteExisitingSeriesData(seriesId);
-			Long createdDataSize = create(dataFile, seriesId);
+			int deletedDataSize = deleteExisitingSeriesData(seriesId);
+			long createdDataSize = create(dataFile, seriesId);
 			return created(makeMsg(deletedDataSize, createdDataSize));
 		} else {
 			return badRequest(errors);
 		}
 	}
 
-	private static String makeMsg(Long deletedDataSize, Long createdDataSize) {
+	private static String makeMsg(int deletedDataSize, long createdDataSize) {
 		String msg = deletedDataSize + " existing item(s) deleted." + "\n"
 				+ createdDataSize + " new item(s) created.";
 		return msg;
 	}
 
-	private static Long deleteExisitingSeriesData(Long seriesId) {
-		CoordinateFilter filter = buildSeriesDataFilter(seriesId);
-		List<Coordinate> seriesData = makeCoordinateRule().query(filter);
-		for (Coordinate data : seriesData) {
-			makeSeriesDataRule().delete(data.getId());
-			
-		}
-		return (long) seriesData.size();
+	private static int deleteExisitingSeriesData(Long seriesId) {
+		return makeSeriesRule().deleteAllSeriesData(seriesId);
 	}
 
-	private static SeriesDataRule makeSeriesDataRule() {
-		return Factory.makeSeriesDataRule(JPA.em());
-	}
-
-	private static CoordinateFilter buildSeriesDataFilter(Long seriesId) {
-
-		CoordinateFilter filter = new CoordinateFilter();
-		filter.setSeriesId(seriesId);
-		filter.setOffset(0);
-		return filter;
-
-	}
-
-	private static CoordinateRule makeCoordinateRule() {
-		return Factory.makeCoordinateRule(JPA.em());
+	private static SeriesRule makeSeriesRule() {
+		return Factory.makeSeriesRule(JPA.em());
 	}
 
 	private static Long create(SeriesDataFile dataFile, Long seriesId)
@@ -103,6 +81,5 @@ public class UploadSeries extends Controller {
 		csvFile.setDelimiter(delimiter);
 		csvFile.setFileFormat(fileFormat);
 		return csvFile;
-
 	}
 }

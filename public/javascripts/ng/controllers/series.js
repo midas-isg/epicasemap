@@ -40,11 +40,11 @@ app.controller('Series', function($scope, $rootScope, api) {
 	$scope.submitThenClose = function() { $scope.submit(close);	};
 	$scope.removeThenClose = function() {
 		if (confirm("About to delete this Series. \nOK = Delete"))
-			api.remove('series', $scope.model.id).then(function(err){
-				if (! err){
-					close();
-				} else{
+			api.remove('series', $scope.model.id).then(function(rsp){
+				if (rsp.errorMessage){
 					api.alert($scope.dialogBody, 'Error: The series could not be deleted!', 'alert-danger');
+				} else {
+					close();
 				}
 			});
 	};
