@@ -13,11 +13,10 @@ import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 
 @Entity
-public class Viz implements models.entities.Entity {
+public class Viz extends MetaData {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
-	private String name;
 	@ManyToMany(fetch = FetchType.LAZY)
 	@JoinTable(name = "viz_series", 
 		joinColumns = { @JoinColumn(name = "viz_id", nullable = false) }, 
@@ -47,13 +46,13 @@ public class Viz implements models.entities.Entity {
 		this.id = id;
 	}
 
-	public String getName() {
-		return name;
+/*	public String getTitle() {
+		return title;
 	}
 
-	public void setName(String name) {
-		this.name = name;
-	}
+	public void setTitle(String title) {
+		this.title = title;
+	}*/
 
 	public List<Series> getAllSeries() {
 		return allSeries;
@@ -88,7 +87,7 @@ public class Viz implements models.entities.Entity {
 		result = prime * result
 				+ ((allSeries2 == null) ? 0 : allSeries2.hashCode());
 		result = prime * result + ((id == null) ? 0 : id.hashCode());
-		result = prime * result + ((name == null) ? 0 : name.hashCode());
+		result = prime * result + ((this.getTitle() == null) ? 0 : this.getTitle().hashCode());
 		return result;
 	}
 
@@ -116,10 +115,10 @@ public class Viz implements models.entities.Entity {
 				return false;
 		} else if (!id.equals(other.id))
 			return false;
-		if (name == null) {
-			if (other.name != null)
+		if (this.getTitle() == null) {
+			if (other.getTitle() != null)
 				return false;
-		} else if (!name.equals(other.name))
+		} else if (!this.getTitle().equals(other.getTitle()))
 			return false;
 		return true;
 	}
@@ -139,7 +138,7 @@ public class Viz implements models.entities.Entity {
 
 	@Override
 	public String toString() {
-		return "Viz [id=" + id + ", name=" + name + ", allSeries=" + allSeries
+		return "Viz [id=" + id + ", title=" + this.getTitle() + ", allSeries=" + allSeries
 				+ ", allSeries2=" + allSeries2 + "]";
 	}
 }

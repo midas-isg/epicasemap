@@ -89,7 +89,7 @@ public class TestViz {
 			List<Series> list = asList(s1);
 			data.setAllSeries(list);
 			data.setAllSeries2(Collections.emptyList());
-			data.setName("complex");
+			data.setTitle("complex");
 			final long id = actCreate(data);
 			data.setId(id);
 		});
@@ -134,14 +134,14 @@ public class TestViz {
 		final JsonNode root = Json.parse(content);
 		final JsonNode data = root.get("result");
 		assertAreEqual(data.get("id").asLong(), id);
-		assertTextNode(data.get("name"), expected.getName());
+		assertTextNode(data.get("title"), expected.getTitle());
 		assertArrayNode(data.get("allSeries"), expected.getAllSeries(),
 				Series.class);
 	}
 
 	private void testUpdate(long id) {
 		Viz dataToUpdate = new Viz();
-		dataToUpdate.setName("name");
+		dataToUpdate.setTitle("title");
 		ApiViz.update(id, dataToUpdate);
 		detachThenAssertWithDatabase(id, dataToUpdate);
 	}

@@ -5,6 +5,21 @@ var app = angular.module('app', [])
 	  $locationProvider.html5Mode(true).hashPrefix('!');
 });
 
+app.directive('appFileModel', function ($parse) {
+    return {
+        restrict: 'A',
+        link: function(scope, element, attrs) {
+            var model = $parse(attrs.appFileModel);
+            
+            element.bind('change', function(){
+                scope.$apply(function(){
+                    model.assign(scope, element[0].files[0]);
+                });
+            });
+        }
+    };
+});
+
 app.service("api", function($http, $q, $location) {
 	$( document ).ready(resizeResizableTable);
 	$( window ).resize(resizeResizableTable);
@@ -22,6 +37,9 @@ app.service("api", function($http, $q, $location) {
 			deferred = $q.defer();
 		$http['delete'](url).then(function(data) {
 			deferred.resolve(data);
+		}, function(err){
+			err.errorMessage = err.statusText;
+			deferred.resolve(err);
 		});
 		return deferred.promise;
 	};
@@ -58,8 +76,37 @@ app.service("api", function($http, $q, $location) {
 			dd = to2digits(d.getUTCDate());
 		
 		return d.getUTCFullYear() + '-' + MM + '-' + dd;
+	};
+    this.uploadFile = function(path, file){
+        var fd = new FormData(),
+        	deferred = $q.defer();
+        fd.append('file', file);
+        $http.put(makeUrl(path), fd, {
+            transformRequest: angular.identity,
+            headers: {'Content-Type': undefined}
+        }).then(function(data){
+        	deferred.resolve(data);
+        });
+        return deferred.promise;
+    };
+	this.alert = function($parent, message, classes){
+		this.removeAllAlerts($parent);
+		if (! classes)
+			classes = 'alert-warning';
+		aler($parent, message, classes);
+	}
+	this.removeAllAlerts = function($parent){
+		$parent.find('.alert').alert("close");
 	}
 	
+	function aler($parent, message, classes){
+		$parent.prepend(
+				'<div class="alert ' + classes + ' fade in"><strong>' + message + 
+				'</strong><small class="text-right"> @ ' + new Date()  +
+				'</small> <button type="button" class="close" data-dismiss="alert">&times;</button>' +
+		        '</div>'
+		);
+	}
 	
 	function makeUrl(path, id){
 		var url = makeApiUrl() + path;
