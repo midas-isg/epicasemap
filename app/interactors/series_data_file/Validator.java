@@ -1,6 +1,6 @@
 package interactors.series_data_file;
 
-import interactors.AlsResponseHelper;
+import gateways.webservice.AlsResponseHelper;
 
 import java.util.ArrayList;
 import java.util.HashMap;

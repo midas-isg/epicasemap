@@ -1,7 +1,9 @@
-package interactors;
+package gateways.webservice;
 
 import static org.fest.assertions.Assertions.assertThat;
+import gateways.webservice.AlsResponseHelper;
 import integrations.server.Server;
+import interactors.LocationCacheRule;
 
 import java.io.IOException;
 
