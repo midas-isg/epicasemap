@@ -5,14 +5,15 @@ timeline.js
 (function() {
 	function MagicMap() {
 		var i,
+		j,
+		temp,
 		vizID = getURLParameterByName("id"),
 		thisMap = this;
 		
 		L.mapbox.accessToken = 'pk.eyJ1IjoidHBzMjMiLCJhIjoiVHEzc0tVWSJ9.0oYZqcggp29zNZlCcb2esA';
 		this.map = L.mapbox.map('map', 'mapbox.streets'/*'mapbox.dark'*/, { worldCopyJump: true, bounceAtZoomLimits: false, zoom: 2, minZoom: 2})
-			.setView([37.8, -96], 4);
+			.setView([30, 0], 2);
 
-		//this.popup = new L.Popup({ autoPan: false }),
 		this.heat = []; //null;
 		this.paused = false;
 		this.frame;
@@ -24,13 +25,14 @@ timeline.js
 		this.detailChart = null;
 		this.dataset = [];
 		this.earliestDate = new Date();
-		
 		this.latestDate = new Date(0);
 		this.zeroTime(this.latestDate);
 		
 		this.seriesList0;
 		this.seriesList1;
 		this.seriesDescriptions = {};
+		
+		this.showControlPanel = false;
 		
 		this.playBack = false;
 		this.set = [];
@@ -78,19 +80,39 @@ timeline.js
 		}
 		
 		this.setGradient = [];
+		/*
 		this.colorSet = [
 			['#1b9e77', '#d95f02', '#7570b3', '#e7298a', '#66a61e'],
 			['#a6cee3', '#1f78b4', '#b2df8a', "#33a02c", "#fb9a99"],
 			['#66c2a5', '#fc8d62', '#8da0cb', "#e78ac3", "#a6d854"]
 		];
+		*/
+		this.colorSet = [
+			['#1b9e77', '#d95f02', '#7570b3', '#e7298a', '#66a61e'],
+			["#33a02c", '#1f78b4', '#b2df8a', '#a6cee3', "#fb9a99"],
+			['#66c2a5', '#fc8d62', '#8da0cb', "#e78ac3", "#a6d854"]
+		];
 		
-		this.colors = this.colorSet[0];
+		this.paletteSelection = 0;
+		this.colors = this.colorSet[this.paletteSelection];
 		
 		for(i = 0; i < this.colors.length; i++) {
 			this.setGradient.push({
 				0.0: this.colors[i]
 			});
 		}
+		
+		/*
+		for(i = 0; i < this.colorSet.length; i++) {
+			$("#ramps").append("<div id='palette-" + i + "' class='ramp'><svg width='15' height='75'></svg></div>");
+			
+			temp = this.colorSet[i];
+			for(j = 0; j < temp.length; j++) {
+				$("#palette-" + i + " svg").append("<rect style='fill: " + temp[j] + ";' width='15' height='15' y='" + (15 * j) + "'></rect>");
+			}
+		}
+		$("#palette-0").addClass("selected");
+		*/
 		
 		return this;
 	}
@@ -102,25 +124,25 @@ timeline.js
 		$.ajax({
 			url: URL,
 			success: function(result) {
-				var h, i;
+				var h,
+				i,
+				seriesDisplayCount = 2;
+				
 				thisMap.seriesList0 = result.result.allSeries;
 				thisMap.seriesList1 = result.result.allSeries2;
 				
-				for(i = 0; i < thisMap.seriesList0.length; i++) {
-					thisMap.seriesDescriptions[thisMap.seriesList0[i].id] = {
-						name: thisMap.seriesList0[i].name,
-						description: thisMap.seriesList0[i].description
-					};
+				$("#title").text(result.result.name);
+				
+				for(h = 0; h < seriesDisplayCount; h++) {
+					for(i = 0; i < thisMap["seriesList" + h].length; i++) {
+						thisMap.seriesDescriptions[thisMap["seriesList" + h][i].id] = {
+							name: thisMap["seriesList" + h][i].name,
+							description: thisMap["seriesList" + h][i].description
+						};
+					}
 				}
 				
-				for(i = 0; i < thisMap.seriesList1.length; i++) {
-					thisMap.seriesDescriptions[thisMap.seriesList1[i].id] = {
-						name: thisMap.seriesList1[i].name,
-						description: thisMap.seriesList1[i].description
-					};
-				}
-				
-				console.log(thisMap.seriesDescriptions);
+				//console.log(thisMap.seriesDescriptions);
 				
 				thisMap.seriesToLoad = [thisMap.seriesList0[0].id, thisMap.seriesList1[0].id];
 				for(i = 0; i < thisMap.seriesToLoad.length; i++) {
@@ -128,11 +150,11 @@ timeline.js
 					thisMap.load(thisMap.seriesToLoad[i]);
 				}
 				
-				/*
-				for(h = 0; h < 2; h++) {
+				/**/
+				for(h = 0; h < seriesDisplayCount; h++) {
 					$("#series-options").append(
 						"<div>" +
-							"<h5>Select series " + h + "</h5>" +
+							"<h5>Select series " + String.fromCharCode(h + 65) + "</h5>" +
 							"<select id='series-" + h + "' style='max-width: 100%;'>" +
 							"</select>" +
 						"</div>"
@@ -144,19 +166,29 @@ timeline.js
 					
 					$("#series-" + h).change(function() {
 						var id = $(this).val(),
+						l,
 						k = $(this).attr("id").split("-")[1];
 console.log("series " + k + ": " + id);
 						
-						//TODO: EVERYTHING HAS TO BE RESET BECAUSE OF TIME ADJUSTMENTS! MAKE IT SO!
-						thisMap.set[k].visiblePoints.length = 0;
-						thisMap.seriesToLoad[k] = id;
+						//TODO: recalculate frameOffset, earliest & latest dates after loading is finished
+						//(refactor block to external call -calculate from 0 and length-1 indexes)
+						thisMap.latestDate = new Date(0);
+						thisMap.earliestDate = new Date();
 						
-						thisMap.load(thisMap.seriesToLoad[k]);
+						thisMap.seriesToLoad = [];
+						for(l = 0; l < seriesDisplayCount; l++) {
+							thisMap.seriesToLoad.push($("#series-" + l).val());
+						}
+						
+						for(l = 0; l < thisMap.seriesToLoad.length; l++) {
+							thisMap.set[k].visiblePoints.length = 0;
+							thisMap.load(thisMap.seriesToLoad[l], l);
+						}
 						
 						return;
 					});
 				}
-				*/
+				/**/
 				
 				return;
 			},
@@ -169,9 +201,7 @@ console.log("series " + k + ": " + id);
 	}
 	
 	MagicMap.prototype.start = function() {
-		//legend stuff
-		this.closeTooltip;
-		//this.map.legendControl.addLegend(this.getLegendHTML());
+		thisMap = this;
 		
 		document.getElementById('body').onkeyup = this.handleInput;
 		setInterval(this.loop, 0);
@@ -179,7 +209,7 @@ console.log("series " + k + ": " + id);
 		$("#reset-button").click(function() {
 			var i;
 			
-			console.log("Buffer:");
+			//console.log("Buffer:");
 			//console.log(MAGIC_MAP.dataset[].buffer);
 			MAGIC_MAP.loadBuffer();
 			
@@ -200,28 +230,50 @@ console.log("series " + k + ": " + id);
 		});
 		
 		$("#toggle-details-button").click(function() {
+			var i;
+			
 			$("#detail-container *").toggle();
-			$("#toggle-details-button span").toggleClass("glyphicon-minus").toggleClass("glyphicon-plus");
+			
+			for(i = 0; i < thisMap.set.length; i++) {
+				thisMap.detailChart.series[i].update({color: thisMap.colors[i]}, true);
+			}
+			
+			return;
 		});
 		
+		$("#toggle-controls-button").click(function() {
+			$("#control-panel").toggle();
+			
+			return;
+		});
 		
 		//TODO: refactor palette click code without causing closure issues
 		$("#palette-0").click(function() {
 			if(!$("#palette-0").hasClass("selected")) {
+				MAGIC_MAP.paletteSelection = 0;
 				MAGIC_MAP.setColorPalette(0);
 			}
 		});
 		
 		$("#palette-1").click(function() {
 			if(!$("#palette-1").hasClass("selected")) {
+				MAGIC_MAP.paletteSelection = 1;
 				MAGIC_MAP.setColorPalette(1);
 			}
 		});
 		
 		$("#palette-2").click(function() {
 			if(!$("#palette-2").hasClass("selected")) {
+				MAGIC_MAP.paletteSelection = 2;
 				MAGIC_MAP.setColorPalette(2);
 			}
+		});
+		
+		$(window).resize(function() {
+			thisMap.detailChart.reflow();
+			thisMap.masterChart.reflow();
+			
+			return;
 		});
 		
 		return;
@@ -269,9 +321,33 @@ console.log("series " + k + ": " + id);
 		return;
 	}
 
-	MagicMap.prototype.load = function(seriesID) {
+	MagicMap.prototype.load = function(seriesID, index) {
 		var URL = CONTEXT + "/api/series/" + seriesID + "/time-coordinate",
+		currentDataset = {
+			seriesID: seriesID,
+			name: "name",
+			buffer: [{point: [], date: null}],
+			maxValue: 0,
+			frameAggregate: [0],
+			frameOffset: 0
+		},
 		thisMap = this;
+		
+		if(!index && (index !== 0)) {
+			this.dataset.push(currentDataset);
+		}
+		else {
+			this.dataset[index] = {
+				seriesID: seriesID,
+				name: "name",
+				buffer: [{point: [], date: null}],
+				maxValue: 0,
+				frameAggregate: [0],
+				frameOffset: 0
+			}
+			
+			currentDataset = this.dataset[index];
+		}
 		
 		$.ajax({
 			url: URL,
@@ -284,19 +360,11 @@ console.log("series " + k + ": " + id);
 				lastDate = new Date(result.results[0].timestamp),
 				emptyDate,
 				inputDate,
-				deltaTime,
-				datasetID = thisMap.dataset.length;
+				deltaTime;
 				
 				thisMap.zeroTime(lastDate);
 				
-				thisMap.dataset.push({
-					seriesID: result.filter.equalities.seriesId,
-					name: thisMap.seriesDescriptions[result.filter.equalities.seriesId].name,
-					buffer: [{point: [], date: null}],
-					maxValue: 0,
-					frameAggregate: [0],
-					frameOffset: 0
-				});
+				currentDataset.name = thisMap.seriesDescriptions[seriesID].name;
 				
 				if(thisMap.earliestDate > lastDate) {
 					thisMap.earliestDate = new Date(lastDate);
@@ -315,27 +383,26 @@ console.log("series " + k + ": " + id);
 						deltaTime = inputDate.valueOf() - lastDate.valueOf();
 						
 						while(deltaTime >= threshold) {
-							thisMap.dataset[datasetID].buffer.push({point: [], date: null});
+							currentDataset.buffer.push({point: [], date: null});
 							frame++;
 							filler++;
 							emptyDate = new Date(emptyDate.valueOf() + threshold);
-							thisMap.dataset[datasetID].buffer[frame].date = emptyDate;
-							thisMap.dataset[datasetID].frameAggregate[frame] = 0;
+							currentDataset.buffer[frame].date = emptyDate;
+							currentDataset.frameAggregate[frame] = 0;
 							
 							deltaTime -= threshold;
 						}
 						
-						thisMap.dataset[datasetID].buffer[frame].point.push({latitude: result.results[i].latitude, longitude: result.results[i].longitude, value: result.results[i].value});
-						thisMap.dataset[datasetID].buffer[frame].date = inputDate;
+						currentDataset.buffer[frame].point.push({latitude: result.results[i].latitude, longitude: result.results[i].longitude, value: result.results[i].value});
+						currentDataset.buffer[frame].date = inputDate;
 						
-						//thisMap.dataset[datasetID].buffer[frame].value = result.results[i].value; //TODO: make this per point to control radius!
-						thisMap.dataset[datasetID].frameAggregate[frame] += result.results[i].value;
+						currentDataset.frameAggregate[frame] += result.results[i].value;
 						
-						if(thisMap.dataset[datasetID].maxValue < result.results[i].value) {
-							thisMap.dataset[datasetID].maxValue = result.results[i].value;
+						if(currentDataset.maxValue < result.results[i].value) {
+							currentDataset.maxValue = result.results[i].value;
 						}
 						
-						lastDate = thisMap.dataset[datasetID].buffer[frame].date;
+						lastDate = currentDataset.buffer[frame].date;
 					}
 					else {
 						skipped++;
@@ -345,20 +412,20 @@ console.log("series " + k + ": " + id);
 				console.log("Skipped " + skipped + " malformed entries");
 				console.log(filler + " days occurred without reports in this timespan");
 				console.log("Total Frames: " + frame + 1);
-				console.log("Buffer length: " + thisMap.dataset[datasetID].buffer.length);
+				console.log("Buffer length: " + currentDataset.buffer.length);
 				
-				if(thisMap.latestDate < thisMap.dataset[datasetID].buffer[frame].date) {
-					thisMap.latestDate = thisMap.dataset[datasetID].buffer[frame].date;
+				if(thisMap.latestDate < currentDataset.buffer[frame].date) {
+					thisMap.latestDate = currentDataset.buffer[frame].date;
 				}
 				
 				thisMap.seriesToLoad.shift();
-				if(thisMap.seriesToLoad.length == 0) {
+				if(thisMap.seriesToLoad.length === 0) {
 					thisMap.frameCount = Math.floor((thisMap.latestDate.valueOf() - thisMap.earliestDate.valueOf()) / threshold) + 1;
 					
 					for(i = 0; i < thisMap.dataset.length; i++) {
 						deltaTime = thisMap.dataset[i].buffer[0].date.valueOf() - thisMap.earliestDate.valueOf();
 						
-						if(deltaTime != 0) {
+						if(deltaTime !== 0) {
 							thisMap.dataset[i].frameOffset = Math.floor(deltaTime / threshold);
 						}
 					}
@@ -422,7 +489,7 @@ console.log("series " + k + ": " + id);
 					reflow: false,
 					marginLeft: 50,
 					//marginRight: 20,
-					backgroundColor: "rgba(255, 255, 255, 0.1)", //null,
+					backgroundColor: "rgba(128, 128, 128, 0.1)", //null,
 					style: {
 						//position: 'absolute'
 					}
@@ -487,6 +554,10 @@ console.log("series " + k + ": " + id);
 					enabled: false
 				}
 			}).highcharts(); // return chart
+			
+			$("#toggle-details-button").click();
+			
+			return;
 		}
 
 		// create the master chart
@@ -497,7 +568,7 @@ console.log("series " + k + ": " + id);
 			for(i = 0; i < MAGIC_MAP.dataset.length; i++) {
 				dataSeries.push({
 						type: 'area',
-						name: "Series " + i,
+						name: String.fromCharCode(i + 65) + ": " + MAGIC_MAP.dataset[i].name,
 						pointInterval: 86400000, //24 * 3600 * 1000,
 						pointStart: Date.UTC(MAGIC_MAP.dataset[i].buffer[0].date.getUTCFullYear(),
 									MAGIC_MAP.dataset[i].buffer[0].date.getUTCMonth(),
@@ -629,11 +700,15 @@ console.log("series " + k + ": " + id);
 					//, crosshairs: true
 				},
 				legend: {
+					layout: 'vertical',
+					align: 'left',
+					verticalAlign: 'top',
+					floating: true,
 					enabled: true,
 					padding: 0,
-					maxHeight: 8,
+					y: 25,
 					itemStyle: {
-						fontSize: "8px"
+						fontSize: "12px"
 					}
 				},
 				credits: {
@@ -900,89 +975,6 @@ console.log((endFrame - startFrame) + " frames");
 		return;
 	}
 
-	MagicMap.prototype.getStyle = function(feature) {
-		thisMap = this;
-		
-		return {
-			weight: 2,
-			opacity: 0.1,
-			color: 'black',
-			fillOpacity: 0.7,
-			fillColor: thisMap.getColor(feature.properties.density)
-		};
-	}
-
-	// get color depending on population density value
-	MagicMap.prototype.getColor = function(d) {
-		return d > 42 ? '#000000' :
-			d > 35  ? '#c000c0' :
-			d > 28  ? '#0000ff' :
-			d > 21  ? '#00ffff' :
-			d > 14   ? '#00ff00' :
-			d > 7   ? '#ffff00' :
-			'#ff0000';
-	}
-
-	/*
-	MagicMap.prototype.onEachFeature = function(feature, layer) {
-		layer.on({
-			mousemove: mousemove,
-			mouseout: mouseout,
-			click: zoomToFeature
-		});
-	}
-
-	MagicMap.prototype.mousemove = function(e) {
-		var layer = e.target;
-
-		this.popup.setLatLng(e.latlng);
-		this.popup.setContent('<div class="marker-title">' + layer.feature.properties.name + '</div>' +
-			layer.feature.properties.density + ' people per square mile');
-
-		if (!this.popup._map) this.popup.openOn(this.map);
-		window.clearTimeout(this.closeTooltip);
-
-		// highlight feature
-		layer.setStyle({
-			weight: 3,
-			opacity: 0.3,
-			fillOpacity: 0.9
-		});
-
-		if (!L.Browser.ie && !L.Browser.opera) {
-			layer.bringToFront();
-		}
-	}
-
-	MagicMap.prototype.mouseout = function(e) {
-		statesLayer.resetStyle(e.target);
-		this.closeTooltip = window.setTimeout(function() {
-			this.map.closePopup();
-		}, 100);
-	}
-
-	MagicMap.prototype.zoomToFeature = function(e) {
-		this.map.fitBounds(e.target.getBounds());
-	}
-	*/
-
-	MagicMap.prototype.getLegendHTML = function() {
-		var grades = [0, 7, 14, 21, 28, 35, 42],
-		labels = [],
-		from, to;
-
-		for (var i = 0; i < grades.length; i++) {
-		from = grades[i];
-		to = grades[i + 1];
-
-		labels.push(
-			'<li><span class="swatch" style="background:' + this.getColor(from + 1) + '"></span> ' +
-			from + (to ? '&ndash;' + to : '+')) + '</li>';
-		}
-
-		return '<span>Age of reports (days)</span><ul>' + labels.join('') + '</ul>';
-	}
-	
 	/* helper to zero-out the time of a Date object (it's bad practice to modify standard JavaScript objects) */
 	MagicMap.prototype.zeroTime = function(dateTime) {
 		dateTime.setUTCHours(0);

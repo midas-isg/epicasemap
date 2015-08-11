@@ -5,7 +5,7 @@ import gateways.database.LocationDao;
 import java.util.List;
 
 import models.entities.Location;
-import models.entities.filters.Filter;
+import models.entities.LocationFilter;
 
 public class LocationRule extends CrudRule<Location> {
 	private LocationDao dao;
@@ -14,7 +14,7 @@ public class LocationRule extends CrudRule<Location> {
 		this.dao = dao;
 	}
 
-	public List<Location> query(Filter filter) {
+	public List<Location> query(LocationFilter filter) {
 		return dao.query(filter);
 	}
 
