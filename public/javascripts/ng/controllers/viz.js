@@ -43,11 +43,13 @@ app.controller('Viz', function($scope, $rootScope, api) {
 	};
 	$scope.submitThenClose = function() { $scope.submit(close);	};
 	$scope.removeThenClose = function() {
-		if (confirm("About to delete this Viz. \nOK = Delete"))
+		if (confirm("About to delete this Viz. \nOK = Delete")){
 			api.remove('vizs', $scope.model.id).then(close);
+		}
 	};
 	$scope.close = function() {
 		$scope.dialog.modal('hide');
+		$scope.model = null;
 	};
 	$scope.isShown = function(series) {
 		return $scope.showAll || series.s1 || series.s2;
