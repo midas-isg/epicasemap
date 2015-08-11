@@ -33,8 +33,6 @@ app.controller('SeriesData', function($scope, $rootScope, api) {
         api.uploadFile(makePath(), $scope.dataFile).then(function(rsp) {
 			$scope.closeDialog();
 			loadCoordinates($scope.seriesId);
-
-			delete $scope.dataFile;
 		});
 
         function makePath(){
