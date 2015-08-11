@@ -5,6 +5,10 @@ app.controller('Series', function($scope, $rootScope, api) {
 	$scope.coordinates = [];
 	
 	$scope.dialog = $('#seriesModal');
+	$scope.dialogBody = $scope.dialog.find('.modal-body');
+	$scope.dialog.ready(function(){
+		$('#Series-btn-save-close').hide();
+	});
     $scope.dialog.on('hide.bs.modal', function (e) {
 		var isOK = true;
 		if ($scope.form.$dirty)
@@ -22,6 +26,9 @@ app.controller('Series', function($scope, $rootScope, api) {
     $rootScope.$on('editSeries', function(event, series) {
     	edit(series);
 	});
+    $rootScope.$on('loadCoordinates', function(event, seriesId) {
+    	loadCoordinates(seriesId);
+	});
 
 	$scope.submit = function(callback) {
 		if ($scope.form.$dirty) {
@@ -33,7 +40,13 @@ app.controller('Series', function($scope, $rootScope, api) {
 	$scope.submitThenClose = function() { $scope.submit(close);	};
 	$scope.removeThenClose = function() {
 		if (confirm("About to delete this Series. \nOK = Delete"))
-			api.remove('series', $scope.model.id).then(close);
+			api.remove('series', $scope.model.id).then(function(rsp){
+				if (rsp.errorMessage){
+					api.alert($scope.dialogBody, 'Error: The series could not be deleted!', 'alert-danger');
+				} else {
+					close();
+				}
+			});
 	};
 	$scope.close = function() {
 		$scope.dialog.modal('hide');
@@ -41,30 +54,43 @@ app.controller('Series', function($scope, $rootScope, api) {
 	$scope.isShown = function(series){
 		return true;
 	};
-	
-	function edit(series) {
-		var isNew = series.id ? false : true;
-		$scope.model = series;
-		$scope.form.isNew = isNew;
-		loadCoordinates($scope.model.id);
-		$scope.dialog.modal();
+    $scope.uploadNewData = function(seriesId) {
+    	$rootScope.$emit('uploadNewSeriesData', seriesId);
+	};
 
-		function loadCoordinates(seriesId){
-			var path = 'series/' + seriesId + '/time-coordinate';
-			api.find(path).then(function(rsp) {
-				$scope.coordinates =  rsp.data.results;
-				populateAdditionInfo($scope.coordinates);
-				$scope.dataOrder = $scope.dataOrder || 'date';
-			});
+	function edit(series) {
+		$scope.model = series;
+		resetView();
+		loadCoordinates(series.id);
+		$scope.dialog.modal();
+		
+		function resetView(){
+			if (series.id)
+				$scope.form.$setPristine();
+			else 
+				$scope.form.$setDirty();
+			$scope.coordinates = [];
+			$scope.locationIds = new Set();
+			api.removeAllAlerts($scope.dialogBody);
 		}
 	};
 	
+	function loadCoordinates(seriesId){
+		if (! seriesId)
+			return;
+		var path = 'series/' + seriesId + '/time-coordinate';
+		api.find(path).then(function(rsp) {
+			$scope.coordinates =  rsp.data.results;
+			populateAdditionInfo($scope.coordinates);
+			$scope.dataOrder = $scope.dataOrder || 'date';
+		});
+	}
+
 	function close(){
 		$scope.form.$setPristine();
-		$scope.coordinates = [];
 		$scope.close();
 	}
-	
+
 	function loadSeries(){
 		$rootScope.$emit('loadSeries');
 	}
@@ -74,16 +100,20 @@ app.controller('Series', function($scope, $rootScope, api) {
 	}
 	
 	function save(callback){
+		var toUpload = ! $scope.model.id;
 		var body = buildBody($scope.model);
 		$scope.working = true;
 		api.save('series', body).then(function(location) {
 			$scope.working = false;
-			$scope.form.isNew = false;
+			api.alert($scope.dialogBody, 'The series was saved.', 'alert-success');
 			if (callback){
 				callback();
 			} else {
 				api.get(location).then(function(rsp) {
 					$scope.model = rsp.data.result;
+					$scope.form.$setPristine();
+					if(toUpload)
+						$scope.uploadNewData($scope.model.id);
 				});
 			}
 		});
@@ -98,7 +128,6 @@ app.controller('Series', function($scope, $rootScope, api) {
 			it.date = api.toDateText(it.timestamp);
 			$scope.locationIds.add(it.locationId);
 		});
-		console.log($scope.locationIds);
 
 		size = $scope.locationIds.size;
 		if (size > 50)
@@ -107,7 +136,6 @@ app.controller('Series', function($scope, $rootScope, api) {
 			api.find(path + it).then(function(rsp) {
 				$scope.locations.set(it, rsp.data.result.label);
 				if ($scope.locations.size >= size){
-					console.log($scope.locations);
 					data.forEach(function (it) {
 						it.location = $scope.locations.get(it.locationId);
 					});

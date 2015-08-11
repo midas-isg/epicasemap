@@ -31,7 +31,7 @@ public class TestSeries {
 	static Series persistThenDetachNewSeries() {
 		EntityManager em = JPA.em();
 		final Series data = new Series();
-		data.setName("name");
+		data.setTitle("title");
 		data.setDescription("description");
 		em.persist(data);
 		em.detach(data);

@@ -5,6 +5,7 @@
 	@script_asset("javascripts/ng/controllers/vizs.js")
 	@script_asset("javascripts/ng/controllers/viz.js")
 	@script_asset("javascripts/ng/controllers/series.js")
+	@script_asset("javascripts/ng/controllers/series-data.js")
 }
 
 @main("Viz Management", imports) {
@@ -15,6 +16,8 @@
 			)
 		)
 		@viz_dialog()
+		@series_dialog()
+		@series_data_dialog()
 	</article>
 }
 

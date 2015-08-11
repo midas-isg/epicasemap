@@ -43,13 +43,25 @@ public class SeriesEndpointTester {
 	private void assertSeriesObject(JsonNode node) {
 		Iterator<String> fields = node.fieldNames();
 		final String idKey = "id";
-		final String nameKey = "name";
+		final String titleKey = "title";
 		final String desKey = "description";
-		assertThat(fields).containsOnly(idKey, nameKey, desKey);
+		final String creatorKey = "creator";
+		final String publisherKey = "publisher";
+		final String versionKey = "version";
+		final String licenseKey = "license";
+		final String isVersionOfKey = "isVersionOf";
+		
+		assertThat(fields).containsOnly(idKey, titleKey, desKey, creatorKey, publisherKey, licenseKey, versionKey, isVersionOfKey);
 		assertThat(node.get(idKey).asLong()).isPositive();
 		
-		assertNodeType(node.get(nameKey), STRING);
+		assertNodeType(node.get(titleKey), STRING);
 		assertNodeType(node.get(desKey), STRING, NULL);
+		assertNodeType(node.get(desKey), STRING, NULL);
+		assertNodeType(node.get(creatorKey), STRING, NULL);
+		assertNodeType(node.get(publisherKey), STRING, NULL);
+		assertNodeType(node.get(licenseKey), STRING, NULL);
+		assertNodeType(node.get(versionKey), STRING, NULL);
+		assertNodeType(node.get(isVersionOfKey), STRING, NULL);
 	}
 
 	private void assertDefaultFilter(JsonNode filter) {

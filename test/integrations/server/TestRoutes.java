@@ -17,7 +17,9 @@ public class TestRoutes {
     		TimeCoordinateEndpointTester.pagination(),
     		TimeCoordinateEndpointTester.defaultParameters(),
     		
-    		LandingPageTester.containsConextForJavaScript()
+    		LandingPageTester.containsConextForJavaScript(),
+    		
+    		UploadSeriesEndpointTester.test()
     	};
 		Server.run(tests);
     }

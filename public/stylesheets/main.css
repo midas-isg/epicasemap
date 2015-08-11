@@ -61,7 +61,7 @@ table {
 .table-content {
   max-height: 300px;
   overflow-y:scroll;
-  margin-bottom: 10px;
+  margin-bottom: 0px;
 }
 
 /* column width */
@@ -74,5 +74,20 @@ table {
 .col-a{width:2em;}
 .col-b{width:2em;}
 
-/* width by ID */
-#name{width:80%;}
+/* form */
+.input-group-sm{margin-bottom:0px;}
+.modal-header{padding-top: 0px; padding-bottom: 0px;}
+.modal-header .close{margin-top: 10px;}
+
+footer{margin-top: 10px;}
+
+
+.alert{
+    padding-top: 5px;
+    padding-bottom: 5px;
+    margin-bottom: 10px;
+}
+
+.expandable:hover{
+	cursor: pointer;
+}
