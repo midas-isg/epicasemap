@@ -3,8 +3,9 @@
 app.controller('Vizs', function($scope, $rootScope, api) {
 	var urlPath = 'vizs';
 
+	$scope.loadModelHavingGivenId = loadModelHavingGivenId;
 	loadModelHavingGivenId();
-    loadVizs();
+	loadVizs();
     $rootScope.$on('loadVizs', function(event) {
     	loadVizs();
 	});
