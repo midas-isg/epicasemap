@@ -6,9 +6,9 @@ ng-click='submit()' ng-disabled='form.$pristine || working' >
 </button>
 <button id='@model-btn-save-close' title="Save the @model & Close the dialog" class='btn-large  btn-primary' 
 ng-click="submitThenClose()" ng-disabled='working'>
-	@bs_icon("save") Save & @bs_icon("remove") Close
+	@bs_icon("save") Save & Close
 </button>
 <button title="Delete the @model & Close the dialog" class='btn-large btn-danger pull-left' 
 ng-click='removeThenClose()' ng-show='model.id' ng-disabled='working'>
-	@bs_icon("trash") Delete & @bs_icon("remove") Close
+	@bs_icon("trash") Delete & Close
 </button>
