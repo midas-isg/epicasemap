@@ -63,7 +63,7 @@ timeline.js
 						url: URL + thisMap.seriesToLoad[j],
 						success: function(result) {
 							thisMap.seriesDescriptions[result.result.id] = {
-								name: result.result.name,
+								title: result.result.title,
 								description: result.result.description
 							};
 							
@@ -173,12 +173,12 @@ timeline.js
 					h++;
 				}
 				
-				$("#title").text(result.result.name);
+				$("#title").text(result.result.title);
 				
 				for(h = 0; h < thisMap.seriesList.length; h++) {
 					for(i = 0; i < thisMap.seriesList[h].length; i++) {
 						thisMap.seriesDescriptions[thisMap.seriesList[h][i].id] = {
-							name: thisMap.seriesList[h][i].name,
+							title: thisMap.seriesList[h][i].title,
 							description: thisMap.seriesList[h][i].description
 						};
 					}
@@ -218,7 +218,7 @@ timeline.js
 					);
 					
 					for(i = 0; i < thisMap.seriesList[h].length; i++) {
-						$("#series-" + h).append("<option value='" + thisMap.seriesList[h][i].id + "'>" + thisMap.seriesList[h][i].name +"</option>");
+						$("#series-" + h).append("<option value='" + thisMap.seriesList[h][i].id + "'>" + thisMap.seriesList[h][i].title +"</option>");
 					}
 					$("#series-" + h).val(thisMap.uiSettings.series[h].index);
 					$("#series-" + h).change();
@@ -392,7 +392,7 @@ console.log("series " + k + ": " + id);
 		var URL = CONTEXT + "/api/series/" + seriesID + "/time-coordinate",
 		currentDataset = {
 			seriesID: seriesID,
-			name: "name",
+			title: "title",
 			buffer: [{point: [], date: null}],
 			maxValue: 0,
 			frameAggregate: [0],
@@ -406,7 +406,7 @@ console.log("series " + k + ": " + id);
 		else {
 			this.dataset[index] = {
 				seriesID: seriesID,
-				name: "name",
+				title: "title",
 				buffer: [{point: [], date: null}],
 				maxValue: 0,
 				frameAggregate: [0],
@@ -431,7 +431,7 @@ console.log("series " + k + ": " + id);
 				
 				thisMap.zeroTime(lastDate);
 				
-				currentDataset.name = thisMap.seriesDescriptions[seriesID].name;
+				currentDataset.title = thisMap.seriesDescriptions[seriesID].title;
 				
 				if(thisMap.earliestDate > lastDate) {
 					thisMap.earliestDate = new Date(lastDate);
@@ -547,7 +547,7 @@ console.log("series " + k + ": " + id);
 			
 			for(i = 0; i < MAGIC_MAP.dataset.length; i++) {
 				series.push({
-						name: MAGIC_MAP.dataset[i].name, //"Series " + MAGIC_MAP.dataset[i].seriesID,
+						name: MAGIC_MAP.dataset[i].title, //"Series " + MAGIC_MAP.dataset[i].seriesID,
 						pointStart: detailStart[i],
 						pointInterval: 86400000,//24 * 3600 * 1000,
 						data: detailSeries[i].detailData
@@ -641,7 +641,7 @@ console.log("series " + k + ": " + id);
 			for(i = 0; i < MAGIC_MAP.dataset.length; i++) {
 				dataSeries.push({
 						type: 'area',
-						name: String.fromCharCode(i + 65) + ": " + MAGIC_MAP.dataset[i].name,
+						name: String.fromCharCode(i + 65) + ": " + MAGIC_MAP.dataset[i].title,
 						pointInterval: 86400000, //24 * 3600 * 1000,
 						pointStart: Date.UTC(MAGIC_MAP.dataset[i].buffer[0].date.getUTCFullYear(),
 									MAGIC_MAP.dataset[i].buffer[0].date.getUTCMonth(),
