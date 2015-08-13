@@ -81,7 +81,6 @@ table {
 
 footer{margin-top: 10px;}
 
-
 .alert{
     padding-top: 5px;
     padding-bottom: 5px;
@@ -91,3 +90,12 @@ footer{margin-top: 10px;}
 .expandable:hover{
 	cursor: pointer;
 }
+
+.dropdown-menu {
+	color:#ffff00;
+	background-color:black;
+}
+
+.navbar-collapse li.dropdown > a{color:#ffff00;}
+
+a.menu-item.navbar-link:hover {background:black;}
