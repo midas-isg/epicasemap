@@ -50,7 +50,7 @@ public class UploadSeries extends Controller {
 	private static Long create(SeriesDataFile dataFile, Long seriesId)
 			throws Exception {
 		Persister persister = new Persister();
-		return persister.persistCSVFile(dataFile, seriesId);
+		return persister.persistSeriesDataFile(dataFile, seriesId);
 	}
 
 	private static String validate(SeriesDataFile dataFile) {

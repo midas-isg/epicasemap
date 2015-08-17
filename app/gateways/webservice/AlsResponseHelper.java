@@ -4,7 +4,6 @@ import static play.mvc.Http.Status.OK;
 import gateways.configuration.AppKey;
 import interactors.ClientRule;
 import interactors.ConfRule;
-import interactors.LocationCacheRule;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,40 +24,40 @@ public class AlsResponseHelper {
 	private static final String BBOX = "bbox";
 	private static final String LONGITUDE = "longitude";
 	private static final String LATITUDE = "latitude";
-	
+
 	private static String baseUrl;
-	
+
 	static {
 		final ConfRule confRule = Factory.makeConfRule();
 		baseUrl = confRule.readString(AppKey.ALS_LOCATION_WS_URL.key());
 	}
-	
-	public Location getAlsLocation(Long id){
-		Location location = LocationCacheRule.read(id);
-		if(location == null){
-			location = getLocationFromAls(id);
-			if(location != null)
-				LocationCacheRule.update(location);
-		}
-		return location;		
-	}
 
-	private Location getLocationFromAls(Long id) {
+//	public Location getAlsLocation(Long id) {
+//		// Location location = LocationCacheRule.read(id);
+//		// if(location == null){
+//		Location location = getLocationFromAls(id);
+//		// if(location != null)
+//		// LocationCacheRule.update(location);
+//		// }
+//		return location;
+//	}
+
+	public Location getLocationFromAls(Long id) {
 		ClientRule clientRule = makeAlsClientRule();
 		Location location = toLocation(clientRule.getById(id));
-		if(location != null)
+		if (location != null)
 			location.setAlsId(id);
 		return location;
-		
+
 	}
 
 	private ClientRule makeAlsClientRule() {
 		return new ClientRule(baseUrl);
-		
+
 	}
 
 	public Location toLocation(WSResponse wsResponse) {
-		if(wsResponse.getStatus() == OK)
+		if (wsResponse.getStatus() == OK)
 			return toLocation(wsResponse.asJson());
 		return null;
 
@@ -67,8 +66,7 @@ public class AlsResponseHelper {
 	Location toLocation(JsonNode jsonNode) {
 		Location location = new Location();
 		Map<String, Double> center = centroid(getBbox(jsonNode));
-		
-		
+
 		location.setLabel(getName(jsonNode));
 		location.setLatitude(center.get(LATITUDE));
 		location.setLongitude(center.get(LONGITUDE));
@@ -81,7 +79,7 @@ public class AlsResponseHelper {
 	}
 
 	private String getName(JsonNode jsonNode) {
-		
+
 		ArrayList<String> names = new ArrayList<>();
 		names.add(getLocationName(jsonNode));
 		names.addAll(getParentsNames(jsonNode));
@@ -99,7 +97,7 @@ public class AlsResponseHelper {
 	private ArrayList<String> getParentsNames(JsonNode jsonNode) {
 		ArrayList<String> names = new ArrayList<>();
 		ArrayNode parents = getParents(jsonNode);
-		for (int i = parents.size()-1; i >= 0; i--) {
+		for (int i = parents.size() - 1; i >= 0; i--) {
 			names.add(parents.get(i).get("name").asText());
 		}
 		return names;
@@ -110,8 +108,7 @@ public class AlsResponseHelper {
 	}
 
 	private String getLocationName(JsonNode jsonNode) {
-		return getProperties(jsonNode).get(NAME)
-				.asText();
+		return getProperties(jsonNode).get(NAME).asText();
 	}
 
 	private static JsonNode getProperties(JsonNode jsonNode) {

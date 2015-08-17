@@ -1,9 +1,7 @@
 package gateways.webservice;
 
 import static org.fest.assertions.Assertions.assertThat;
-import gateways.webservice.AlsResponseHelper;
 import integrations.server.Server;
-import interactors.LocationCacheRule;
 
 import java.io.IOException;
 
@@ -88,13 +86,13 @@ public class TestAlsResponseHelper {
 	public void testGetAlsLocation() {
 		Long id = 1L;
 		AlsResponseHelper helper = new AlsResponseHelper();
-		Location loc = helper.getAlsLocation(id);
+		Location loc = helper.getLocationFromAls(id);
 		
 		assertThat(loc.getLabel()).isEqualTo("Moyamba, Southern, Sierra Leone");
 		assertThat(loc.getLongitude()).isEqualTo(-12.395816326141244);
 		assertThat(loc.getLatitude()).isEqualTo(8.02103376388547);
 		
-		assertThat(LocationCacheRule.read(id)).isNotEqualTo(null);
+		//assertThat(LocationCacheRule.read(id)).isNotEqualTo(null);
 	}
 	
 	private static Runnable testGetLocation() {

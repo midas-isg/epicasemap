@@ -1,6 +1,7 @@
 package interactors.series_data_file;
 
 import static org.fest.assertions.Assertions.assertThat;
+import integrations.app.App;
 import integrations.server.Server;
 
 import java.util.Arrays;
@@ -13,6 +14,7 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.junit.Test;
 
+import play.libs.F.Callback0;
 import suites.SeriesDataFileHelper;
 
 public class TestValidator {
@@ -48,7 +50,11 @@ public class TestValidator {
 		Server.run(test);
 	}
 
-	private void testGetLocationValueError() throws Exception {
+	@Test
+	public void testGetLocationValueError() {
+		runWithTransaction(() -> getLocationValueError());
+	}
+	private void getLocationValueError() throws Exception {
 		Validator validator = new Validator();
 		SeriesDataFileHelper helper = new SeriesDataFileHelper();
 		SeriesDataFile dataFile = helper
@@ -138,5 +144,10 @@ public class TestValidator {
 	private static TestValidator newInstance() {
 		return new TestValidator();
 	}
+	
+	private static void runWithTransaction(Callback0 callback) {
+		App.newWithInMemoryDbWithDbOpen().runWithTransaction(callback);
+	}
+
 
 }
