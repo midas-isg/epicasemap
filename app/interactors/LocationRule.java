@@ -1,7 +1,7 @@
 package interactors;
 
 import gateways.database.LocationDao;
-import gateways.webservice.AlsResponseHelper;
+import gateways.webservice.AlsApiHelper;
 
 import java.util.List;
 
@@ -48,7 +48,7 @@ public class LocationRule extends CrudRule<Location> {
 	}
 
 	private Location getLocationFromAls(Long alsId) {
-		AlsResponseHelper helper = new AlsResponseHelper();
+		AlsApiHelper helper = new AlsApiHelper();
 		return helper.getLocationFromAls(alsId);
 	}
 

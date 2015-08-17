@@ -69,7 +69,7 @@ public class TestAlsResponseHelper {
 	public void testJsonToLocation() throws JsonProcessingException, IOException  {
 				
 		JsonNode node = new ObjectMapper().readTree(response);
-		AlsResponseHelper helper = new AlsResponseHelper();
+		AlsApiHelper helper = new AlsApiHelper();
 		Location loc = helper.toLocation(node);
 		
 		assertThat(loc.getLabel()).isEqualTo("Moyamba, Southern, Sierra Leone");
@@ -85,7 +85,7 @@ public class TestAlsResponseHelper {
 	
 	public void testGetAlsLocation() {
 		Long id = 1L;
-		AlsResponseHelper helper = new AlsResponseHelper();
+		AlsApiHelper helper = new AlsApiHelper();
 		Location loc = helper.getLocationFromAls(id);
 		
 		assertThat(loc.getLabel()).isEqualTo("Moyamba, Southern, Sierra Leone");
