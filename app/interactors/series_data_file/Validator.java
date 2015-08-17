@@ -1,6 +1,6 @@
 package interactors.series_data_file;
 
-import gateways.webservice.AlsResponseHelper;
+import interactors.LocationRule;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,6 +16,9 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.lang.math.NumberUtils;
 import org.joda.time.DateTime;
+
+import play.db.jpa.JPA;
+import controllers.Factory;
 
 public class Validator {
 
@@ -180,16 +183,10 @@ public class Validator {
 	}
 
 	private boolean existInAls(String alsId) {
-		Location location = getAlsLocation(Long.parseLong(alsId));
+		Location location = makeLocationRule().getLocationByAlsId(Long.parseLong(alsId));
 		if (location == null)
 			return false;
 		return true;
-	}
-
-	private Location getAlsLocation(long alsId) throws NumberFormatException {
-		AlsResponseHelper helper = new AlsResponseHelper();
-		Location location = helper.getAlsLocation(alsId);
-		return location;
 	}
 
 	private boolean isNumber(String val) {
@@ -217,5 +214,10 @@ public class Validator {
 		}
 		return errorMsg;
 	}
+	
+	private LocationRule makeLocationRule() {
+		return Factory.makeLocationRule(JPA.em());
+	}
+
 
 }

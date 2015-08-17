@@ -1,16 +1,13 @@
 package interactors.series_data_file;
 
-import gateways.webservice.AlsResponseHelper;
 import interactors.LocationRule;
 import interactors.SeriesRule;
 
 import java.util.Date;
 import java.util.Iterator;
-import java.util.List;
 
 import models.SeriesDataFile;
 import models.entities.Location;
-import models.entities.LocationFilter;
 import models.entities.SeriesData;
 
 import org.apache.commons.csv.CSVParser;
@@ -22,22 +19,22 @@ import controllers.Factory;
 
 public class Persister {
 
-	public Long persistCSVFile(SeriesDataFile dataFile, Long seriesId)
+	public Long persistSeriesDataFile(SeriesDataFile dataFile, Long seriesId)
 			throws Exception {
 
 		Parser csvParser = new Parser();
 		CSVParser parser = null;
 		parser = csvParser.parse(dataFile);
-		return persistRecords(seriesId, dataFile, parser);
+		return persistSeriesData(seriesId, dataFile, parser);
 
 	}
 
-	private Long persistRecords(Long seriesId, SeriesDataFile dataFile,
+	private Long persistSeriesData(Long seriesId, SeriesDataFile dataFile,
 			CSVParser parser) throws Exception {
 		Long counter = 0L;
-		Iterator<CSVRecord> records = parser.iterator();
-		while (records.hasNext()) {
-			if (isNotTrue(persistRecord(seriesId, dataFile, records.next())))
+		Iterator<CSVRecord> dataPoints = parser.iterator();
+		while (dataPoints.hasNext()) {
+			if (isNotTrue(persistDataPoint(seriesId, dataFile, dataPoints.next())))
 				return 0L;
 			counter++;
 		}
@@ -48,10 +45,10 @@ public class Persister {
 		return !result;
 	}
 
-	private boolean persistRecord(Long seriesId, SeriesDataFile dataFile,
-			CSVRecord record) throws Exception {
+	private boolean persistDataPoint(Long seriesId, SeriesDataFile dataFile,
+			CSVRecord dataPoint) throws Exception {
 
-		SeriesData seriesData = csvRecordToSeriesData(seriesId, record,
+		SeriesData seriesData = csvRecordToSeriesData(seriesId, dataPoint,
 				dataFile);
 		Long seriesDataId = persist(seriesData);
 		return (seriesDataId != null) ? true : false;
@@ -66,29 +63,31 @@ public class Persister {
 
 	private Double getValue(CSVRecord record, SeriesDataFile dataFile)
 			throws Exception {
-		String header = dataFile.stdHeaderToFileHeader(SeriesDataFile.VALUE_HEADER);
+		String header = dataFile
+				.stdHeaderToFileHeader(SeriesDataFile.VALUE_HEADER);
 
 		return stringToDouble(record.get(header));
 	}
 
 	private Date getTimeStamp(CSVRecord record, SeriesDataFile dataFile) {
-		String header = dataFile.stdHeaderToFileHeader(SeriesDataFile.TIME_HEADER);
+		String header = dataFile
+				.stdHeaderToFileHeader(SeriesDataFile.TIME_HEADER);
 		return DateTime.parse(record.get(header)).toDate();
 	}
 
-	private Long createLocationFromCSVRecord(CSVRecord record, SeriesDataFile dataFile)
-			throws Exception {
+	private Long createLocationFromCSVRecord(CSVRecord record,
+			SeriesDataFile dataFile) throws Exception {
 		Long locId = null;
 		String fileFormat = dataFile.getFileFormat();
 
 		if (fileFormat.equals(SeriesDataFile.ALS_ID_FORMAT)) {
 			Long alsId = getAlsId(record, dataFile);
-			locId = createLocationFromAlsIdIfNotExists(alsId);
+			locId = createLocation(alsId);
 
 		} else if (fileFormat.equals(SeriesDataFile.COORDINATE_FORMAT)) {
 			Double lat = getLatitude(record, dataFile);
 			Double lon = getLongitude(record, dataFile);
-			locId = createLocationFromCoordinateIfNotExists(lat, lon);
+			locId = createLocation(lat, lon);
 		}
 		return locId;
 	}
@@ -125,82 +124,32 @@ public class Persister {
 		return Long.parseLong(header);
 	}
 
-	Long createLocationFromCoordinateIfNotExists(Double lat, Double lon) {
-		Long locId;
-		if ((locId = findLocation(lat, lon)) != null) {
-			return locId;
-		} else {
-			return persist(createLocation(lat, lon));
-		}
+	Long createLocation(Double lat, Double lon) {
+		Location location = makeLocationRule().getLocationByCoordinate(lat, lon);
+		if (location == null)
+			location = createNew(lat,lon);
+		return getId(location);
 	}
 
-	private Long findLocation(Double lat, Double lon) {
-		LocationFilter filter = buildLocationFilter(lat, lon);
-		List<Location> LocList = makeLocationRule().query(filter);
-		if (isNotEmpty(LocList)) {
-			return LocList.get(0).getId();
-		} else {
+	Location createNew(Double lat,Double lon) {
+		Location location = new Location();
+		location.setLongitude(lon);
+		location.setLatitude(lat);
+		return location;
+	}
+
+	private Long getId(Location location) {
+		if(location ==null)
 			return null;
-		}
+		else if (location.getId() != null)
+			return location.getId();
+		else
+			return persist(location);
 	}
 
-	private LocationFilter buildLocationFilter(Double lat, Double lon) {
-		LocationFilter filter = new LocationFilter();
-		filter.setLatitude(lat);
-		filter.setLongitude(lon);
-		return filter;
-	}
-
-	Long createLocationFromAlsIdIfNotExists(Long alsId) {
-		Long locId;
-		if ((locId = findLocation(alsId)) != null) {
-			return locId;
-		} else {
-			locId = persist(createLocation(alsId));
-			return locId;
-		}
-	}
-
-	private Long findLocation(Long alsId) {
-		LocationFilter filter = buildLocationFilter(alsId);
-		List<Location> LocList = makeLocationRule().query(filter);
-		if (isNotEmpty(LocList)) {
-			return LocList.get(0).getId();
-		} else {
-			return null;
-		}
-	}
-
-	private boolean isNotEmpty(List<Location> list) {
-		return !(list.isEmpty());
-	}
-
-	private LocationFilter buildLocationFilter(Long alsId) {
-		LocationFilter filter = new LocationFilter();
-		filter.setAlsId(alsId);
-		return filter;
-	}
-
-	Location createLocation(Long alsId) {
-		Location loc = getLocationFromAls(alsId);
-		if (loc == null){
-			loc = new Location();
-			loc.setAlsId(alsId);
-		}
-		return loc;
-	}
-
-	private Location getLocationFromAls(Long alsId) {
-		AlsResponseHelper helper = new AlsResponseHelper();
-		return helper.getAlsLocation(alsId);
-	}
-
-	Location createLocation(Double latitude, Double longitude) {
-
-		final Location loc = new Location();
-		loc.setLatitude(latitude);
-		loc.setLongitude(longitude);
-		return loc;
+	Long createLocation(Long alsId) {
+		Location location = makeLocationRule().getLocationByAlsId(alsId);
+		return getId(location);
 	}
 
 	SeriesData createSeriesData(Long seriesId, Long locId, Date time,

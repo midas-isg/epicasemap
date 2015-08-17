@@ -35,13 +35,13 @@ public class TestPersister {
 		//Long seriesId = 1L;
 
 		Persister persister = new Persister();
-		Long created = persister.persistCSVFile(dataFile, seriesId);
+		Long created = persister.persistSeriesDataFile(dataFile, seriesId);
 		assertThat(created).isEqualTo(expected);
 
 		dataFile = helper.createTestSeriesDataFileWithCoordianteFormat();
 		helper.setStdToFileHeaderMap(dataFile);
 		persister = new Persister();
-		created = persister.persistCSVFile(dataFile, seriesId);
+		created = persister.persistSeriesDataFile(dataFile, seriesId);
 		assertThat(created).isEqualTo(expected);
 
 	}
@@ -72,21 +72,21 @@ public class TestPersister {
 		Long alsId = location.getAlsId();
 		
 		Long exsitingLocId = persist(location);
-		Long locId = persister.createLocationFromAlsIdIfNotExists(alsId);
+		Long locId = persister.createLocation(alsId);
 		assertAreEqual(locId, exsitingLocId);
 		
-		locId = persister.createLocationFromAlsIdIfNotExists(987654321L);
-		assertThat(locId).isNotEqualTo(exsitingLocId);
+		locId = persister.createLocation(987654321L);
+		assertThat(locId).isNull();
 		
 		location = getLocationObjectFromCSVRecordWithCoordinate();
 		Double lat = location.getLatitude();
 		Double lon = location.getLongitude();
 		exsitingLocId = persist(location);
 		
-		locId = persister.createLocationFromCoordinateIfNotExists(lat,lon);
+		locId = persister.createLocation(lat,lon);
 		assertAreEqual(locId,exsitingLocId);
 		
-		locId = persister.createLocationFromCoordinateIfNotExists(987654321.0,-987654321.0);
+		locId = persister.createLocation(987654321.0,-987654321.0);
 		assertThat(locId).isNotEqualTo(exsitingLocId);
 	}
 
@@ -147,9 +147,14 @@ public class TestPersister {
 		SeriesDataFileHelper helper = new SeriesDataFileHelper();
 		SeriesDataFile dataFile = helper.createTestSeriesDataFileWithAlsIdFormat();
 		CSVRecord csvRecord = helper.getCSVParser(dataFile).iterator().next();
-		Persister persister = new Persister();
-		Location location = persister.createLocation(Long.parseLong(get(
+		Location location = createLocation(Long.parseLong(get(
 				csvRecord, SeriesDataFile.ALS_ID_HEADER, dataFile)));
+		return location;
+	}
+
+	private Location createLocation(long alsId) {
+		Location location = new Location();
+		location.setAlsId(alsId);
 		return location;
 	}
 
@@ -160,13 +165,20 @@ public class TestPersister {
 		SeriesDataFile dataFile = helper.createTestSeriesDataFileWithCoordianteFormat();
 		CSVRecord csvRecord = helper.getCSVParser(dataFile).iterator().next();
 		Persister persister = new Persister();
-		Location location = persister.createLocation(Double.parseDouble(get(
+		Location location = persister.createNew(Double.parseDouble(get(
 				csvRecord, SeriesDataFile.LATITUDE_HEADER, dataFile)),
 				Double.parseDouble(get(csvRecord, SeriesDataFile.LONGITUDE_HEADER,
 						dataFile)));
 		return location;
 	}
 	
+//	private Location createLocation(double longitude, double latitude) {
+//		Location location = new Location();
+//		location.setLongitude(longitude);
+//		location.setLatitude(latitude);
+//		return location;
+//	}
+
 	private Long persist(final Location location) {
 		return Factory.makeLocationRule(JPA.em()).create(location);
 	}
