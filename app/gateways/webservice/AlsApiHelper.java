@@ -18,7 +18,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 
 import controllers.Factory;
 
-public class AlsResponseHelper {
+public class AlsApiHelper {
 
 	private static final String NAME = "name";
 	private static final String BBOX = "bbox";
@@ -29,18 +29,8 @@ public class AlsResponseHelper {
 
 	static {
 		final ConfRule confRule = Factory.makeConfRule();
-		baseUrl = confRule.readString(AppKey.ALS_LOCATION_WS_URL.key());
+		baseUrl = confRule.readString(AppKey.ALS_WS_URL.key()) + "/api/locations";
 	}
-
-//	public Location getAlsLocation(Long id) {
-//		// Location location = LocationCacheRule.read(id);
-//		// if(location == null){
-//		Location location = getLocationFromAls(id);
-//		// if(location != null)
-//		// LocationCacheRule.update(location);
-//		// }
-//		return location;
-//	}
 
 	public Location getLocationFromAls(Long id) {
 		ClientRule clientRule = makeAlsClientRule();
