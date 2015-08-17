@@ -7,6 +7,8 @@ timeline.js
 		var i,
 		j,
 		temp,
+		currentSVG,
+		svgDocument,
 		thisMap = this;
 		
 		L.mapbox.accessToken = 'pk.eyJ1IjoidHBzMjMiLCJhIjoiVHEzc0tVWSJ9.0oYZqcggp29zNZlCcb2esA';
@@ -113,16 +115,26 @@ timeline.js
 		}
 		
 		/*
+		//TODO: figure out how to make svgDocument create children
 		for(i = 0; i < this.colorSet.length; i++) {
-			$("#ramps").append("<div id='palette-" + i + "' class='ramp'><svg width='15' height='75'></svg></div>");
+			$("#ramps").append("<div id='palette-" + i + "' class='ramp'><svg id='svg-" + i + "' width='15' height='75'></svg></div>");
 			
 			temp = this.colorSet[i];
 			for(j = 0; j < temp.length; j++) {
-				$("#palette-" + i + " svg").append("<rect style='fill: " + temp[j] + ";' width='15' height='15' y='" + (15 * j) + "'></rect>");
+				currentSVG = svgDocument.createElementNS("http://www.w3.org/2000/svg", "rect");
+				//currentSVG.setAttributeNS(id = "color-" + i + "-" + j);
+				currentSVG.setAttributeNS(null, "width", 15);
+				currentSVG.setAttributeNS(null, "height", 15);
+				currentSVG.setAttributeNS(null, "y", 15 * j);
+				currentSVG.setAttributeNS(null, "fill", temp[j]);
+				
+				$("#svg-" + i).append(currentSVG);
+				//$("#palette-" + i + " svg").append("<rect id='color-" + i + "-" + j + "'  width='15' height='15' y='" + (15 * j) + "'></rect>");
+				//$("#color-" + i + "-" + j).attr("fill", temp[j]);
 			}
 		}
 		$("#palette-0").addClass("selected");
-		*/
+		/**/
 		
 		return this;
 	}
