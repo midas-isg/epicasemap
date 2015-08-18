@@ -7,12 +7,12 @@ timeline.js
 		var i,
 		j,
 		temp,
-		currentSVG,
-		svgDocument,
+		svgElement,
+		svg,
 		thisMap = this;
 		
 		L.mapbox.accessToken = 'pk.eyJ1IjoidHBzMjMiLCJhIjoiVHEzc0tVWSJ9.0oYZqcggp29zNZlCcb2esA';
-		this.map = L.mapbox.map('map', 'mapbox.streets'/*'mapbox.dark'*/, { worldCopyJump: true, bounceAtZoomLimits: false, zoom: 2, minZoom: 2})
+		this.map = L.mapbox.map('map', 'mapbox.streets-basic' /*'mapbox.streets'*/ /*'mapbox.dark'*/, { worldCopyJump: true, bounceAtZoomLimits: false, zoom: 2, minZoom: 2})
 			.setView([30, 0], 2);
 
 		this.heat = []; //null;
@@ -114,27 +114,26 @@ timeline.js
 			});
 		}
 		
-		/*
-		//TODO: figure out how to make svgDocument create children
 		for(i = 0; i < this.colorSet.length; i++) {
-			$("#ramps").append("<div id='palette-" + i + "' class='ramp'><svg id='svg-" + i + "' width='15' height='75'></svg></div>");
+			svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+			svg.setAttribute("width", 15);
+			svg.setAttribute("height", 75);
+			
+			$("#ramps").append("<div id='palette-" + i + "' class='ramp'></div>");
+			$("#palette-" + i ).append(svg);
 			
 			temp = this.colorSet[i];
 			for(j = 0; j < temp.length; j++) {
-				currentSVG = svgDocument.createElementNS("http://www.w3.org/2000/svg", "rect");
-				//currentSVG.setAttributeNS(id = "color-" + i + "-" + j);
-				currentSVG.setAttributeNS(null, "width", 15);
-				currentSVG.setAttributeNS(null, "height", 15);
-				currentSVG.setAttributeNS(null, "y", 15 * j);
-				currentSVG.setAttributeNS(null, "fill", temp[j]);
+				svgElement = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+				svgElement.setAttributeNS(null, "width", 15);
+				svgElement.setAttributeNS(null, "height", 15);
+				svgElement.setAttributeNS(null, "y", 15 * j);
+				svgElement.setAttributeNS(null, "fill", temp[j]);
 				
-				$("#svg-" + i).append(currentSVG);
-				//$("#palette-" + i + " svg").append("<rect id='color-" + i + "-" + j + "'  width='15' height='15' y='" + (15 * j) + "'></rect>");
-				//$("#color-" + i + "-" + j).attr("fill", temp[j]);
+				$(svg).append(svgElement);
 			}
 		}
 		$("#palette-0").addClass("selected");
-		/**/
 		
 		return this;
 	}
@@ -1091,5 +1090,7 @@ console.log((endFrame - startFrame) + " frames");
 	$(document).ready(function() {
 		window.MAGIC_MAP = new MagicMap();
 		MAGIC_MAP.start();
+		
+		return;
 	});
 })();
