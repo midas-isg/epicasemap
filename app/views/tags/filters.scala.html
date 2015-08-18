@@ -2,7 +2,7 @@
 
 @* filter elements usually used with filter_repeat tag*@
 @(prefix:String, plural:String, options:Seq[Seq[String]]) 
-<fieldset id='@{prefix}Filter'>
+<fieldset id='@{prefix}Filter' ng-init='@{prefix}Order="@options(0)(0)"'>
 	<label>filter: </label>
 	<input placeholder="Filter your @plural" autofocus 
 	ng-model="@{prefix}Query" >
