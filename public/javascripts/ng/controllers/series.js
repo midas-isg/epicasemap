@@ -4,7 +4,6 @@ app.controller('Series', function($scope, $rootScope, api) {
 	$scope.view = {};
 	$scope.coordinates = [];
 	
-	$('#Series-btn-save-close').hide();
 	$scope.dialog = $('#seriesModal');
 	$scope.alertParent = $scope.dialog.find('.modal-body');
     $scope.dialog.on('hide.bs.modal', function (e) {
@@ -56,6 +55,7 @@ app.controller('Series', function($scope, $rootScope, api) {
     $scope.uploadNewData = function(seriesId) {
     	$rootScope.$emit('uploadNewSeriesData', seriesId);
 	};
+	$scope.isHiddenButtonSaveThenClose = isNoData;
 
 	function edit(series) {
 		$scope.model = series;
@@ -96,9 +96,12 @@ app.controller('Series', function($scope, $rootScope, api) {
 		return model;
 	}
 	
+	function isNoData(){
+		return $scope.coordinates.length <= 0;
+	}
 	function save(callback){
 		emitBusy();
-		var toUpload = ! $scope.model.id;
+		var toUpload = isNoData();
 		var body = buildBody($scope.model);
 		api.save('series', body).then(function(location) {
 			emitDone();
