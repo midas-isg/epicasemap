@@ -7,7 +7,6 @@ timeline.js
 		var i,
 		j,
 		temp,
-		vizID = getURLParameterByName("id"),
 		thisMap = this;
 		
 		L.mapbox.accessToken = 'pk.eyJ1IjoidHBzMjMiLCJhIjoiVHEzc0tVWSJ9.0oYZqcggp29zNZlCcb2esA';
@@ -28,19 +27,30 @@ timeline.js
 		this.latestDate = new Date(0);
 		this.zeroTime(this.latestDate);
 		
-		this.seriesList0;
-		this.seriesList1;
+		this.vizID = getURLParameterByName("id")
+		
+		this.uiSettings = {
+			series: [{index: -1, color: 0}],
+			colorPalette: 0,
+			bBox: [[], []],
+			timeSelectionEvent: null
+		};
+		
+		this.seriesList = [];
 		this.seriesDescriptions = {};
+		this.seriesToLoad = [];
 		
 		this.showControlPanel = false;
 		
 		this.playBack = false;
-		this.set = [];
+		this.displaySet = [];
 		
-		if(vizID) {
-			this.loadVisualization(vizID);
+		if(this.vizID) {
+			this.loadVisualization(this.vizID);
 		}
 		else {
+			$("#save-button").hide();
+			
 			function getDescriptions(seriesToLoad) {
 				var URL = CONTEXT + "/api/series/",
 				i,
@@ -53,14 +63,14 @@ timeline.js
 						url: URL + thisMap.seriesToLoad[j],
 						success: function(result) {
 							thisMap.seriesDescriptions[result.result.id] = {
-								name: result.result.name,
+								title: result.result.title,
 								description: result.result.description
 							};
 							
 							seriesToLoad.shift();
 							if(seriesToLoad.length === 0) {
 								for(i = 0; i < thisMap.seriesToLoad.length; i++) {
-									thisMap.set.push({visiblePoints: []});
+									thisMap.displaySet.push({visiblePoints: []});
 									thisMap.load(thisMap.seriesToLoad[i]);
 								}
 							}
@@ -93,8 +103,8 @@ timeline.js
 			['#66c2a5', '#fc8d62', '#8da0cb', "#e78ac3", "#a6d854"]
 		];
 		
-		this.paletteSelection = 0;
-		this.colors = this.colorSet[this.paletteSelection];
+		this.uiSettings.colorPalette = 0;
+		this.colors = this.colorSet[this.uiSettings.colorPalette];
 		
 		for(i = 0; i < this.colors.length; i++) {
 			this.setGradient.push({
@@ -117,6 +127,35 @@ timeline.js
 		return this;
 	}
 	
+	MagicMap.prototype.saveVisualization = function() {
+		var URL = CONTEXT + "/api/vizs/" + this.vizID + "/ui-setting",
+		bounds = this.map.getBounds();
+		
+		if(this.vizID) {
+			this.uiSettings.bBox[0][0] = bounds.getSouth();
+			this.uiSettings.bBox[0][1] = bounds.getWest();
+			this.uiSettings.bBox[1][0] = bounds.getNorth();
+			this.uiSettings.bBox[1][1] = bounds.getEast();
+			
+			$.ajax({
+				url: URL,
+				type: "PUT",
+				data: JSON.stringify(this.uiSettings),
+				contentType: "application/json; charset=UTF-8",
+				success: function(result, status, xhr) {
+					alert("Save successful");
+					return;
+				},
+				error: function(xhr, status, error) {
+					alert(xhr + "\n" + status + "\n" + error);
+					return;
+				}
+			});
+		}
+		
+		return;
+	}
+	
 	MagicMap.prototype.loadVisualization = function(vizID) {
 		var URL = CONTEXT + "/api/vizs/" + vizID,
 		thisMap = this;
@@ -125,33 +164,51 @@ timeline.js
 			url: URL,
 			success: function(result) {
 				var h,
-				i,
-				seriesDisplayCount = 2;
+				i;
 				
-				thisMap.seriesList0 = result.result.allSeries;
-				thisMap.seriesList1 = result.result.allSeries2;
+				thisMap.seriesList[0] = result.result.allSeries;
+				h = 2;
+				while(result.result["allSeries" + h]) {
+					thisMap.seriesList.push(result.result["allSeries" + h]);
+					h++;
+				}
 				
-				$("#title").text(result.result.name);
+				$("#title").text(result.result.title);
 				
-				for(h = 0; h < seriesDisplayCount; h++) {
-					for(i = 0; i < thisMap["seriesList" + h].length; i++) {
-						thisMap.seriesDescriptions[thisMap["seriesList" + h][i].id] = {
-							name: thisMap["seriesList" + h][i].name,
-							description: thisMap["seriesList" + h][i].description
+				for(h = 0; h < thisMap.seriesList.length; h++) {
+					for(i = 0; i < thisMap.seriesList[h].length; i++) {
+						thisMap.seriesDescriptions[thisMap.seriesList[h][i].id] = {
+							title: thisMap.seriesList[h][i].title,
+							description: thisMap.seriesList[h][i].description
 						};
 					}
 				}
 				
 				//console.log(thisMap.seriesDescriptions);
 				
-				thisMap.seriesToLoad = [thisMap.seriesList0[0].id, thisMap.seriesList1[0].id];
+				if(result.result.uiSetting) {
+					thisMap.uiSettings = JSON.parse(result.result.uiSetting);
+					
+					for(h = 0; h < thisMap.uiSettings.series.length; h++) {
+						thisMap.seriesToLoad.push(thisMap.uiSettings.series[h].index);
+					}
+					
+					thisMap.map.fitBounds(thisMap.uiSettings.bBox);
+					$("#palette-" + thisMap.uiSettings.colorPalette).click();
+				}
+				else {
+					for(h = 0; h < thisMap.seriesList.length; h++) {
+						thisMap.seriesToLoad.push(thisMap.seriesList[h][0].id);
+						thisMap.uiSettings.series[h] = {index: thisMap.seriesList[h][0].id, color: 0};
+					}
+				}
+				
 				for(i = 0; i < thisMap.seriesToLoad.length; i++) {
-					thisMap.set.push({visiblePoints: []});
+					thisMap.displaySet.push({visiblePoints: []});
 					thisMap.load(thisMap.seriesToLoad[i]);
 				}
 				
-				/**/
-				for(h = 0; h < seriesDisplayCount; h++) {
+				for(h = 0; h < thisMap.seriesList.length; h++) {
 					$("#series-options").append(
 						"<div>" +
 							"<h5>Select series " + String.fromCharCode(h + 65) + "</h5>" +
@@ -160,9 +217,11 @@ timeline.js
 						"</div>"
 					);
 					
-					for(i = 0; i < thisMap["seriesList" + h].length; i++) {
-						$("#series-" + h).append("<option value='" + thisMap["seriesList" + h][i].id + "'>" + thisMap["seriesList" + h][i].name +"</option>");
+					for(i = 0; i < thisMap.seriesList[h].length; i++) {
+						$("#series-" + h).append("<option value='" + thisMap.seriesList[h][i].id + "'>" + thisMap.seriesList[h][i].title +"</option>");
 					}
+					$("#series-" + h).val(thisMap.uiSettings.series[h].index);
+					$("#series-" + h).change();
 					
 					$("#series-" + h).change(function() {
 						var id = $(this).val(),
@@ -170,25 +229,26 @@ timeline.js
 						k = $(this).attr("id").split("-")[1];
 console.log("series " + k + ": " + id);
 						
+						thisMap.uiSettings.series[k].index = id;
+						
 						//TODO: recalculate frameOffset, earliest & latest dates after loading is finished
 						//(refactor block to external call -calculate from 0 and length-1 indexes)
 						thisMap.latestDate = new Date(0);
 						thisMap.earliestDate = new Date();
 						
 						thisMap.seriesToLoad = [];
-						for(l = 0; l < seriesDisplayCount; l++) {
+						for(l = 0; l < thisMap.seriesList.length; l++) {
 							thisMap.seriesToLoad.push($("#series-" + l).val());
 						}
 						
 						for(l = 0; l < thisMap.seriesToLoad.length; l++) {
-							thisMap.set[k].visiblePoints.length = 0;
+							thisMap.displaySet[k].visiblePoints.length = 0;
 							thisMap.load(thisMap.seriesToLoad[l], l);
 						}
 						
 						return;
 					});
 				}
-				/**/
 				
 				return;
 			},
@@ -201,7 +261,7 @@ console.log("series " + k + ": " + id);
 	}
 	
 	MagicMap.prototype.start = function() {
-		thisMap = this;
+		var thisMap = this;
 		
 		document.getElementById('body').onkeyup = this.handleInput;
 		setInterval(this.loop, 0);
@@ -209,24 +269,26 @@ console.log("series " + k + ": " + id);
 		$("#reset-button").click(function() {
 			var i;
 			
-			//console.log("Buffer:");
-			//console.log(MAGIC_MAP.dataset[].buffer);
-			MAGIC_MAP.loadBuffer();
+			thisMap.uiSettings.event = null;//TODO: remove if necessary
 			
-			for(i = 0; i < MAGIC_MAP.heat.length; i++) {
-				MAGIC_MAP.heat[i].redraw();
+			//console.log("Buffer:");
+			//console.log(thisMap.dataset[].buffer);
+			thisMap.loadBuffer();
+			
+			for(i = 0; i < thisMap.heat.length; i++) {
+				thisMap.heat[i].redraw();
 			}
 			
-			MAGIC_MAP.masterChart.xAxis[0].removePlotLine('date-line');
+			thisMap.masterChart.xAxis[0].removePlotLine('date-line');
 			
 			return;
 		});
 		
 		$("#playback-button").click(function() {
-			MAGIC_MAP.paused = !MAGIC_MAP.paused;
+			thisMap.paused = !thisMap.paused;
 			console.log(new Date());
 			
-			return MAGIC_MAP.updatePlaybackInterface();
+			return thisMap.updatePlaybackInterface();
 		});
 		
 		$("#toggle-details-button").click(function() {
@@ -234,7 +296,7 @@ console.log("series " + k + ": " + id);
 			
 			$("#detail-container *").toggle();
 			
-			for(i = 0; i < thisMap.set.length; i++) {
+			for(i = 0; i < thisMap.displaySet.length; i++) {
 				thisMap.detailChart.series[i].update({color: thisMap.colors[i]}, true);
 			}
 			
@@ -250,23 +312,28 @@ console.log("series " + k + ": " + id);
 		//TODO: refactor palette click code without causing closure issues
 		$("#palette-0").click(function() {
 			if(!$("#palette-0").hasClass("selected")) {
-				MAGIC_MAP.paletteSelection = 0;
-				MAGIC_MAP.setColorPalette(0);
+				thisMap.uiSettings.colorPalette = 0;
+				thisMap.setColorPalette(0);
 			}
 		});
 		
 		$("#palette-1").click(function() {
 			if(!$("#palette-1").hasClass("selected")) {
-				MAGIC_MAP.paletteSelection = 1;
-				MAGIC_MAP.setColorPalette(1);
+				thisMap.uiSettings.colorPalette = 1;
+				thisMap.setColorPalette(1);
 			}
 		});
 		
 		$("#palette-2").click(function() {
 			if(!$("#palette-2").hasClass("selected")) {
-				MAGIC_MAP.paletteSelection = 2;
-				MAGIC_MAP.setColorPalette(2);
+				thisMap.uiSettings.colorPalette = 2;
+				thisMap.setColorPalette(2);
 			}
+		});
+		
+		$("#save-button").click(function() {
+			thisMap.saveVisualization();
+			return;
 		});
 		
 		$(window).resize(function() {
@@ -297,7 +364,7 @@ console.log("series " + k + ": " + id);
 			});
 		}
 		
-		for(i = 0; i < this.set.length; i++) {
+		for(i = 0; i < this.displaySet.length; i++) {
 			this.detailChart.series[i].update({color: this.colors[i]}, true);
 			this.masterChart.series[i].update({color: this.colors[i]}, true);
 			
@@ -325,7 +392,7 @@ console.log("series " + k + ": " + id);
 		var URL = CONTEXT + "/api/series/" + seriesID + "/time-coordinate",
 		currentDataset = {
 			seriesID: seriesID,
-			name: "name",
+			title: "title",
 			buffer: [{point: [], date: null}],
 			maxValue: 0,
 			frameAggregate: [0],
@@ -339,7 +406,7 @@ console.log("series " + k + ": " + id);
 		else {
 			this.dataset[index] = {
 				seriesID: seriesID,
-				name: "name",
+				title: "title",
 				buffer: [{point: [], date: null}],
 				maxValue: 0,
 				frameAggregate: [0],
@@ -364,7 +431,7 @@ console.log("series " + k + ": " + id);
 				
 				thisMap.zeroTime(lastDate);
 				
-				currentDataset.name = thisMap.seriesDescriptions[seriesID].name;
+				currentDataset.title = thisMap.seriesDescriptions[seriesID].title;
 				
 				if(thisMap.earliestDate > lastDate) {
 					thisMap.earliestDate = new Date(lastDate);
@@ -410,7 +477,7 @@ console.log("series " + k + ": " + id);
 				}
 				console.log("Loaded " + (result.results.length - skipped) + " entries");
 				console.log("Skipped " + skipped + " malformed entries");
-				console.log(filler + " days occurred without reports in this timespan");
+				console.log(filler + " days occurred without incidents in this timespan");
 				console.log("Total Frames: " + frame + 1);
 				console.log("Buffer length: " + currentDataset.buffer.length);
 				
@@ -434,6 +501,12 @@ console.log("series " + k + ": " + id);
 					thisMap.packHeat();
 					thisMap.loadBuffer();
 					thisMap.paused = true;
+					
+					//use timeline selection event object as parameter and trigger master-container/chart selection event
+					if(thisMap.uiSettings.timeSelectionEvent) {
+						thisMap.doSelection(thisMap.uiSettings.timeSelectionEvent);
+					}
+					
 					console.log("Finished loading. Unpause to begin.");
 				}
 				
@@ -474,7 +547,7 @@ console.log("series " + k + ": " + id);
 			
 			for(i = 0; i < MAGIC_MAP.dataset.length; i++) {
 				series.push({
-						name: MAGIC_MAP.dataset[i].name, //"Series " + MAGIC_MAP.dataset[i].seriesID,
+						name: MAGIC_MAP.dataset[i].title, //"Series " + MAGIC_MAP.dataset[i].seriesID,
 						pointStart: detailStart[i],
 						pointInterval: 86400000,//24 * 3600 * 1000,
 						data: detailSeries[i].detailData
@@ -568,7 +641,7 @@ console.log("series " + k + ": " + id);
 			for(i = 0; i < MAGIC_MAP.dataset.length; i++) {
 				dataSeries.push({
 						type: 'area',
-						name: String.fromCharCode(i + 65) + ": " + MAGIC_MAP.dataset[i].name,
+						name: String.fromCharCode(i + 65) + ": " + MAGIC_MAP.dataset[i].title,
 						pointInterval: 86400000, //24 * 3600 * 1000,
 						pointStart: Date.UTC(MAGIC_MAP.dataset[i].buffer[0].date.getUTCFullYear(),
 									MAGIC_MAP.dataset[i].buffer[0].date.getUTCMonth(),
@@ -591,70 +664,8 @@ console.log("series " + k + ": " + id);
 						// listen to the selection event on the master chart to update the
 						// extremes of the detail chart
 						selection: function(event) {
-							var extremesObject = event.xAxis[0],
-								min = extremesObject.min,
-								max = extremesObject.max,
-								detailSeries = [],
-								xAxis = this.xAxis[0],
-								minDate = new Date(extremesObject.min),
-								maxDate = new Date(extremesObject.max),
-								startFrame,
-								endFrame,
-								i;
+							MAGIC_MAP.doSelection(event);
 							
-							for(i = 0; i < this.series.length; i++) {
-								detailSeries.push({detailData: []});
-								
-								// reverse engineer the last part of the data
-								$.each(this.series[i].data, function() {
-									if((this.x >= min) && (this.x <= max)) {
-										detailSeries[i].detailData.push([this.x, this.y])
-									}
-								});
-							}
-							
-							// move the plot bands to reflect the new detail span
-							xAxis.removePlotBand('mask-before');
-							xAxis.addPlotBand({
-								id: 'mask-before',
-								from: Date.UTC(MAGIC_MAP.earliestDate.getUTCFullYear(),
-									MAGIC_MAP.earliestDate.getUTCMonth(),
-									MAGIC_MAP.earliestDate.getUTCDate()),
-								to: min,
-								color: 'rgba(128, 128, 128, 0.2)'
-							});
-
-							xAxis.removePlotBand('mask-after');
-							xAxis.addPlotBand({
-								id: 'mask-after',
-								from: max,
-								to: Date.UTC(MAGIC_MAP.latestDate.getUTCFullYear(),
-									MAGIC_MAP.latestDate.getUTCMonth(),
-									MAGIC_MAP.latestDate.getUTCDate()),
-								color: 'rgba(128, 128, 128, 0.2)'
-							});
-							
-							for(i = 0; i < MAGIC_MAP.detailChart.series.length; i++) {
-								MAGIC_MAP.detailChart.series[i].setData(detailSeries[i].detailData);
-							}
-							
-							MAGIC_MAP.zeroTime(minDate);
-							MAGIC_MAP.zeroTime(maxDate);
-							
-							startFrame = Math.floor((minDate - MAGIC_MAP.earliestDate) / 86400000);
-							endFrame = Math.floor((maxDate - MAGIC_MAP.earliestDate) / 86400000);
-							
-							if(startFrame < 0) {
-								startFrame = 0;
-							}
-							
-							if(endFrame > (MAGIC_MAP.frameCount - 1)) {
-								endFrame = (MAGIC_MAP.frameCount - 1);
-							}
-							
-							console.log(startFrame + "->" + endFrame);
-							MAGIC_MAP.playSection(startFrame, endFrame);
-
 							return false;
 						}
 					}
@@ -766,6 +777,82 @@ console.log("series " + k + ": " + id);
 		return;
 	}
 	
+	MagicMap.prototype.doSelection = function(event) {
+		var extremesObject = event.xAxis[0],
+			min = extremesObject.min,
+			max = extremesObject.max,
+			detailSeries = [],
+			xAxis = this.masterChart.xAxis[0],
+			minDate = new Date(extremesObject.min),
+			maxDate = new Date(extremesObject.max),
+			startFrame,
+			endFrame,
+			i;
+		
+		console.log("min: " + min);
+		console.log("min date: " + minDate);
+		console.log("max: " + max);
+		console.log("max date: " + maxDate);
+		
+		for(i = 0; i < this.masterChart.series.length; i++) {
+			detailSeries.push({detailData: []});
+			
+			// reverse engineer the last part of the data
+			$.each(this.masterChart.series[i].data, function() {
+				if((this.x >= min) && (this.x <= max)) {
+					detailSeries[i].detailData.push([this.x, this.y])
+				}
+			});
+		}
+		
+		// move the plot bands to reflect the new detail span
+		xAxis.removePlotBand('mask-before');
+		xAxis.addPlotBand({
+			id: 'mask-before',
+			from: Date.UTC(MAGIC_MAP.earliestDate.getUTCFullYear(),
+				MAGIC_MAP.earliestDate.getUTCMonth(),
+				MAGIC_MAP.earliestDate.getUTCDate()),
+			to: min,
+			color: 'rgba(128, 128, 128, 0.2)'
+		});
+
+		xAxis.removePlotBand('mask-after');
+		xAxis.addPlotBand({
+			id: 'mask-after',
+			from: max,
+			to: Date.UTC(MAGIC_MAP.latestDate.getUTCFullYear(),
+				MAGIC_MAP.latestDate.getUTCMonth(),
+				MAGIC_MAP.latestDate.getUTCDate()),
+			color: 'rgba(128, 128, 128, 0.2)'
+		});
+		
+		for(i = 0; i < MAGIC_MAP.detailChart.series.length; i++) {
+			MAGIC_MAP.detailChart.series[i].setData(detailSeries[i].detailData);
+		}
+		
+		MAGIC_MAP.zeroTime(minDate);
+		MAGIC_MAP.zeroTime(maxDate);
+		
+		startFrame = Math.floor((minDate - MAGIC_MAP.earliestDate) / 86400000);
+		endFrame = Math.floor((maxDate - MAGIC_MAP.earliestDate) / 86400000);
+		
+		if(startFrame < 0) {
+			startFrame = 0;
+		}
+		
+		if(endFrame > (MAGIC_MAP.frameCount - 1)) {
+			endFrame = (MAGIC_MAP.frameCount - 1);
+		}
+		
+		console.log("Selection: " + startFrame + "->" + endFrame);
+		MAGIC_MAP.playSection(startFrame, endFrame);
+		
+		MAGIC_MAP.uiSettings.timeSelectionEvent = {xAxis: []};
+		MAGIC_MAP.uiSettings.timeSelectionEvent.xAxis.push({min: event.xAxis[0].min, max: event.xAxis[0].max});
+		
+		return;
+	}
+	
 	MagicMap.prototype.evolve = function() {
 		return;
 	}
@@ -781,10 +868,9 @@ console.log("series " + k + ": " + id);
 		this.masterChart.xAxis[0].removePlotBand('mask-before');
 		this.masterChart.xAxis[0].removePlotBand('mask-after');
 		
-		for(i = 0; i < this.set.length; i++) {
+		for(i = 0; i < this.displaySet.length; i++) {
 			//empty visiblePoints array
-			//while(this.set[i].visiblePoints.length > 0) { this.set[i].visiblePoints.pop(); }
-			this.set[i].visiblePoints.length = 0; //hopefully the old data is garbage collected!
+			this.displaySet[i].visiblePoints.length = 0; //hopefully the old data is garbage collected!
 		}
 		
 		$("#playback-button").removeClass("disabled");
@@ -804,9 +890,9 @@ console.log("series " + k + ": " + id);
 		if(this.reset) {
 			this.reset = false;
 			
-			for(i = 0; i < this.set.length; i++) {
+			for(i = 0; i < this.displaySet.length; i++) {
 				//empty visiblePoints array
-				this.set[i].visiblePoints.length = 0; //hopefully the old data is garbage collected!
+				this.displaySet[i].visiblePoints.length = 0; //hopefully the old data is garbage collected!
 			}
 		}
 		
@@ -818,7 +904,7 @@ console.log("series " + k + ": " + id);
 			if(this.dataset[setID].buffer[setFrame]) {
 				for(i = 0; i < this.dataset[setID].buffer[setFrame].point.length; i++) {
 					if(this.dataset[setID].buffer[setFrame].point[i].value > 0) {
-						this.set[setID].visiblePoints.push([this.dataset[setID].buffer[setFrame].point[i].latitude,
+						this.displaySet[setID].visiblePoints.push([this.dataset[setID].buffer[setFrame].point[i].latitude,
 							this.dataset[setID].buffer[setFrame].point[i].longitude,
 							0.7,
 							(this.dataset[setID].buffer[setFrame].point[i].value / this.dataset[setID].maxValue)]);
@@ -851,12 +937,12 @@ console.log("series " + k + ": " + id);
 			}
 			
 			if(this.playBack) {
-				for(i = 0; i < this.set[setID].visiblePoints.length; i++) {
-					if(this.set[setID].visiblePoints[i][2] > 0.00) {
-						this.set[setID].visiblePoints[i][2] -= 0.0231;
+				for(i = 0; i < this.displaySet[setID].visiblePoints.length; i++) {
+					if(this.displaySet[setID].visiblePoints[i][2] > 0.00) {
+						this.displaySet[setID].visiblePoints[i][2] -= 0.0231;
 					}
 					else {
-						this.set[setID].visiblePoints.splice(i, 1);
+						this.displaySet[setID].visiblePoints.splice(i, 1);
 						i--;
 					}
 				}
@@ -886,16 +972,15 @@ console.log("series " + k + ": " + id);
 	MagicMap.prototype.playSection = function(startFrame, endFrame) {
 		var i;
 		
-		//TODO: ensure startFrame and EndFrame hit all series throughout during visualization
 		this.playBack = false;
 		this.paused = true;
 		this.updatePlaybackInterface();
 		$("#playback-button").removeClass("disabled");
 		this.frame = startFrame;
 		
-		for(i = 0; i < this.set.length; i++) {
+		for(i = 0; i < this.displaySet.length; i++) {
 			//empty visiblePoints array
-			this.set[i].visiblePoints.length = 0; //hopefully the old data is garbage collected!
+			this.displaySet[i].visiblePoints.length = 0; //hopefully the old data is garbage collected!
 		}
 		
 console.log((endFrame - startFrame) + " frames");
@@ -918,7 +1003,7 @@ console.log((endFrame - startFrame) + " frames");
 		
 		for(setID = 0; setID < this.dataset.length; setID++) {
 			if(!this.heat[setID]) {
-				this.heat.push(L.heatLayer(this.set[setID].visiblePoints,
+				this.heat.push(L.heatLayer(this.displaySet[setID].visiblePoints,
 					{
 						minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.1, //radius: 5,
 						gradient: this.setGradient[setID]
@@ -926,7 +1011,7 @@ console.log((endFrame - startFrame) + " frames");
 				).addTo(this.map));
 			}
 			else {
-				this.heat[setID].setLatLngs(this.set[setID].visiblePoints);
+				this.heat[setID].setLatLngs(this.displaySet[setID].visiblePoints);
 			}
 //console.log(this.heat[setID]._latlngs);
 		}

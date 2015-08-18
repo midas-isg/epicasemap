@@ -8,8 +8,8 @@
 	@script_asset("javascripts/ng/controllers/series-data.js")
 }
 
-@main("Viz Management", imports) {
-	<article id='vizs-body' ng-app='app' ng-controller='Vizs'>
+@main("Visualization Management", imports) {
+	<article id='vizs-body'  ng-app='app' ng-controller='Vizs'>
 		@metadata_manager("Viz", "Vizs", "viz", 
 			Seq(
 				Seq(Html("action-2"), Html("Actions"), buttons())
