@@ -2,8 +2,9 @@
 
 app.controller('SeriesCollection', function($scope, $rootScope, api) {
 	var urlPath = 'series';
-	loadModelHavingGivenId();
 
+	$scope.alertParent = $("#series-body");
+	loadModelHavingGivenId();
 	loadSeries();
     $rootScope.$on('loadSeries', function(event) {
     	loadSeries();
@@ -20,7 +21,8 @@ app.controller('SeriesCollection', function($scope, $rootScope, api) {
 	function loadSeries(){
 		api.find(urlPath).then(function(rsp) {
 			$scope.models = rsp.data.results;
-			$scope.seriesOrder = $scope.seriesOrder || 'id';
+		}, function(err){
+			error('Failed to load all Series');
 		});
 	}
 	
@@ -33,8 +35,18 @@ app.controller('SeriesCollection', function($scope, $rootScope, api) {
 				if (model)
 					$scope.edit(model);
 				else
-					alert('Series with ID=' + id + " was not found!");
+					alert('Series with ID = ' + id + " was not found!");
+			}, function(err){
+				error('Failed to read Series with ID = ' + id);
 			});
 		}
+	}
+	
+	function error(message){
+		alert('Error: ' + message, 'alert-danger');
+	}
+	
+	function alert(message, classes){
+		api.alert($scope.alertParent, message, classes);
 	}
 });

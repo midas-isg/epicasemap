@@ -5,6 +5,19 @@ var app = angular.module('app', [])
 	  $locationProvider.html5Mode(true).hashPrefix('!');
 });
 
+app.run(function(){
+	$( document ).ready(resizeResizableTable);
+	$( window ).resize(resizeResizableTable);
+
+	function resizeResizableTable() {
+		var tc = $(".table-content-resizable");
+		var th = $(".table-header");
+		var height = $(window).height() - ($("body").height() - tc.height()) - 20;
+		var minHeight = $( "tr:first" ).height() * 3;
+		tc.css('max-height', Math.max(height, minHeight) + 'px');
+	}
+})
+
 app.directive('appFileModel', function ($parse) {
     return {
         restrict: 'A',
@@ -21,25 +34,13 @@ app.directive('appFileModel', function ($parse) {
 });
 
 app.service("api", function($http, $q, $location) {
-	$( document ).ready(resizeResizableTable);
-	$( window ).resize(resizeResizableTable);
-
-	function resizeResizableTable() {
-		var tc = $(".table-content-resizable");
-		var th = $(".table-header");
-		var height = $(window).height() - ($("body").height() - tc.height()) - 20;
-		var minHeight = $( "tr:first" ).height() * 3;
-		tc.css('max-height', Math.max(height, minHeight) + 'px');
-	}
-	
 	this.remove = function(path, id) {
 		var url = makeUrl(path, id), 
 			deferred = $q.defer();
 		$http['delete'](url).then(function(data) {
 			deferred.resolve(data);
 		}, function(err){
-			err.errorMessage = err.statusText;
-			deferred.resolve(err);
+			deferred.reject(err);
 		});
 		return deferred.promise;
 	};
@@ -53,6 +54,8 @@ app.service("api", function($http, $q, $location) {
 		var deferred = $q.defer();
 		$http.get(url).then(function(data) {
 			deferred.resolve(data);
+		}, function(err){
+			deferred.reject(err);
 		});
 		return deferred.promise;
 	};
@@ -60,7 +63,9 @@ app.service("api", function($http, $q, $location) {
 		var url = makeUrl(path, body.id),
 			method = body.id ? 'put' : 'post',
 			deferred = $q.defer();
-		$http[method](url, body).then(success);
+		$http[method](url, body).then(success, function(err){
+			deferred.reject(err);
+		});
 		return deferred.promise;
 		
 		function success(data){
@@ -86,20 +91,22 @@ app.service("api", function($http, $q, $location) {
             headers: {'Content-Type': undefined}
         }).then(function(data){
         	deferred.resolve(data);
-        });
+        }, function(err){
+			deferred.reject(err);
+		});
         return deferred.promise;
     };
 	this.alert = function($parent, message, classes){
 		this.removeAllAlerts($parent);
 		if (! classes)
 			classes = 'alert-warning';
-		aler($parent, message, classes);
+		alert($parent, message, classes);
 	}
 	this.removeAllAlerts = function($parent){
 		$parent.find('.alert').alert("close");
 	}
 	
-	function aler($parent, message, classes){
+	function alert($parent, message, classes){
 		$parent.prepend(
 				'<div class="alert ' + classes + ' fade in"><strong>' + message + 
 				'</strong><small class="text-right"> @ ' + new Date()  +

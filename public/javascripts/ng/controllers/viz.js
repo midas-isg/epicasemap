@@ -7,6 +7,7 @@ $(document).ready(function() {
 app.controller('Viz', function($scope, $rootScope, api) {
 	$scope.view = {};
 	$scope.dialog = $('#modal');
+	$scope.alertParent = $scope.dialog.find('.modal-body');
     loadAllSeries();
     $scope.$watch('model', function() { updateAllSeries($scope.model); });
     $scope.dialog.on('hide.bs.modal', function (e) {
@@ -44,7 +45,11 @@ app.controller('Viz', function($scope, $rootScope, api) {
 	$scope.submitThenClose = function() { $scope.submit(close);	};
 	$scope.removeThenClose = function() {
 		if (confirm("About to delete this Viz. \nOK = Delete")){
-			api.remove('vizs', $scope.model.id).then(close);
+			emitBusy();
+			api.remove('vizs', $scope.model.id).then(close, function(err){
+				emitDone();
+				error('Failed to delete the Viz!');
+			});
 		}
 	};
 	$scope.close = function() {
@@ -75,6 +80,7 @@ app.controller('Viz', function($scope, $rootScope, api) {
 	}
 	
 	function close(){
+		emitDone();
 		$scope.form.$setPristine();
 		$scope.close();
 	}
@@ -87,7 +93,8 @@ app.controller('Viz', function($scope, $rootScope, api) {
 		api.find('series').then(function(rsp) {
 			$scope.allSeries = rsp.data.results;
 			updateAllSeries($scope.model);
-			$scope.seriesOrder = $scope.seriesOrder || 'id';
+		}, function(err){
+			error("Failed to read all Series!");
 		});
 	}
 	
@@ -108,10 +115,20 @@ app.controller('Viz', function($scope, $rootScope, api) {
 	}
 
 	function edit(viz) {
-		var isNew = viz.id ? false : true;
 		$scope.model = viz;
-		$scope.showAll = isNew;
+		resetView();
 		$scope.dialog.modal();
+		
+		function resetView(){
+			api.removeAllAlerts($scope.alertParent);
+			$scope.form.$setPristine();
+			if (viz.id) {
+				$scope.showAll = false;
+			} else {
+				$scope.showAll = true;
+			} 
+		}
+
 	}
 
 	function buildBody(model) {
@@ -137,17 +154,45 @@ app.controller('Viz', function($scope, $rootScope, api) {
 	}
 	
 	function save(callback){
+		emitBusy();
 		var body = buildBody($scope.model);
-		$scope.working = true;
 		api.save('vizs', body).then(function(location) {
-			$scope.working = false;
+			emitDone();
+			success('The Viz was saved');
 			if (callback){
 				callback();
 			} else {
 				api.get(location).then(function(rsp) {
 					$scope.model = rsp.data.result;
+				}, function(err){
+					error('Failed to read the Viz!');
 				});
 			}
+		}, function(err){
+			emitDone();
+			error('Failed to save the Viz!');
 		});
+	}
+	
+	function success(message){
+		alert('Success: ' + message, 'alert-success');
+	}
+	
+	function error(message){
+		alert('Error: ' + message, 'alert-danger');
+	}
+	
+	function alert(message, classes){
+		api.alert($scope.alertParent, message, classes);
+	}
+	
+	function emitBusy(){
+		$scope.isWorking = true;
+		$rootScope.$emit('modalBusyDialog');
+	}
+	
+	function emitDone(){
+		$scope.isWorking = false;
+		$rootScope.$emit('hideBusyDialog');
 	}
 });
