@@ -26,7 +26,7 @@ app.controller('Vizs', function($scope, $rootScope, api) {
 		api.find(urlPath).then(function(rsp) {
 			$scope.models = rsp.data.results;
 		}, function(err){
-			error('Failed to load all Vizs!');
+			error('Failed to load all Visualizations!');
 		});
 	}
 	
@@ -39,9 +39,9 @@ app.controller('Vizs', function($scope, $rootScope, api) {
 				if (model)
 					$scope.edit(model);
 				else
-					alert('Viz with ID = ' + id + " was not found!");
+					alert('Visualization with ID = ' + id + " was not found!");
 			}, function(err){
-				error('Failed to read Viz with ID = ' + id);
+				error('Failed to read Visualization with ID = ' + id);
 			});
 		}
 	}

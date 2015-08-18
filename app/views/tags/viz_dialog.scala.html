@@ -1,6 +1,6 @@
 @import tags._ 
 
-@* Viz modal dialog *@
+@* Visualization modal dialog *@
 @(
 	orders:Seq[Seq[String]] =Seq(Seq("id", "ID"), Seq("title", "Title"), Seq("version", "Version")),
 	more:Seq[Seq[Html]] =Seq(
@@ -9,7 +9,7 @@
 		Seq(Html("action-1"), Html("Edit"), Html("<button title='edit' class='btn btn-xs' ng-click='editSeries(it)'><span class = 'glyphicon glyphicon-edit' aria-hidden='true'></span></button>"))
 	)
 )
-@bs_modal("modal", "Viz", "Viz Editor", "close()")(editor())(modal_buttons("Viz"))
+@bs_modal("modal", "Viz", "Visualization Editor", "close()")(editor())(modal_buttons("Visualization"))
 
 @editor(labelSize:Int=3) = {
 	@filters("series", "Series", orders)

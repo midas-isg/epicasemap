@@ -44,11 +44,11 @@ app.controller('Viz', function($scope, $rootScope, api) {
 	};
 	$scope.submitThenClose = function() { $scope.submit(close);	};
 	$scope.removeThenClose = function() {
-		if (confirm("About to delete this Viz. \nOK = Delete")){
+		if (confirm("About to delete the Visualization. \nOK = Delete")){
 			emitBusy();
 			api.remove('vizs', $scope.model.id).then(close, function(err){
 				emitDone();
-				error('Failed to delete the Viz!');
+				error('Failed to delete the Visualization!');
 			});
 		}
 	};
@@ -158,19 +158,19 @@ app.controller('Viz', function($scope, $rootScope, api) {
 		var body = buildBody($scope.model);
 		api.save('vizs', body).then(function(location) {
 			emitDone();
-			success('The Viz was saved');
+			success('The Visualization was saved');
 			if (callback){
 				callback();
 			} else {
 				api.get(location).then(function(rsp) {
 					$scope.model = rsp.data.result;
 				}, function(err){
-					error('Failed to read the Viz!');
+					error('Failed to read the Visualization!');
 				});
 			}
 		}, function(err){
 			emitDone();
-			error('Failed to save the Viz!');
+			error('Failed to save the Visualization!');
 		});
 	}
 	
