@@ -18,10 +18,9 @@ import play.mvc.Result;
 public class UploadSeries extends Controller {
 
 	@Transactional
-	public static Result upload(long seriesId, String delimiter,
-			String fileFormat) throws Exception {
-		
-		SeriesDataFile dataFile = getFileObject(request(), delimiter, fileFormat);
+	public static Result upload(long seriesId) throws Exception {
+
+		SeriesDataFile dataFile = getFileObject(request());
 		String errors = validate(dataFile);
 
 		if (errors.equals("")) {
@@ -72,14 +71,13 @@ public class UploadSeries extends Controller {
 		return stringErrors;
 	}
 
-	private static SeriesDataFile getFileObject(Request request, String delimiter,
-			String fileFormat) {
+	private static SeriesDataFile getFileObject(Request request) {
 
-		SeriesDataFile csvFile = new SeriesDataFile();
-		csvFile.setFile(request.body().asMultipartFormData().getFiles().get(0)
+		SeriesDataFile dataFile = new SeriesDataFile(request.body()
+				.asMultipartFormData().getFiles().get(0).getFile());
+		dataFile.setFile(request.body().asMultipartFormData().getFiles().get(0)
 				.getFile());
-		csvFile.setDelimiter(delimiter);
-		csvFile.setFileFormat(fileFormat);
-		return csvFile;
+
+		return dataFile;
 	}
 }

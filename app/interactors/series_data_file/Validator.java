@@ -73,22 +73,25 @@ public class Validator {
 		dataFile.setStdHeaderToFileHeaderMap(result);
 	}
 
-	private List<String> getFileConsistencyError(CSVParser parser,
+	List<String> getFileConsistencyError(CSVParser parser,
 			SeriesDataFile dataFile) {
 		List<String> errors = new ArrayList<String>();
-		addErrorToList(errors, validateFileHeaders(parser, dataFile));
-		addErrorToList(errors, validateDelimiter(parser, dataFile));
+		addErrorToList(errors, validateFormat(dataFile));
+		if (errors.isEmpty())
+			addErrorToList(errors, validateFileHeaders(parser, dataFile));
 		return errors;
 
 	}
 
-	private List<String> validateDelimiter(CSVParser parser,
-			SeriesDataFile dataFile) {
-		List<String> errors = new ArrayList<String>();
-		return errors;
+	private String validateFormat(SeriesDataFile dataFile) {
+		String format = dataFile.getFileFormat();
+		if(format.isEmpty())
+			return "column names are not valid.";
+		else
+			return "";
 	}
 
-	List<String> validateFileHeaders(CSVParser parser, SeriesDataFile dataFile) {
+	private List<String> validateFileHeaders(CSVParser parser, SeriesDataFile dataFile) {
 		List<String> errors = new ArrayList<String>();
 		Set<String> fileHeaderSet = parser.getHeaderMap().keySet();
 		Set<String> expectedHeaderSet = dataFile.getHeaders();
