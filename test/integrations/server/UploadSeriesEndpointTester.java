@@ -92,7 +92,7 @@ public class UploadSeriesEndpointTester {
 		File file = new File(
 				"test/resources/input-files/test_alsId_format_tab.txt");
 		String url = buildUrl(seriesId, "%09", SeriesDataFile.ALS_ID_FORMAT);
-		WSResponse response = uploadMultiPartRequest(file, url);
+		WSResponse response = sendMultiPartRequest(file, url);
 		return response;
 	}
 
@@ -103,7 +103,7 @@ public class UploadSeriesEndpointTester {
 		File file = new File(
 				"test/resources/input-files/test_coordinate_format_with_errors.txt");
 		String url = buildUrl(seriesId, "%2C", SeriesDataFile.COORDINATE_FORMAT);
-		response = uploadMultiPartRequest(file, url);
+		response = sendMultiPartRequest(file, url);
 		return response;
 	}
 
@@ -113,7 +113,7 @@ public class UploadSeriesEndpointTester {
 		File file = new File(
 				"test/resources/input-files/test_alsId_format_with_errors.txt");
 		String url = buildUrl(seriesId, "%2C", SeriesDataFile.ALS_ID_FORMAT);
-		response = uploadMultiPartRequest(file, url);
+		response = sendMultiPartRequest(file, url);
 		return response;
 	}
 
@@ -124,7 +124,7 @@ public class UploadSeriesEndpointTester {
 		File file = new File(
 				"test/resources/input-files/test_coordinate_format.txt");
 		String url = buildUrl(seriesId, "%2C", SeriesDataFile.COORDINATE_FORMAT);
-		response = uploadMultiPartRequest(file, url);
+		response = sendMultiPartRequest(file, url);
 		return response;
 	}
 
@@ -132,7 +132,7 @@ public class UploadSeriesEndpointTester {
 			throws RuntimeException {
 		File file = new File("test/resources/input-files/test_alsId_format.txt");
 		String url = buildUrl(seriesId, "%2C", SeriesDataFile.ALS_ID_FORMAT);
-		WSResponse response = uploadMultiPartRequest(file, url);
+		WSResponse response = sendMultiPartRequest(file, url);
 		return response;
 	}
 
@@ -143,7 +143,7 @@ public class UploadSeriesEndpointTester {
 		return url;
 	}
 
-	private WSResponse uploadMultiPartRequest(File file, String url)
+	private WSResponse sendMultiPartRequest(File file, String url)
 			throws RuntimeException {
 		MultipartRequestEntity multiPartReqE = buildMultiPartReqEntity(file);
 

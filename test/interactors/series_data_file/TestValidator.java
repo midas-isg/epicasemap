@@ -55,13 +55,15 @@ public class TestValidator {
 		runWithTransaction(() -> getLocationValueError());
 	}
 	private void getLocationValueError() throws Exception {
-		Validator validator = new Validator();
 		SeriesDataFileHelper helper = new SeriesDataFileHelper();
 		SeriesDataFile dataFile = helper
 				.createTestSeriesDataFileWithAlsIdFormatWithErrors();
 		
 		CSVParser parser = helper.getCSVParser(dataFile);
 		CSVRecord record = parser.iterator().next();
+		
+		Validator validator = new Validator();
+
 		String error = validator.getLocationValueError(record, dataFile);
 		assertThat(error).isEqualTo("als_id: a is not valid.");
 		
@@ -73,28 +75,49 @@ public class TestValidator {
 	
 	@Test
 	public void testGetRecordSizeError() throws Exception {
-		Validator validator = new Validator();
 		SeriesDataFileHelper helper = new SeriesDataFileHelper();
 		SeriesDataFile dataFile = helper.createTestSeriesDataFileWithAlsIdFormatWithErrors();
 		CSVRecord record = helper.getCSVParser(dataFile).iterator().next();
-		String error = validator.getRecordSizeError(record,dataFile);
+		String error = getRecordSizeError(dataFile, record);
 		assertThat(error).isEqualTo("row has 4 columns. should have 3 columns.");
 		
+	}
+
+	private String getRecordSizeError(SeriesDataFile dataFile, CSVRecord record) {
+		Validator validator = new Validator();
+		String error = validator.getRecordSizeError(record,dataFile);
+		return error;
 	}
 	
 	@Test
 	public void testValidateFileHeader() throws Exception {
-		Validator validator = new Validator();
+		
 		SeriesDataFileHelper helper = new SeriesDataFileHelper();
 		SeriesDataFile dataFile = helper.createTestSeriesDataFileWithAlsIdFormatWithErrors();
-		Parser fileParser = new Parser();
-		CSVParser parser = fileParser.parse(dataFile);
-		List<String> error = validator.validateFileHeaders(parser,dataFile);
+		List<String> error = getHeaderErrors(dataFile);
 		List<String> expected = Arrays.asList("number of columns is 4. should be 3.","\"lat\" column name is not allowed in alsIdFormat format.");
 		assertThat(error).isEqualTo(expected);
 		
 	}
 	
+	@Test
+	public void testValidateFormat() throws Exception {
+		SeriesDataFileHelper helper = new SeriesDataFileHelper();
+		SeriesDataFile dataFile = helper.creatDataSeriesFileWithDelimiterError();
+		List<String> error = getHeaderErrors(dataFile);
+		List<String> expected = Arrays.asList("number of columns is 4. should be 3.","\"\" column name is not allowed in alsIdFormat format.");
+		assertThat(error).isEqualTo(expected);
+	}
+	
+	@Test
+	public void testValidateHeader() throws Exception {
+		SeriesDataFileHelper helper = new SeriesDataFileHelper();
+		SeriesDataFile dataFile = helper.creatDataSeriesFileWithHeaderError();
+		List<String> error = getHeaderErrors(dataFile);
+		List<String> expected = Arrays.asList("column names are not valid.");
+		assertThat(error).isEqualTo(expected);
+	}
+		
 	@Test
 	public void testValidateAlsIdFormatted() {
 		Validator validator = new Validator();
@@ -108,9 +131,10 @@ public class TestValidator {
 	
 	@Test
 	public void testValidateCoordinateFormatted() {
-		Validator validator = new Validator();
+	
 		SeriesDataFileHelper helper = new SeriesDataFileHelper();
 		SeriesDataFile dataFile = helper.createTestSeriesDataFileWithCoordinateFormatWithErrors();
+		Validator validator = new Validator();
 		Map<Long, List<String>> error = validator.validate(dataFile);
 		List<String> expected = Arrays.asList("number of columns is 5. should be 4.","\"error\" column name is not allowed in coordinateFormat format.");
 		assertThat(error.get(1L)).isEqualTo(expected);
@@ -126,6 +150,14 @@ public class TestValidator {
 		CSVRecord record = helper.getCSVParser(dataFile).iterator().next();
 		String error = validator.getLocationValueError(record, dataFile);
 		assertThat(error).isEqualTo("latitude: a is not valid. longitude: b is not valid.");
+	}
+	
+	private List<String> getHeaderErrors(SeriesDataFile dataFile) throws Exception {
+		Parser fileParser = new Parser();
+		CSVParser parser = fileParser.parse(dataFile);
+		Validator validator = new Validator();
+		List<String> error = validator.getFileConsistencyError(parser,dataFile);
+		return error;
 	}
 	
 	private static Runnable testLocationError() {

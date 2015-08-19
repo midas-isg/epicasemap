@@ -19,39 +19,27 @@ public class SeriesDataFileHelper {
 		Parser fileParser = new Parser();
 		CSVParser parser = null;
 		parser = fileParser.parse(dataFile);
-
-		//return parser.iterator().next();
 		return parser;
 
 	}
 
 	public SeriesDataFile createTestSeriesDataFileWithAlsIdFormat() {
-		File csvFile = new File(
+		File file = new File(
 				"test/resources/input-files/test_alsId_format.txt");
-		String fileFormat = SeriesDataFile.ALS_ID_FORMAT;
-		String delimiter = ",";
-		SeriesDataFile dataFile = creatSeriesDataFile(csvFile, fileFormat,
-				delimiter);
+		SeriesDataFile dataFile = creatSeriesDataFile(file);
 		return dataFile;
 	}
 
-	private SeriesDataFile creatSeriesDataFile(File csvFile, String fileFormat,
-			String delimiter) {
-		SeriesDataFile dataFile = new SeriesDataFile();
-		dataFile.setFile(csvFile);
-		dataFile.setDelimiter(delimiter);
-		dataFile.setFileFormat(fileFormat);
+	private SeriesDataFile creatSeriesDataFile(File file) {
+		SeriesDataFile dataFile = new SeriesDataFile(file);
 		return dataFile;
 	}
 
 	public SeriesDataFile createTestSeriesDataFileWithCoordianteFormat() {
 
-		File csvFile = new File(
+		File file = new File(
 				"test/resources/input-files/test_coordinate_format.txt");
-		String fileFormat = SeriesDataFile.COORDINATE_FORMAT;
-		String delimiter = ",";
-		SeriesDataFile dataFile = creatSeriesDataFile(csvFile, fileFormat,
-				delimiter);
+		SeriesDataFile dataFile = creatSeriesDataFile(file);
 		return dataFile;
 	}
 
@@ -75,22 +63,30 @@ public class SeriesDataFileHelper {
 	}
 
 	public SeriesDataFile createTestSeriesDataFileWithAlsIdFormatWithErrors() {
-		File csvFile = new File(
+		File file = new File(
 				"test/resources/input-files/test_alsId_format_with_errors.txt");
-		String fileFormat = SeriesDataFile.ALS_ID_FORMAT;
-		String delimiter = ",";
-		SeriesDataFile dataFile = creatSeriesDataFile(csvFile, fileFormat,
-				delimiter);
+		SeriesDataFile dataFile = creatSeriesDataFile(file);
 		return dataFile;
 	}
 
 	public SeriesDataFile createTestSeriesDataFileWithCoordinateFormatWithErrors() {
-		File csvFile = new File(
+		File file = new File(
 				"test/resources/input-files/test_coordinate_format_with_errors.txt");
-		String fileFormat = SeriesDataFile.COORDINATE_FORMAT;
-		String delimiter = ",";
-		SeriesDataFile dataFile = creatSeriesDataFile(csvFile, fileFormat,
-				delimiter);
+		SeriesDataFile dataFile = creatSeriesDataFile(file);
+		return dataFile;
+	}
+
+	public SeriesDataFile creatDataSeriesFileWithDelimiterError() {
+		File file = new File(
+				"test/resources/input-files/test_alsId_format_unix_with_delim_error.txt");
+		SeriesDataFile dataFile = creatSeriesDataFile(file);
+		return dataFile;
+	}
+
+	public SeriesDataFile creatDataSeriesFileWithHeaderError() {
+		File file = new File(
+				"test/resources/input-files/test_with_header_error.txt");
+		SeriesDataFile dataFile = creatSeriesDataFile(file);
 		return dataFile;
 	}
 }
