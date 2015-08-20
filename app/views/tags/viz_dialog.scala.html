@@ -4,8 +4,7 @@
 @(
 	orders:Seq[Seq[String]] =Seq(Seq("id", "ID"), Seq("title", "Title"), Seq("version", "Version")),
 	more:Seq[Seq[Html]] =Seq(
-		Seq(Html("a"), Html("A"), Html("<input title='check to include the Series as A' type='checkbox' ng-model='it.s1'>")),
-		Seq(Html("b"), Html("B"), Html("<input title='check to include the Series as B' type='checkbox' ng-model='it.s2'>")),
+		Seq(Html("a"), bs_icon("check"), Html("<input title='check to select the Series to be avialble to view in the Visualization' type='checkbox' ng-model='it.s1'>")),
 		Seq(Html("action-1"), Html("Edit"), Html("<button title='edit' class='btn btn-xs' ng-click='editSeries(it)'><span class = 'glyphicon glyphicon-edit' aria-hidden='true'></span></button>"))
 	)
 )
@@ -15,28 +14,19 @@
 	@filters("series", "Series", orders)
 	<form name='form' class="form-horizontal" role="form">
 		@metadata_inputs(labelSize)
-		@category("A", "s1", labelSize)
-		@category("B", "s2", labelSize)
 		@selectedSeriesSection("view.hideSeries")
 	</form>
 }
 
-@category(cat:String, key:String, labelSize:Int) = {
-	@form_group_readonly(
-		"# selected Series as " + cat, 
-		"{{countBy('" + key +"')}}", 
-		"the number of selected Series in category " + cat, 
-		labelSize
-	)
-}
-
 @selectedSeriesSection(varName:String) = {
 	@section_expandable(varName){
-		<h4>@span_expandable(varName, "Selected Series")</h4>
+		<h4 title='selected Series to be avialble to view in the Visualization'>
+			@span_expandable(varName, "Selected Series") 
+			<span class="badge" title='the number of selected Series to be avialble to view in the Visualization'>{{countBy("s1")}}</span>
+		</h4>
 	}{
 		<div id='filterPlaceholderNotToCountAsPartOfForm'></div>
 		@buttonInvert("A")
-		@buttonInvert("B")
 		@buttonHideSeries("showAll")
 		You have {{count(allSeries)}} series available to select
 		@table_scollarable_content("allSeries", "series", orders, more)
@@ -44,8 +34,8 @@
 }
 
 @buttonInvert(cat:String) = {
-	<button title='invert Series in category @cat selection' class='btn btn-xs' 
-	ng-click='invert@{cat}()'>invert @cat</button>
+	<button title='invert Series selection' class='btn btn-xs' 
+	ng-click='invert@{cat}()'>invert selected series</button>
 }
 
 @buttonHideSeries(varName:String) = {
