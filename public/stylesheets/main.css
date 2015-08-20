@@ -71,8 +71,7 @@ table {
 .col-action-2{width:5em;}
 .col-date{width:7em;}
 .col-value{width:10em;}
-.col-a{width:2em;}
-.col-b{width:2em;}
+.col-check{width:2em;}
 
 /* form */
 .input-group-sm{margin-bottom:0px;}

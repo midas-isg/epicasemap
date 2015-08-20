@@ -4,7 +4,7 @@
 @(
 	orders:Seq[Seq[String]] =Seq(Seq("id", "ID"), Seq("title", "Title"), Seq("version", "Version")),
 	more:Seq[Seq[Html]] =Seq(
-		Seq(Html("a"), bs_icon("check"), Html("<input title='check to select the Series to be avialble to view in the Visualization' type='checkbox' ng-model='it.s1'>")),
+		Seq(Html("check"), bs_icon("check"), Html("<input title='check to select the Series to be avialble to view in the Visualization' type='checkbox' ng-model='it.isSelected'>")),
 		Seq(Html("action-1"), Html("Edit"), Html("<button title='edit' class='btn btn-xs' ng-click='editSeries(it)'><span class = 'glyphicon glyphicon-edit' aria-hidden='true'></span></button>"))
 	)
 )
@@ -22,20 +22,20 @@
 	@section_expandable(varName){
 		<h4 title='selected Series to be avialble to view in the Visualization'>
 			@span_expandable(varName, "Selected Series") 
-			<span class="badge" title='the number of selected Series to be avialble to view in the Visualization'>{{countBy("s1")}}</span>
+			<span class="badge" title='the number of selected Series to be avialble to view in the Visualization'>{{countBy("isSelected")}}</span>
 		</h4>
 	}{
 		<div id='filterPlaceholderNotToCountAsPartOfForm'></div>
-		@buttonInvert("A")
+		@buttonInvert()
 		@buttonHideSeries("showAll")
 		You have {{count(allSeries)}} series available to select
 		@table_scollarable_content("allSeries", "series", orders, more)
 	}
 }
 
-@buttonInvert(cat:String) = {
+@buttonInvert() = {
 	<button title='invert Series selection' class='btn btn-xs' 
-	ng-click='invert@{cat}()'>invert selected series</button>
+	ng-click='invertSelection()'>invert selected series</button>
 }
 
 @buttonHideSeries(varName:String) = {

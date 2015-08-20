@@ -57,7 +57,7 @@ app.controller('Viz', function($scope, $rootScope, api) {
 		$scope.model = null;
 	};
 	$scope.isShown = function(series) {
-		return $scope.showAll || series.s1 || series.s2;
+		return $scope.showAll || series.isSelected;
 	};
 	$scope.isHidden = function(series) {
 		return ! $scope.isShown(series);
@@ -65,11 +65,8 @@ app.controller('Viz', function($scope, $rootScope, api) {
 	$scope.editSeries = function(series){
 		$rootScope.$emit('editSeries', series);
 	}
-	$scope.invertA = function(){
-		invert('s1');
-	}
-	$scope.invertB = function(){
-		invert('s2');
+	$scope.invertSelection = function(){
+		invert('isSelected');
 	}
 	
 	function invert(key){
@@ -100,7 +97,7 @@ app.controller('Viz', function($scope, $rootScope, api) {
 	
 	function updateAllSeries(viz){
 		if (viz && $scope.allSeries){
-			check(viz.allSeries.map(byId), 's1');
+			check(viz.allSeries.map(byId), 'isSelected');
 		}
 		$scope.form.$setPristine();
 
@@ -132,7 +129,7 @@ app.controller('Viz', function($scope, $rootScope, api) {
 
 	function buildBody(model) {
 		var body = _.omit(model, 'allSeries', 'allSeries2');
-		body.seriesIds = toSeriesIds('s1');
+		body.seriesIds = toSeriesIds('isSelected');
 		body.series2Ids = toSeriesIds('s2');
 		return body;
 		
