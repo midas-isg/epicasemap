@@ -30,7 +30,8 @@ app.controller('Viz', function($scope, $rootScope, api) {
     $rootScope.$on('loadSeries', function(event) {
     	loadAllSeries();
 	});
-	$scope.countBy = function(key) {
+	$scope.countSelected = function() {
+		var key = 'isSelected';
 		return _.countBy($scope.allSeries, function(s) {
 			return s[key] ? key : 'others';
 		})[key] || 0;
