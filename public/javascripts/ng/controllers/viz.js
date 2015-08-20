@@ -101,7 +101,6 @@ app.controller('Viz', function($scope, $rootScope, api) {
 	function updateAllSeries(viz){
 		if (viz && $scope.allSeries){
 			check(viz.allSeries.map(byId), 's1');
-			check(viz.allSeries2.map(byId), 's2');
 		}
 		$scope.form.$setPristine();
 
