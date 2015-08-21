@@ -15,13 +15,13 @@ public class Parser {
 	private static boolean Ignore_Surrounding_Spaces = true;
 	private static boolean Skip_Header_Record = true;
 
-	public CSVParser parse(SeriesDataFile dataFile) throws Exception {
+	public CSVParser parse(SeriesDataFile dataFile)  {
 
 		return parse(dataFile.getDelimiter(), dataFile.getFile());
 
 	}
 
-	private CSVParser parse(char delimiter, File file) throws Exception {
+	private CSVParser parse(char delimiter, File file) {
 		CSVParser csvParser = null;
 		CSVFormat csvFormat = CSVFormat.newFormat(delimiter);
 			try {
@@ -32,7 +32,7 @@ public class Parser {
 						.withSkipHeaderRecord(Skip_Header_Record)
 						.parse(new FileReader(file));
 			} catch (IOException e) {
-				throw new Exception(e);
+				throw new RuntimeException(e);
 			}
 	
 		return csvParser;

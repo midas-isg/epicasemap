@@ -3,7 +3,6 @@ package interactors.series_data_file;
 import static org.fest.assertions.Assertions.assertThat;
 import static suites.Helper.assertAreEqual;
 import integrations.app.App;
-import interactors.series_data_file.Persister;
 import models.SeriesDataFile;
 import models.entities.Location;
 import models.entities.SeriesData;
@@ -72,10 +71,10 @@ public class TestPersister {
 		Long alsId = location.getAlsId();
 		
 		Long exsitingLocId = persist(location);
-		Long locId = persister.createLocation(alsId);
+		Long locId = persister.makeLocation(alsId).getId();
 		assertAreEqual(locId, exsitingLocId);
 		
-		locId = persister.createLocation(987654321L);
+		locId = persister.makeLocation(987654321L).getId();
 		assertThat(locId).isNull();
 		
 		location = getLocationObjectFromCSVRecordWithCoordinate();
@@ -83,10 +82,10 @@ public class TestPersister {
 		Double lon = location.getLongitude();
 		exsitingLocId = persist(location);
 		
-		locId = persister.createLocation(lat,lon);
+		locId = persister.makeLocation(lat,lon).getId();
 		assertAreEqual(locId,exsitingLocId);
 		
-		locId = persister.createLocation(987654321.0,-987654321.0);
+		locId = persister.makeLocation(987654321.0,-987654321.0).getId();
 		assertThat(locId).isNotEqualTo(exsitingLocId);
 	}
 
@@ -116,7 +115,7 @@ public class TestPersister {
 		CSVRecord csvRecord = helper.getCSVParser(dataFile).iterator().next();
 		Persister persister = new Persister();
 
-		SeriesData seriesData = persister.createSeriesData(seriesId, 1L, DateTime
+		SeriesData seriesData = persister.newSeriesData(null, null, DateTime
 				.parse(get(csvRecord, SeriesDataFile.TIME_HEADER, dataFile)).toDate(),
 				Double.parseDouble(get(csvRecord, SeriesDataFile.VALUE_HEADER,
 						dataFile)));
@@ -134,7 +133,7 @@ public class TestPersister {
 		CSVRecord csvRecord = helper.getCSVParser(dataFile).iterator().next();
 
 		Persister persister = new Persister();
-		SeriesData seriesData = persister.createSeriesData(seriesId, 1L, DateTime
+		SeriesData seriesData = persister.newSeriesData(null, null, DateTime
 				.parse(get(csvRecord, SeriesDataFile.TIME_HEADER, dataFile)).toDate(),
 				Double.parseDouble(get(csvRecord, SeriesDataFile.VALUE_HEADER,
 						dataFile)));
@@ -186,5 +185,4 @@ public class TestPersister {
 	private static void runWithTransaction(Callback0 callback) {
 		App.newWithInMemoryDbWithDbOpen().runWithTransaction(callback);
 	}
-
 }

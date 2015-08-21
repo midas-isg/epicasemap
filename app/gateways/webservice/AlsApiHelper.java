@@ -46,7 +46,7 @@ public class AlsApiHelper {
 
 	}
 
-	public Location toLocation(WSResponse wsResponse) {
+	private Location toLocation(WSResponse wsResponse) {
 		if (wsResponse.getStatus() == OK)
 			return toLocation(wsResponse.asJson());
 		return null;
