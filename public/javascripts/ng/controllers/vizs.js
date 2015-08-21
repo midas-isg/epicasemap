@@ -12,7 +12,7 @@ app.controller('Vizs', function($scope, $rootScope, api) {
 
 	$scope.loadModelHavingGivenId = loadModelHavingGivenId;
     $scope.addNew = function() {
-    	$scope.edit({allSeries:[], allSeries2:[]});
+    	$scope.edit({allSeries:[]});
 	};
 	$scope.edit = function(viz) {
 		$rootScope.$emit('editViz', viz);
