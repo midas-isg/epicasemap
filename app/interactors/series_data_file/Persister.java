@@ -4,10 +4,10 @@ import interactors.LocationRule;
 import interactors.SeriesRule;
 
 import java.util.Date;
-import java.util.Iterator;
 
 import models.SeriesDataFile;
 import models.entities.Location;
+import models.entities.Series;
 import models.entities.SeriesData;
 
 import org.apache.commons.csv.CSVParser;
@@ -23,41 +23,41 @@ public class Persister {
 			throws Exception {
 
 		Parser csvParser = new Parser();
-		CSVParser parser = null;
-		parser = csvParser.parse(dataFile);
-		return persistSeriesData(seriesId, dataFile, parser);
+		CSVParser parser = csvParser.parse(dataFile);
+		Series series = makeSeriesRule().read(seriesId);
+		return persistSeriesData(series, dataFile, parser);
 
 	}
 
-	private Long persistSeriesData(Long seriesId, SeriesDataFile dataFile,
+	private long persistSeriesData(Series series, SeriesDataFile dataFile,
 			CSVParser parser) throws Exception {
-		Long counter = 0L;
-		Iterator<CSVRecord> dataPoints = parser.iterator();
-		while (dataPoints.hasNext()) {
-			if (isNotTrue(persistDataPoint(seriesId, dataFile, dataPoints.next())))
-				return 0L;
+		long counter = 0L; // Long -> long; Don't use Long if long can be used because it'll affect performance.
+		//Iterator<CSVRecord> dataPoints = parser.iterator();
+		//while (dataPoints.hasNext()) {
+		for (CSVRecord dataPoint : parser) {
+			persistDataPoint(series, dataFile, dataPoint);
 			counter++;
 		}
 		return counter;
 	}
 
-	private boolean isNotTrue(boolean result) {
+	/*private boolean isNotTrue(boolean result) { // Just use !
 		return !result;
-	}
+	}*/
 
-	private boolean persistDataPoint(Long seriesId, SeriesDataFile dataFile,
+	private void persistDataPoint(Series series, SeriesDataFile dataFile,
 			CSVRecord dataPoint) throws Exception {
 
-		SeriesData seriesData = csvRecordToSeriesData(seriesId, dataPoint,
+		SeriesData seriesData = csvRecordToSeriesData(series, dataPoint,
 				dataFile);
-		Long seriesDataId = persist(seriesData);
-		return (seriesDataId != null) ? true : false;
+		/*Long seriesDataId = */persist(seriesData);
+		// return (seriesDataId != null) ? true : false; // an exception will be thrown if something wrong (not set id to null)
 	}
 
-	private SeriesData csvRecordToSeriesData(Long seriesId, CSVRecord record,
+	private SeriesData csvRecordToSeriesData(Series series, CSVRecord record,
 			SeriesDataFile dataFile) throws Exception {
-		Long locId = createLocationFromCSVRecord(record, dataFile);
-		return createSeriesData(seriesId, locId,
+		Location location = createLocationFromCSVRecord(record, dataFile);
+		return newSeriesData(series, location,
 				getTimeStamp(record, dataFile), getValue(record, dataFile));
 	}
 
@@ -75,21 +75,21 @@ public class Persister {
 		return DateTime.parse(record.get(header)).toDate();
 	}
 
-	private Long createLocationFromCSVRecord(CSVRecord record,
+	private Location createLocationFromCSVRecord(CSVRecord record,
 			SeriesDataFile dataFile) throws Exception {
-		Long locId = null;
+		Location location = null;
 		String fileFormat = dataFile.getFileFormat();
 
 		if (fileFormat.equals(SeriesDataFile.ALS_ID_FORMAT)) {
 			Long alsId = getAlsId(record, dataFile);
-			locId = createLocation(alsId);
+			location = makeLocation(alsId);
 
 		} else if (fileFormat.equals(SeriesDataFile.COORDINATE_FORMAT)) {
 			Double lat = getLatitude(record, dataFile);
 			Double lon = getLongitude(record, dataFile);
-			locId = createLocation(lat, lon);
+			location = makeLocation(lat, lon);
 		}
-		return locId;
+		return location;
 	}
 
 	private Double getLongitude(CSVRecord record, SeriesDataFile dataFile)
@@ -124,40 +124,45 @@ public class Persister {
 		return Long.parseLong(header);
 	}
 
-	Long createLocation(Double lat, Double lon) {
+	Location makeLocation(Double lat, Double lon) {
 		Location location = makeLocationRule().getLocationByCoordinate(lat, lon);
 		if (location == null)
-			location = createNew(lat,lon);
-		return getId(location);
-	}
-
-	Location createNew(Double lat,Double lon) {
-		Location location = new Location();
-		location.setLongitude(lon);
-		location.setLatitude(lat);
+			location = createNew(lat, lon);
+		//return getId(location);
 		return location;
 	}
 
-	private Long getId(Location location) {
-		if(location ==null)
+	Location createNew(Double lat, Double lon) {
+		Location location = new Location();
+		location.setLongitude(lon);
+		location.setLatitude(lat);
+		persist(location);
+		return location;
+	}
+
+	/*private Long getId(Location location) {
+		if(location == null)
 			return null;
 		else if (location.getId() != null)
 			return location.getId();
 		else
 			return persist(location);
-	}
+	}*/
 
-	Long createLocation(Long alsId) {
+	Location makeLocation(Long alsId) {
 		Location location = makeLocationRule().getLocationByAlsId(alsId);
-		return getId(location);
+		//return getId(location);
+		if (location != null && location.getId() == null)
+			persist(location);
+		return location;
 	}
 
-	SeriesData createSeriesData(Long seriesId, Long locId, Date time,
+	SeriesData newSeriesData(Series series, Location location, Date time,
 			Double value) {
 
 		final SeriesData seriesData = new SeriesData();
-		seriesData.setLocation(makeLocationRule().read(locId));
-		seriesData.setSeries(makeSeriesRule().read(seriesId));
+		seriesData.setLocation(location);
+		seriesData.setSeries(series);
 		seriesData.setTimestamp(time);
 		seriesData.setValue(value);
 		return seriesData;
@@ -172,11 +177,11 @@ public class Persister {
 		return Factory.makeLocationRule(JPA.em());
 	}
 
-	private Long persist(final Location location) {
+	private long persist(final Location location) {
 		return makeLocationRule().create(location);
 	}
 
-	private Long persist(final SeriesData seriesData) {
+	private long persist(final SeriesData seriesData) {
 		return Factory.makeSeriesDataRule(JPA.em()).create(seriesData);
 	}
 
