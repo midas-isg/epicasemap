@@ -181,10 +181,10 @@ describe('Controller: Viz', function() {
 			var unregister =$scope.$watch('model', function(){
 				var model = $scope.model;
 				if (model === null){
-					done();
 					expect(theApi.save).not.toHaveBeenCalled();
 					expect(theApi.remove).not.toHaveBeenCalled();
 					unregister();
+					done();
 				}
 			});
 		});
