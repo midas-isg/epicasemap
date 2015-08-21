@@ -2,7 +2,10 @@
 
 var app = angular.module('app', [])
 .config(function($locationProvider) {
-	  $locationProvider.html5Mode(true).hashPrefix('!');
+	  $locationProvider.html5Mode({
+		  enabled: true,
+		  requireBase: false
+		}).hashPrefix('!');
 });
 
 app.run(function(){
