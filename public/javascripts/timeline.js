@@ -101,12 +101,6 @@ timeline.js
 		this.uiSettings.colorPalette = 0;
 		this.colors = this.colorSet[this.uiSettings.colorPalette];
 		
-		for(i = 0; i < this.colors.length; i++) {
-			this.setGradient.push({
-				0.0: this.colors[i]
-			});
-		}
-		
 		for(i = 0; i < this.colorSet.length; i++) {
 			svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
 			svg.setAttribute("width", 15);
@@ -140,7 +134,7 @@ timeline.js
 			this.uiSettings.bBox[0][1] = bounds.getWest();
 			this.uiSettings.bBox[1][0] = bounds.getNorth();
 			this.uiSettings.bBox[1][1] = bounds.getEast();
-			
+
 			$.ajax({
 				url: URL,
 				type: "PUT",
@@ -172,8 +166,6 @@ timeline.js
 				svg,
 				svgElement;
 				
-				//thisMap.seriesList[0] = result.result.allSeries;
-				
 				$("#title").text(result.result.title);
 				
 				//console.log(thisMap.seriesDescriptions);
@@ -196,6 +188,12 @@ timeline.js
 					
 					thisMap.map.fitBounds(thisMap.uiSettings.bBox);
 					$("#palette-" + thisMap.uiSettings.colorPalette).click();
+					
+					for(i = 0; i < thisMap.uiSettings.series.length; i++) {
+						thisMap.setGradient.push({
+							0.0: thisMap.colors[thisMap.uiSettings.series[i].color]
+						});
+					}
 				}
 				else {
 					/*
@@ -242,6 +240,9 @@ timeline.js
 								
 								thisMap.detailChart.series[seriesID].update({color: thisMap.colors[colorID]}, true);
 								thisMap.masterChart.series[seriesID].update({color: thisMap.colors[colorID]}, true);
+								
+								thisMap.setGradient[seriesID] = {0.0: thisMap.colors[colorID]};
+								thisMap.heat[seriesID].setOptions({gradient: thisMap.setGradient[seriesID]});
 							}
 							
 							return;
@@ -406,9 +407,9 @@ console.log("series " + k + ": " + id);
 		this.colors = this.colorSet[palette];
 		
 		this.setGradient.length = 0;
-		for(i = 0; i < this.colors.length; i++) {
+		for(i = 0; i < this.uiSettings.series.length; i++) {
 			this.setGradient.push({
-				0.0: this.colors[i]
+				0.0: this.colors[this.uiSettings.series[i].color]
 			});
 		}
 		
