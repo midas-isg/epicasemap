@@ -38,7 +38,7 @@
 				</div>
 				<div style="float: right;" class="collapse navbar-collapse" id="navbar-collapse">
 					<ul class=" nav navbar-nav" id="navigation_menu">
-						@manageMenu
+						@managementMenu
 						@api
 					</ul>
 				</div>
@@ -64,10 +64,10 @@
 	@menuItem(routes.Application.swagger.url, "API")
 }
 
-@manageMenu = {
+@managementMenu = {
 	@menu("Manage", Seq(
-		menuItem(routes.Application.manageVizs.url, "Visualizations"),
-		menuItem(routes.Application.manageSeries.url, "Series")
+		menuItem(routes.Application.manageSeries.url, "Series"),
+		menuItem(routes.Application.manageVizs.url, "Visualizations")
 	))
 }
 
@@ -81,6 +81,6 @@
 
 @menuItem(href:String, text:String) = {
 	<li>
-		<a class="menu-item navbar-link" style="color:#ffff00;" href="@href">@text</a>
+		<a class="menu-item navbar-link" href="@href">@text</a>
 	</li>
 }
