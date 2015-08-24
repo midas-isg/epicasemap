@@ -12,7 +12,7 @@ timeline.js
 		thisMap = this;
 		
 		L.mapbox.accessToken = 'pk.eyJ1IjoidHBzMjMiLCJhIjoiVHEzc0tVWSJ9.0oYZqcggp29zNZlCcb2esA';
-		this.map = L.mapbox.map('map', 'mapbox.streets-basic' /*'mapbox.streets'*/ /*'mapbox.dark'*/, { worldCopyJump: true, bounceAtZoomLimits: false, zoom: 2, minZoom: 2})
+		this.map = L.mapbox.map('map', 'financialtimes.map-w7l4lfi8' /*'mapbox.streets'*/ /*'mapbox.dark'*/, { worldCopyJump: true, bounceAtZoomLimits: false, zoom: 2, minZoom: 2})
 			.setView([30, 0], 2);
 
 		this.heat = []; //null;
@@ -92,16 +92,9 @@ timeline.js
 		}
 		
 		this.setGradient = [];
-		/*
 		this.colorSet = [
 			['#1b9e77', '#d95f02', '#7570b3', '#e7298a', '#66a61e'],
 			['#a6cee3', '#1f78b4', '#b2df8a', "#33a02c", "#fb9a99"],
-			['#66c2a5', '#fc8d62', '#8da0cb', "#e78ac3", "#a6d854"]
-		];
-		*/
-		this.colorSet = [
-			['#1b9e77', '#d95f02', '#7570b3', '#e7298a', '#66a61e'],
-			["#33a02c", '#1f78b4', '#b2df8a', '#a6cee3', "#fb9a99"],
 			['#66c2a5', '#fc8d62', '#8da0cb', "#e78ac3", "#a6d854"]
 		];
 		
@@ -175,30 +168,27 @@ timeline.js
 			url: URL,
 			success: function(result) {
 				var h,
-				i;
+				i,
+				svg,
+				svgElement;
 				
-				thisMap.seriesList[0] = result.result.allSeries;
-				h = 2;
-				while(result.result["allSeries" + h]) {
-					thisMap.seriesList.push(result.result["allSeries" + h]);
-					h++;
-				}
+				//thisMap.seriesList[0] = result.result.allSeries;
 				
 				$("#title").text(result.result.title);
-				
-				for(h = 0; h < thisMap.seriesList.length; h++) {
-					for(i = 0; i < thisMap.seriesList[h].length; i++) {
-						thisMap.seriesDescriptions[thisMap.seriesList[h][i].id] = {
-							title: thisMap.seriesList[h][i].title,
-							description: thisMap.seriesList[h][i].description
-						};
-					}
-				}
 				
 				//console.log(thisMap.seriesDescriptions);
 				
 				if(result.result.uiSetting) {
 					thisMap.uiSettings = JSON.parse(result.result.uiSetting);
+					
+					thisMap.seriesList = result.result.allSeries;
+					
+					for(h = 0; h < thisMap.seriesList.length; h++) {
+						thisMap.seriesDescriptions[thisMap.seriesList[h].id] = {
+							title: thisMap.seriesList[h].title,
+							description: thisMap.seriesList[h].description
+						};
+					}
 					
 					for(h = 0; h < thisMap.uiSettings.series.length; h++) {
 						thisMap.seriesToLoad.push(thisMap.uiSettings.series[h].index);
@@ -208,10 +198,57 @@ timeline.js
 					$("#palette-" + thisMap.uiSettings.colorPalette).click();
 				}
 				else {
+					/*
+					//TODO: FIX default page (no ID associated)
 					for(h = 0; h < thisMap.seriesList.length; h++) {
-						thisMap.seriesToLoad.push(thisMap.seriesList[h][0].id);
-						thisMap.uiSettings.series[h] = {index: thisMap.seriesList[h][0].id, color: 0};
+						thisMap.seriesToLoad.push(thisMap.seriesList[h].id);
+						thisMap.uiSettings.series[h] = {index: thisMap.seriesList[h].id, color: 0};
 					}
+					*/
+				}
+				
+				for(h = 0; h < thisMap.uiSettings.series.length; h++) {
+					$("#color-options").append("<div style='float: left; clear: right;'><h5>Pick series " + (h + 1) + " color:</h5><div id='series-" + h + "'></div></div>");
+					
+					for(i = 0; i < thisMap.colors.length; i++) {
+						$("#series-" + h).append("<div id='color-" + i + "' class='ramp'></div>");
+						svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+						svg.setAttribute("width", 15);
+						svg.setAttribute("height", 15);
+						svgElement = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+						svgElement.setAttributeNS(null, "width", 15);
+						svgElement.setAttributeNS(null, "height", 15);
+						svgElement.setAttributeNS(null, "fill", thisMap.colors[i]);
+						$(svg).append(svgElement);
+						
+						$("#series-" + h + " #color-" + i).append(svg);
+						
+						$("#series-" + h + " #color-" + i).click(function() {
+							var colorID = this.id.split("-")[1],
+								seriesID = $(this).parent().attr("id").split("-")[1],
+								siblings = $(this).siblings().get(),
+								i;
+							
+							if(!$(this).hasClass("selected")) {
+								thisMap.uiSettings.series[seriesID].color = colorID;
+								
+								for(i = 0; i < siblings.length; i++) {
+									if($(siblings[i]).hasClass("selected")) {
+										$(siblings[i]).removeClass("selected");
+										break;
+									}
+								}
+								$(this).addClass("selected");
+								
+								thisMap.detailChart.series[seriesID].update({color: thisMap.colors[colorID]}, true);
+								thisMap.masterChart.series[seriesID].update({color: thisMap.colors[colorID]}, true);
+							}
+							
+							return;
+						});
+					}
+					
+					$("#series-" + h + " #color-" + thisMap.uiSettings.series[h].color).addClass("selected");
 				}
 				
 				for(i = 0; i < thisMap.seriesToLoad.length; i++) {
@@ -219,7 +256,7 @@ timeline.js
 					thisMap.load(thisMap.seriesToLoad[i]);
 				}
 				
-				for(h = 0; h < thisMap.seriesList.length; h++) {
+				for(h = 0; h < thisMap.uiSettings.series.length; h++) {
 					$("#series-options").append(
 						"<div>" +
 							"<h5>Select series " + String.fromCharCode(h + 65) + "</h5>" +
@@ -228,8 +265,8 @@ timeline.js
 						"</div>"
 					);
 					
-					for(i = 0; i < thisMap.seriesList[h].length; i++) {
-						$("#series-" + h).append("<option value='" + thisMap.seriesList[h][i].id + "'>" + thisMap.seriesList[h][i].title +"</option>");
+					for(i = 0; i < thisMap.seriesList.length; i++) {
+						$("#series-" + h).append("<option value='" + thisMap.seriesList[i].id + "'>" + thisMap.seriesList[i].title +"</option>");
 					}
 					$("#series-" + h).val(thisMap.uiSettings.series[h].index);
 					$("#series-" + h).change();
@@ -248,7 +285,7 @@ console.log("series " + k + ": " + id);
 						thisMap.earliestDate = new Date();
 						
 						thisMap.seriesToLoad = [];
-						for(l = 0; l < thisMap.seriesList.length; l++) {
+						for(l = 0; l < thisMap.uiSettings.series.length; l++) {
 							thisMap.seriesToLoad.push($("#series-" + l).val());
 						}
 						
@@ -376,10 +413,14 @@ console.log("series " + k + ": " + id);
 		}
 		
 		for(i = 0; i < this.displaySet.length; i++) {
-			this.detailChart.series[i].update({color: this.colors[i]}, true);
-			this.masterChart.series[i].update({color: this.colors[i]}, true);
+			this.detailChart.series[i].update({color: this.colors[this.uiSettings.series[i].color]}, true);
+			this.masterChart.series[i].update({color: this.colors[this.uiSettings.series[i].color]}, true);
 			
 			this.heat[i].setOptions({gradient: this.setGradient[i]});
+		}
+		
+		for(i = 0; i < this.colors.length; i++) {
+			$("#color-" + i + " svg rect").attr("fill", this.colors[i]);
 		}
 		
 		return;
@@ -532,6 +573,13 @@ console.log("series " + k + ": " + id);
 	}
 	
 	MagicMap.prototype.createChart = function() {
+		var seriesColors = [],
+		i;
+		
+		for(i = 0; i < this.uiSettings.series.length; i++) {
+			seriesColors.push(this.colors[this.uiSettings.series[i].color]);
+		}
+		
 			// create the detail chart
 		function createDetail(masterChart) {
 			// prepare the detail chart
@@ -578,7 +626,7 @@ console.log("series " + k + ": " + id);
 						//position: 'absolute'
 					}
 				},
-				colors: MAGIC_MAP.colors,
+				colors: seriesColors, //MAGIC_MAP.colors,
 				credits: {
 					enabled: false
 				},
@@ -681,7 +729,7 @@ console.log("series " + k + ": " + id);
 						}
 					}
 				},
-				colors: MAGIC_MAP.colors,
+				colors: seriesColors, //MAGIC_MAP.colors,
 				title: {
 					text: null
 				},
