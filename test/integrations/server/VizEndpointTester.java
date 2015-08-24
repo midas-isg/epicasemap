@@ -53,7 +53,8 @@ public class VizEndpointTester {
 		Tuple data = testCreate();
 		long id = data.id;
 		final String subpath = "/ui-setting";
-		String url = urlWithId(id) + subpath;
+		final String seriesUrl = urlWithId(id);
+		final String url = seriesUrl + subpath;
 		testRead(data);
 		Map<String, Object> setting = new HashMap<>();
 		setting.put("key", "value");
@@ -68,6 +69,7 @@ public class VizEndpointTester {
 		final WSResponse read = assertStatusOfGet(url, OK);
 		assertJsonString(read.getBody(), input);
 		assertStatusOfGet(urlWithId(0) + subpath, NOT_FOUND);
+		WS.url(url).put(input).get(timeout);
 	}
 
 	private WSResponse assertStatusOfGet(String url, final int expected) {
@@ -152,7 +154,6 @@ public class VizEndpointTester {
 		assertNodeType(result, OBJECT);
 		assertAreEqual(result.get("id").asLong(), id);
 		assertAllSeries(result.get("allSeries"), expected.getSeriesIds());
-		assertAllSeries(result.get("allSeries2"), expected.getSeries2Ids());
 		assertTextNode(result.get("uiSetting"), expected.getUiSetting());
 	}
 
