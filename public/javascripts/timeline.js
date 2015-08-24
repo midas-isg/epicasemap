@@ -206,7 +206,7 @@ timeline.js
 				}
 				
 				for(h = 0; h < thisMap.uiSettings.series.length; h++) {
-					$("#color-options").append("<div style='float: left; clear: right;'><h5>Pick series " + (h + 1) + " color:</h5><div id='series-" + h + "'></div></div>");
+					$("#color-options").append("<div style='float: left; clear: right;'><h5>Pick series " + String.fromCharCode(h + 65) + " color:</h5><div id='series-" + h + "'></div></div>");
 					
 					for(i = 0; i < thisMap.colors.length; i++) {
 						$("#series-" + h).append("<div id='color-" + i + "' class='ramp'></div>");
