@@ -24,5 +24,11 @@
 </div>
 
 @tooltip = { 
-	{{it.title ? "Title: " + it.title : ""}} {{it.description ? "\nDescription: " + it.description : ""}}
+	@first("Title", "title") @next("Version", "version") @text("\n# selected series", "count(it.allSeries)") @next("Description", "description")
 }
+
+@first(title:String, key:String) = { @text(title, "it." + key) }
+
+@next(title:String, key:String) = { @first("\n" + title, key) }
+
+@text(title:String, expression:String) = { {{@expression ? "@title: " + @expression : ""}} }
