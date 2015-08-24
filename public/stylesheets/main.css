@@ -99,3 +99,7 @@ footer{margin-top: 10px;}
 .navbar-collapse li.dropdown > a{color:#ffff00;}
 
 a.menu-item.navbar-link:hover {background:black;}
+
+.navbar-nav>li>a.menu-item {color:#ffff00;}
+
+ul.dropdown-menu>li>a.menu-item {color:#ffff00;}
