@@ -1,7 +1,7 @@
 package interactors;
 
 import gateways.database.LocationDao;
-import gateways.webservice.AlsApiHelper;
+import gateways.webservice.AlsDAO;
 
 import java.util.List;
 
@@ -23,17 +23,35 @@ public class LocationRule extends CrudRule<Location> {
 	protected LocationDao getDao() {
 		return dao;
 	}
+	
+	public Location getLocation(Long alsId) {
+		Location location = getLocationByAlsId(alsId);
+		if (location != null && location.getId() == null)
+			create(location);
+		return location;
+	}
+	
+	public Location getLocation(Double lat, Double lon) {
+		Location location = queryByCoordinate(lat, lon);
+		if (location == null)
+			location = createNew(lat, lon);
+		return location;
+	}
+
+	Location createNew(Double lat, Double lon) {
+		Location location = new Location();
+		location.setLongitude(lon);
+		location.setLatitude(lat);
+		create(location);
+		return location;
+	}
+
 
 	public Location getLocationByAlsId(Long alsId) {
 		Location location = queryByAlsId(alsId);
 		if (location == null)
 			location = getLocationFromAls(alsId);
 		return location;
-	}
-
-	public Location getLocationByCoordinate(Double latitude, Double longitude) {
-		return queryByCoordinate(latitude,longitude);
-
 	}
 
 	private Location queryByCoordinate(Double latitude, Double longitude) {
@@ -48,8 +66,8 @@ public class LocationRule extends CrudRule<Location> {
 	}
 
 	private Location getLocationFromAls(Long alsId) {
-		AlsApiHelper helper = new AlsApiHelper();
-		return helper.getLocationFromAls(alsId);
+		AlsDAO alsDao = new AlsDAO();
+		return alsDao.getLocationFromAls(alsId);
 	}
 
 	private Location findOne(LocationFilter filter) {

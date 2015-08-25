@@ -1,6 +1,14 @@
 package suites;
 
+import gateways.database.LocationDao;
+import gateways.database.SeriesDao;
+import gateways.database.SeriesDataDao;
+import interactors.LocationRule;
+import interactors.SeriesDataRule;
+import interactors.SeriesRule;
 import interactors.series_data_file.Parser;
+import interactors.series_data_file.Persister;
+import interactors.series_data_file.Validator;
 
 import java.io.File;
 import java.util.HashMap;
@@ -11,39 +19,31 @@ import models.SeriesDataFile;
 
 import org.apache.commons.csv.CSVParser;
 
+import play.db.jpa.JPA;
+
 public class SeriesDataFileHelper {
 
-	public CSVParser getCSVParser(SeriesDataFile dataFile) throws Exception {
-		SeriesDataFileHelper helper = new SeriesDataFileHelper();
-		helper.setStdToFileHeaderMap(dataFile);
+	public static CSVParser getCSVParser(SeriesDataFile dataFile) {
+		setStdToFileHeaderMap(dataFile);
 		Parser fileParser = new Parser();
-		CSVParser parser = null;
-		parser = fileParser.parse(dataFile);
-		return parser;
-
+		return fileParser.parse(dataFile);
 	}
 
-	public SeriesDataFile createTestSeriesDataFileWithAlsIdFormat() {
+	public static SeriesDataFile createTestSeriesDataFileWithAlsIdFormat() {
 		File file = new File(
 				"test/resources/input-files/test_alsId_format.txt");
-		SeriesDataFile dataFile = creatSeriesDataFile(file);
-		return dataFile;
+		return new SeriesDataFile(file);
+
 	}
 
-	private SeriesDataFile creatSeriesDataFile(File file) {
-		SeriesDataFile dataFile = new SeriesDataFile(file);
-		return dataFile;
-	}
-
-	public SeriesDataFile createTestSeriesDataFileWithCoordianteFormat() {
+	public static SeriesDataFile createTestSeriesDataFileWithCoordianteFormat() {
 
 		File file = new File(
 				"test/resources/input-files/test_coordinate_format.txt");
-		SeriesDataFile dataFile = creatSeriesDataFile(file);
-		return dataFile;
+		return new SeriesDataFile(file);
 	}
 
-	public void setStdToFileHeaderMap(SeriesDataFile dataFile) throws Exception {
+	public static void setStdToFileHeaderMap(SeriesDataFile dataFile) {
 		Map<String, String> result = new HashMap<String, String>();
 		Parser csvParser = new Parser();
 		CSVParser parser = null;
@@ -62,31 +62,59 @@ public class SeriesDataFileHelper {
 
 	}
 
-	public SeriesDataFile createTestSeriesDataFileWithAlsIdFormatWithErrors() {
+	public static SeriesDataFile createTestSeriesDataFileWithAlsIdFormatWithErrors() {
 		File file = new File(
 				"test/resources/input-files/test_alsId_format_with_errors.txt");
-		SeriesDataFile dataFile = creatSeriesDataFile(file);
-		return dataFile;
+		return new SeriesDataFile(file);
 	}
 
-	public SeriesDataFile createTestSeriesDataFileWithCoordinateFormatWithErrors() {
+	public static SeriesDataFile createTestSeriesDataFileWithCoordinateFormatWithErrors() {
 		File file = new File(
 				"test/resources/input-files/test_coordinate_format_with_errors.txt");
-		SeriesDataFile dataFile = creatSeriesDataFile(file);
-		return dataFile;
+		return new SeriesDataFile(file);
 	}
 
-	public SeriesDataFile creatDataSeriesFileWithDelimiterError() {
+	public static SeriesDataFile creatDataSeriesFileWithDelimiterError() {
 		File file = new File(
 				"test/resources/input-files/test_alsId_format_unix_with_delim_error.txt");
-		SeriesDataFile dataFile = creatSeriesDataFile(file);
-		return dataFile;
+		return new SeriesDataFile(file);
 	}
 
-	public SeriesDataFile creatDataSeriesFileWithHeaderError() {
+	public static SeriesDataFile creatDataSeriesFileWithHeaderError() {
 		File file = new File(
 				"test/resources/input-files/test_with_header_error.txt");
-		SeriesDataFile dataFile = creatSeriesDataFile(file);
-		return dataFile;
+		return new SeriesDataFile(file);
+	}
+
+	public static Persister makePersister() {
+		Persister persister = new Persister();
+		persister.setLocationRule(makeLocationRule());
+		persister.setSeriesRule(makeSeriesRule());
+		persister.setSeriesDataRule(makeSeriesDataRule());
+		persister.setParser(new Parser());
+		return persister;
+	}
+
+	private static SeriesDataRule makeSeriesDataRule() {
+		SeriesDataDao dao = new SeriesDataDao(JPA.em());
+		return new SeriesDataRule(dao);
+	}
+
+	private static SeriesRule makeSeriesRule() {
+		SeriesDao dao = new SeriesDao(JPA.em());
+		return new SeriesRule(dao);
+	}
+
+	private static LocationRule makeLocationRule() {
+		
+		LocationDao dao = new LocationDao(JPA.em());
+		return new LocationRule(dao );
+	}
+
+	public static Validator makeValidator() {
+		Validator validator = new Validator();
+		validator.setLocationRule(makeLocationRule());
+		validator.setParser(new Parser());
+		return validator;
 	}
 }

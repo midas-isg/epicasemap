@@ -9,11 +9,10 @@ import models.entities.Location;
 
 import org.junit.Test;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class TestAlsResponseHelper {
+public class TestAlsDAO {
 	
 	private final String response =  "{"
 			+ "\"type\": \"FeatureCollection\","
@@ -66,41 +65,50 @@ public class TestAlsResponseHelper {
 			+ "}";
 	
 	@Test
-	public void testJsonToLocation() throws JsonProcessingException, IOException  {
-				
-		JsonNode node = new ObjectMapper().readTree(response);
-		AlsApiHelper helper = new AlsApiHelper();
-		Location loc = helper.toLocation(node);
-		
-		assertThat(loc.getLabel()).isEqualTo("Moyamba, Southern, Sierra Leone");
-		assertThat(loc.getLongitude()).isEqualTo(-12.395816326141244);
-		assertThat(loc.getLatitude()).isEqualTo(8.02103376388547);
-	}
-	
-	@Test
 	public void test(){
-		Runnable test = testGetLocation();
-		Server.run(test);
+		Runnable[] tests = { 
+				testGetLocation(),
+				testJsonToLocation()
+		};
+		Server.run(tests);
 	}
 	
-	public void testGetAlsLocation() {
+	private void testGetAlsLocation() {
 		Long id = 1L;
-		AlsApiHelper helper = new AlsApiHelper();
-		Location loc = helper.getLocationFromAls(id);
+		AlsDAO alsDao = new AlsDAO();
+		Location loc = alsDao.getLocationFromAls(id);
 		
 		assertThat(loc.getLabel()).isEqualTo("Moyamba, Southern, Sierra Leone");
 		assertThat(loc.getLongitude()).isEqualTo(-12.395816326141244);
 		assertThat(loc.getLatitude()).isEqualTo(8.02103376388547);
+	}
+	
+	private void jsonToLocation() {
+				
+		JsonNode node = null;
+		try {
+			node = new ObjectMapper().readTree(response);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		AlsDAO alsDao = new AlsDAO();
+		Location loc = alsDao.toLocation(node);
 		
-		//assertThat(LocationCacheRule.read(id)).isNotEqualTo(null);
+		assertThat(loc.getLabel()).isEqualTo("Moyamba, Southern, Sierra Leone");
+		assertThat(loc.getLongitude()).isEqualTo(-12.395816326141244);
+		assertThat(loc.getLatitude()).isEqualTo(8.02103376388547);
 	}
 	
 	private static Runnable testGetLocation() {
 		return () -> newInstance().testGetAlsLocation();
 	}
+	
+	private static Runnable testJsonToLocation() {
+		return () -> newInstance().jsonToLocation();
+	}
 
-	private static TestAlsResponseHelper newInstance() {
-		return new TestAlsResponseHelper();
+	private static TestAlsDAO newInstance() {
+		return new TestAlsDAO();
 	}
 
 }

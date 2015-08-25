@@ -25,14 +25,14 @@ public class UploadSeries extends Controller {
 
 		if (errors.equals("")) {
 			int deletedDataSize = deleteExisitingSeriesData(seriesId);
-			long createdDataSize = create(dataFile, seriesId);
+			int createdDataSize = create(dataFile, seriesId);
 			return created(makeMsg(deletedDataSize, createdDataSize));
 		} else {
 			return badRequest(errors);
 		}
 	}
 
-	private static String makeMsg(int deletedDataSize, long createdDataSize) {
+	private static String makeMsg(int deletedDataSize, int createdDataSize) {
 		String msg = deletedDataSize + " existing item(s) deleted." + "\n"
 				+ createdDataSize + " new item(s) created.";
 		return msg;
@@ -46,14 +46,14 @@ public class UploadSeries extends Controller {
 		return Factory.makeSeriesRule(JPA.em());
 	}
 
-	private static Long create(SeriesDataFile dataFile, Long seriesId)
+	private static int create(SeriesDataFile dataFile, Long seriesId)
 			throws Exception {
-		Persister persister = new Persister();
+		Persister persister = Factory.makePersister(JPA.em());
 		return persister.persistSeriesDataFile(dataFile, seriesId);
 	}
 
 	private static String validate(SeriesDataFile dataFile) {
-		Validator validator = new Validator();
+		Validator validator = Factory.makeValidator(JPA.em());
 		Map<Long, List<String>> errors = validator.validate(dataFile);
 		return joinErrorsAsString(errors);
 	}
