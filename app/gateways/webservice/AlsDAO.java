@@ -25,11 +25,11 @@ public class AlsDAO {
 	private static final String LONGITUDE = "longitude";
 	private static final String LATITUDE = "latitude";
 
-	private static String baseUrl;
+	private static String locationsUrl;
 
 	static {
 		final ConfRule confRule = Factory.makeConfRule();
-		baseUrl = confRule.readString(AppKey.ALS_WS_URL.key()) + "/api/locations";
+		locationsUrl = confRule.readString(AppKey.ALS_WS_URL.key()) + "/api/locations";
 	}
 
 	public Location getLocationFromAls(Long id) {
@@ -41,7 +41,7 @@ public class AlsDAO {
 	}
 
 	private ClientRule makeAlsClientRule() {
-		return new ClientRule(baseUrl);
+		return new ClientRule(locationsUrl);
 
 	}
 
