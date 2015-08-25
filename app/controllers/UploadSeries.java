@@ -15,10 +15,10 @@ import play.mvc.Controller;
 import play.mvc.Http.Request;
 import play.mvc.Result;
 
-public class UploadSeries extends Controller {
+class UploadSeries extends Controller {
 
 	@Transactional
-	public static Result upload(long seriesId) throws Exception {
+	public static Result upload(long seriesId) {
 
 		SeriesDataFile dataFile = getFileObject(request());
 		String errors = validate(dataFile);
@@ -46,8 +46,7 @@ public class UploadSeries extends Controller {
 		return Factory.makeSeriesRule(JPA.em());
 	}
 
-	private static int create(SeriesDataFile dataFile, Long seriesId)
-			throws Exception {
+	private static int create(SeriesDataFile dataFile, Long seriesId) {
 		Persister persister = Factory.makePersister(JPA.em());
 		return persister.persistSeriesDataFile(dataFile, seriesId);
 	}
