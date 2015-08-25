@@ -6,6 +6,7 @@ import gateways.database.LocationDao;
 import gateways.database.SeriesDao;
 import gateways.database.SeriesDataDao;
 import gateways.database.VizDao;
+import gateways.webservice.AlsDao;
 import interactors.ConfRule;
 import interactors.CoordinateRule;
 import interactors.LocationRule;
@@ -58,7 +59,10 @@ public class Factory {
 
 	public static LocationRule makeLocationRule(EntityManager em) {
 		LocationDao dao = new LocationDao(em);
-		return new LocationRule(dao); 
+		AlsDao alsDao = new AlsDao();
+		LocationRule locationRule = new LocationRule(dao);
+		locationRule.setAlsDao(alsDao);
+		return locationRule;
 	}
 
 	public static Persister makePersister(EntityManager em) {

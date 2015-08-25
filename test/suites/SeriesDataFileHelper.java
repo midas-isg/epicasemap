@@ -1,11 +1,5 @@
 package suites;
 
-import gateways.database.LocationDao;
-import gateways.database.SeriesDao;
-import gateways.database.SeriesDataDao;
-import interactors.LocationRule;
-import interactors.SeriesDataRule;
-import interactors.SeriesRule;
 import interactors.series_data_file.Parser;
 import interactors.series_data_file.Persister;
 import interactors.series_data_file.Validator;
@@ -16,10 +10,12 @@ import java.util.Map;
 import java.util.Set;
 
 import models.SeriesDataFile;
+import models.entities.Location;
 
 import org.apache.commons.csv.CSVParser;
 
 import play.db.jpa.JPA;
+import controllers.Factory;
 
 public class SeriesDataFileHelper {
 
@@ -87,34 +83,14 @@ public class SeriesDataFileHelper {
 	}
 
 	public static Persister makePersister() {
-		Persister persister = new Persister();
-		persister.setLocationRule(makeLocationRule());
-		persister.setSeriesRule(makeSeriesRule());
-		persister.setSeriesDataRule(makeSeriesDataRule());
-		persister.setParser(new Parser());
-		return persister;
-	}
-
-	private static SeriesDataRule makeSeriesDataRule() {
-		SeriesDataDao dao = new SeriesDataDao(JPA.em());
-		return new SeriesDataRule(dao);
-	}
-
-	private static SeriesRule makeSeriesRule() {
-		SeriesDao dao = new SeriesDao(JPA.em());
-		return new SeriesRule(dao);
-	}
-
-	private static LocationRule makeLocationRule() {
-		
-		LocationDao dao = new LocationDao(JPA.em());
-		return new LocationRule(dao );
+		return Factory.makePersister(JPA.em());
 	}
 
 	public static Validator makeValidator() {
-		Validator validator = new Validator();
-		validator.setLocationRule(makeLocationRule());
-		validator.setParser(new Parser());
-		return validator;
+		return Factory.makeValidator(JPA.em());
+	}
+
+	public static Location makeLocation() {
+		return new Location();
 	}
 }

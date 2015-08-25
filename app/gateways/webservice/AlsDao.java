@@ -18,7 +18,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 
 import controllers.Factory;
 
-public class AlsDAO {
+public class AlsDao {
 
 	private static final String NAME = "name";
 	private static final String BBOX = "bbox";

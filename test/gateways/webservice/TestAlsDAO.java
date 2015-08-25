@@ -75,7 +75,7 @@ public class TestAlsDAO {
 	
 	private void testGetAlsLocation() {
 		Long id = 1L;
-		AlsDAO alsDao = new AlsDAO();
+		AlsDao alsDao = new AlsDao();
 		Location loc = alsDao.getLocationFromAls(id);
 		
 		assertThat(loc.getLabel()).isEqualTo("Moyamba, Southern, Sierra Leone");
@@ -91,7 +91,7 @@ public class TestAlsDAO {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		AlsDAO alsDao = new AlsDAO();
+		AlsDao alsDao = new AlsDao();
 		Location loc = alsDao.toLocation(node);
 		
 		assertThat(loc.getLabel()).isEqualTo("Moyamba, Southern, Sierra Leone");

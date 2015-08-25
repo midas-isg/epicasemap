@@ -1,7 +1,7 @@
 package interactors;
 
 import gateways.database.LocationDao;
-import gateways.webservice.AlsDAO;
+import gateways.webservice.AlsDao;
 
 import java.util.List;
 
@@ -10,6 +10,7 @@ import models.entities.LocationFilter;
 
 public class LocationRule extends CrudRule<Location> {
 	private LocationDao dao;
+	private AlsDao alsDao;
 
 	public LocationRule(LocationDao dao) {
 		this.dao = dao;
@@ -66,13 +67,12 @@ public class LocationRule extends CrudRule<Location> {
 	}
 
 	private Location getLocationFromAls(Long alsId) {
-		AlsDAO alsDao = new AlsDAO();
 		return alsDao.getLocationFromAls(alsId);
 	}
 
 	private Location findOne(LocationFilter filter) {
 		List<Location> LocList = query(filter);
-		if (isNotEmpty(LocList))
+		if (!LocList.isEmpty())
 			return LocList.get(0);
 		else
 			return null;
@@ -90,9 +90,9 @@ public class LocationRule extends CrudRule<Location> {
 		filter.setAlsId(alsId);
 		return filter;
 	}
-
-	private boolean isNotEmpty(List<Location> list) {
-		return !(list.isEmpty());
+	
+	public void setAlsDao(AlsDao alsDao){
+		this.alsDao = alsDao;
 	}
 
 }

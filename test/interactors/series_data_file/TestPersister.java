@@ -100,7 +100,7 @@ public class TestPersister {
 	}
 
 	private Location createLocation(long alsId) {
-		Location location = new Location();
+		Location location = SeriesDataFileHelper.makeLocation();
 		location.setAlsId(alsId);
 		return location;
 	}
