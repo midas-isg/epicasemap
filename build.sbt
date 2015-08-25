@@ -21,5 +21,5 @@ libraryDependencies ++= Seq(
   "postgresql" % "postgresql" % "9.1-901.jdbc4",
   "org.hibernate" % "hibernate-entitymanager" % "4.3.7.Final",
   javaJpa,
-  "org.apache.commons" % "commons-csv" % "1.1",
+  "org.apache.commons" % "commons-csv" % "1.1"
 )
