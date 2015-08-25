@@ -2,7 +2,6 @@ package interactors;
 
 import static org.fest.assertions.Assertions.assertThat;
 import static suites.Helper.assertAreEqual;
-import gateways.database.LocationDao;
 import integrations.app.App;
 import models.entities.Location;
 
@@ -10,6 +9,8 @@ import org.junit.Test;
 
 import play.db.jpa.JPA;
 import play.libs.F.Callback0;
+import suites.SeriesDataFileHelper;
+import controllers.Factory;
 
 public class TestLocationRule {
 	
@@ -19,8 +20,8 @@ public class TestLocationRule {
 	}
 
 	private void createLocation() throws Exception{
-		LocationRule rule = new LocationRule(new LocationDao(JPA.em()));
-		Location loc = new Location();
+		LocationRule rule = Factory.makeLocationRule(JPA.em());
+		Location loc = SeriesDataFileHelper.makeLocation();
 		loc.setAlsId(100L);
 		Long exsitingLocId = rule.create(loc);
 		Long locId = rule.getLocation(loc.getAlsId()).getId();
@@ -35,7 +36,7 @@ public class TestLocationRule {
 		}
 		assertThat(expected).isEqualTo("Internal Server Error");
 		
-		loc = new Location();
+		loc = SeriesDataFileHelper.makeLocation();
 		double lat = 10.1;
 		double lon = -10.1;
 		exsitingLocId = rule.createNew(lat, lon).getId();		
