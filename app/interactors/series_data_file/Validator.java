@@ -10,17 +10,15 @@ import java.util.Map;
 import java.util.Set;
 
 import models.SeriesDataFile;
-import models.entities.Location;
 
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
-import org.apache.commons.lang.math.NumberUtils;
 import org.joda.time.DateTime;
 
-import play.db.jpa.JPA;
-import controllers.Factory;
-
 public class Validator {
+
+	private LocationRule locationRule;
+	private Parser parser;
 
 	public Map<Long, List<String>> validate(SeriesDataFile dataFile) {
 
@@ -48,14 +46,14 @@ public class Validator {
 
 	private CSVParser getParseErrors(SeriesDataFile dataFile,
 			List<String> errorList) {
-		Parser csvParser = new Parser();
-		CSVParser parser = null;
+
+		CSVParser csvParser = null;
 		try {
-			parser = csvParser.parse(dataFile);
+			csvParser = parser.parse(dataFile);
 		} catch (Exception e) {
 			errorList.add(e.getMessage());
 		}
-		return parser;
+		return csvParser;
 	}
 
 	private void mapFileHeadersToStdHeaders(CSVParser parser,
@@ -186,14 +184,23 @@ public class Validator {
 	}
 
 	private boolean existInAls(String alsId) {
-		Location location = makeLocationRule().getLocationByAlsId(Long.parseLong(alsId));
-		if (location == null)
+		try{
+		locationRule.getLocationByAlsId(Long.parseLong(alsId));
+		}
+		catch(RuntimeException e){
 			return false;
+		}
 		return true;
 	}
 
 	private boolean isNumber(String val) {
-		return NumberUtils.isNumber(val);
+		try{
+			Double.parseDouble(val);
+		}
+		catch(Exception e){
+			return false;
+		}
+		return true;
 	}
 
 	String getValueError(CSVRecord record, SeriesDataFile dataFile) {
@@ -218,8 +225,13 @@ public class Validator {
 		return errorMsg;
 	}
 	
-	private LocationRule makeLocationRule() {
-		return Factory.makeLocationRule(JPA.em());
+
+	public void setLocationRule(LocationRule locationRule) {
+		this.locationRule = locationRule;
+	}
+
+	public void setParser(Parser parser) {
+		this.parser = parser;
 	}
 
 

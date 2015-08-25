@@ -22,5 +22,4 @@ libraryDependencies ++= Seq(
   "org.hibernate" % "hibernate-entitymanager" % "4.3.7.Final",
   javaJpa,
   "org.apache.commons" % "commons-csv" % "1.1",
-  "commons-lang" % "commons-lang" % "2.6"
 )

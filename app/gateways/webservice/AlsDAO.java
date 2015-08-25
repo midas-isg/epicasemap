@@ -18,7 +18,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 
 import controllers.Factory;
 
-public class AlsApiHelper {
+public class AlsDAO {
 
 	private static final String NAME = "name";
 	private static final String BBOX = "bbox";
@@ -35,8 +35,7 @@ public class AlsApiHelper {
 	public Location getLocationFromAls(Long id) {
 		ClientRule clientRule = makeAlsClientRule();
 		Location location = toLocation(clientRule.getById(id));
-		if (location != null)
-			location.setAlsId(id);
+		location.setAlsId(id);
 		return location;
 
 	}
@@ -49,7 +48,8 @@ public class AlsApiHelper {
 	private Location toLocation(WSResponse wsResponse) {
 		if (wsResponse.getStatus() == OK)
 			return toLocation(wsResponse.asJson());
-		return null;
+		else
+			throw new RuntimeException(wsResponse.getStatusText());
 
 	}
 
