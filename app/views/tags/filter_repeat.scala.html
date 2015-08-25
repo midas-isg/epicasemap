@@ -1,3 +1,3 @@
 @* filter repeat usually used with ng-repeat directive and filters tag*@
 @(expression:String, prefix:String)
-'@expression | filter: @{prefix}Query | orderBy:@{prefix}Order:@{prefix}Dir'
+'@expression | filter: @{prefix}Query | orderBy:@{prefix}Order:@{prefix}Dir | limitTo : @{prefix}Limit as filtered_result'

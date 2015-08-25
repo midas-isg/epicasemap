@@ -1,4 +1,4 @@
-@(expression:String, ifHtml:Html, elseHtml:Html) 
+@(expression:String, ifHtml:Html, elseHtml:Html = Html("")) 
 <span ng-switch='!!@expression'>
 	<span ng-switch-when='true'>@ifHtml</span>
 	<span ng-switch-default>@elseHtml</span>

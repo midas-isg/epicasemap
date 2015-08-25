@@ -7,7 +7,7 @@
 @bs_modal("modal", "Viz", "Visualization Editor", "close()")(editor())(modal_buttons("Visualization"))
 
 @editor(labelSize:Int=3) = {
-	@filters("series", "Series", orders)
+	@filters("allSeries", "series", "Series", orders)
 	<form name='form' class="form-horizontal" role="form">
 		@metadata_inputs(labelSize)
 		@selectedSeriesSection("view.hideSeries")
@@ -20,14 +20,14 @@
 	)) = {
 	@section_expandable(varName){
 		<h4 title='selected Series to be avialble to view in the Visualization'>
-			@span_expandable(varName, "Selected Series") 
-			<span title='the number of selected Series to be avialble to view in the Visualization'>({{countSelected()}})</span>
+			@span_expandable(varName, Html("Selected Series")) 
+			<span title='the number of selected Series to be avialble to view in the Visualization'>({{countSelected() | number}})</span>
 		</h4>
 	}{
 		<div id='filterPlaceholderNotToCountAsPartOfForm'></div>
 		@buttonInvert()
 		@buttonHideSeries("showAll")
-		You have {{count(allSeries)}} series available to select
+		You have {{count(allSeries) | number}} series available to select
 		@table_scollarable_content("allSeries", "series", orders, appendCols)
 	}
 }
