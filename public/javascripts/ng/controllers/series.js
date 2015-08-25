@@ -3,11 +3,12 @@
 app.controller('Series', function($scope, $rootScope, api) {
 	$scope.view = {};
 	$scope.coordinates = [];
+	$scope.dataLimit = 100;
 	
 	$scope.dialog = $('#seriesModal');
 	$scope.alertParent = $scope.dialog.find('.modal-body');
     $scope.dialog.on('hide.bs.modal', function (e) {
-		var isOK = true;
+    	var isOK = true;
 		if ($scope.form.$dirty)
 			isOK = confirm("Changes are not saved. \nOK = Close without save");
 		if (isOK) {
@@ -75,12 +76,16 @@ app.controller('Series', function($scope, $rootScope, api) {
 		if (! seriesId)
 			return;
 		var path = 'series/' + seriesId + '/time-coordinate';
-		api.find(path).then(function(rsp) {
-			$scope.coordinates =  rsp.data.results;
-			populateAdditionInfo($scope.coordinates);
-		}, function(err){
+		api.find(path).then(success, fail);
+		
+		function success(rsp) {
+			$scope.coordinates = rsp.data.results;
+			populateAdditionInfo(rsp.data.results);
+		}
+		
+		function fail(reason){
 			error('Failed to load the time-coordinate data!');
-		});
+		}
 	}
 
 	function close(){

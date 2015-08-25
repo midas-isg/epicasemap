@@ -20,8 +20,7 @@
 @dataSection(varName:String) = {
 	@section_expandable(varName){
 		<h4>
-			@span_expandable(varName, 
-			"The Series contains {{count(coordinates)}} data from {{locationIds.size}} location(s)")
+			@span_expandable(varName, head())
 		<button title="Open the dialog to upload data" class='btn btn-large' 
 		ng-click='uploadNewData(model.id)' ng-show ='model.id'>
 			@bs_icon("upload") Re-upload data ...
@@ -31,3 +30,9 @@
 		@table_filterable("coordinates", "data", "data", orders)
 	}
 }
+
+@head(unitText:String="location") = {
+The Series contains {{count(coordinates) | number}} data from {{locationIds.size | number}} @unit(unitText)
+}
+
+@unit(text:String) = {@span_if_else("(locationIds.size > 1)", Html(text +"s"), Html(text))}
