@@ -152,26 +152,20 @@ app.controller('Series', function($scope, $rootScope, api) {
 	}
 	
 	function populateAdditionInfo(data){
-		var path = 'locations/',
-			size = 0;
-		$scope.locationIds = new Set();
-		$scope.locations = new Map();
+		var path = 'locations/bulk-lables';
+		$scope.locationIds = [];
 		data.forEach(function (it) {
 			it.date = api.toDateText(it.timestamp);
-			$scope.locationIds.add(it.locationId);
+			$scope.locationIds.push(it.locationId);
 		});
 
-		size = $scope.locationIds.size;
-		if (size > 50)
-			return;
-		$scope.locationIds.forEach(function (it) {
-			api.find(path + it).then(function(rsp) {
-				$scope.locations.set(it, rsp.data.result.label);
-				if ($scope.locations.size >= size){
-					data.forEach(function (it) {
-						it.location = $scope.locations.get(it.locationId);
-					});
-				}
+		$scope.locationIds = _.uniq($scope.locationIds);
+		size = _.uniq($scope.locationIds).length;
+		var array = _.toArray($scope.locationIds);
+		api.post(path, JSON.stringify($scope.locationIds)).then(function(rsp){
+			var id2label = rsp.data.result;
+			data.forEach(function (datum) {
+				datum.location = id2label[datum.locationId];
 			});
 		});
 	}

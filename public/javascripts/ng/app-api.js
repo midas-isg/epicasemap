@@ -75,6 +75,16 @@ app.service("api", function($http, $q, $location) {
 			deferred.resolve(data.headers().location);
 		}
 	};
+	this.post = function(path, body) {
+		var url = makeUrl(path),
+			deferred = $q.defer();
+		$http.post(url, body).then(function(data) {
+			deferred.resolve(data);
+		}, function(err){
+			deferred.reject(err);
+		});
+		return deferred.promise;
+	};
 	this.getUrlQuery = function() {
 		return $location.search();
 	}

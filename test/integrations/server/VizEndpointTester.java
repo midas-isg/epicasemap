@@ -70,6 +70,7 @@ public class VizEndpointTester {
 		assertJsonString(read.getBody(), input);
 		assertStatusOfGet(urlWithId(0) + subpath, NOT_FOUND);
 		WS.url(url).put(input).get(timeout);
+		testDelete(id);
 	}
 
 	private WSResponse assertStatusOfGet(String url, final int expected) {
@@ -113,9 +114,8 @@ public class VizEndpointTester {
 		});
 
 		assertThat(all.size()).isGreaterThanOrEqualTo(2);
-		input.setSeriesIds(toList(all.subList(0, 1), it -> it.getId()));
-		input.setSeries2Ids(toList(all.subList(0, 2), it -> it.getId()));
-		input.setTitle("Test first 2 Series");
+		input.setSeriesIds(toList(all.subList(0, 2), it -> it.getId()));
+		input.setTitle("Test first 2 Series created by " + this.getClass().getSimpleName());
 		input.setUiSetting("{}");
 		final JsonNode root = Json.toJson(input);
 		final String json = root + "";

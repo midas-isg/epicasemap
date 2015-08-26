@@ -43,8 +43,9 @@ public class JpaAdaptor {
 		Integer limit = filter.getLimit();
 		if (limit != null)
 			query.setMaxResults(limit);
-		int offset = filter.getOffset();
-		query.setFirstResult(offset);
+		Integer offset = filter.getOffset();
+		if (offset != null) 
+			query.setFirstResult(offset);
 	}
 
 	private <T> TypedQuery<T> buildQuery(Class<T> clazz) {
@@ -83,6 +84,16 @@ public class JpaAdaptor {
 			predicates.add(p);
 		}
 		
+		Map<String, List<?>> key2List = filter.getInOperators();
+		for (Entry<String, List<?>> pair : key2List.entrySet()){
+			final List<?> value = pair.getValue();
+			if (value == null)
+				continue;
+			Path<String> exp = root.get(pair.getKey());
+			Predicate predicate = exp.in(value);
+			predicates.add(predicate);
+		}
+
 		criteriaQuery.where(predicates.toArray(new Predicate[predicates.size()]));
 		final LinkedHashMap<String, Filter.Order> orders = filter.getOrder();
 		for (Entry<String, Filter.Order> pair : orders.entrySet()){
