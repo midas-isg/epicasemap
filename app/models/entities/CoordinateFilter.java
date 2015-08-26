@@ -2,6 +2,7 @@ package models.entities;
 
 import java.util.Date;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import models.entities.filters.Filter;
@@ -26,6 +27,10 @@ public class CoordinateFilter implements Pagination, TimestampRange, Filter {
 	private Integer offset;
 	
 	private LinkedHashMap<String, Order> order;
+
+	public Map<String, List<?>>  getInOperators(){
+		return null;
+	}
 
 	public Long getSeriesId() {
 		return seriesId;

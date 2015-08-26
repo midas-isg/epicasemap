@@ -6,13 +6,14 @@ app.test = (function(){ 'use strict'; `comment: use ES6`;
 		scope,
 		// methods
 		workaroundForRealHttpCallsUsingNgMockAndNgMockE2E,
-		initController,
+		injectController,
 		init,
 		asynCallAfterTruthy,
 		removeViz,
 		setValidViz: function(viz) {the.validViz = viz},
 		getValidViz,
 		getApi: function() {return the.api},
+		injectApi
 	};
 	
 	function getValidViz(){
@@ -48,29 +49,34 @@ app.test = (function(){ 'use strict'; `comment: use ES6`;
 	}
 
 	function init(controllerName) {
-		var original;
+		var originalTimeout;
+		var suiName = controllerName || 'api';
 		
 		beforeAll(function(){
-			original = jasmine.DEFAULT_TIMEOUT_INTERVAL;
+			originalTimeout = jasmine.DEFAULT_TIMEOUT_INTERVAL;
 			jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000;
-			console.log(controllerName + ': started with jasmine.DEFAULT_TIMEOUT_INTERVAL = ' + jasmine.DEFAULT_TIMEOUT_INTERVAL);
+			console.log(suiName + ': started with jasmine.DEFAULT_TIMEOUT_INTERVAL = ' + jasmine.DEFAULT_TIMEOUT_INTERVAL);
 		});
 	    beforeEach(module('app'));
 	    beforeEach(angular.mock.http.init);
 	    afterEach(angular.mock.http.reset);
-	    beforeEach(initController(controllerName));
+	    if (controllerName)
+	    	beforeEach(injectController(controllerName));
+	    else
+	    	beforeEach(injectApi());
 	    afterAll(function() {
-	    	jasmine.DEFAULT_TIMEOUT_INTERVAL = original;
-	    	console.log(controllerName + ': stoped and restored jasmine.DEFAULT_TIMEOUT_INTERVAL = ' + jasmine.DEFAULT_TIMEOUT_INTERVAL);
-	    	original = null;
+	    	jasmine.DEFAULT_TIMEOUT_INTERVAL = originalTimeout;
+	    	console.log(suiName + ': stoped and restored jasmine.DEFAULT_TIMEOUT_INTERVAL = ' + jasmine.DEFAULT_TIMEOUT_INTERVAL);
+	    	originalTimeout = null;
 	    }); 
 	}
-	function initController(name, key){
+	
+	function injectController(name, key){
 		key = key || name.toLowerCase();
 		return inject(function ($rootScope, api, _$controller_, _$httpBackend_) {
 			the.api = api;
-			scope.root = $rootScope;
 			initHttpBackend(_$httpBackend_);
+			scope.root = $rootScope;
 			scope[key] = $rootScope.$new();
 			_$controller_(name, {
 	            $scope: scope[key],
@@ -81,14 +87,24 @@ app.test = (function(){ 'use strict'; `comment: use ES6`;
 			scope[key].form = {$setPristine: angular.noop};
 	    })
 	    
-	    function initHttpBackend(httpBackend){
-			var any = /.+\//;
-			httpBackend.whenPOST(any).passThrough();
-			httpBackend.whenGET(any).passThrough();
-			httpBackend.whenPUT(any).passThrough();
-			httpBackend.whenDELETE(any).passThrough();
-		}
 	}
+	
+    function initHttpBackend(httpBackend){
+		var any = /.+\//;
+		httpBackend.whenPOST(any).passThrough();
+		httpBackend.whenGET(any).passThrough();
+		httpBackend.whenPUT(any).passThrough();
+		httpBackend.whenDELETE(any).passThrough();
+	}
+
+    function injectApi(){
+    	return inject(initApi);
+	}
+    
+    function initApi(api, _$httpBackend_){
+		the.api = api;
+		initHttpBackend(_$httpBackend_);
+    }
 
 	function workaroundForRealHttpCallsUsingNgMockAndNgMockE2E(){
 		angular.mock.http = {};

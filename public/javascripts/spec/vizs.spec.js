@@ -34,7 +34,7 @@ describe('Controller: Vizs', function() {
 	}
 
 	describe('when loaded with an ID', function() {
-		beforeEach(app.test.initController('Viz'));
+		beforeEach(app.test.injectController('Viz'));
 		beforeEach(function(){
 			spyOn(app.test.getApi(), 'getUrlQuery').and.returnValue({id:app.test.getValidViz().id});	
 			$scope.loadModelHavingGivenId();
@@ -53,7 +53,7 @@ describe('Controller: Vizs', function() {
 	let addNew = 'addNew';
 	describe(`when ${addNew} was invoked`, function() {
 		var viz = 'Viz';
-    	beforeEach(app.test.initController(viz));
+    	beforeEach(app.test.injectController(viz));
     	beforeEach(function(){
     		$scope[addNew]();
     	});

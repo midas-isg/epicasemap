@@ -32,7 +32,7 @@
 }
 
 @head(unitText:String="location") = {
-The Series contains {{count(coordinates) | number}} data from {{locationIds.size | number}} @unit(unitText)
+The Series contains {{count(coordinates) | number}} data from {{locationIds.length | number}} @unit(unitText)
 }
 
-@unit(text:String) = {@span_if_else("(locationIds.size > 1)", Html(text +"s"), Html(text))}
+@unit(text:String) = {@span_if_else("(locationIds.length > 1)", Html(text +"s"), Html(text))}
