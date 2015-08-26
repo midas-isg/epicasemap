@@ -3,6 +3,7 @@ package interactors.series_data_file;
 import interactors.LocationRule;
 import interactors.SeriesDataRule;
 import interactors.SeriesRule;
+import interactors.series_data_file.Parser.DataPoint;
 
 import java.util.Date;
 
@@ -11,8 +12,6 @@ import models.entities.Location;
 import models.entities.Series;
 import models.entities.SeriesData;
 
-import org.apache.commons.csv.CSVParser;
-import org.apache.commons.csv.CSVRecord;
 import org.joda.time.DateTime;
 
 public class Persister {
@@ -21,68 +20,63 @@ public class Persister {
 	private SeriesRule seriesRule;
 	private SeriesDataRule seriesDataRule;
 	private Parser parser;
+	private SeriesDataFile dataFile;
+	private Series series;
 
-	public int persistSeriesDataFile(SeriesDataFile dataFile, Long seriesId) {
+	public int persistSeriesDataFile(Long seriesId) {
 
-		CSVParser csvParser = parser.parse(dataFile);
-		Series series = seriesRule.read(seriesId);
-		return persistSeriesData(series, dataFile, csvParser);
-
+		this.series = seriesRule.read(seriesId);
+		return persistSeriesData();
 	}
 
-	private int persistSeriesData(Series series, SeriesDataFile dataFile,
-			CSVParser parser) {
+	private int persistSeriesData() {
 		int counter = 0;
-		for (CSVRecord dataPoint : parser) {
-			persistDataPoint(series, dataFile, dataPoint);
+		while (parser.hasNext()) {
+			persistDataPoint(parser.next());
 			counter++;
 		}
 		return counter;
 	}
 
-	SeriesData persistDataPoint(Series series, SeriesDataFile dataFile,
-			CSVRecord dataPoint) {
-
-		Location location = createLocationFromCSVRecord(dataPoint, dataFile);
+	SeriesData persistDataPoint(DataPoint dataPoint) {
+		Location location = createLocationFromCSVRecord(dataPoint);
 		return seriesDataRule.createNew(series, location,
-				getTimeStamp(dataPoint, dataFile),
-				getValue(dataPoint, dataFile));
+				getTimeStamp(dataPoint), getValue(dataPoint));
 	}
 
-	private Double getValue(CSVRecord record, SeriesDataFile dataFile) {
+	private Double getValue(DataPoint dataPoint) {
 		String header = dataFile
 				.stdHeaderToFileHeader(SeriesDataFile.VALUE_HEADER);
 
-		return stringToDouble(record.get(header));
+		return stringToDouble(dataPoint.get(header));
 	}
 
-	private Date getTimeStamp(CSVRecord record, SeriesDataFile dataFile) {
+	private Date getTimeStamp(DataPoint dataPoint) {
 		String header = dataFile
 				.stdHeaderToFileHeader(SeriesDataFile.TIME_HEADER);
-		return DateTime.parse(record.get(header)).toDate();
+		return DateTime.parse(dataPoint.get(header)).toDate();
 	}
 
-	Location createLocationFromCSVRecord(CSVRecord record,
-			SeriesDataFile dataFile) {
+	Location createLocationFromCSVRecord(DataPoint dataPoint) {
 		Location location = null;
 		String fileFormat = dataFile.getFileFormat();
 
 		if (fileFormat.equals(SeriesDataFile.ALS_ID_FORMAT)) {
-			Long alsId = getAlsId(record, dataFile);
+			Long alsId = getAlsId(dataPoint);
 			location = locationRule.getLocation(alsId);
 
 		} else if (fileFormat.equals(SeriesDataFile.COORDINATE_FORMAT)) {
-			Double lat = getLatitude(record, dataFile);
-			Double lon = getLongitude(record, dataFile);
+			Double lat = getLatitude(dataPoint);
+			Double lon = getLongitude(dataPoint);
 			location = locationRule.getLocation(lat, lon);
 		}
 		return location;
 	}
 
-	private Double getLongitude(CSVRecord record, SeriesDataFile dataFile) {
+	private Double getLongitude(DataPoint dataPoint) {
 		String lonHeader = dataFile
 				.stdHeaderToFileHeader(SeriesDataFile.LONGITUDE_HEADER);
-		Double lon = stringToDouble(record.get(lonHeader));
+		Double lon = stringToDouble(dataPoint.get(lonHeader));
 		return lon;
 	}
 
@@ -90,17 +84,17 @@ public class Persister {
 		return Double.parseDouble(header);
 	}
 
-	private Double getLatitude(CSVRecord record, SeriesDataFile dataFile) {
+	private Double getLatitude(DataPoint dataPoint) {
 		String latHeader = dataFile
 				.stdHeaderToFileHeader(SeriesDataFile.LATITUDE_HEADER);
-		Double lat = stringToDouble(record.get(latHeader));
+		Double lat = stringToDouble(dataPoint.get(latHeader));
 		return lat;
 	}
 
-	private Long getAlsId(CSVRecord record, SeriesDataFile dataFile) {
+	private Long getAlsId(DataPoint dataPoint) {
 		String header;
 		header = dataFile.stdHeaderToFileHeader(SeriesDataFile.ALS_ID_HEADER);
-		Long alsId = stringToLong(record.get(header));
+		Long alsId = stringToLong(dataPoint.get(header));
 		return alsId;
 	}
 
@@ -123,6 +117,11 @@ public class Persister {
 
 	public void setParser(Parser parser) {
 		this.parser = parser;
+
+	}
+
+	public void setSeriesDataFile(SeriesDataFile dataFile) {
+		this.dataFile = dataFile;
 
 	}
 

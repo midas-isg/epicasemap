@@ -2,11 +2,11 @@ package interactors.series_data_file;
 
 import static org.fest.assertions.Assertions.assertThat;
 import integrations.app.App;
+import interactors.series_data_file.Parser.DataPoint;
 import models.SeriesDataFile;
 import models.entities.Location;
 import models.entities.SeriesData;
 
-import org.apache.commons.csv.CSVRecord;
 import org.joda.time.DateTime;
 import org.junit.Test;
 
@@ -28,14 +28,14 @@ public class TestPersister {
 		SeriesDataFileHelper.setStdToFileHeaderMap(dataFile);
 		int expected = 5;
 
-		Persister persister = SeriesDataFileHelper.makePersister();
-		int created = persister.persistSeriesDataFile(dataFile, seriesId);
+		Persister persister = SeriesDataFileHelper.makePersister(dataFile);
+		int created = persister.persistSeriesDataFile(seriesId);
 		assertThat(created).isEqualTo(expected);
 
 		dataFile = SeriesDataFileHelper.createTestSeriesDataFileWithCoordianteFormat();
 		SeriesDataFileHelper.setStdToFileHeaderMap(dataFile);
-		persister = SeriesDataFileHelper.makePersister();
-		created = persister.persistSeriesDataFile(dataFile, seriesId);
+		persister = SeriesDataFileHelper.makePersister(dataFile);
+		created = persister.persistSeriesDataFile(seriesId);
 		assertThat(created).isEqualTo(expected);
 
 	}
@@ -65,37 +65,37 @@ public class TestPersister {
 	}
 
 	private void csvRecordToSeriesDataEntityObject() throws Exception {
-		SeriesData seriesData = getSeriesDataFromCSVRecord(SeriesDataFileHelper.createTestSeriesDataFileWithAlsIdFormat());
+		SeriesData seriesData = getSeriesDataFromDataPoint(SeriesDataFileHelper.createTestSeriesDataFileWithAlsIdFormat());
 		assertThat(seriesData.getValue()).isEqualTo(1);
 		assertThat(seriesData.getTimestamp()).isEqualTo(
 				DateTime.parse("2015-01-01").toDate());
 
-		seriesData = getSeriesDataFromCSVRecord(SeriesDataFileHelper.createTestSeriesDataFileWithCoordianteFormat());
+		seriesData = getSeriesDataFromDataPoint(SeriesDataFileHelper.createTestSeriesDataFileWithCoordianteFormat());
 		assertThat(seriesData.getValue().equals(1));
 		assertThat(seriesData.getTimestamp()).isEqualTo(
 				DateTime.parse("2015-01-01").toDate());
 
 	}
 
-	private SeriesData getSeriesDataFromCSVRecord(SeriesDataFile dataFile)
+	private SeriesData getSeriesDataFromDataPoint(SeriesDataFile dataFile)
 			throws Exception {
 
-		CSVRecord csvRecord = SeriesDataFileHelper.getCSVParser(dataFile).iterator().next();
-		Persister persister = SeriesDataFileHelper.makePersister();
-		return persister.persistDataPoint(null, dataFile, csvRecord);
+		DataPoint dataPoint = SeriesDataFileHelper.getParser(dataFile).next();
+		Persister persister = SeriesDataFileHelper.makePersister(dataFile);
+		return persister.persistDataPoint(dataPoint);
 	}
 
-	private String get(CSVRecord csvRecord, String header, SeriesDataFile dataFile) {
-		return csvRecord.get(dataFile.stdHeaderToFileHeader(header));
+	private String get(DataPoint dataPoint, String header, SeriesDataFile dataFile) {
+		return dataPoint.get(dataFile.stdHeaderToFileHeader(header));
 	}
 
 	private Location getLocationObjectFromCSVRecordWithAlsId()
 			throws Exception {
 
 		SeriesDataFile dataFile = SeriesDataFileHelper.createTestSeriesDataFileWithAlsIdFormat();
-		CSVRecord csvRecord = SeriesDataFileHelper.getCSVParser(dataFile).iterator().next();
+		DataPoint dataPoint = SeriesDataFileHelper.getParser(dataFile).next();
 		Location location = createLocation(Long.parseLong(get(
-				csvRecord, SeriesDataFile.ALS_ID_HEADER, dataFile)));
+				dataPoint, SeriesDataFile.ALS_ID_HEADER, dataFile)));
 		return location;
 	}
 
@@ -109,9 +109,9 @@ public class TestPersister {
 			throws Exception {
 
 		SeriesDataFile dataFile = SeriesDataFileHelper.createTestSeriesDataFileWithCoordianteFormat();
-		CSVRecord csvRecord = SeriesDataFileHelper.getCSVParser(dataFile).iterator().next();
-		Persister persister = SeriesDataFileHelper.makePersister();
-		Location location = persister.createLocationFromCSVRecord(csvRecord, dataFile);
+		DataPoint dataPoint = SeriesDataFileHelper.getParser(dataFile).next();
+		Persister persister = SeriesDataFileHelper.makePersister(dataFile);
+		Location location = persister.createLocationFromCSVRecord(dataPoint);
 		return location;
 	}
 
