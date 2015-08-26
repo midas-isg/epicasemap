@@ -47,13 +47,13 @@ class UploadSeries extends Controller {
 	}
 
 	private static int create(SeriesDataFile dataFile, Long seriesId) {
-		Persister persister = Factory.makePersister(JPA.em());
-		return persister.persistSeriesDataFile(dataFile, seriesId);
+		Persister persister = Factory.makePersister(dataFile);
+		return persister.persistSeriesDataFile(seriesId);
 	}
 
 	private static String validate(SeriesDataFile dataFile) {
-		Validator validator = Factory.makeValidator(JPA.em());
-		Map<Long, List<String>> errors = validator.validate(dataFile);
+		Validator validator = Factory.makeValidator(dataFile);
+		Map<Long, List<String>> errors = validator.validateDataFile();
 		return joinErrorsAsString(errors);
 	}
 

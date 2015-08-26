@@ -11,18 +11,14 @@ import java.util.Set;
 
 import models.SeriesDataFile;
 import models.entities.Location;
-
-import org.apache.commons.csv.CSVParser;
-
-import play.db.jpa.JPA;
 import controllers.Factory;
 
 public class SeriesDataFileHelper {
 
-	public static CSVParser getCSVParser(SeriesDataFile dataFile) {
+	public static Parser getParser(SeriesDataFile dataFile) {
 		setStdToFileHeaderMap(dataFile);
-		Parser fileParser = new Parser();
-		return fileParser.parse(dataFile);
+		return new Parser(dataFile);
+		
 	}
 
 	public static SeriesDataFile createTestSeriesDataFileWithAlsIdFormat() {
@@ -41,11 +37,9 @@ public class SeriesDataFileHelper {
 
 	public static void setStdToFileHeaderMap(SeriesDataFile dataFile) {
 		Map<String, String> result = new HashMap<String, String>();
-		Parser csvParser = new Parser();
-		CSVParser parser = null;
-		parser = csvParser.parse(dataFile);
+		Parser parser = new Parser(dataFile);
 
-		Set<String> fileHeaderSet = parser.getHeaderMap().keySet();
+		Set<String> fileHeaderSet = parser.getFileHeaders();
 		Set<String> stdHeaderSet = dataFile.getHeaders();
 		for (String fileHeader : fileHeaderSet) {
 			for (String stdHeader : stdHeaderSet) {
@@ -82,12 +76,12 @@ public class SeriesDataFileHelper {
 		return new SeriesDataFile(file);
 	}
 
-	public static Persister makePersister() {
-		return Factory.makePersister(JPA.em());
+	public static Persister makePersister(SeriesDataFile dataFile) {
+		return Factory.makePersister(dataFile);
 	}
 
-	public static Validator makeValidator() {
-		return Factory.makeValidator(JPA.em());
+	public static Validator makeValidator(SeriesDataFile dataFile) {
+		return Factory.makeValidator(dataFile);
 	}
 
 	public static Location makeLocation() {

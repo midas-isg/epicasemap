@@ -3,6 +3,7 @@ package interactors.series_data_file;
 import static org.fest.assertions.Assertions.assertThat;
 import integrations.app.App;
 import integrations.server.Server;
+import interactors.series_data_file.Parser.DataPoint;
 
 import java.util.Arrays;
 import java.util.List;
@@ -10,8 +11,6 @@ import java.util.Map;
 
 import models.SeriesDataFile;
 
-import org.apache.commons.csv.CSVParser;
-import org.apache.commons.csv.CSVRecord;
 import org.junit.Test;
 
 import play.libs.F.Callback0;
@@ -49,50 +48,50 @@ public class TestValidator {
 	private void getAlsLocationError()  {
 		SeriesDataFile dataFile = SeriesDataFileHelper.createTestSeriesDataFileWithAlsIdFormatWithErrors();
 		
-		CSVParser parser = SeriesDataFileHelper.getCSVParser(dataFile);
-		CSVRecord record = parser.iterator().next();
+		Parser parser = SeriesDataFileHelper.getParser(dataFile);
+		DataPoint dataPoint = parser.next();
 		
-		Validator validator = SeriesDataFileHelper.makeValidator();
+		Validator validator = SeriesDataFileHelper.makeValidator(dataFile);
 
-		String error = validator.getLocationValueError(record, dataFile);
+		String error = validator.getLocationValueError(dataPoint);
 		assertThat(error).isEqualTo("als_id: a is not valid.");
 		
-		record = parser.iterator().next();
-		error = validator.getLocationValueError(record, dataFile);
+		dataPoint = parser.next();
+		error = validator.getLocationValueError(dataPoint);
 		assertThat(error).isEqualTo("als_id: 1234567890 does not exist in ALS.");
 
 	}
 
 	private void testGetDateTimeError() {
-		Validator validator = SeriesDataFileHelper.makeValidator();
 		SeriesDataFile dataFile = SeriesDataFileHelper.createTestSeriesDataFileWithAlsIdFormatWithErrors();
-		CSVRecord record = SeriesDataFileHelper.getCSVParser(dataFile).iterator().next();
-		String error = validator.getDateTimeError(record, dataFile);
+		Validator validator = SeriesDataFileHelper.makeValidator(dataFile);
+		DataPoint dataPoint = SeriesDataFileHelper.getParser(dataFile).next();
+		String error = validator.getDateTimeError(dataPoint);
 		assertThat(error).isEqualTo(
 				"time: Invalid format: \"2015-01-\" is malformed at \"-\"");
 
 	}
 
 	private void testGetValueError() {
-		Validator validator = SeriesDataFileHelper.makeValidator();
 		SeriesDataFile dataFile = SeriesDataFileHelper.createTestSeriesDataFileWithAlsIdFormatWithErrors();
-		CSVRecord record = SeriesDataFileHelper.getCSVParser(dataFile).iterator().next();
-		String error = validator.getValueError(record, dataFile);
+		Validator validator = SeriesDataFileHelper.makeValidator(dataFile);
+		DataPoint dataPoint = SeriesDataFileHelper.getParser(dataFile).next();
+		String error = validator.getValueError(dataPoint);
 		assertThat(error).isEqualTo("VALUE: b is not valid.");
 
 	}
 	
 	private void testGetRecordSizeError() {
 		SeriesDataFile dataFile = SeriesDataFileHelper.createTestSeriesDataFileWithAlsIdFormatWithErrors();
-		CSVRecord record = SeriesDataFileHelper.getCSVParser(dataFile).iterator().next();
-		String error = getRecordSizeError(dataFile, record);
+		DataPoint dataPoint = SeriesDataFileHelper.getParser(dataFile).next();
+		String error = getRecordSizeError(dataFile,dataPoint);
 		assertThat(error).isEqualTo("row has 4 columns. should have 3 columns.");
 		
 	}
 
-	private String getRecordSizeError(SeriesDataFile dataFile, CSVRecord record) {
-		Validator validator = SeriesDataFileHelper.makeValidator();
-		String error = validator.getRecordSizeError(record,dataFile);
+	private String getRecordSizeError(SeriesDataFile dataFile, DataPoint dataPoint) {
+		Validator validator = SeriesDataFileHelper.makeValidator(dataFile);
+		String error = validator.getRecordSizeError(dataPoint);
 		return error;
 	}
 	
@@ -120,9 +119,9 @@ public class TestValidator {
 	}
 		
 	private void testValidateAlsIdFormatted() {
-		Validator validator = SeriesDataFileHelper.makeValidator();
 		SeriesDataFile dataFile = SeriesDataFileHelper.createTestSeriesDataFileWithAlsIdFormatWithErrors();
-		Map<Long, List<String>> error = validator.validate(dataFile);
+		Validator validator = SeriesDataFileHelper.makeValidator(dataFile);
+		Map<Long, List<String>> error = validator.validateDataFile();
 		List<String> expected = Arrays.asList("number of columns is 4. should be 3.","\"lat\" column name is not allowed in alsIdFormat format.");
 		assertThat(error.get(1L)).isEqualTo(expected);
 		
@@ -131,26 +130,24 @@ public class TestValidator {
 	private void testValidateCoordinateFormatted() {
 	
 		SeriesDataFile dataFile = SeriesDataFileHelper.createTestSeriesDataFileWithCoordinateFormatWithErrors();
-		Validator validator = SeriesDataFileHelper.makeValidator();
-		Map<Long, List<String>> error = validator.validate(dataFile);
+		Validator validator = SeriesDataFileHelper.makeValidator(dataFile);
+		Map<Long, List<String>> error = validator.validateDataFile();
 		List<String> expected = Arrays.asList("number of columns is 5. should be 4.","\"error\" column name is not allowed in coordinateFormat format.");
 		assertThat(error.get(1L)).isEqualTo(expected);
 		
 	}
 	
 	private void testGetLocationValueErrorForCoordinateFormat() {
-		Validator validator = SeriesDataFileHelper.makeValidator();
 		SeriesDataFile dataFile = SeriesDataFileHelper.createTestSeriesDataFileWithCoordinateFormatWithErrors();
-		CSVRecord record = SeriesDataFileHelper.getCSVParser(dataFile).iterator().next();
-		String error = validator.getLocationValueError(record, dataFile);
+		Validator validator = SeriesDataFileHelper.makeValidator(dataFile);
+		DataPoint dataPoint = SeriesDataFileHelper.getParser(dataFile).next();
+		String error = validator.getLocationValueError(dataPoint);
 		assertThat(error).isEqualTo("latitude: a is not valid. longitude: b is not valid.");
 	}
 	
 	private List<String> getHeaderErrors(SeriesDataFile dataFile)  {
-		Parser fileParser = new Parser();
-		CSVParser parser = fileParser.parse(dataFile);
-		Validator validator = SeriesDataFileHelper.makeValidator();
-		List<String> error = validator.getFileConsistencyError(parser,dataFile);
+		Validator validator = SeriesDataFileHelper.makeValidator(dataFile);
+		List<String> error = validator.getFileConsistencyError();
 		return error;
 	}
 	
@@ -165,6 +162,4 @@ public class TestValidator {
 	private static void runWithTransaction(Callback0 callback) {
 		App.newWithInMemoryDbWithDbOpen().runWithTransaction(callback);
 	}
-
-
 }
