@@ -21,14 +21,28 @@
 	<div id='body' style="">
 		<div style="position: relative; z-index: 1;">
 			<div style="">
-				<button id="toggle-controls-button" class="btn no-padding" style="float: right; position: relative; right: 16px;"><span class="glyphicon glyphicon-indent-right" aria-hidden="true"></button>
+				<div style="">
+					<button id="toggle-controls-button" class="btn no-padding" style="float: right; position: relative; right: 16px;">
+						<span class="glyphicon glyphicon-indent-right" aria-hidden="true">
+					</button>
+				</div>
 				
-				<div id="control-panel" style="background-color: rgba(128, 128, 128, 0.1); padding: 5px; height: 600px; width: 15%; float: right; display: none;">
+				<div id="control-panel" style="background-color: rgba(128, 128, 128, 0.1); padding: 5px; height: 600px; width: 20%; float: right; display: none;">
 					<div id="series-options"></div>
 					
+					<div style="">
+						<button id="remove-series-button" class="btn no-padding" style="">
+							<span class="glyphicon glyphicon-minus" aria-hidden="true">
+						</button>
+						
+						<button id="add-series-button" class="btn no-padding" style="">
+							<span class="glyphicon glyphicon-plus" aria-hidden="true">
+						</button>
+					</div>
+					
 					<div>
-						<div>
-							<h5>Pick a color scheme:</h5>
+						<div id="color-palettes">
+							<h5 class="vertical-spaced">Pick a color scheme:</h5>
 							<div id="ramps"></div>
 						</div>
 						
