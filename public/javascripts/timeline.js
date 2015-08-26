@@ -5,11 +5,11 @@ timeline.js
 (function() {
 	function MagicMap() {
 		var i,
-		j,
-		temp,
-		svgElement,
-		svg,
-		thisMap = this;
+			j,
+			temp,
+			svgElement,
+			svg,
+			thisMap = this;
 		
 		L.mapbox.accessToken = 'pk.eyJ1IjoidHBzMjMiLCJhIjoiVHEzc0tVWSJ9.0oYZqcggp29zNZlCcb2esA';
 		this.map = L.mapbox.map('map', 'financialtimes.map-w7l4lfi8' /*'mapbox.streets'*/ /*'mapbox.dark'*/, { worldCopyJump: true, bounceAtZoomLimits: false, zoom: 2, minZoom: 2})
@@ -162,38 +162,35 @@ timeline.js
 			url: URL,
 			success: function(result) {
 				var h,
-				i,
-				svg,
-				svgElement;
+					i,
+					svg,
+					svgElement;
 				
 				$("#title").text(result.result.title);
 				
 				//console.log(thisMap.seriesDescriptions);
+				thisMap.seriesList = result.result.allSeries;
+				
+				for(h = 0; h < thisMap.seriesList.length; h++) {
+					thisMap.seriesDescriptions[thisMap.seriesList[h].id] = {
+						title: thisMap.seriesList[h].title,
+						description: thisMap.seriesList[h].description
+					};
+				}
 				
 				if(result.result.uiSetting) {
 					thisMap.uiSettings = JSON.parse(result.result.uiSetting);
 					
-					thisMap.seriesList = result.result.allSeries;
-					
-					for(h = 0; h < thisMap.seriesList.length; h++) {
-						thisMap.seriesDescriptions[thisMap.seriesList[h].id] = {
-							title: thisMap.seriesList[h].title,
-							description: thisMap.seriesList[h].description
-						};
-					}
-					
 					for(h = 0; h < thisMap.uiSettings.series.length; h++) {
 						thisMap.seriesToLoad.push(thisMap.uiSettings.series[h].index);
+						
+						thisMap.setGradient.push({
+							0.0: thisMap.colors[thisMap.uiSettings.series[h].color]
+						});
 					}
 					
 					thisMap.map.fitBounds(thisMap.uiSettings.bBox);
 					$("#palette-" + thisMap.uiSettings.colorPalette).click();
-					
-					for(i = 0; i < thisMap.uiSettings.series.length; i++) {
-						thisMap.setGradient.push({
-							0.0: thisMap.colors[thisMap.uiSettings.series[i].color]
-						});
-					}
 				}
 				else {
 					/*
@@ -205,98 +202,17 @@ timeline.js
 					*/
 				}
 				
-				for(h = 0; h < thisMap.uiSettings.series.length; h++) {
-					$("#color-options").append("<div style='float: left; clear: right;'><h5>Pick series " + String.fromCharCode(h + 65) + " color:</h5><div id='series-" + h + "'></div></div>");
-					
-					for(i = 0; i < thisMap.colors.length; i++) {
-						$("#series-" + h).append("<div id='color-" + i + "' class='ramp'></div>");
-						svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-						svg.setAttribute("width", 15);
-						svg.setAttribute("height", 15);
-						svgElement = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-						svgElement.setAttributeNS(null, "width", 15);
-						svgElement.setAttributeNS(null, "height", 15);
-						svgElement.setAttributeNS(null, "fill", thisMap.colors[i]);
-						$(svg).append(svgElement);
-						
-						$("#series-" + h + " #color-" + i).append(svg);
-						
-						$("#series-" + h + " #color-" + i).click(function() {
-							var colorID = this.id.split("-")[1],
-								seriesID = $(this).parent().attr("id").split("-")[1],
-								siblings = $(this).siblings().get(),
-								i;
-							
-							if(!$(this).hasClass("selected")) {
-								thisMap.uiSettings.series[seriesID].color = colorID;
-								
-								for(i = 0; i < siblings.length; i++) {
-									if($(siblings[i]).hasClass("selected")) {
-										$(siblings[i]).removeClass("selected");
-										break;
-									}
-								}
-								$(this).addClass("selected");
-								
-								thisMap.detailChart.series[seriesID].update({color: thisMap.colors[colorID]}, true);
-								thisMap.masterChart.series[seriesID].update({color: thisMap.colors[colorID]}, true);
-								
-								thisMap.setGradient[seriesID] = {0.0: thisMap.colors[colorID]};
-								thisMap.heat[seriesID].setOptions({gradient: thisMap.setGradient[seriesID]});
-							}
-							
-							return;
-						});
-					}
-					
-					$("#series-" + h + " #color-" + thisMap.uiSettings.series[h].color).addClass("selected");
-				}
-				
 				for(i = 0; i < thisMap.seriesToLoad.length; i++) {
 					thisMap.displaySet.push({visiblePoints: []});
 					thisMap.load(thisMap.seriesToLoad[i]);
 				}
 				
 				for(h = 0; h < thisMap.uiSettings.series.length; h++) {
-					$("#series-options").append(
-						"<div>" +
-							"<h5>Select series " + String.fromCharCode(h + 65) + "</h5>" +
-							"<select id='series-" + h + "' style='max-width: 100%;'>" +
-							"</select>" +
-						"</div>"
-					);
+					thisMap.pushSeries();
 					
-					for(i = 0; i < thisMap.seriesList.length; i++) {
-						$("#series-" + h).append("<option value='" + thisMap.seriesList[i].id + "'>" + thisMap.seriesList[i].title +"</option>");
-					}
 					$("#series-" + h).val(thisMap.uiSettings.series[h].index);
 					$("#series-" + h).change();
-					
-					$("#series-" + h).change(function() {
-						var id = $(this).val(),
-						l,
-						k = $(this).attr("id").split("-")[1];
-console.log("series " + k + ": " + id);
-						
-						thisMap.uiSettings.series[k].index = id;
-						
-						//TODO: recalculate frameOffset, earliest & latest dates after loading is finished
-						//(refactor block to external call -calculate from 0 and length-1 indexes)
-						thisMap.latestDate = new Date(0);
-						thisMap.earliestDate = new Date();
-						
-						thisMap.seriesToLoad = [];
-						for(l = 0; l < thisMap.uiSettings.series.length; l++) {
-							thisMap.seriesToLoad.push($("#series-" + l).val());
-						}
-						
-						for(l = 0; l < thisMap.seriesToLoad.length; l++) {
-							thisMap.displaySet[k].visiblePoints.length = 0;
-							thisMap.load(thisMap.seriesToLoad[l], l);
-						}
-						
-						return;
-					});
+					$("#color-selector-" + h + " #color-" + thisMap.uiSettings.series[h].color).addClass("selected");
 				}
 				
 				return;
@@ -317,8 +233,6 @@ console.log("series " + k + ": " + id);
 		
 		$("#reset-button").click(function() {
 			var i;
-			
-			thisMap.uiSettings.event = null;//TODO: remove if necessary
 			
 			//console.log("Buffer:");
 			//console.log(thisMap.dataset[].buffer);
@@ -358,6 +272,24 @@ console.log("series " + k + ": " + id);
 			return;
 		});
 		
+		$("#remove-series-button").click(function() {
+			thisMap.popSeries();
+			
+			return;
+		});
+		
+		$("#add-series-button").click(function() {
+			var i;
+			thisMap.pushSeries();
+			
+			//TODO: trigger default series option value as change and click color-0 of new series
+			//$("#series-" + selectorID).val(thisMap.uiSettings.series[selectorID].index);
+			//$("#series-" + selectorID).change();
+			//$("#color-selector-" + ? + " #color-0").click();
+			
+			return;
+		});
+		
 		//TODO: refactor palette click code without causing closure issues
 		$("#palette-0").click(function() {
 			if(!$("#palette-0").hasClass("selected")) {
@@ -392,6 +324,112 @@ console.log("series " + k + ": " + id);
 			return;
 		});
 		
+		return;
+	}
+	
+	MagicMap.prototype.pushSeries = function() {
+		var selectorID = $("#series-options").children().last().index() + 1,
+			thisMap = this;
+		
+		function appendColorSelector(setID) {
+			for(i = 0; i < thisMap.colors.length; i++) {
+				$("#color-selector-" + setID).append("<div id='color-" + i + "' class='ramp'></div>");
+				svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+				svg.setAttribute("width", 15);
+				svg.setAttribute("height", 15);
+				svgElement = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+				svgElement.setAttributeNS(null, "width", 15);
+				svgElement.setAttributeNS(null, "height", 15);
+				svgElement.setAttributeNS(null, "fill", thisMap.colors[i]);
+				$(svg).append(svgElement);
+				
+				$("#color-selector-" + setID + " #color-" + i).append(svg);
+				
+				$("#color-selector-" + setID + " #color-" + i).click(function() {
+					var colorID = this.id.split("-")[1],
+						seriesID = $(this).parent().attr("id").split("-")[2],
+						siblings = $(this).siblings().get(),
+						i;
+					
+					if(!$(this).hasClass("selected")) {
+						thisMap.uiSettings.series[seriesID].color = colorID;
+						
+						for(i = 0; i < siblings.length; i++) {
+							if($(siblings[i]).hasClass("selected")) {
+								$(siblings[i]).removeClass("selected");
+								break;
+							}
+						}
+						$(this).addClass("selected");
+						
+						thisMap.detailChart.series[seriesID].update({color: thisMap.colors[colorID]}, true);
+						thisMap.masterChart.series[seriesID].update({color: thisMap.colors[colorID]}, true);
+						
+						thisMap.setGradient[seriesID] = {0.0: thisMap.colors[colorID]};
+						thisMap.heat[seriesID].setOptions({gradient: thisMap.setGradient[seriesID]});
+					}
+					
+					return;
+				});
+			}
+			
+			return;
+		}
+		
+		function appendSeriesSelector(selectorID) {
+			if(selectorID >= thisMap.uiSettings.series.length) {
+				selectorID = thisMap.uiSettings.series.length;
+				thisMap.uiSettings.series.push({ color: 0, index: thisMap.seriesList[0].id });
+				thisMap.displaySet.push({visiblePoints: []});
+			}
+			
+			$("#series-options").append(
+				"<div>" +
+					"<h5 class='vertical-spaced'>Select series " + String.fromCharCode(selectorID + 65) + "</h5>" +
+					"<select id='series-" + selectorID + "' style='max-width: 100%;'>" + "</select>" +
+					"<div id='color-selector-" + selectorID + "'></div>" +
+				"</div>"
+			);
+			
+			for(i = 0; i < thisMap.seriesList.length; i++) {
+				$("#series-" + selectorID).append("<option value='" + thisMap.seriesList[i].id + "'>" + thisMap.seriesList[i].title +"</option>");
+			}
+			
+			$("#series-" + selectorID).change(function() {
+				var id = $(this).val(),
+				l,
+				k = $(this).attr("id").split("-")[1];
+console.log("series " + k + ": " + id);
+				
+				thisMap.uiSettings.series[k].index = id;
+				
+				//TODO: recalculate frameOffset, earliest & latest dates after loading is finished
+				//(refactor block to external call -calculate from 0 and length-1 indexes)
+				thisMap.latestDate = new Date(0);
+				thisMap.earliestDate = new Date();
+				
+				thisMap.seriesToLoad = [];
+				for(l = 0; l < thisMap.uiSettings.series.length; l++) {
+					thisMap.seriesToLoad.push($("#series-" + l).val());
+				}
+				
+				for(l = 0; l < thisMap.seriesToLoad.length; l++) {
+					thisMap.displaySet[l].visiblePoints.length = 0;
+					thisMap.load(thisMap.seriesToLoad[l], l);
+				}
+				
+				return;
+			});
+		}
+		
+		appendSeriesSelector(selectorID);
+		appendColorSelector(selectorID);
+		
+		return;
+	}
+	
+	MagicMap.prototype.popSeries = function() {
+		console.log("popSeries");
 		return;
 	}
 	
@@ -982,8 +1020,8 @@ console.log("series " + k + ": " + id);
 						dateString = (currentDate.getUTCMonth() + 1) + '/' + currentDate.getUTCDate() + '/' + currentDate.getUTCFullYear();
 						$("#current-date").text(dateString);
 						
-					console.log(currentDate);
-					console.log(dateString);
+					//console.log(currentDate);
+					//console.log(dateString);
 						
 						this.masterChart.xAxis[0].addPlotLine({
 							value: currentDate.valueOf(),
