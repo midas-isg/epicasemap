@@ -35,7 +35,7 @@ public class TestClientRule {
 
 	private void readUrl() {
 		ConfRule confRule = Factory.makeConfRule();
-		this.baseUrl = confRule.readString(AppKey.ALS_LOCATION_WS_URL.key());
+		this.baseUrl = confRule.readString(AppKey.ALS_WS_URL.key()) + "/api/locations";
 	}
 
 	private void assertStatus(WSResponse wsResponse, int expected) {

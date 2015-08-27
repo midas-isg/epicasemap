@@ -1,39 +1,37 @@
 package interactors.series_data_file;
 
-import gateways.webservice.AlsResponseHelper;
+import interactors.LocationRule;
+import interactors.series_data_file.Parser.DataPoint;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import models.SeriesDataFile;
-import models.entities.Location;
 
-import org.apache.commons.csv.CSVParser;
-import org.apache.commons.csv.CSVRecord;
-import org.apache.commons.lang.math.NumberUtils;
 import org.joda.time.DateTime;
 
 public class Validator {
 
-	public Map<Long, List<String>> validate(SeriesDataFile dataFile) {
+	private LocationRule locationRule;
+	private Parser parser;
+	private SeriesDataFile dataFile;
+	private Map<Long, List<String>> errors = new HashMap<Long, List<String>>();
 
-		Map<Long, List<String>> errors = new HashMap<Long, List<String>>();
+	public Map<Long, List<String>> validateDataFile() {
+
 		List<String> errorList = new ArrayList<String>();
-		CSVParser parser = getParseErrors(dataFile, errorList);
+		addErrorToList(errorList, parser.getParseError());
 		if (!errorList.isEmpty()) {
 			errors.put(1L, errorList);
-			return errors;
+			return this.errors;
 		}
-		if ((errorList = getFileConsistencyError(parser, dataFile)).isEmpty()) {
-			mapFileHeadersToStdHeaders(parser, dataFile);
-			Iterator<CSVRecord> records = parser.iterator();
-			while (records.hasNext()) {
-				if (!(errorList = getRecordErrors(records.next(), dataFile))
-						.isEmpty()) {
+		if ((errorList = getFileConsistencyError()).isEmpty()) {
+			mapFileHeadersToStdHeaders();
+			while (parser.hasNext()) {
+				if (!(errorList = getRecordErrors(parser.next())).isEmpty()) {
 					errors.put(parser.getCurrentLineNumber(), errorList);
 				}
 			}
@@ -43,22 +41,9 @@ public class Validator {
 		return errors;
 	}
 
-	private CSVParser getParseErrors(SeriesDataFile dataFile,
-			List<String> errorList) {
-		Parser csvParser = new Parser();
-		CSVParser parser = null;
-		try {
-			parser = csvParser.parse(dataFile);
-		} catch (Exception e) {
-			errorList.add(e.getMessage());
-		}
-		return parser;
-	}
-
-	private void mapFileHeadersToStdHeaders(CSVParser parser,
-			SeriesDataFile dataFile) {
+	private void mapFileHeadersToStdHeaders() {
 		Map<String, String> result = new HashMap<String, String>();
-		Set<String> fileHeaderSet = parser.getHeaderMap().keySet();
+		Set<String> fileHeaderSet = parser.getFileHeaders();
 		Set<String> stdHeaderSet = dataFile.getHeaders();
 		for (String fileHeader : fileHeaderSet) {
 			for (String stdHeader : stdHeaderSet) {
@@ -70,24 +55,26 @@ public class Validator {
 		dataFile.setStdHeaderToFileHeaderMap(result);
 	}
 
-	private List<String> getFileConsistencyError(CSVParser parser,
-			SeriesDataFile dataFile) {
+	List<String> getFileConsistencyError() {
 		List<String> errors = new ArrayList<String>();
-		addErrorToList(errors, validateFileHeaders(parser, dataFile));
-		addErrorToList(errors, validateDelimiter(parser, dataFile));
+		addErrorToList(errors, validateFormat());
+		if (errors.isEmpty())
+			addErrorToList(errors, validateFileHeaders());
 		return errors;
 
 	}
 
-	private List<String> validateDelimiter(CSVParser parser,
-			SeriesDataFile dataFile) {
-		List<String> errors = new ArrayList<String>();
-		return errors;
+	private String validateFormat() {
+		String format = dataFile.getFileFormat();
+		if (format.isEmpty())
+			return "column names are not valid.";
+		else
+			return "";
 	}
 
-	List<String> validateFileHeaders(CSVParser parser, SeriesDataFile dataFile) {
+	private List<String> validateFileHeaders() {
 		List<String> errors = new ArrayList<String>();
-		Set<String> fileHeaderSet = parser.getHeaderMap().keySet();
+		Set<String> fileHeaderSet = parser.getFileHeaders();
 		Set<String> expectedHeaderSet = dataFile.getHeaders();
 		if (fileHeaderSet.size() != expectedHeaderSet.size()) {
 			addErrorToList(errors,
@@ -107,30 +94,29 @@ public class Validator {
 		return errors;
 	}
 
-	private List<String> getRecordErrors(CSVRecord record,
-			SeriesDataFile dataFile) {
+	private List<String> getRecordErrors(DataPoint dataPoint) {
 
 		List<String> errors = new ArrayList<String>();
-		addErrorToList(errors, getRecordSizeError(record, dataFile));
-		addErrorToList(errors, getDateTimeError(record, dataFile));
-		addErrorToList(errors, getValueError(record, dataFile));
-		addErrorToList(errors, getLocationValueError(record, dataFile));
+		addErrorToList(errors, getRecordSizeError(dataPoint));
+		addErrorToList(errors, getDateTimeError(dataPoint));
+		addErrorToList(errors, getValueError(dataPoint));
+		addErrorToList(errors, getLocationValueError(dataPoint));
 
 		return errors;
 	}
 
-	String getRecordSizeError(CSVRecord record, SeriesDataFile dataFile) {
+	String getRecordSizeError(DataPoint dataPoint) {
 		String errorMsg = "";
-		if (record.size() != dataFile.getHeaders().size()) {
-			errorMsg = "row has " + record.size() + " columns. should have "
+		if (dataPoint.size() != dataFile.getHeaders().size()) {
+			errorMsg = "row has " + dataPoint.size() + " columns. should have "
 					+ dataFile.getHeaders().size() + " columns.";
 		}
 		return errorMsg;
 	}
 
-	private void addErrorToList(List<String> errors, String err) {
+	private void addErrorToList(List<String> errorList, String err) {
 		if (err != "")
-			errors.add(err);
+			errorList.add(err);
 	}
 
 	private void addErrorToList(List<String> errors1, List<String> errors2) {
@@ -138,7 +124,7 @@ public class Validator {
 			errors1.addAll(errors2);
 	}
 
-	String getLocationValueError(CSVRecord record, SeriesDataFile dataFile) {
+	String getLocationValueError(DataPoint dataPoint) {
 
 		String errorMsg = "";
 		String header;
@@ -149,11 +135,11 @@ public class Validator {
 			header = dataFile
 					.stdHeaderToFileHeader(SeriesDataFile.ALS_ID_HEADER);
 
-			if (! isNumber(record.get(header))) {
-				errorMsg = header + ": " + record.get(header)
+			if (!isNumber(dataPoint.get(header))) {
+				errorMsg = header + ": " + dataPoint.get(header)
 						+ " is not valid.";
-			} else if(! existInAls(record.get(header))){
-				errorMsg = header + ": " + record.get(header)
+			} else if (!existInAls(dataPoint.get(header))) {
+				errorMsg = header + ": " + dataPoint.get(header)
 						+ " does not exist in ALS.";
 			}
 			break;
@@ -163,14 +149,14 @@ public class Validator {
 			header = dataFile
 					.stdHeaderToFileHeader(SeriesDataFile.LATITUDE_HEADER);
 
-			if (! isNumber(record.get(header))) {
-				errorMsg = header + ": " + record.get(header)
+			if (!isNumber(dataPoint.get(header))) {
+				errorMsg = header + ": " + dataPoint.get(header)
 						+ " is not valid. ";
 			}
 			header = dataFile
 					.stdHeaderToFileHeader(SeriesDataFile.LONGITUDE_HEADER);
-			if (! isNumber(record.get(header))) {
-				errorMsg += header + ": " + record.get(header)
+			if (!isNumber(dataPoint.get(header))) {
+				errorMsg += header + ": " + dataPoint.get(header)
 						+ " is not valid.";
 			}
 
@@ -180,42 +166,56 @@ public class Validator {
 	}
 
 	private boolean existInAls(String alsId) {
-		Location location = getAlsLocation(Long.parseLong(alsId));
-		if (location == null)
+		try {
+			locationRule.getLocationByAlsId(Long.parseLong(alsId));
+		} catch (RuntimeException e) {
 			return false;
+		}
 		return true;
 	}
 
-	private Location getAlsLocation(long alsId) throws NumberFormatException {
-		AlsResponseHelper helper = new AlsResponseHelper();
-		Location location = helper.getAlsLocation(alsId);
-		return location;
-	}
-
 	private boolean isNumber(String val) {
-		return NumberUtils.isNumber(val);
+		try {
+			Double.parseDouble(val);
+		} catch (Exception e) {
+			return false;
+		}
+		return true;
 	}
 
-	String getValueError(CSVRecord record, SeriesDataFile dataFile) {
+	String getValueError(DataPoint dataPoint) {
 		String errorMsg = "";
 		String header = dataFile
 				.stdHeaderToFileHeader(SeriesDataFile.VALUE_HEADER);
-		if (!isNumber(record.get(header))) {
-			errorMsg = header + ": " + record.get(header) + " is not valid.";
+		if (!isNumber(dataPoint.get(header))) {
+			errorMsg = header + ": " + dataPoint.get(header) + " is not valid.";
 		}
 		return errorMsg;
 	}
 
-	String getDateTimeError(CSVRecord record, SeriesDataFile dataFile) {
+	String getDateTimeError(DataPoint dataPoint) {
 		String errorMsg = "";
 		String header = dataFile
 				.stdHeaderToFileHeader(SeriesDataFile.TIME_HEADER);
 		try {
-			DateTime.parse(record.get(header));
+			DateTime.parse(dataPoint.get(header));
 		} catch (IllegalArgumentException e) {
 			errorMsg = header + ": " + e.getMessage();
 		}
 		return errorMsg;
+	}
+
+	public void setLocationRule(LocationRule locationRule) {
+		this.locationRule = locationRule;
+	}
+
+	public void setParser(Parser parser) {
+		this.parser = parser;
+	}
+
+	public void setDataFile(SeriesDataFile dataFile) {
+		this.dataFile = dataFile;
+
 	}
 
 }

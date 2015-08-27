@@ -1,6 +1,8 @@
 package suites;
 
 import interactors.series_data_file.Parser;
+import interactors.series_data_file.Persister;
+import interactors.series_data_file.Validator;
 
 import java.io.File;
 import java.util.HashMap;
@@ -8,60 +10,36 @@ import java.util.Map;
 import java.util.Set;
 
 import models.SeriesDataFile;
-
-import org.apache.commons.csv.CSVParser;
+import models.entities.Location;
+import controllers.Factory;
 
 public class SeriesDataFileHelper {
 
-	public CSVParser getCSVParser(SeriesDataFile dataFile) throws Exception {
-		SeriesDataFileHelper helper = new SeriesDataFileHelper();
-		helper.setStdToFileHeaderMap(dataFile);
-		Parser fileParser = new Parser();
-		CSVParser parser = null;
-		parser = fileParser.parse(dataFile);
-
-		//return parser.iterator().next();
-		return parser;
-
+	public static Parser getParser(SeriesDataFile dataFile) {
+		setStdToFileHeaderMap(dataFile);
+		return new Parser(dataFile);
+		
 	}
 
-	public SeriesDataFile createTestSeriesDataFileWithAlsIdFormat() {
-		File csvFile = new File(
+	public static SeriesDataFile createTestSeriesDataFileWithAlsIdFormat() {
+		File file = new File(
 				"test/resources/input-files/test_alsId_format.txt");
-		String fileFormat = SeriesDataFile.ALS_ID_FORMAT;
-		String delimiter = ",";
-		SeriesDataFile dataFile = creatSeriesDataFile(csvFile, fileFormat,
-				delimiter);
-		return dataFile;
+		return new SeriesDataFile(file);
+
 	}
 
-	private SeriesDataFile creatSeriesDataFile(File csvFile, String fileFormat,
-			String delimiter) {
-		SeriesDataFile dataFile = new SeriesDataFile();
-		dataFile.setFile(csvFile);
-		dataFile.setDelimiter(delimiter);
-		dataFile.setFileFormat(fileFormat);
-		return dataFile;
-	}
+	public static SeriesDataFile createTestSeriesDataFileWithCoordianteFormat() {
 
-	public SeriesDataFile createTestSeriesDataFileWithCoordianteFormat() {
-
-		File csvFile = new File(
+		File file = new File(
 				"test/resources/input-files/test_coordinate_format.txt");
-		String fileFormat = SeriesDataFile.COORDINATE_FORMAT;
-		String delimiter = ",";
-		SeriesDataFile dataFile = creatSeriesDataFile(csvFile, fileFormat,
-				delimiter);
-		return dataFile;
+		return new SeriesDataFile(file);
 	}
 
-	public void setStdToFileHeaderMap(SeriesDataFile dataFile) throws Exception {
+	public static void setStdToFileHeaderMap(SeriesDataFile dataFile) {
 		Map<String, String> result = new HashMap<String, String>();
-		Parser csvParser = new Parser();
-		CSVParser parser = null;
-		parser = csvParser.parse(dataFile);
+		Parser parser = new Parser(dataFile);
 
-		Set<String> fileHeaderSet = parser.getHeaderMap().keySet();
+		Set<String> fileHeaderSet = parser.getFileHeaders();
 		Set<String> stdHeaderSet = dataFile.getHeaders();
 		for (String fileHeader : fileHeaderSet) {
 			for (String stdHeader : stdHeaderSet) {
@@ -74,23 +52,39 @@ public class SeriesDataFileHelper {
 
 	}
 
-	public SeriesDataFile createTestSeriesDataFileWithAlsIdFormatWithErrors() {
-		File csvFile = new File(
+	public static SeriesDataFile createTestSeriesDataFileWithAlsIdFormatWithErrors() {
+		File file = new File(
 				"test/resources/input-files/test_alsId_format_with_errors.txt");
-		String fileFormat = SeriesDataFile.ALS_ID_FORMAT;
-		String delimiter = ",";
-		SeriesDataFile dataFile = creatSeriesDataFile(csvFile, fileFormat,
-				delimiter);
-		return dataFile;
+		return new SeriesDataFile(file);
 	}
 
-	public SeriesDataFile createTestSeriesDataFileWithCoordinateFormatWithErrors() {
-		File csvFile = new File(
+	public static SeriesDataFile createTestSeriesDataFileWithCoordinateFormatWithErrors() {
+		File file = new File(
 				"test/resources/input-files/test_coordinate_format_with_errors.txt");
-		String fileFormat = SeriesDataFile.COORDINATE_FORMAT;
-		String delimiter = ",";
-		SeriesDataFile dataFile = creatSeriesDataFile(csvFile, fileFormat,
-				delimiter);
-		return dataFile;
+		return new SeriesDataFile(file);
+	}
+
+	public static SeriesDataFile creatDataSeriesFileWithDelimiterError() {
+		File file = new File(
+				"test/resources/input-files/test_alsId_format_unix_with_delim_error.txt");
+		return new SeriesDataFile(file);
+	}
+
+	public static SeriesDataFile creatDataSeriesFileWithHeaderError() {
+		File file = new File(
+				"test/resources/input-files/test_with_header_error.txt");
+		return new SeriesDataFile(file);
+	}
+
+	public static Persister makePersister(SeriesDataFile dataFile) {
+		return Factory.makePersister(dataFile);
+	}
+
+	public static Validator makeValidator(SeriesDataFile dataFile) {
+		return Factory.makeValidator(dataFile);
+	}
+
+	public static Location makeLocation() {
+		return new Location();
 	}
 }
