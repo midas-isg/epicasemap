@@ -1,4 +1,4 @@
-package models.entities.filters;
+package models.filters;
 
 public interface Pagination extends Filter {
 

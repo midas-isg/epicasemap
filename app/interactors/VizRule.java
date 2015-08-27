@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 import models.entities.MetaData;
 import models.entities.Series;
 import models.entities.Viz;
-import models.entities.filters.Filter;
+import models.filters.Filter;
 import models.view.VizInput;
 
 public class VizRule extends CrudRule<Viz> {

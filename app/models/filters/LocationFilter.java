@@ -1,10 +1,8 @@
-package models.entities;
+package models.filters;
 
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-import models.entities.filters.Filter;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 

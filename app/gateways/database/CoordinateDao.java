@@ -11,9 +11,9 @@ import java.util.Map;
 import javax.persistence.EntityManager;
 
 import models.entities.Coordinate;
-import models.entities.CoordinateFilter;
-import models.entities.filters.Filter;
-import models.entities.filters.Filter.Order;
+import models.filters.CoordinateFilter;
+import models.filters.Filter;
+import models.filters.Filter.Order;
 
 public class CoordinateDao extends DataAccessObject<Coordinate> {
 	public CoordinateDao(EntityManager em){

@@ -8,7 +8,7 @@ import java.util.List;
 import javax.ws.rs.PathParam;
 
 import models.entities.Series;
-import models.entities.filters.Filter;
+import models.filters.Filter;
 import play.data.Form;
 import play.db.jpa.JPA;
 import play.db.jpa.Transactional;
