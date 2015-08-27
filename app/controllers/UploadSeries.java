@@ -10,16 +10,12 @@ import java.util.StringJoiner;
 
 import models.SeriesDataFile;
 import play.db.jpa.JPA;
-import play.db.jpa.Transactional;
 import play.mvc.Controller;
 import play.mvc.Http.Request;
 import play.mvc.Result;
 
 class UploadSeries extends Controller {
-
-	@Transactional
-	public static Result upload(long seriesId) {
-
+	static Result upload(long seriesId) {
 		SeriesDataFile dataFile = getFileObject(request());
 		String errors = validate(dataFile);
 
@@ -71,12 +67,10 @@ class UploadSeries extends Controller {
 	}
 
 	private static SeriesDataFile getFileObject(Request request) {
-
 		SeriesDataFile dataFile = new SeriesDataFile(request.body()
 				.asMultipartFormData().getFiles().get(0).getFile());
 		dataFile.setFile(request.body().asMultipartFormData().getFiles().get(0)
 				.getFile());
-
 		return dataFile;
 	}
 }
