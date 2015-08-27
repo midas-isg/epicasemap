@@ -94,7 +94,6 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
 		this._heat.draw2 = function(minOpacity) {
 			var ctx = this._ctx,
 			i,
-			len,
 			colored,
 			p;
 			
@@ -105,28 +104,27 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
 			if (!this._grad) {
 				this.gradient(this.defaultGradient);
 			}
-
+			
 			ctx.clearRect(0, 0, this._width, this._height);
-
 			// draw a grayscale heatmap by putting a blurred circle at each data point
-			for(i = 0, len = this._data.length; i < len; i++) {
+			for(i = 0; i < this._data.length; i++) {
 				p = this._data[i];
 				
 				//data[i][2] cannot be NaN so make work-around
 				if(p[2] && (p[2] > 0)) {
-					this.radius(p[3] * 10, 0.1);
+					this.radius((p[3] >= 0.1 ? p[3] : 0.1) * 10, 0.1);
 					
 					//ctx.globalAlpha = 1.0;
 					ctx.globalAlpha = Math.max(p[2], minOpacity === undefined ? 0.05 : minOpacity);
 					ctx.drawImage(this._circle, p[0] - this._r, p[1] - this._r);
 				}
 			}
-
+			
 			// colorize the heatmap, using opacity value of each pixel to get the right color from our gradient
 			colored = ctx.getImageData(0, 0, this._width, this._height);
 			this._colorize(colored.data, this._grad);
 			ctx.putImageData(colored, 0, 0);
-
+			
 			return this;
 		}
 		/* End _heat Object Extension */
@@ -183,7 +181,7 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
 			radius;
 
         // console.time('process');
-        for (i = 0, len = this._latlngs.length; i < len; i++) {
+        for(i = 0, len = this._latlngs.length; i < len; i++) {
             if (bounds.contains(this._latlngs[i])) {
                 p = this._map.latLngToContainerPoint(this._latlngs[i]);
                 x = Math.floor((p.x - offsetX) / cellSize) + 2;
@@ -230,7 +228,7 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
         // console.time('draw ' + data.length);
         this._heat.data(data).draw2(this.options.minOpacity); //this._heat.data(data).draw(this.options.minOpacity);
         // console.timeEnd('draw ' + data.length);
-
+		
         this._frame = null;
     },
 
