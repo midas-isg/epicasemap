@@ -47,7 +47,7 @@ app.controller('Viz', function($scope, $rootScope, api) {
 	$scope.removeThenClose = function() {
 		if (confirm("About to delete the Visualization. \nOK = Delete")){
 			emitBusy();
-			api.remove('vizs', $scope.model.id).then(close, function(err){
+			api.deleting('vizs', $scope.model.id).then(close, function(err){
 				emitDone();
 				error('Failed to delete the Visualization!');
 			});
@@ -88,7 +88,7 @@ app.controller('Viz', function($scope, $rootScope, api) {
 	}
 	
 	function loadAllSeries(){
-		api.find('series').then(function(rsp) {
+		api.finding('series').then(function(rsp) {
 			$scope.allSeries = rsp.data.results;
 			updateAllSeries($scope.model);
 		}, function(err){
@@ -153,13 +153,13 @@ app.controller('Viz', function($scope, $rootScope, api) {
 	function save(callback){
 		emitBusy();
 		var body = buildBody($scope.model);
-		api.save('vizs', body).then(function(location) {
+		api.saving('vizs', body).then(function(location) {
 			emitDone();
 			success('The Visualization was saved');
 			if (callback){
 				callback();
 			} else {
-				api.get(location).then(function(rsp) {
+				api.gettingFromUrl(location).then(function(rsp) {
 					$scope.model = rsp.data.result;
 				}, function(err){
 					error('Failed to read the Visualization!');

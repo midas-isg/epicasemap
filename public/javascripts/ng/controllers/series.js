@@ -39,7 +39,7 @@ app.controller('Series', function($scope, $rootScope, api) {
 	$scope.removeThenClose = function() {
 		if (confirm("About to delete this Series. \nOK = Delete"))
 			emitBusy();
-			api.remove('series', $scope.model.id).then(function(rsp){
+			api.deleting('series', $scope.model.id).then(function(rsp){
 				emitDone();
 				close();
 			}, function (err){
@@ -76,7 +76,7 @@ app.controller('Series', function($scope, $rootScope, api) {
 		if (! seriesId)
 			return;
 		var path = 'series/' + seriesId + '/time-coordinate';
-		api.find(path).then(success, fail);
+		api.finding(path).then(success, fail);
 		
 		function success(rsp) {
 			$scope.coordinates = rsp.data.results;
@@ -108,13 +108,13 @@ app.controller('Series', function($scope, $rootScope, api) {
 		emitBusy();
 		var toUpload = isNoData();
 		var body = buildBody($scope.model);
-		api.save('series', body).then(function(location) {
+		api.saving('series', body).then(function(location) {
 			emitDone();
 			success('The series was saved.');
 			if (callback){
 				callback();
 			} else {
-				api.get(location).then(function(rsp) {
+				api.gettingFromUrl(location).then(function(rsp) {
 					$scope.model = rsp.data.result;
 					$scope.form.$setPristine();
 					if(toUpload)
@@ -160,9 +160,8 @@ app.controller('Series', function($scope, $rootScope, api) {
 		});
 
 		$scope.locationIds = _.uniq($scope.locationIds);
-		size = _.uniq($scope.locationIds).length;
 		var array = _.toArray($scope.locationIds);
-		api.post(path, JSON.stringify($scope.locationIds)).then(function(rsp){
+		api.posting(path, JSON.stringify($scope.locationIds)).then(function(rsp){
 			var id2label = rsp.data.result;
 			data.forEach(function (datum) {
 				datum.location = id2label[datum.locationId];

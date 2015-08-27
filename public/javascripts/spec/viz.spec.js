@@ -2,7 +2,6 @@
 
 app.test.workaroundForRealHttpCallsUsingNgMockAndNgMockE2E();
 
-//$scope.$watch('model' => $scope.form.$setPristine()
 describe('Controller: Viz', function() {
 	var asynCallAfterTruthy = app.test.asynCallAfterTruthy;
 	var $scope;
@@ -42,14 +41,14 @@ describe('Controller: Viz', function() {
 		});
 
 		it('should close without change if close was invoked', function(done){
-			spyOn(app.test.getApi(), 'save');
-			spyOn(app.test.getApi(), 'remove');
+			spyOn(app.test.getApi(), 'saving');
+			spyOn(app.test.getApi(), 'deleting');
 			$scope.close();
 			var unregister =$scope.$watch('model', function(){
 				var model = $scope.model;
 				if (model === null){
-					expect(app.test.getApi().save).not.toHaveBeenCalled();
-					expect(app.test.getApi().remove).not.toHaveBeenCalled();
+					expect(app.test.getApi().saving).not.toHaveBeenCalled();
+					expect(app.test.getApi().deleting).not.toHaveBeenCalled();
 					unregister();
 					done();
 				}
@@ -66,7 +65,7 @@ describe('Controller: Viz', function() {
     	
     	afterEach(function(){
     		if (viz.id)
-    			app.test.removeViz(viz.id);
+    			app.test.deleteViz(viz.id);
     	});
     	
     	let removeThenClose = 'removeThenClose';
@@ -134,7 +133,7 @@ describe('Controller: Viz', function() {
     });
     
     function readViz(id, callback){
-    	app.test.getApi().read('vizs', id).then(function(rsp){
+    	app.test.getApi().reading('vizs', id).then(function(rsp){
     		callback && callback(rsp.data.result);
 		}, function(){
 			callback && callback(null);
@@ -142,7 +141,7 @@ describe('Controller: Viz', function() {
     }
     
     function persistNewViz(viz, done){
-    	app.test.getApi().save('vizs', viz).then(function(location){
+    	app.test.getApi().saving('vizs', viz).then(function(location){
     		var id = toId(location);
 			console.log("The Viz was persisted: id="+id);
 			viz.id = id;
