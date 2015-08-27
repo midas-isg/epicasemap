@@ -7,6 +7,8 @@ timeline.js
 		var i,
 		j,
 		temp,
+		currentSVG,
+		svgDocument,
 		thisMap = this;
 		
 		L.mapbox.accessToken = 'pk.eyJ1IjoidHBzMjMiLCJhIjoiVHEzc0tVWSJ9.0oYZqcggp29zNZlCcb2esA';
@@ -113,16 +115,26 @@ timeline.js
 		}
 		
 		/*
+		//TODO: figure out how to make svgDocument create children
 		for(i = 0; i < this.colorSet.length; i++) {
-			$("#ramps").append("<div id='palette-" + i + "' class='ramp'><svg width='15' height='75'></svg></div>");
+			$("#ramps").append("<div id='palette-" + i + "' class='ramp'><svg id='svg-" + i + "' width='15' height='75'></svg></div>");
 			
 			temp = this.colorSet[i];
 			for(j = 0; j < temp.length; j++) {
-				$("#palette-" + i + " svg").append("<rect style='fill: " + temp[j] + ";' width='15' height='15' y='" + (15 * j) + "'></rect>");
+				currentSVG = svgDocument.createElementNS("http://www.w3.org/2000/svg", "rect");
+				//currentSVG.setAttributeNS(id = "color-" + i + "-" + j);
+				currentSVG.setAttributeNS(null, "width", 15);
+				currentSVG.setAttributeNS(null, "height", 15);
+				currentSVG.setAttributeNS(null, "y", 15 * j);
+				currentSVG.setAttributeNS(null, "fill", temp[j]);
+				
+				$("#svg-" + i).append(currentSVG);
+				//$("#palette-" + i + " svg").append("<rect id='color-" + i + "-" + j + "'  width='15' height='15' y='" + (15 * j) + "'></rect>");
+				//$("#color-" + i + "-" + j).attr("fill", temp[j]);
 			}
 		}
 		$("#palette-0").addClass("selected");
-		*/
+		/**/
 		
 		return this;
 	}
@@ -286,7 +298,7 @@ console.log("series " + k + ": " + id);
 		
 		$("#playback-button").click(function() {
 			thisMap.paused = !thisMap.paused;
-			console.log(new Date());
+			//console.log(new Date()); //real-time timestamp
 			
 			return thisMap.updatePlaybackInterface();
 		});
@@ -789,6 +801,9 @@ console.log("series " + k + ": " + id);
 			endFrame,
 			i;
 		
+		this.zeroTime(minDate);
+		this.zeroTime(maxDate);
+		
 		console.log("min: " + min);
 		console.log("min date: " + minDate);
 		console.log("max: " + max);
@@ -812,14 +827,14 @@ console.log("series " + k + ": " + id);
 			from: Date.UTC(MAGIC_MAP.earliestDate.getUTCFullYear(),
 				MAGIC_MAP.earliestDate.getUTCMonth(),
 				MAGIC_MAP.earliestDate.getUTCDate()),
-			to: min,
+			to: minDate.valueOf(),//min,
 			color: 'rgba(128, 128, 128, 0.2)'
 		});
 
 		xAxis.removePlotBand('mask-after');
 		xAxis.addPlotBand({
 			id: 'mask-after',
-			from: max,
+			from: maxDate.valueOf(),//max,
 			to: Date.UTC(MAGIC_MAP.latestDate.getUTCFullYear(),
 				MAGIC_MAP.latestDate.getUTCMonth(),
 				MAGIC_MAP.latestDate.getUTCDate()),
@@ -919,6 +934,9 @@ console.log("series " + k + ": " + id);
 						dateString = (currentDate.getUTCMonth() + 1) + '/' + currentDate.getUTCDate() + '/' + currentDate.getUTCFullYear();
 						$("#current-date").text(dateString);
 						
+					console.log(currentDate);
+					console.log(dateString);
+						
 						this.masterChart.xAxis[0].addPlotLine({
 							value: currentDate.valueOf(),
 							color: 'red',
@@ -962,8 +980,8 @@ console.log("series " + k + ": " + id);
 			$("#playback-button span").toggleClass("glyphicon-pause")
 				.toggleClass("glyphicon-play");
 			
-			console.log("Finished playback");
-			console.log(new Date());
+			//console.log("Finished playback");
+			//console.log(new Date()); //real-time timestamp
 		}
 		
 		return;
