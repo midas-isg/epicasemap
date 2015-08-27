@@ -1,11 +1,11 @@
 "use strict";
 
 app.controller('SeriesData', function($scope, $rootScope, api) {
-	var dom = cacheDOM();
-	bindEvents();
+	var dom = cacheDom();
 	populateScope();
+	bindEvents();
 	
-	function cacheDOM(){
+	function cacheDom(){
 		var dom = {$dialog: $('#dataModal')};
 		dom.$form = dom.$dialog.find('form');
 		dom.$alertParent = dom.$dialog.find('.modal-body');
