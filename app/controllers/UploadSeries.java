@@ -15,25 +15,24 @@ import play.mvc.Controller;
 import play.mvc.Http.Request;
 import play.mvc.Result;
 
-public class UploadSeries extends Controller {
+class UploadSeries extends Controller {
 
 	@Transactional
-	public static Result upload(long seriesId, String delimiter,
-			String fileFormat) throws Exception {
-		
-		SeriesDataFile dataFile = getFileObject(request(), delimiter, fileFormat);
+	public static Result upload(long seriesId) {
+
+		SeriesDataFile dataFile = getFileObject(request());
 		String errors = validate(dataFile);
 
 		if (errors.equals("")) {
 			int deletedDataSize = deleteExisitingSeriesData(seriesId);
-			long createdDataSize = create(dataFile, seriesId);
+			int createdDataSize = create(dataFile, seriesId);
 			return created(makeMsg(deletedDataSize, createdDataSize));
 		} else {
 			return badRequest(errors);
 		}
 	}
 
-	private static String makeMsg(int deletedDataSize, long createdDataSize) {
+	private static String makeMsg(int deletedDataSize, int createdDataSize) {
 		String msg = deletedDataSize + " existing item(s) deleted." + "\n"
 				+ createdDataSize + " new item(s) created.";
 		return msg;
@@ -47,15 +46,14 @@ public class UploadSeries extends Controller {
 		return Factory.makeSeriesRule(JPA.em());
 	}
 
-	private static Long create(SeriesDataFile dataFile, Long seriesId)
-			throws Exception {
-		Persister persister = new Persister();
-		return persister.persistCSVFile(dataFile, seriesId);
+	private static int create(SeriesDataFile dataFile, Long seriesId) {
+		Persister persister = Factory.makePersister(dataFile);
+		return persister.persistSeriesDataFile(seriesId);
 	}
 
 	private static String validate(SeriesDataFile dataFile) {
-		Validator validator = new Validator();
-		Map<Long, List<String>> errors = validator.validate(dataFile);
+		Validator validator = Factory.makeValidator(dataFile);
+		Map<Long, List<String>> errors = validator.validateDataFile();
 		return joinErrorsAsString(errors);
 	}
 
@@ -72,14 +70,13 @@ public class UploadSeries extends Controller {
 		return stringErrors;
 	}
 
-	private static SeriesDataFile getFileObject(Request request, String delimiter,
-			String fileFormat) {
+	private static SeriesDataFile getFileObject(Request request) {
 
-		SeriesDataFile csvFile = new SeriesDataFile();
-		csvFile.setFile(request.body().asMultipartFormData().getFiles().get(0)
+		SeriesDataFile dataFile = new SeriesDataFile(request.body()
+				.asMultipartFormData().getFiles().get(0).getFile());
+		dataFile.setFile(request.body().asMultipartFormData().getFiles().get(0)
 				.getFile());
-		csvFile.setDelimiter(delimiter);
-		csvFile.setFileFormat(fileFormat);
-		return csvFile;
+
+		return dataFile;
 	}
 }

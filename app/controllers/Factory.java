@@ -6,14 +6,21 @@ import gateways.database.LocationDao;
 import gateways.database.SeriesDao;
 import gateways.database.SeriesDataDao;
 import gateways.database.VizDao;
+import gateways.webservice.AlsDao;
 import interactors.ConfRule;
 import interactors.CoordinateRule;
 import interactors.LocationRule;
 import interactors.SeriesDataRule;
 import interactors.SeriesRule;
 import interactors.VizRule;
+import interactors.series_data_file.Parser;
+import interactors.series_data_file.Persister;
+import interactors.series_data_file.Validator;
 
 import javax.persistence.EntityManager;
+
+import play.db.jpa.JPA;
+import models.SeriesDataFile;
 
 public class Factory {
 	private Factory() {
@@ -55,6 +62,27 @@ public class Factory {
 
 	public static LocationRule makeLocationRule(EntityManager em) {
 		LocationDao dao = new LocationDao(em);
-		return new LocationRule(dao); 
+		AlsDao alsDao = new AlsDao();
+		LocationRule locationRule = new LocationRule(dao);
+		locationRule.setAlsDao(alsDao);
+		return locationRule;
+	}
+
+	public static Persister makePersister(SeriesDataFile dataFile) {
+		Persister persister = new Persister();
+		persister.setLocationRule(makeLocationRule(JPA.em()));
+		persister.setSeriesRule(makeSeriesRule(JPA.em()));
+		persister.setSeriesDataRule(makeSeriesDataRule(JPA.em()));
+		persister.setParser(new Parser(dataFile));
+		persister.setSeriesDataFile(dataFile);
+		return persister;
+	}
+
+	public static Validator makeValidator(SeriesDataFile dataFile) {
+		Validator validator = new Validator();
+		validator.setLocationRule(makeLocationRule(JPA.em()));
+		validator.setDataFile(dataFile);
+		validator.setParser(new Parser(dataFile));
+		return validator;
 	}
 }
