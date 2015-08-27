@@ -12,7 +12,9 @@ timeline.js
 			thisMap = this;
 		
 		L.mapbox.accessToken = 'pk.eyJ1IjoidHBzMjMiLCJhIjoiVHEzc0tVWSJ9.0oYZqcggp29zNZlCcb2esA';
-		this.map = L.mapbox.map('map', 'financialtimes.map-w7l4lfi8' /*'mapbox.streets'*/ /*'mapbox.dark'*/, { worldCopyJump: true, bounceAtZoomLimits: false, zoom: 2, minZoom: 2})
+		this.map = L.mapbox.map( 'map',
+				'financialtimes.map-w7l4lfi8' /*'mapbox.streets'*/ /*'mapbox.dark'*/,
+				{ worldCopyJump: true, bounceAtZoomLimits: false, zoom: 2, minZoom: 2})
 			.setView([30, 0], 2);
 
 		this.heat = []; //null;
@@ -25,11 +27,10 @@ timeline.js
 		this.masterChart = null;
 		this.detailChart = null;
 		this.dataset = [];
-		this.earliestDate = new Date();
-		this.latestDate = new Date(0);
-		this.zeroTime(this.latestDate);
+		this.earliestDate = null;
+		this.latestDate = null;
 		
-		this.vizID = getURLParameterByName("id")
+		this.vizID = getURLParameterByName("id");
 		
 		this.uiSettings = {
 			series: [{index: -1, color: 0}],
@@ -193,13 +194,9 @@ timeline.js
 					$("#palette-" + thisMap.uiSettings.colorPalette).click();
 				}
 				else {
-					/*
 					//TODO: FIX default page (no ID associated)
-					for(h = 0; h < thisMap.seriesList.length; h++) {
-						thisMap.seriesToLoad.push(thisMap.seriesList[h].id);
-						thisMap.uiSettings.series[h] = {index: thisMap.seriesList[h].id, color: 0};
-					}
-					*/
+					thisMap.uiSettings.series[0] = {index: thisMap.seriesList[0].id, color: 0};
+					thisMap.seriesToLoad.push(thisMap.uiSettings.series[0].index);
 				}
 				
 				for(i = 0; i < thisMap.seriesToLoad.length; i++) {
@@ -209,9 +206,7 @@ timeline.js
 				
 				for(h = 0; h < thisMap.uiSettings.series.length; h++) {
 					thisMap.pushSeries();
-					
 					$("#series-" + h).val(thisMap.uiSettings.series[h].index);
-					$("#series-" + h).change();
 					$("#color-selector-" + h + " #color-" + thisMap.uiSettings.series[h].color).addClass("selected");
 				}
 				
@@ -234,8 +229,8 @@ timeline.js
 		$("#reset-button").click(function() {
 			var i;
 			
-			//console.log("Buffer:");
-			//console.log(thisMap.dataset[].buffer);
+			//console.log("Time Group:");
+			//console.log(thisMap.dataset[].timeGroup);
 			thisMap.loadBuffer();
 			
 			for(i = 0; i < thisMap.heat.length; i++) {
@@ -273,19 +268,16 @@ timeline.js
 		});
 		
 		$("#remove-series-button").click(function() {
+			//TODO: remove last entry of series
 			thisMap.popSeries();
 			
 			return;
 		});
 		
 		$("#add-series-button").click(function() {
-			var i;
-			thisMap.pushSeries();
-			
-			//TODO: trigger default series option value as change and click color-0 of new series
-			//$("#series-" + selectorID).val(thisMap.uiSettings.series[selectorID].index);
-			//$("#series-" + selectorID).change();
-			//$("#color-selector-" + ? + " #color-0").click();
+			var id = thisMap.pushSeries();
+			$("#series-" + id).change();
+			$("#color-selector-" + id + " #color-0").click();
 			
 			return;
 		});
@@ -403,20 +395,9 @@ console.log("series " + k + ": " + id);
 				
 				thisMap.uiSettings.series[k].index = id;
 				
-				//TODO: recalculate frameOffset, earliest & latest dates after loading is finished
-				//(refactor block to external call -calculate from 0 and length-1 indexes)
-				thisMap.latestDate = new Date(0);
-				thisMap.earliestDate = new Date();
-				
-				thisMap.seriesToLoad = [];
-				for(l = 0; l < thisMap.uiSettings.series.length; l++) {
-					thisMap.seriesToLoad.push($("#series-" + l).val());
-				}
-				
-				for(l = 0; l < thisMap.seriesToLoad.length; l++) {
-					thisMap.displaySet[l].visiblePoints.length = 0;
-					thisMap.load(thisMap.seriesToLoad[l], l);
-				}
+				thisMap.seriesToLoad.push(id);
+				thisMap.displaySet[k].visiblePoints.length = 0;
+				thisMap.load(thisMap.seriesToLoad[0], k);
 				
 				return;
 			});
@@ -425,7 +406,7 @@ console.log("series " + k + ": " + id);
 		appendSeriesSelector(selectorID);
 		appendColorSelector(selectorID);
 		
-		return;
+		return selectorID;
 	}
 	
 	MagicMap.prototype.popSeries = function() {
@@ -484,7 +465,7 @@ console.log("series " + k + ": " + id);
 		currentDataset = {
 			seriesID: seriesID,
 			title: "title",
-			buffer: [{point: [], date: null}],
+			timeGroup: [{point: [], date: null}],
 			maxValue: 0,
 			frameAggregate: [0],
 			frameOffset: 0
@@ -495,16 +476,7 @@ console.log("series " + k + ": " + id);
 			this.dataset.push(currentDataset);
 		}
 		else {
-			this.dataset[index] = {
-				seriesID: seriesID,
-				title: "title",
-				buffer: [{point: [], date: null}],
-				maxValue: 0,
-				frameAggregate: [0],
-				frameOffset: 0
-			}
-			
-			currentDataset = this.dataset[index];
+			this.dataset[index] = currentDataset;
 		}
 		
 		$.ajax({
@@ -522,14 +494,7 @@ console.log("series " + k + ": " + id);
 				
 				thisMap.zeroTime(lastDate);
 				
-				currentDataset.title = thisMap.seriesDescriptions[seriesID].title;
-				
-				if(thisMap.earliestDate > lastDate) {
-					thisMap.earliestDate = new Date(lastDate);
-				}
-				else {
-					//lastDate = new Date(thisMap.earliestDate);
-				}
+				currentDataset.title = thisMap.seriesDescriptions[result.results[0].seriesId].title;
 				
 				for(i = 0; i < result.results.length; i++) {
 					if(result.results[i]) {
@@ -541,18 +506,18 @@ console.log("series " + k + ": " + id);
 						deltaTime = inputDate.valueOf() - lastDate.valueOf();
 						
 						while(deltaTime >= threshold) {
-							currentDataset.buffer.push({point: [], date: null});
+							currentDataset.timeGroup.push({point: [], date: null});
 							frame++;
 							filler++;
 							emptyDate = new Date(emptyDate.valueOf() + threshold);
-							currentDataset.buffer[frame].date = emptyDate;
+							currentDataset.timeGroup[frame].date = emptyDate;
 							currentDataset.frameAggregate[frame] = 0;
 							
 							deltaTime -= threshold;
 						}
 						
-						currentDataset.buffer[frame].point.push({latitude: result.results[i].latitude, longitude: result.results[i].longitude, value: result.results[i].value});
-						currentDataset.buffer[frame].date = inputDate;
+						currentDataset.timeGroup[frame].point.push({latitude: result.results[i].latitude, longitude: result.results[i].longitude, value: result.results[i].value});
+						currentDataset.timeGroup[frame].date = inputDate;
 						
 						currentDataset.frameAggregate[frame] += result.results[i].value;
 						
@@ -560,28 +525,40 @@ console.log("series " + k + ": " + id);
 							currentDataset.maxValue = result.results[i].value;
 						}
 						
-						lastDate = currentDataset.buffer[frame].date;
+						lastDate = currentDataset.timeGroup[frame].date;
 					}
 					else {
 						skipped++;
 					}
 				}
-				console.log("Loaded " + (result.results.length - skipped) + " entries");
+				console.log("Loaded " + (result.results.length - skipped) + " entries for " + currentDataset.title);
 				console.log("Skipped " + skipped + " malformed entries");
 				console.log(filler + " days occurred without incidents in this timespan");
 				console.log("Total Frames: " + frame + 1);
-				console.log("Buffer length: " + currentDataset.buffer.length);
-				
-				if(thisMap.latestDate < currentDataset.buffer[frame].date) {
-					thisMap.latestDate = currentDataset.buffer[frame].date;
-				}
+				console.log("Time Groups: " + currentDataset.timeGroup.length);
+				console.log("---");
 				
 				thisMap.seriesToLoad.shift();
 				if(thisMap.seriesToLoad.length === 0) {
+					thisMap.earliestDate = thisMap.dataset[0].timeGroup[0].date;
+					thisMap.latestDate = thisMap.dataset[0].timeGroup[thisMap.dataset[0].timeGroup.length - 1].date;
+					
+					for(i = 1; i < thisMap.dataset.length; i++) {
+						if(thisMap.earliestDate > thisMap.dataset[i].timeGroup[0].date) {
+							thisMap.earliestDate = thisMap.dataset[i].timeGroup[0].date;
+						}
+						
+						if(thisMap.latestDate < thisMap.dataset[i].timeGroup[thisMap.dataset[i].timeGroup.length - 1].date) {
+							thisMap.latestDate = thisMap.dataset[i].timeGroup[thisMap.dataset[i].timeGroup.length - 1].date;
+						}
+					}
+					console.log("Earliest date: " + thisMap.earliestDate);
+					console.log("Latest date: " + thisMap.latestDate);
+					
 					thisMap.frameCount = Math.floor((thisMap.latestDate.valueOf() - thisMap.earliestDate.valueOf()) / threshold) + 1;
 					
 					for(i = 0; i < thisMap.dataset.length; i++) {
-						deltaTime = thisMap.dataset[i].buffer[0].date.valueOf() - thisMap.earliestDate.valueOf();
+						deltaTime = thisMap.dataset[i].timeGroup[0].date.valueOf() - thisMap.earliestDate.valueOf();
 						
 						if(deltaTime !== 0) {
 							thisMap.dataset[i].frameOffset = Math.floor(deltaTime / threshold);
@@ -628,9 +605,9 @@ console.log("series " + k + ": " + id);
 				i;
 			
 			for(i = 0; i < MAGIC_MAP.dataset.length; i++) {
-				detailStart.push(Date.UTC(MAGIC_MAP.dataset[i].buffer[0].date.getUTCFullYear(),
-					MAGIC_MAP.dataset[i].buffer[0].date.getUTCMonth(),
-					MAGIC_MAP.dataset[i].buffer[0].date.getUTCDate()));
+				detailStart.push(Date.UTC(MAGIC_MAP.dataset[i].timeGroup[0].date.getUTCFullYear(),
+					MAGIC_MAP.dataset[i].timeGroup[0].date.getUTCMonth(),
+					MAGIC_MAP.dataset[i].timeGroup[0].date.getUTCDate()));
 			}
 
 			for(i = 0; i < masterChart.series.length; i++) {
@@ -741,9 +718,9 @@ console.log("series " + k + ": " + id);
 						type: 'area',
 						name: String.fromCharCode(i + 65) + ": " + MAGIC_MAP.dataset[i].title,
 						pointInterval: 86400000, //24 * 3600 * 1000,
-						pointStart: Date.UTC(MAGIC_MAP.dataset[i].buffer[0].date.getUTCFullYear(),
-									MAGIC_MAP.dataset[i].buffer[0].date.getUTCMonth(),
-									MAGIC_MAP.dataset[i].buffer[0].date.getUTCDate()),
+						pointStart: Date.UTC(MAGIC_MAP.dataset[i].timeGroup[0].date.getUTCFullYear(),
+									MAGIC_MAP.dataset[i].timeGroup[0].date.getUTCMonth(),
+									MAGIC_MAP.dataset[i].timeGroup[0].date.getUTCDate()),
 						data: MAGIC_MAP.dataset[i].frameAggregate //y-value array
 					}
 				);
@@ -1002,13 +979,13 @@ console.log("series " + k + ": " + id);
 			adjustedStart = startFrame - this.dataset[setID].frameOffset;
 			adjustedEnd = endFrame - this.dataset[setID].frameOffset;
 			
-			if(this.dataset[setID].buffer[setFrame]) {
-				for(i = 0; i < this.dataset[setID].buffer[setFrame].point.length; i++) {
-					if(this.dataset[setID].buffer[setFrame].point[i].value > 0) {
-						this.displaySet[setID].visiblePoints.push([this.dataset[setID].buffer[setFrame].point[i].latitude,
-							this.dataset[setID].buffer[setFrame].point[i].longitude,
+			if(this.dataset[setID].timeGroup[setFrame]) {
+				for(i = 0; i < this.dataset[setID].timeGroup[setFrame].point.length; i++) {
+					if(this.dataset[setID].timeGroup[setFrame].point[i].value > 0) {
+						this.displaySet[setID].visiblePoints.push([this.dataset[setID].timeGroup[setFrame].point[i].latitude,
+							this.dataset[setID].timeGroup[setFrame].point[i].longitude,
 							0.7,
-							(this.dataset[setID].buffer[setFrame].point[i].value / this.dataset[setID].maxValue)]);
+							(this.dataset[setID].timeGroup[setFrame].point[i].value / this.dataset[setID].maxValue)]);
 					}
 				}
 				
@@ -1016,7 +993,7 @@ console.log("series " + k + ": " + id);
 					this.masterChart.xAxis[0].removePlotLine('date-line');
 					
 					if(this.playBack) {
-						currentDate = this.dataset[setID].buffer[setFrame].date;
+						currentDate = this.dataset[setID].timeGroup[setFrame].date;
 						dateString = (currentDate.getUTCMonth() + 1) + '/' + currentDate.getUTCDate() + '/' + currentDate.getUTCFullYear();
 						$("#current-date").text(dateString);
 						
@@ -1030,10 +1007,10 @@ console.log("series " + k + ": " + id);
 							id: 'date-line'
 						});
 					}
-					else if(this.dataset[setID].buffer[adjustedStart] && this.dataset[setID].buffer[adjustedEnd]) {
-						currentDate = this.dataset[setID].buffer[adjustedStart].date;
+					else if(this.dataset[setID].timeGroup[adjustedStart] && this.dataset[setID].timeGroup[adjustedEnd]) {
+						currentDate = this.dataset[setID].timeGroup[adjustedStart].date;
 						dateString = (currentDate.getUTCMonth() + 1) + '/' + currentDate.getUTCDate() + '/' + currentDate.getUTCFullYear() + " - ";
-						currentDate = this.dataset[setID].buffer[adjustedEnd].date;
+						currentDate = this.dataset[setID].timeGroup[adjustedEnd].date;
 						dateString += (currentDate.getUTCMonth() + 1) + '/' + currentDate.getUTCDate() + '/' + currentDate.getUTCFullYear();
 						$("#current-date").text(dateString);
 					}
