@@ -19,7 +19,7 @@ app.controller('SeriesCollection', function($scope, $rootScope, api) {
 	$scope.count = function(array) { return array && array.length || 0;	};
 	
 	function loadSeries(){
-		api.find(urlPath).then(function(rsp) {
+		api.finding(urlPath).then(function(rsp) {
 			$scope.models = rsp.data.results;
 		}, function(err){
 			error('Failed to load all Series');
@@ -30,7 +30,7 @@ app.controller('SeriesCollection', function($scope, $rootScope, api) {
 	    var urlQuery = api.getUrlQuery();
 		var id = urlQuery && urlQuery.id;
 		if (id){
-			api.read(urlPath, id).then(function(rsp){
+			api.reading(urlPath, id).then(function(rsp){
 				var model = rsp.data.result;
 				if (model)
 					$scope.edit(model);

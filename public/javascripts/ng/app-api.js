@@ -37,82 +37,29 @@ app.directive('appFileModel', function ($parse) {
 });
 
 app.service("api", function($http, $q, $location) {
-	this.remove = function(path, id) {
-		var url = makeUrl(path, id), 
-			deferred = $q.defer();
-		$http['delete'](url).then(function(data) {
-			deferred.resolve(data);
-		}, function(err){
-			deferred.reject(err);
-		});
-		return deferred.promise;
+	this.gettingFromUrl = function(url, cfg) {
+		return requesting('get', url, cfg);
 	};
-	this.read = function(path, id) {
-		return this.get(makeUrl(path, id));
+	this.posting = function(path, body, cfg) {
+		return requesting('post', makeUrl(path), cfg, body);
 	};
-	this.find = function(path) {
-		return this.get(makeUrl(path));
+	this.saving = saving;
+	this.reading = function(path, id, cfg) {
+		return this.gettingFromUrl(makeUrl(path, id), cfg);
 	};
-	this.get = function(url) {
-		var deferred = $q.defer();
-		$http.get(url).then(function(data) {
-			deferred.resolve(data);
-		}, function(err){
-			deferred.reject(err);
-		});
-		return deferred.promise;
+	this.deleting = function(path, id, cfg) {
+		return requesting('delete', makeUrl(path, id), cfg);
 	};
-	this.save = function(path, body) {
-		var url = makeUrl(path, body.id),
-			method = body.id ? 'put' : 'post',
-			deferred = $q.defer();
-		$http[method](url, body).then(success, function(err){
-			deferred.reject(err);
-		});
-		return deferred.promise;
-		
-		function success(data){
-			deferred.resolve(data.headers().location);
-		}
+	this.finding = function(path, cfg) {
+		return this.gettingFromUrl(makeUrl(path), cfg);
 	};
-	this.post = function(path, body) {
-		var url = makeUrl(path),
-			deferred = $q.defer();
-		$http.post(url, body).then(function(data) {
-			deferred.resolve(data);
-		}, function(err){
-			deferred.reject(err);
-		});
-		return deferred.promise;
-	};
+    this.uploading = uploading;
 	this.getUrlQuery = function() {
 		return $location.search();
 	}
-	this.toDateText = function(timestamp){
-		var d = new Date(timestamp),
-			MM = to2digits(d.getUTCMonth() + 1),
-			dd = to2digits(d.getUTCDate());
-		
-		return d.getUTCFullYear() + '-' + MM + '-' + dd;
-	};
-    this.uploadFile = function(path, file){
-        var fd = new FormData(),
-        	deferred = $q.defer();
-        fd.append('file', file);
-        $http.put(makeUrl(path), fd, {
-            transformRequest: angular.identity,
-            headers: {'Content-Type': undefined}
-        }).then(function(data){
-        	deferred.resolve(data);
-        }, function(err){
-			deferred.reject(err);
-		});
-        return deferred.promise;
-    };
+	this.toDateText = toDateText;
 	this.alert = function($parent, message, classes){
 		this.removeAllAlerts($parent);
-		if (! classes)
-			classes = 'alert-warning';
 		alert($parent, message, classes);
 	}
 	this.removeAllAlerts = function($parent){
@@ -120,14 +67,60 @@ app.service("api", function($http, $q, $location) {
 	}
 	
 	function alert($parent, message, classes){
+		if (! classes)
+			classes = 'alert-warning';
 		$parent.prepend(
-				'<div class="alert ' + classes + ' fade in"><strong>' + message + 
-				'</strong><small class="text-right"> @ ' + new Date()  +
-				'</small> <button type="button" class="close" data-dismiss="alert">&times;</button>' +
-		        '</div>'
+			'<div class="alert ' + classes + ' fade in"><strong>' + message + 
+			'</strong><small> @ ' + new Date()  +
+			'</small> <button class="close" data-dismiss="alert">&times;</button>' +
+		    '</div>'
 		);
 	}
 	
+	function requesting(method, url, cfg, body){
+		var deferred = $q.defer();
+		$http[method](url, body, cfg).then(success, fail);
+		return deferred.promise;
+		
+		function success(response){
+			deferred.resolve(response);
+		}
+		
+		function fail(reason){
+			deferred.reject(reason);
+		}
+	}
+	
+	function saving(path, body, cfg) {
+		var url = makeUrl(path, body.id),
+			method = body.id ? 'put' : 'post',
+			deferred = $q.defer();
+		$http[method](url, body, cfg).then(success, fail);
+		return deferred.promise;
+		
+		function success(response){
+			deferred.resolve(response.headers().location);
+		}
+		
+		function fail(reason){
+			deferred.reject(reason);
+		}
+	}
+
+	function uploading(path, file, cfg){
+        var fd = new FormData();
+        fd.append('file', file);
+        return requesting('put', makeUrl(path), modify(cfg), fd);
+        
+        function modify(cfg){
+        	cfg = cfg || {};
+        	cfg.transformRequest = angular.identity;
+        	cfg.headers = cfg.headers || {};
+        	cfg.headers['Content-Type'] = undefined;
+        	return cfg;
+        }
+    }
+
 	function makeUrl(path, id){
 		var url = makeApiUrl() + path;
 		if (id)
@@ -140,8 +133,15 @@ app.service("api", function($http, $q, $location) {
 		return path.replace('//', '/');
 	}
 	
-	function to2digits(number){
-		var text = number.toString();
-		return number > 9 ? text : '0' + text;
+	function toDateText(timestamp){
+		var d = new Date(timestamp),
+			MM = to2digits(d.getUTCMonth() + 1),
+			dd = to2digits(d.getUTCDate());
+		return d.getUTCFullYear() + '-' + MM + '-' + dd;
+
+		function to2digits(number){
+			var text = number.toString();
+			return number > 9 ? text : '0' + text;
+		}
 	}
 });

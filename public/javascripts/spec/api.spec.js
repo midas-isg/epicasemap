@@ -10,13 +10,13 @@ describe('Service: api', function() {
 		expect(app.test.getApi()).toBeDefined();
 	});
 
-	let post = 'post';
+	let posting = 'posting';
 	let path = 'locations/bulk-lables';
 	let body = [1,2];
-	describe(`when ${post} to ${path} with [${body}]`, function(){
+	describe(`when ${posting} to ${path} with [${body}]`, function(){
 		var response;
 		beforeEach(function(done){
-			api[post](path, body).then(function(rsp){
+			api[posting](path, body).then(function(rsp){
 				response = rsp;
 				done();
 			});

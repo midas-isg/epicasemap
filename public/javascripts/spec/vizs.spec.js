@@ -88,7 +88,7 @@ describe('Controller: Vizs', function() {
         			if (id){
         				expect(id).toBeGreaterThan(0);
         				console.log("The Viz was created: id=" + id);
-        				app.test.removeViz(id, done);
+        				app.test.deleteViz(id, done);
         			}
         		});
         	});

@@ -23,7 +23,7 @@ app.controller('Vizs', function($scope, $rootScope, api) {
 	};
 	
 	function loadVizs(){
-		api.find(urlPath).then(function(rsp) {
+		api.finding(urlPath).then(function(rsp) {
 			$scope.models = rsp.data.results;
 		}, function(err){
 			error('Failed to load all Visualizations!');
@@ -34,7 +34,7 @@ app.controller('Vizs', function($scope, $rootScope, api) {
 	    var urlQuery = api.getUrlQuery();
 		var id = urlQuery && urlQuery.id;
 		if (id){
-			api.read(urlPath, id).then(function(rsp){
+			api.reading(urlPath, id).then(function(rsp){
 				var model = rsp.data.result;
 				if (model)
 					$scope.edit(model);

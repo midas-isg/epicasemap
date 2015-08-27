@@ -9,11 +9,10 @@ app.test = (function(){ 'use strict'; `comment: use ES6`;
 		injectController,
 		init,
 		asynCallAfterTruthy,
-		removeViz,
+		deleteViz,
 		setValidViz: function(viz) {the.validViz = viz},
 		getValidViz,
-		getApi: function() {return the.api},
-		injectApi
+		getApi: function() {return the.api}
 	};
 	
 	function getValidViz(){
@@ -31,19 +30,19 @@ app.test = (function(){ 'use strict'; `comment: use ES6`;
 		return the.validViz;
 	}
 	
-	function removeViz(id, done){
-		the.api.remove('vizs', id).then(function(){
-			console.log("The Viz was deleted: id="+id);
+	function deleteViz(id, done){
+		the.api.deleting('vizs', id).then(function(){
+			console.log("The Viz was deleted: id =", id);
 			done && done();
 		});
 	}
 	
 	function asynCallAfterTruthy($scope, key, done, callback){
-		var unregister = $scope.$watch(key, function() {
+		var unwatch = $scope.$watch(key, function() {
 			if ($scope[key]){
 				callback();
 				done();
-				unregister();
+				unwatch();
 			}
 		});
 	}
@@ -55,7 +54,7 @@ app.test = (function(){ 'use strict'; `comment: use ES6`;
 		beforeAll(function(){
 			originalTimeout = jasmine.DEFAULT_TIMEOUT_INTERVAL;
 			jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000;
-			console.log(suiName + ': started with jasmine.DEFAULT_TIMEOUT_INTERVAL = ' + jasmine.DEFAULT_TIMEOUT_INTERVAL);
+			console.log(suiName + ': started with', timeoutText());
 		});
 	    beforeEach(module('app'));
 	    beforeEach(angular.mock.http.init);
@@ -63,19 +62,23 @@ app.test = (function(){ 'use strict'; `comment: use ES6`;
 	    if (controllerName)
 	    	beforeEach(injectController(controllerName));
 	    else
-	    	beforeEach(injectApi());
+	    	beforeEach(inject(initApi));
 	    afterAll(function() {
 	    	jasmine.DEFAULT_TIMEOUT_INTERVAL = originalTimeout;
-	    	console.log(suiName + ': stoped and restored jasmine.DEFAULT_TIMEOUT_INTERVAL = ' + jasmine.DEFAULT_TIMEOUT_INTERVAL);
+	    	console.log(suiName + ': stoped and restored', timeoutText());
 	    	originalTimeout = null;
 	    }); 
+	    
+	    function timeoutText(){
+	    	return 'jasmine.DEFAULT_TIMEOUT_INTERVAL =' +
+	    	jasmine.DEFAULT_TIMEOUT_INTERVAL;
+	    }
 	}
 	
 	function injectController(name, key){
 		key = key || name.toLowerCase();
-		return inject(function ($rootScope, api, _$controller_, _$httpBackend_) {
-			the.api = api;
-			initHttpBackend(_$httpBackend_);
+		return inject(function($rootScope, api, _$controller_, _$httpBackend_){
+			initApi(api, _$httpBackend_);
 			scope.root = $rootScope;
 			scope[key] = $rootScope.$new();
 			_$controller_(name, {
@@ -83,27 +86,21 @@ app.test = (function(){ 'use strict'; `comment: use ES6`;
 	            $rootScope: $rootScope,
 	            api: api
 	        });
-
 			scope[key].form = {$setPristine: angular.noop};
 	    })
-	    
 	}
 	
-    function initHttpBackend(httpBackend){
-		var any = /.+\//;
-		httpBackend.whenPOST(any).passThrough();
-		httpBackend.whenGET(any).passThrough();
-		httpBackend.whenPUT(any).passThrough();
-		httpBackend.whenDELETE(any).passThrough();
-	}
-
-    function injectApi(){
-    	return inject(initApi);
-	}
-    
     function initApi(api, _$httpBackend_){
 		the.api = api;
 		initHttpBackend(_$httpBackend_);
+
+		function initHttpBackend(httpBackend){
+			var any = /.+\//;
+			httpBackend.whenPOST(any).passThrough();
+			httpBackend.whenGET(any).passThrough();
+			httpBackend.whenPUT(any).passThrough();
+			httpBackend.whenDELETE(any).passThrough();
+		}
     }
 
 	function workaroundForRealHttpCallsUsingNgMockAndNgMockE2E(){

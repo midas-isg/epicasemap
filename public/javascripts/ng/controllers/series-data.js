@@ -1,16 +1,15 @@
 "use strict";
 
 app.controller('SeriesData', function($scope, $rootScope, api) {
-	var dom = {};
-	cacheDOM();
+	var dom = cacheDOM();
 	bindEvents();
 	populateScope();
 	
-	
 	function cacheDOM(){
-		dom.$dialog = $('#dataModal');
+		var dom = {$dialog: $('#dataModal')};
 		dom.$form = dom.$dialog.find('form');
 		dom.$alertParent = dom.$dialog.find('.modal-body');
+		return dom;
 	}
 	
 	function bindEvents(){
@@ -19,12 +18,8 @@ app.controller('SeriesData', function($scope, $rootScope, api) {
 
 		function showDialog(event, seriesId){
 			$scope.seriesId = seriesId;
-			resetView();
+			api.removeAllAlerts(dom.$alertParent);
 			dom.$dialog.modal();
-			
-			function resetView(){
-				api.removeAllAlerts(dom.$alertParent);
-			}
 		}
 		
 		function focusFirstFormInput(event) {
@@ -32,10 +27,18 @@ app.controller('SeriesData', function($scope, $rootScope, api) {
 	    }
 	}
 	
+	function populateScope(){
+		$scope.view = {};
+		$scope.closeDialog = function() { 
+			dom.$dialog.modal('hide'); 
+		};
+	    $scope.uploadThenClose = uploadThenClose;
+	}
+
 	function uploadThenClose(){
 		$scope.isWorking = true;
 		$rootScope.$emit('modalBusyDialog');
-        api.uploadFile(makePath(), $scope.dataFile).then(function(rsp) {
+        api.uploading(makePath(), $scope.dataFile).then(function(rsp) {
         	emitDone();
        		$scope.closeDialog();
        		loadCoordinates($scope.seriesId);
@@ -64,13 +67,5 @@ app.controller('SeriesData', function($scope, $rootScope, api) {
         function loadCoordinates(seriesId) {
         	$rootScope.$emit('loadCoordinates', seriesId);
     	}
-	}
-	
-	function populateScope(){
-		$scope.view = {};
-		$scope.closeDialog = function() { 
-			dom.$dialog.modal('hide'); 
-		};
-	    $scope.uploadThenClose = uploadThenClose;
 	}
 });
