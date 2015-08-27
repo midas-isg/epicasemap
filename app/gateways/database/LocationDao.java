@@ -11,7 +11,7 @@ import java.util.Map;
 import javax.persistence.EntityManager;
 
 import models.entities.Location;
-import models.entities.LocationFilter;
+import models.filters.LocationFilter;
 
 public class LocationDao extends DataAccessObject<Location> {
 	public LocationDao(EntityManager em) {

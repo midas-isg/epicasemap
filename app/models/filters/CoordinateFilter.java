@@ -1,13 +1,9 @@
-package models.entities;
+package models.filters;
 
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-import models.entities.filters.Filter;
-import models.entities.filters.Pagination;
-import models.entities.filters.TimestampRange;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 

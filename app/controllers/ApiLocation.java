@@ -10,8 +10,8 @@ import java.util.stream.Collectors;
 import javax.ws.rs.PathParam;
 
 import models.entities.Location;
-import models.entities.LocationFilter;
-import models.entities.filters.Filter;
+import models.filters.Filter;
+import models.filters.LocationFilter;
 import play.db.jpa.JPA;
 import play.db.jpa.Transactional;
 import play.mvc.Controller;

@@ -10,7 +10,7 @@ import java.util.List;
 import javax.ws.rs.PathParam;
 
 import models.entities.Viz;
-import models.entities.filters.Filter;
+import models.filters.Filter;
 import models.view.VizInput;
 import play.data.Form;
 import play.db.jpa.JPA;

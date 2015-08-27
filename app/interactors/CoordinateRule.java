@@ -5,7 +5,7 @@ import gateways.database.CoordinateDao;
 import java.util.List;
 
 import models.entities.Coordinate;
-import models.entities.CoordinateFilter;
+import models.filters.CoordinateFilter;
 
 public class CoordinateRule {
 	private CoordinateDao dao;

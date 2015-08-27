@@ -6,7 +6,7 @@ import gateways.webservice.AlsDao;
 import java.util.List;
 
 import models.entities.Location;
-import models.entities.LocationFilter;
+import models.filters.LocationFilter;
 
 public class LocationRule extends CrudRule<Location> {
 	private LocationDao dao;

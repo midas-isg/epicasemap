@@ -8,7 +8,7 @@ import java.util.List;
 import models.entities.Location;
 import models.entities.Series;
 import models.entities.SeriesData;
-import models.entities.filters.Filter;
+import models.filters.Filter;
 
 public class SeriesDataRule extends CrudRule<SeriesData> {
 	private SeriesDataDao dao;

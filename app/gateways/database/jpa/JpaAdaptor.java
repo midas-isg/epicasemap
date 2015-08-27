@@ -17,9 +17,9 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
 import models.entities.Entity;
-import models.entities.filters.Filter;
-import models.entities.filters.Pagination;
-import models.entities.filters.TimestampRange;
+import models.filters.Filter;
+import models.filters.Pagination;
+import models.filters.TimestampRange;
 
 public class JpaAdaptor {
 	private EntityManager em;
