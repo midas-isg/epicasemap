@@ -73,7 +73,7 @@ timeline.js
 							seriesToLoad.shift();
 							if(seriesToLoad.length === 0) {
 								for(i = 0; i < thisMap.seriesToLoad.length; i++) {
-									thisMap.displaySet.push({visiblePoints: []});
+									//thisMap.displaySet.push({visiblePoints: []});
 									thisMap.load(thisMap.seriesToLoad[i]);
 								}
 							}
@@ -200,7 +200,6 @@ timeline.js
 				}
 				
 				for(i = 0; i < thisMap.seriesToLoad.length; i++) {
-					thisMap.displaySet.push({visiblePoints: []});
 					thisMap.load(thisMap.seriesToLoad[i]);
 				}
 				
@@ -268,7 +267,6 @@ timeline.js
 		});
 		
 		$("#remove-series-button").click(function() {
-			//TODO: remove last entry of series
 			thisMap.popSeries();
 			
 			return;
@@ -372,8 +370,9 @@ timeline.js
 			if(selectorID >= thisMap.uiSettings.series.length) {
 				selectorID = thisMap.uiSettings.series.length;
 				thisMap.uiSettings.series.push({ color: 0, index: thisMap.seriesList[0].id });
-				thisMap.displaySet.push({visiblePoints: []});
 			}
+			
+			thisMap.displaySet.push({visiblePoints: []});
 			
 			$("#series-options").append(
 				"<div>" +
@@ -396,7 +395,6 @@ console.log("series " + k + ": " + id);
 				thisMap.uiSettings.series[k].index = id;
 				
 				thisMap.seriesToLoad.push(id);
-				thisMap.displaySet[k].visiblePoints.length = 0;
 				thisMap.load(thisMap.seriesToLoad[0], k);
 				
 				return;
@@ -410,7 +408,16 @@ console.log("series " + k + ": " + id);
 	}
 	
 	MagicMap.prototype.popSeries = function() {
-		console.log("popSeries");
+		var selectorID = $("#series-options").children().last().index();
+		
+		$("#series-" + selectorID).parent().remove();
+		
+		this.detailChart.series[selectorID].remove();
+		this.masterChart.series[selectorID].remove();
+		this.dataset.splice(selectorID, 1);
+		this.displaySet.pop();
+		this.heat[selectorID].setLatLngs([]);
+		
 		return;
 	}
 	
@@ -552,8 +559,8 @@ console.log("series " + k + ": " + id);
 							thisMap.latestDate = thisMap.dataset[i].timeGroup[thisMap.dataset[i].timeGroup.length - 1].date;
 						}
 					}
-					console.log("Earliest date: " + thisMap.earliestDate);
-					console.log("Latest date: " + thisMap.latestDate);
+					console.log("Beginning date: " + thisMap.earliestDate);
+					console.log("Ending date: " + thisMap.latestDate);
 					
 					thisMap.frameCount = Math.floor((thisMap.latestDate.valueOf() - thisMap.earliestDate.valueOf()) / threshold) + 1;
 					
@@ -576,6 +583,7 @@ console.log("series " + k + ": " + id);
 					}
 					
 					console.log("Finished loading. Unpause to begin.");
+					console.log("===");
 				}
 				
 				return;
@@ -867,6 +875,7 @@ console.log("series " + k + ": " + id);
 		this.zeroTime(minDate);
 		this.zeroTime(maxDate);
 		
+		console.log("***");
 		console.log("min: " + min);
 		console.log("min date: " + minDate);
 		console.log("max: " + max);
@@ -923,6 +932,7 @@ console.log("series " + k + ": " + id);
 		}
 		
 		console.log("Selection: " + startFrame + "->" + endFrame);
+		console.log("***");
 		MAGIC_MAP.playSection(startFrame, endFrame);
 		
 		MAGIC_MAP.uiSettings.timeSelectionEvent = {xAxis: []};
@@ -974,7 +984,7 @@ console.log("series " + k + ": " + id);
 			}
 		}
 		
-		for(setID = 0; setID < this.dataset.length; setID++) {
+		for(setID = 0; setID < this.displaySet.length; setID++) {
 			setFrame = this.frame - this.dataset[setID].frameOffset;
 			adjustedStart = startFrame - this.dataset[setID].frameOffset;
 			adjustedEnd = endFrame - this.dataset[setID].frameOffset;
@@ -1082,7 +1092,7 @@ console.log((endFrame - startFrame) + " frames");
 	MagicMap.prototype.packHeat = function() {
 		var setID;
 		
-		for(setID = 0; setID < this.dataset.length; setID++) {
+		for(setID = 0; setID < this.displaySet.length; setID++) {
 			if(!this.heat[setID]) {
 				this.heat.push(L.heatLayer(this.displaySet[setID].visiblePoints,
 					{
