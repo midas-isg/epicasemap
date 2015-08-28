@@ -2,21 +2,34 @@ package interactors.series_data_file;
 
 import static org.fest.assertions.Assertions.assertThat;
 import integrations.app.App;
+import interactors.SeriesRule;
 import interactors.series_data_file.Parser.DataPoint;
 import models.SeriesDataFile;
 import models.entities.Location;
+import models.entities.Series;
 import models.entities.SeriesData;
 
 import org.joda.time.DateTime;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
+import play.db.jpa.JPA;
 import play.libs.F.Callback0;
 import suites.SeriesDataFileHelper;
+import controllers.Factory;
 
 public class TestPersister {
 	
-	final static Long seriesId = 1000_000L;
+	static Long seriesId;
 
+	@BeforeClass
+	public static void createTheSeries(){
+		runWithTransaction(() -> {
+			final SeriesRule sr = Factory.makeSeriesRule(JPA.em());
+			Series s = new Series();
+			seriesId = sr.create(s);
+		});
+	}
 
 	@Test
 	public void testPersistSeriesDataFile() {

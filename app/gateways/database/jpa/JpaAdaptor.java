@@ -16,6 +16,7 @@ import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
+import models.NotFoundException;
 import models.entities.Entity;
 import models.filters.Filter;
 import models.filters.Pagination;
@@ -161,18 +162,27 @@ public class JpaAdaptor {
 	}
 
 	public <T> T read(Class<T> clazz, long id) {
-		return em.find(clazz, id);
+		return find(clazz, id);
 	}
 
 	public <T> void delete(Class<T> clazz, long id) {
-		T data = em.find(clazz, id);
+		T data = find(clazz, id);
 		em.remove(data);
 	}
 
 	public <T extends Entity> T update(Class<T> clazz, long id, T data) {
-		T original = em.find(clazz, id);
+		T original = find(clazz, id);
 		data.setId(original.getId());
 		em.merge(data);
 		return data;
+	}
+
+	private <T> T find(Class<T> clazz, long id) {
+		final T t = em.find(clazz, id);
+		if (t == null){
+			final String message = clazz.getSimpleName() + " with ID = " + id + " was not found!";
+			throw new NotFoundException(message);
+		}
+		return t;
 	}
 }
