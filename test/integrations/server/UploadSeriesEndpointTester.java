@@ -13,7 +13,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import models.SeriesDataFile;
 import play.libs.ws.WS;
 import play.libs.ws.WSRequestHolder;
 import play.libs.ws.WSResponse;
@@ -68,7 +67,7 @@ public class UploadSeriesEndpointTester {
 	}
 
 	private WSResponse uploadMultiPartFormData() {
-		String url = buildUrl(seriesId, "%2C", SeriesDataFile.ALS_ID_FORMAT);
+		String url = buildUrl(seriesId);
 		String boundary = "--xyz123--";
 
 		String body = boundary
@@ -91,8 +90,8 @@ public class UploadSeriesEndpointTester {
 	private WSResponse uploadDataWithAlsIdFormatWithTab(long seriesId) {
 		File file = new File(
 				"test/resources/input-files/test_alsId_format_tab.txt");
-		String url = buildUrl(seriesId, "%09", SeriesDataFile.ALS_ID_FORMAT);
-		WSResponse response = uploadMultiPartRequest(file, url);
+		String url = buildUrl(seriesId);
+		WSResponse response = sendMultiPartRequest(file, url);
 		return response;
 	}
 
@@ -102,8 +101,8 @@ public class UploadSeriesEndpointTester {
 
 		File file = new File(
 				"test/resources/input-files/test_coordinate_format_with_errors.txt");
-		String url = buildUrl(seriesId, "%2C", SeriesDataFile.COORDINATE_FORMAT);
-		response = uploadMultiPartRequest(file, url);
+		String url = buildUrl(seriesId);
+		response = sendMultiPartRequest(file, url);
 		return response;
 	}
 
@@ -112,8 +111,8 @@ public class UploadSeriesEndpointTester {
 		WSResponse response;
 		File file = new File(
 				"test/resources/input-files/test_alsId_format_with_errors.txt");
-		String url = buildUrl(seriesId, "%2C", SeriesDataFile.ALS_ID_FORMAT);
-		response = uploadMultiPartRequest(file, url);
+		String url = buildUrl(seriesId);
+		response = sendMultiPartRequest(file, url);
 		return response;
 	}
 
@@ -123,27 +122,25 @@ public class UploadSeriesEndpointTester {
 
 		File file = new File(
 				"test/resources/input-files/test_coordinate_format.txt");
-		String url = buildUrl(seriesId, "%2C", SeriesDataFile.COORDINATE_FORMAT);
-		response = uploadMultiPartRequest(file, url);
+		String url = buildUrl(seriesId);
+		response = sendMultiPartRequest(file, url);
 		return response;
 	}
 
 	private WSResponse uploadDataWithAlsIdFormat(Long seriesId)
 			throws RuntimeException {
 		File file = new File("test/resources/input-files/test_alsId_format.txt");
-		String url = buildUrl(seriesId, "%2C", SeriesDataFile.ALS_ID_FORMAT);
-		WSResponse response = uploadMultiPartRequest(file, url);
+		String url = buildUrl(seriesId);
+		WSResponse response = sendMultiPartRequest(file, url);
 		return response;
 	}
 
-	private String buildUrl(long id, String delimiter, String format) {
-		String url = Server.makeTestUrl(basePath) + id + "/data?" ;
-		url += "delimiter=" + delimiter;
-		url += "&format=" + format;
+	private String buildUrl(long id) {
+		String url = Server.makeTestUrl(basePath) + id + "/data";
 		return url;
 	}
 
-	private WSResponse uploadMultiPartRequest(File file, String url)
+	private WSResponse sendMultiPartRequest(File file, String url)
 			throws RuntimeException {
 		MultipartRequestEntity multiPartReqE = buildMultiPartReqEntity(file);
 

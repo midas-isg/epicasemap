@@ -1,8 +1,8 @@
 @import tags.bs_icon
 
 @* filter elements usually used with filter_repeat tag*@
-@(prefix:String, plural:String, options:Seq[Seq[String]]) 
-<fieldset id='@{prefix}Filter'>
+@(models:String, prefix:String, plural:String, options:Seq[Seq[String]]) 
+<fieldset id='@{prefix}Filter' ng-init='@{prefix}Order="@options(0)(0)"'>
 	<label>filter: </label>
 	<input placeholder="Filter your @plural" autofocus 
 	ng-model="@{prefix}Query" >
@@ -16,5 +16,8 @@
 	<label title='ascending order' for="@{prefix}Asc"> @bs_icon("sort-by-attributes") </label> 
 	<input title='descending order' id='@{prefix}Des' type="radio" ng-model="@{prefix}Dir" name="@{prefix}Dir" value="reverse">
 	<label title='descending order' for="@{prefix}Des"> @bs_icon("sort-by-attributes-alt") </label>
+	<span ng-init='@{prefix}IsLimit = !!@{prefix}Limit' ng-show='@{prefix}IsLimit'>
+		<label>limit: </label><input  size='5' ng-model="@{prefix}Limit"> of {{@{models}.length | number }}
+	</span>
 </fieldset>
 

@@ -3,14 +3,12 @@
 app.controller('Series', function($scope, $rootScope, api) {
 	$scope.view = {};
 	$scope.coordinates = [];
+	$scope.dataLimit = 100;
 	
 	$scope.dialog = $('#seriesModal');
-	$scope.dialogBody = $scope.dialog.find('.modal-body');
-	$scope.dialog.ready(function(){
-		$('#Series-btn-save-close').hide();
-	});
+	$scope.alertParent = $scope.dialog.find('.modal-body');
     $scope.dialog.on('hide.bs.modal', function (e) {
-		var isOK = true;
+    	var isOK = true;
 		if ($scope.form.$dirty)
 			isOK = confirm("Changes are not saved. \nOK = Close without save");
 		if (isOK) {
@@ -40,12 +38,13 @@ app.controller('Series', function($scope, $rootScope, api) {
 	$scope.submitThenClose = function() { $scope.submit(close);	};
 	$scope.removeThenClose = function() {
 		if (confirm("About to delete this Series. \nOK = Delete"))
-			api.remove('series', $scope.model.id).then(function(rsp){
-				if (rsp.errorMessage){
-					api.alert($scope.dialogBody, 'Error: The series could not be deleted!', 'alert-danger');
-				} else {
-					close();
-				}
+			emitBusy();
+			api.deleting('series', $scope.model.id).then(function(rsp){
+				emitDone();
+				close();
+			}, function (err){
+				emitDone();
+				error('Failed to delete the series!');
 			});
 	};
 	$scope.close = function() {
@@ -57,6 +56,7 @@ app.controller('Series', function($scope, $rootScope, api) {
     $scope.uploadNewData = function(seriesId) {
     	$rootScope.$emit('uploadNewSeriesData', seriesId);
 	};
+	$scope.isHiddenButtonSaveThenClose = isNoData;
 
 	function edit(series) {
 		$scope.model = series;
@@ -65,13 +65,10 @@ app.controller('Series', function($scope, $rootScope, api) {
 		$scope.dialog.modal();
 		
 		function resetView(){
-			if (series.id)
-				$scope.form.$setPristine();
-			else 
-				$scope.form.$setDirty();
+			api.removeAllAlerts($scope.alertParent);
+			$scope.form.$setPristine();
 			$scope.coordinates = [];
 			$scope.locationIds = new Set();
-			api.removeAllAlerts($scope.dialogBody);
 		}
 	};
 	
@@ -79,11 +76,16 @@ app.controller('Series', function($scope, $rootScope, api) {
 		if (! seriesId)
 			return;
 		var path = 'series/' + seriesId + '/time-coordinate';
-		api.find(path).then(function(rsp) {
-			$scope.coordinates =  rsp.data.results;
-			populateAdditionInfo($scope.coordinates);
-			$scope.dataOrder = $scope.dataOrder || 'date';
-		});
+		api.finding(path).then(success, fail);
+		
+		function success(rsp) {
+			$scope.coordinates = rsp.data.results;
+			populateAdditionInfo(rsp.data.results);
+		}
+		
+		function fail(reason){
+			error('Failed to load the time-coordinate data!');
+		}
 	}
 
 	function close(){
@@ -99,47 +101,70 @@ app.controller('Series', function($scope, $rootScope, api) {
 		return model;
 	}
 	
+	function isNoData(){
+		return $scope.coordinates.length <= 0;
+	}
 	function save(callback){
-		var toUpload = ! $scope.model.id;
+		emitBusy();
+		var toUpload = isNoData();
 		var body = buildBody($scope.model);
-		$scope.working = true;
-		api.save('series', body).then(function(location) {
-			$scope.working = false;
-			api.alert($scope.dialogBody, 'The series was saved.', 'alert-success');
+		api.saving('series', body).then(function(location) {
+			emitDone();
+			success('The series was saved.');
 			if (callback){
 				callback();
 			} else {
-				api.get(location).then(function(rsp) {
+				api.gettingFromUrl(location).then(function(rsp) {
 					$scope.model = rsp.data.result;
 					$scope.form.$setPristine();
 					if(toUpload)
 						$scope.uploadNewData($scope.model.id);
+				}, function(err){
+					error('Failed to read the series!');
 				});
 			}
+		}, function(err){
+			emitDone();
+			error('Failed to save the series!');
 		});
 	}
 	
+	function success(message){
+		alert('Success: ' + message, 'alert-success');
+	}
+	
+	function error(message){
+		alert('Error: ' + message, 'alert-danger');
+	}
+	
+	function alert(message, classes){
+		api.alert($scope.alertParent, message, classes);
+	}
+	
+	function emitBusy(){
+		$scope.isWorking = true;
+		$rootScope.$emit('modalBusyDialog');
+	}
+	
+	function emitDone(){
+		$scope.isWorking = false;
+		$rootScope.$emit('hideBusyDialog');
+	}
+	
 	function populateAdditionInfo(data){
-		var path = 'locations/',
-			size = 0;
-		$scope.locationIds = new Set();
-		$scope.locations = new Map();
+		var path = 'locations/bulk-lables';
+		$scope.locationIds = [];
 		data.forEach(function (it) {
 			it.date = api.toDateText(it.timestamp);
-			$scope.locationIds.add(it.locationId);
+			$scope.locationIds.push(it.locationId);
 		});
 
-		size = $scope.locationIds.size;
-		if (size > 50)
-			return;
-		$scope.locationIds.forEach(function (it) {
-			api.find(path + it).then(function(rsp) {
-				$scope.locations.set(it, rsp.data.result.label);
-				if ($scope.locations.size >= size){
-					data.forEach(function (it) {
-						it.location = $scope.locations.get(it.locationId);
-					});
-				}
+		$scope.locationIds = _.uniq($scope.locationIds);
+		var array = _.toArray($scope.locationIds);
+		api.posting(path, JSON.stringify($scope.locationIds)).then(function(rsp){
+			var id2label = rsp.data.result;
+			data.forEach(function (datum) {
+				datum.location = id2label[datum.locationId];
 			});
 		});
 	}

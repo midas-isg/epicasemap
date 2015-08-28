@@ -11,7 +11,7 @@ public class Location implements models.entities.Entity {
 	@Id @GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 	private String label;
-	@Column(name = "als_id")
+	@Column(name = "als_id", unique = true)
 	private Long alsId;
 	@Column(name = "lat")
 	private Double latitude;

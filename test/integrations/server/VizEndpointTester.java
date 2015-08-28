@@ -53,7 +53,8 @@ public class VizEndpointTester {
 		Tuple data = testCreate();
 		long id = data.id;
 		final String subpath = "/ui-setting";
-		String url = urlWithId(id) + subpath;
+		final String seriesUrl = urlWithId(id);
+		final String url = seriesUrl + subpath;
 		testRead(data);
 		Map<String, Object> setting = new HashMap<>();
 		setting.put("key", "value");
@@ -68,6 +69,8 @@ public class VizEndpointTester {
 		final WSResponse read = assertStatusOfGet(url, OK);
 		assertJsonString(read.getBody(), input);
 		assertStatusOfGet(urlWithId(0) + subpath, NOT_FOUND);
+		WS.url(url).put(input).get(timeout);
+		testDelete(id);
 	}
 
 	private WSResponse assertStatusOfGet(String url, final int expected) {
@@ -111,9 +114,8 @@ public class VizEndpointTester {
 		});
 
 		assertThat(all.size()).isGreaterThanOrEqualTo(2);
-		input.setSeriesIds(toList(all.subList(0, 1), it -> it.getId()));
-		input.setSeries2Ids(toList(all.subList(0, 2), it -> it.getId()));
-		input.setTitle("Test first 2 Series");
+		input.setSeriesIds(toList(all.subList(0, 2), it -> it.getId()));
+		input.setTitle("Test first 2 Series created by " + this.getClass().getSimpleName());
 		input.setUiSetting("{}");
 		final JsonNode root = Json.toJson(input);
 		final String json = root + "";
@@ -152,7 +154,6 @@ public class VizEndpointTester {
 		assertNodeType(result, OBJECT);
 		assertAreEqual(result.get("id").asLong(), id);
 		assertAllSeries(result.get("allSeries"), expected.getSeriesIds());
-		assertAllSeries(result.get("allSeries2"), expected.getSeries2Ids());
 		assertTextNode(result.get("uiSetting"), expected.getUiSetting());
 	}
 
