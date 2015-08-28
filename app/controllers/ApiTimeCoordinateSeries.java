@@ -9,7 +9,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 
 import models.entities.Coordinate;
-import models.entities.CoordinateFilter;
+import models.filters.CoordinateFilter;
 
 import org.joda.time.DateTime;
 

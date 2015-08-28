@@ -14,8 +14,8 @@ import java.util.List;
 import javax.persistence.EntityManager;
 
 import models.entities.Coordinate;
-import models.entities.CoordinateFilter;
-import models.entities.filters.Filter;
+import models.filters.CoordinateFilter;
+import models.filters.Filter;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
