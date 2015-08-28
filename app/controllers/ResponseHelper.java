@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import models.entities.filters.Filter;
+import models.filters.Filter;
 import play.libs.Json;
 import play.mvc.Controller;
 import play.mvc.Http.Context;

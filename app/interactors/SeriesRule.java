@@ -5,9 +5,9 @@ import gateways.database.SeriesDao;
 import java.util.List;
 
 import models.entities.Coordinate;
-import models.entities.CoordinateFilter;
 import models.entities.Series;
-import models.entities.filters.Filter;
+import models.filters.CoordinateFilter;
+import models.filters.Filter;
 
 public class SeriesRule extends CrudRule<Series> {
 	private SeriesDao dao; 

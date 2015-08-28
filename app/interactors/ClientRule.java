@@ -1,11 +1,12 @@
 package interactors;
 
+import play.libs.ws.WS;
 import play.libs.ws.WSResponse;
-import gateways.webservice.Client;
 
 public class ClientRule {
 	
-	private Client client = new Client();
+	private long timeout = 100_000;
+
 	private String baseUrl;
 	
 	public ClientRule(String baseUrl){
@@ -14,10 +15,14 @@ public class ClientRule {
 
 	public WSResponse getById(Long id){
 		String url = append(baseUrl,id+"");
-		return client.get(url);
+		return get(url);
 	}
 
 	private String append(final String baseUrl, final String str) {
 		return baseUrl + "/" + str;
+	}
+	
+	public WSResponse get(String url){
+		return WS.url(url).get().get(timeout);
 	}
 }

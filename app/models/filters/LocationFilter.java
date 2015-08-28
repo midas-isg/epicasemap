@@ -1,9 +1,8 @@
-package models.entities;
+package models.filters;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
-
-import models.entities.filters.Filter;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -12,11 +11,18 @@ public class LocationFilter implements Filter {
 	@JsonIgnore
 	private Long alsId;
 
+	@JsonIgnore
 	private Double latitude;
+	@JsonIgnore
 	private Double longitude;
-
+	
 	private Map<String, Object> equalities;
-
+	
+	@JsonIgnore
+	private List<Long> ids;
+	
+	private Map<String, List<?>> ins;
+	
 	private LinkedHashMap<String, Order> order;
 
 	public Long getAlsId() {
@@ -60,5 +66,20 @@ public class LocationFilter implements Filter {
 	public void setOrder(LinkedHashMap<String, Order> map) {
 		order = map;
 	}
+	
+	public void setInOperators(Map<String, List<?>> ins){
+		this.ins = ins;
+	}
+	
+	public Map<String, List<?>>  getInOperators(){
+		return ins;
+	}
 
+	public void setIds(List<Long> ids){
+		this.ids = ids;
+	}
+
+	public List<Long> getIds(){
+		return ids;
+	}
 }

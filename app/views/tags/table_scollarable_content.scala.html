@@ -13,7 +13,7 @@
 <div ng-init='view.resizable = !dialog' class='table-content' ng-class='{"table-content-resizable":view.resizable}'>
 	<table class=@classes_table()>
 		<tbody>
-			<tr class='active' ng-hide='isHidden(it)' ng-repeat=@filter_repeat("it in " + models, prefix)>
+			<tr class='active' title='@tooltip' ng-hide='isHidden(it)' ng-repeat=@filter_repeat("it in " + models, prefix)>
 				@orders.map { o =><td class='col-@o(0)'>{{it.@o(0)}}</td>
 				}
 				@append.map {o =><td class='col-@o(0)'>@o(2)</td>
@@ -22,3 +22,13 @@
 		</tbody>
 	</table>
 </div>
+
+@tooltip = { 
+	@first("Title", "title") @next("Version", "version") @text("\n# selected series", "count(it.allSeries)") @next("Description", "description")
+}
+
+@first(title:String, key:String) = { @text(title, "it." + key) }
+
+@next(title:String, key:String) = { @first("\n" + title, key) }
+
+@text(title:String, expression:String) = { {{@expression ? "@title: " + @expression : ""}} }
