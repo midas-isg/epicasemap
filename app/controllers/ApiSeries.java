@@ -8,7 +8,7 @@ import java.util.List;
 import javax.ws.rs.PathParam;
 
 import models.entities.Series;
-import models.entities.filters.Filter;
+import models.filters.Filter;
 import play.data.Form;
 import play.db.jpa.JPA;
 import play.db.jpa.Transactional;
@@ -111,6 +111,21 @@ public class ApiSeries extends Controller {
 		deleteById(id);
 		setResponseLocationFromRequest();
 		return noContent();
+	}
+	
+	@ApiOperation(httpMethod = "PUT", nickname = "upload", value = "Uploads Series Data", 
+			notes = "This endpoint uploads data for the given Series idientified by 'id' "
+					+ "and returns the upload status in response header. "
+					+ "(returns more information in response body.)")
+			@ApiResponses({ 
+					@ApiResponse(code = CREATED, message = "success"),
+					@ApiResponse(code = BAD_REQUEST, message = "failure") })
+	@Transactional
+	public static Result uploadData(
+			@ApiParam(value = "ID of the Series", required = true) 
+			@PathParam("id") 
+				long id) {
+		return UploadSeries.upload(id);
 	}
 
 	public static void deleteById(long id) {

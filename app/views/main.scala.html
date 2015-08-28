@@ -1,7 +1,6 @@
 @import play.api.Play.current
 @import play.api.Play
 
-@*(title: String, imports: Html = Html(""), version: String)(content: Html)*@
 @(title: String, imports: Html = Html(""))(content: Html)
 
 <!DOCTYPE html>
@@ -25,7 +24,6 @@
 		<!--<link rel='stylesheet' href='@routes.Assets.at("stylesheets/bcos.css")'>-->
 		
 		<link rel='shortcut icon' type='image/png' href='@routes.Assets.at("images/favicon.png")'>
-		
 		<!-- page-specific -->
 		@imports
 	</head>
@@ -38,31 +36,13 @@
 						<a href="@routes.Application.index" style="color:#ffff00;">MidasViz</a> <span id="title">@title</span>
 					</span>
 				</div>
-				
 				<div style="float: right;" class="collapse navbar-collapse" id="navbar-collapse">
 					<ul class=" nav navbar-nav" id="navigation_menu">
-						@*
-						<li>
-							<a class="" onclick="promptLeave = false;" style="color:#ffff00;" href="@routes.Application.setup">job setup</a>
-						</li>
-						
-						<li>
-							<a class="" onclick="promptLeave = false;" style="color:#ffff00;" href="@routes.Application.summary">job summary</a>
-						</li>
-						
-						<li>
-							<a class="" onclick="promptLeave = false;" style="color:#ffff00;" href="@routes.Application.manageJobs">job management</a>
-						</li>
-						*@
+						@managementMenu
+						@api
 					</ul>
 				</div>
 			</div>
-			
-			@*
-			<div class="container">
-				
-			</div>
-			*@
 		</nav>
 		
 		<div id="main-container" class="container-fluid" style="margin-left: auto; margin-right: auto;">
@@ -79,3 +59,28 @@
 		</footer>
 	</body>
 </html>
+
+@api = {
+	@menuItem(routes.Application.swagger.url, "API")
+}
+
+@managementMenu = {
+	@menu("Manage", Seq(
+		menuItem(routes.Application.manageSeries.url, "Series"),
+		menuItem(routes.Application.manageVizs.url, "Visualizations")
+	))
+}
+
+@menu(name:String, items:Seq[Html]) = {
+	<li class="menu-item dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">@name <b class="caret"></b></a>
+		<ul class="dropdown-menu">
+			@items
+		</ul>
+	</li>
+}
+
+@menuItem(href:String, text:String) = {
+	<li>
+		<a class="menu-item navbar-link" href="@href">@text</a>
+	</li>
+}

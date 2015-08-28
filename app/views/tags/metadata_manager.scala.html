@@ -2,7 +2,7 @@
 
 @(singular:String, plural:String, prefix:String, more:Seq[Seq[Html]] = null)
 <section>
-	<h3>You have {{count(models)}} @plural
+	<h3>You have {{count(models) | number}} @plural
 		<small><button title='Add new @singular' class='btn btn-xs' ng-click='addNew()'>
 			@bs_icon("plus")
 		</button></small>

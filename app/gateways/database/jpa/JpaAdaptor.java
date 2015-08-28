@@ -16,10 +16,11 @@ import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
+import models.NotFoundException;
 import models.entities.Entity;
-import models.entities.filters.Filter;
-import models.entities.filters.Pagination;
-import models.entities.filters.TimestampRange;
+import models.filters.Filter;
+import models.filters.Pagination;
+import models.filters.TimestampRange;
 
 public class JpaAdaptor {
 	private EntityManager em;
@@ -43,8 +44,9 @@ public class JpaAdaptor {
 		Integer limit = filter.getLimit();
 		if (limit != null)
 			query.setMaxResults(limit);
-		int offset = filter.getOffset();
-		query.setFirstResult(offset);
+		Integer offset = filter.getOffset();
+		if (offset != null) 
+			query.setFirstResult(offset);
 	}
 
 	private <T> TypedQuery<T> buildQuery(Class<T> clazz) {
@@ -83,6 +85,16 @@ public class JpaAdaptor {
 			predicates.add(p);
 		}
 		
+		Map<String, List<?>> key2List = filter.getInOperators();
+		for (Entry<String, List<?>> pair : key2List.entrySet()){
+			final List<?> value = pair.getValue();
+			if (value == null)
+				continue;
+			Path<String> exp = root.get(pair.getKey());
+			Predicate predicate = exp.in(value);
+			predicates.add(predicate);
+		}
+
 		criteriaQuery.where(predicates.toArray(new Predicate[predicates.size()]));
 		final LinkedHashMap<String, Filter.Order> orders = filter.getOrder();
 		for (Entry<String, Filter.Order> pair : orders.entrySet()){
@@ -150,18 +162,27 @@ public class JpaAdaptor {
 	}
 
 	public <T> T read(Class<T> clazz, long id) {
-		return em.find(clazz, id);
+		return find(clazz, id);
 	}
 
 	public <T> void delete(Class<T> clazz, long id) {
-		T data = em.find(clazz, id);
+		T data = find(clazz, id);
 		em.remove(data);
 	}
 
 	public <T extends Entity> T update(Class<T> clazz, long id, T data) {
-		T original = em.find(clazz, id);
+		T original = find(clazz, id);
 		data.setId(original.getId());
 		em.merge(data);
 		return data;
+	}
+
+	private <T> T find(Class<T> clazz, long id) {
+		final T t = em.find(clazz, id);
+		if (t == null){
+			final String message = clazz.getSimpleName() + " with ID = " + id + " was not found!";
+			throw new NotFoundException(message);
+		}
+		return t;
 	}
 }

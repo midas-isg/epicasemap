@@ -7,7 +7,6 @@ import models.entities.MetaData;
 public class VizInput extends MetaData {
 	private Long id;
 	private List<Long> seriesIds;
-	private List<Long> series2Ids;
 	private String uiSetting;
 
 	public List<Long> getSeriesIds() {
@@ -16,14 +15,6 @@ public class VizInput extends MetaData {
 
 	public void setSeriesIds(List<Long> seriesIds) {
 		this.seriesIds = seriesIds;
-	}
-
-	public List<Long> getSeries2Ids() {
-		return series2Ids;
-	}
-
-	public void setSeries2Ids(List<Long> series2Ids) {
-		this.series2Ids = series2Ids;
 	}
 
 	public String getUiSetting() {

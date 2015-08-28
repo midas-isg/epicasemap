@@ -1,12 +1,9 @@
-package models.view;
+package models.filters;
 
 import java.util.Date;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
-
-import models.entities.filters.Filter;
-import models.entities.filters.Pagination;
-import models.entities.filters.TimestampRange;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -26,6 +23,10 @@ public class CoordinateFilter implements Pagination, TimestampRange, Filter {
 	private Integer offset;
 	
 	private LinkedHashMap<String, Order> order;
+
+	public Map<String, List<?>>  getInOperators(){
+		return null;
+	}
 
 	public Long getSeriesId() {
 		return seriesId;

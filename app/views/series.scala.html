@@ -8,10 +8,11 @@
 }
 
 @main("Series Management", imports) {
-	<article ng-app='app' ng-controller='SeriesCollection'>
+	<article id='series-body' ng-app='app' ng-controller='SeriesCollection'>
 		@metadata_manager("Series", "Series", "series")
 		@series_dialog()
 		@series_data_dialog()
+		@busy_dialog()
 	</article>
 }
 

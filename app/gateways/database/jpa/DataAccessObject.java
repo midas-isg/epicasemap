@@ -3,7 +3,7 @@ package gateways.database.jpa;
 import java.util.List;
 
 import models.entities.Entity;
-import models.entities.filters.Filter;
+import models.filters.Filter;
 
 public class DataAccessObject<T extends Entity> {
 	private Class<T> clazz;

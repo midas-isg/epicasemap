@@ -1,6 +1,10 @@
 @* Common imports for AngularJS (ng) *@
 @()
-<base href="/">
+
+<link rel='stylesheet' href='@routes.Assets.at("external_packages/font-awesome-4.4.0/css/font-awesome.min.css")'>
+
 @script_asset("external_packages/angular-1.4.3.js")
 @script_asset("external_packages/underscore-min-1.8.3.js")
-@script_asset("javascripts/ng/app-api.js")
+@script_asset("javascripts/ng/app.js")
+@script_asset("javascripts/ng/api.js")
+@script_asset("javascripts/ng/controllers/busy.js")

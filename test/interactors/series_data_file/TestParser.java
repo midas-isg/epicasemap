@@ -12,10 +12,9 @@ public class TestParser {
 
 	@Test
 	public void testParse() throws Exception{
-		SeriesDataFileHelper helper = new SeriesDataFileHelper();
-		SeriesDataFile dataFile = helper.createTestSeriesDataFileWithAlsIdFormat();
-		Parser parser = new Parser();
-		int NumOfRecords = parser.parse(dataFile).getRecords().size();
-		assertThat(NumOfRecords).isEqualTo(5);
+		SeriesDataFile dataFile = SeriesDataFileHelper.createTestSeriesDataFileWithAlsIdFormat();
+		Parser parser = new Parser(dataFile);
+		int fileHeaderSize = parser.getFileHeaders().size();
+		assertThat(fileHeaderSize).isEqualTo(3);
 	}
 }
