@@ -50,12 +50,9 @@ app.controller('Vizs', function($scope, $rootScope, api) {
 		if (id){
 			api.reading(urlPath, id).then(function(rsp){
 				var model = rsp.data.result;
-				if (model)
-					$scope.edit(model);
-				else
-					alert('Visualization with ID = ' + id + " was not found!");
+				$scope.edit(model);
 			}, function(err){
-				error('Failed to read Visualization with ID = ' + id);
+				alert('Visualization with ID = ' + id + " was not found!");
 			});
 		}
 	}

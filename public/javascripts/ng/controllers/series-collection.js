@@ -32,12 +32,9 @@ app.controller('SeriesCollection', function($scope, $rootScope, api) {
 		if (id){
 			api.reading(urlPath, id).then(function(rsp){
 				var model = rsp.data.result;
-				if (model)
-					$scope.edit(model);
-				else
-					alert('Series with ID = ' + id + " was not found!");
+				$scope.edit(model);
 			}, function(err){
-				error('Failed to read Series with ID = ' + id);
+				alert(err.data);
 			});
 		}
 	}
