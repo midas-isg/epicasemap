@@ -274,8 +274,9 @@ timeline.js
 		
 		$("#add-series-button").click(function() {
 			var id = thisMap.pushSeries();
+			
 			$("#series-" + id).change();
-			$("#color-selector-" + id + " #color-0").click();
+			thisMap.setSeriesColor($("#color-selector-" + id + " #color-0")[0]);
 			
 			return;
 		});
@@ -318,12 +319,12 @@ timeline.js
 	}
 	
 	MagicMap.prototype.pushSeries = function() {
-		var selectorID = $("#series-options").children().last().index() + 1,
+		var optionID = $("#series-options").children().last().index() + 1,
 			thisMap = this;
 		
-		function appendColorSelector(setID) {
+		function appendColorSelector(selectorID) {
 			for(i = 0; i < thisMap.colors.length; i++) {
-				$("#color-selector-" + setID).append("<div id='color-" + i + "' class='ramp'></div>");
+				$("#color-selector-" + selectorID).append("<div id='color-" + i + "' class='ramp'></div>");
 				svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
 				svg.setAttribute("width", 15);
 				svg.setAttribute("height", 15);
@@ -333,33 +334,10 @@ timeline.js
 				svgElement.setAttributeNS(null, "fill", thisMap.colors[i]);
 				$(svg).append(svgElement);
 				
-				$("#color-selector-" + setID + " #color-" + i).append(svg);
+				$("#color-selector-" + selectorID + " #color-" + i).append(svg);
 				
-				$("#color-selector-" + setID + " #color-" + i).click(function() {
-					var colorID = this.id.split("-")[1],
-						seriesID = $(this).parent().attr("id").split("-")[2],
-						siblings = $(this).siblings().get(),
-						i;
-					
-					if(!$(this).hasClass("selected")) {
-						thisMap.uiSettings.series[seriesID].color = colorID;
-						
-						for(i = 0; i < siblings.length; i++) {
-							if($(siblings[i]).hasClass("selected")) {
-								$(siblings[i]).removeClass("selected");
-								break;
-							}
-						}
-						$(this).addClass("selected");
-						
-						thisMap.detailChart.series[seriesID].update({color: thisMap.colors[colorID]}, true);
-						thisMap.masterChart.series[seriesID].update({color: thisMap.colors[colorID]}, true);
-						
-						thisMap.setGradient[seriesID] = {0.0: thisMap.colors[colorID]};
-						thisMap.heat[seriesID].setOptions({gradient: thisMap.setGradient[seriesID]});
-					}
-					
-					return;
+				$("#color-selector-" + selectorID + " #color-" + i).click(function() {
+					thisMap.setSeriesColor(this);
 				});
 			}
 			
@@ -401,10 +379,10 @@ console.log("series " + k + ": " + id);
 			});
 		}
 		
-		appendSeriesSelector(selectorID);
-		appendColorSelector(selectorID);
+		appendSeriesSelector(optionID);
+		appendColorSelector(optionID);
 		
-		return selectorID;
+		return optionID;
 	}
 	
 	MagicMap.prototype.popSeries = function() {
@@ -448,6 +426,44 @@ console.log("series " + k + ": " + id);
 		
 		for(i = 0; i < this.colors.length; i++) {
 			$("#color-" + i + " svg rect").attr("fill", this.colors[i]);
+		}
+		
+		return;
+	}
+	
+	MagicMap.prototype.setSeriesColor = function(colorSelector) {
+		var colorID = colorSelector.id.split("-")[1],
+			selectorID = $(colorSelector).parent().attr("id").split("-")[2],
+			siblings = $(colorSelector).siblings().get(),
+			i;
+		
+		if(!$(colorSelector).hasClass("selected")) {
+			this.uiSettings.series[selectorID].color = colorID;
+			
+			for(i = 0; i < siblings.length; i++) {
+				if($(siblings[i]).hasClass("selected")) {
+					$(siblings[i]).removeClass("selected");
+					break;
+				}
+			}
+			$(colorSelector).addClass("selected");
+			
+			if(!this.heat[selectorID]) {
+				this.heat.push(L.heatLayer(this.displaySet[selectorID].visiblePoints,
+					{
+						minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.1, //radius: 5,
+						gradient: this.setGradient[selectorID]
+					}
+				).addTo(this.map));
+			}
+			
+			this.setGradient[selectorID] = {0.0: this.colors[colorID]};
+			this.heat[selectorID].setOptions({gradient: this.setGradient[selectorID]});
+			
+			if(this.detailChart.series[selectorID]) {
+				this.detailChart.series[selectorID].update({color: this.colors[colorID]}, true);
+				this.masterChart.series[selectorID].update({color: this.colors[colorID]}, true);
+			}
 		}
 		
 		return;
