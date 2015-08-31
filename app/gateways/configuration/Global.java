@@ -39,7 +39,7 @@ public class Global extends GlobalSettings {
 					final String message = e.getMessage();
 					final Status status = notFound(message);
 					return Promise.<Result>pure(status);
-				} catch (RuntimeException e) {
+				} catch (RuntimeException|Error e) {
 					throw e;
 				} catch (Throwable e) {
 					throw new RuntimeException(e);
