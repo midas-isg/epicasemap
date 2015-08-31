@@ -282,6 +282,15 @@ timeline.js
 			return;
 		});
 		
+		$("#step-forward-button").click(function() {
+			thisMap.playBack = true;
+			thisMap.playBuffer(thisMap.startFrame, thisMap.endFrame);
+			thisMap.packHeat();
+			thisMap.playBack = false;
+			
+			return;
+		});
+		
 		$("#toggle-controls-button").click(function() {
 			$("#control-panel").toggle();
 			
