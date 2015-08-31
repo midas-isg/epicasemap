@@ -28,9 +28,14 @@
 				</div>
 				
 				<div id="control-panel" style="background-color: rgba(128, 128, 128, 0.1); padding: 5px; height: 600px; width: 20%; float: right; display: none;">
-					<div id="series-options"></div>
+					<div class="extra-bottom-space" style="clear: both;">
+						<h5 class="no-margin">Select map:</h5>
+						<select id="map-selector" style="max-width: 100%;"></select>
+					</div>
 					
-					<div style="">
+					<div id="series-options" style="clear: both;"></div>
+					
+					<div style="clear: both; float: right;">
 						<button id="remove-series-button" class="btn no-padding" style="">
 							<span class="glyphicon glyphicon-minus" aria-hidden="true">
 						</button>
@@ -40,13 +45,13 @@
 						</button>
 					</div>
 					
-					<div>
-						<div id="color-palettes">
+					<div style="clear: both;">
+						<div id="color-palettes" style="">
 							<h5 class="vertical-spaced">Pick a color scheme:</h5>
 							<div id="ramps"></div>
 						</div>
 						
-						<div>
+						<div style="clear: both;">
 							<button id="save-button">Save as default view</button>
 						</div>
 					</div>
