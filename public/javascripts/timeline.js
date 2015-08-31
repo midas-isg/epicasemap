@@ -110,6 +110,8 @@ timeline.js
 		$("#map-selector").val(mapID);
 		
 		$("#map-selector").change(function() {
+			sessionStorage.uiSettings = JSON.stringify(thisMap.uiSettings);
+			
 			return location.assign(CONTEXT + "?id=" + thisMap.vizID + "&map=" + $(this).val());
 		});
 		
@@ -202,7 +204,13 @@ timeline.js
 				}
 				
 				if(result.result.uiSetting) {
-					thisMap.uiSettings = JSON.parse(result.result.uiSetting);
+					if(sessionStorage.uiSettings) {
+						thisMap.uiSettings = JSON.parse(sessionStorage.uiSettings);
+						sessionStorage.removeItem("uiSettings");
+					}
+					else {
+						thisMap.uiSettings = JSON.parse(result.result.uiSetting);
+					}
 					
 					for(h = 0; h < thisMap.uiSettings.series.length; h++) {
 						thisMap.seriesToLoad.push(thisMap.uiSettings.series[h].index);
