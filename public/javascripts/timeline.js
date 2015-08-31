@@ -9,11 +9,24 @@ timeline.js
 			temp,
 			svgElement,
 			svg,
-			thisMap = this;
+			thisMap = this,
+			mapID;
+		
+		this.mapTypes = [
+			"financialtimes.map-w7l4lfi8",
+			"mapbox.streets",
+			"mapbox.dark"
+		];
+		
+		mapID = getURLParameterByName("map");
+		if(!mapID) {
+			mapID = 0;
+		}
+		temp = this.mapTypes[mapID];
 		
 		L.mapbox.accessToken = 'pk.eyJ1IjoidHBzMjMiLCJhIjoiVHEzc0tVWSJ9.0oYZqcggp29zNZlCcb2esA';
 		this.map = L.mapbox.map( 'map',
-				'financialtimes.map-w7l4lfi8' /*'mapbox.streets'*/ /*'mapbox.dark'*/,
+				temp,
 				{ worldCopyJump: true, bounceAtZoomLimits: false, zoom: 2, minZoom: 2})
 			.setView([30, 0], 2);
 
@@ -73,7 +86,6 @@ timeline.js
 							seriesToLoad.shift();
 							if(seriesToLoad.length === 0) {
 								for(i = 0; i < thisMap.seriesToLoad.length; i++) {
-									//thisMap.displaySet.push({visiblePoints: []});
 									thisMap.load(thisMap.seriesToLoad[i]);
 								}
 							}
@@ -91,6 +103,16 @@ timeline.js
 			
 			getDescriptions([1, 259]);
 		}
+		
+		for(i = 0; i < this.mapTypes.length; i++) {
+			$("#map-selector").append("<option value='" + i + "'>" + this.mapTypes[i] + "</option>");
+		}
+		$("#map-selector").val(mapID);
+		
+		$("#map-selector").change(function() {
+			return location.assign(CONTEXT + "?id=" + thisMap.vizID + "&map=" + $(this).val());
+		});
+		
 		
 		this.setGradient = [];
 		this.colorSet = [
@@ -353,8 +375,8 @@ timeline.js
 			thisMap.displaySet.push({visiblePoints: []});
 			
 			$("#series-options").append(
-				"<div>" +
-					"<h5 class='vertical-spaced'>Select series " + String.fromCharCode(selectorID + 65) + "</h5>" +
+				"<div style='clear: both;'>" +
+					"<h5 class='no-margin'>Select series " + String.fromCharCode(selectorID + 65) + "</h5>" +
 					"<select id='series-" + selectorID + "' style='max-width: 100%;'>" + "</select>" +
 					"<div id='color-selector-" + selectorID + "'></div>" +
 				"</div>"
@@ -395,6 +417,7 @@ console.log("series " + k + ": " + id);
 		this.dataset.splice(selectorID, 1);
 		this.displaySet.pop();
 		this.heat[selectorID].setLatLngs([]);
+		this.uiSettings.series.pop();
 		
 		return;
 	}
