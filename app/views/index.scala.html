@@ -9,106 +9,52 @@
 	<script src='@routes.Assets.at("external_packages/Highcharts-4.1.5/js/modules/exporting.js")'></script>
 
 	<script src='@routes.Assets.at("javascripts/leaflet-heat2.js")'></script>
-	<!--<script src='external-lib/leaflet-heat/leaflet-heat2.js'></script>-->
 
 	<script type='text/javascript' src='https://code.angularjs.org/1.4.2/angular.js'></script>
-	<!--<script src='js/test.js'></script>-->
 
 	<link href='@routes.Assets.at("stylesheets/index.css")' rel='stylesheet' />
 	
 	<script src='@routes.Assets.at("javascripts/timeline.js")'></script>
-	
-	<!--<link rel='stylesheet' href='@routes.Assets.at("stylesheets/bcos.css")'>-->
 }
 
 @main(title, imports) {
 	<div id='body' style="">
-		<button id="toggle-controls-button" class="btn no-padding" style="float: right; position: relative; right: 16px; z-index: 1;"><span class="glyphicon glyphicon-indent-right" aria-hidden="true"></button>
-		
-		<div id="control-panel" style="background-color: rgba(128, 128, 128, 0.1); padding: 5px; height: 600px; width: 15%; float: right; z-index: 0; display: none;">
-			<div id="series-options">
-			</div>
-			
-			<div>
-				<div>
-					<h5>Pick a color scheme:</h5>
-					<div id="ramps">
-						<div id="palette-0" class="ramp selected">
-							<svg width="15" height="75">
-								<rect fill="rgb(27,158,119)" width="15" height="15" y="0"></rect>
-								<rect fill="rgb(217,95,2)" width="15" height="15" y="15"></rect>
-								<rect fill="rgb(117,112,179)" width="15" height="15" y="30"></rect>
-								<rect fill="rgb(231,41,138)" width="15" height="15" y="45"></rect>
-								<rect fill="rgb(102,166,30)" width="15" height="15" y="60"></rect>
-							</svg>
-						</div>
-						
-						<div id="palette-1" class="ramp">
-							<svg width="15" height="75">
-								<rect fill="rgb(51,160,44)" width="15" height="15" y="0"></rect>
-								<rect fill="rgb(31,120,180)" width="15" height="15" y="15"></rect>
-								<rect fill="rgb(178,223,138)" width="15" height="15" y="30"></rect>
-								<rect fill="rgb(166,206,227)" width="15" height="15" y="45"></rect>
-								<rect fill="rgb(251,154,153)" width="15" height="15" y="60"></rect>
-							</svg>
-						</div>
-						
-						<div id="palette-2" class="ramp">
-							<svg width="15" height="75">
-								<rect fill="rgb(102,194,165)" width="15" height="15" y="0"></rect>
-								<rect fill="rgb(252,141,98)" width="15" height="15" y="15"></rect>
-								<rect fill="rgb(141,160,203)" width="15" height="15" y="30"></rect>
-								<rect fill="rgb(231,138,195)" width="15" height="15" y="45"></rect>
-								<rect fill="rgb(166,216,84)" width="15" height="15" y="60"></rect>
-							</svg>
-						</div>
-						
-						<!--
-						<div id="palette-10" class="ramp">
-							<svg width="15" height="75">
-								<rect style="fill: #a6cee3;" width="15" height="15" y="0"></rect>
-								<rect fill="#1f78b4" width="15" height="15" y="15"></rect>
-								<rect fill="#b2df8a" width="15" height="15" y="30"></rect>
-								<rect fill="#33a02c" width="15" height="15" y="45"></rect>
-								<rect fill="#fb9a99" width="15" height="15" y="60"></rect>
-							</svg>
-						</div>
-						-->
-					</div>
+		<div style="position: relative; z-index: 1;">
+			<div style="">
+				<div style="">
+					<button id="toggle-controls-button" class="btn no-padding" style="float: right; position: relative; right: 16px;">
+						<span class="glyphicon glyphicon-indent-right" aria-hidden="true">
+					</button>
 				</div>
 				
-				<!--
-				<div>
-					<div>
-						<h5>Pick series 1 color:</h5>
-						<div id="series-0" class="">
-							<svg>
-								<rect fill="rgb(102,194,165)" width="15" height="15" x="5"></rect>
-								<rect fill="rgb(252,141,98)" width="15" height="15" x="25"></rect>
-								<rect fill="rgb(141,160,203)" width="15" height="15" x="45"></rect>
-								<rect fill="rgb(231,138,195)" width="15" height="15" x="65"></rect>
-								<rect fill="rgb(166,216,84)" width="15" height="15" x="85"></rect>
-							</svg>
-						</div>
+				<div id="control-panel" style="background-color: rgba(128, 128, 128, 0.1); padding: 5px; height: 600px; width: 20%; float: right; display: none;">
+					<div class="extra-bottom-space" style="clear: both;">
+						<h5 class="no-margin">Select map:</h5>
+						<select id="map-selector" style="max-width: 100%;"></select>
 					</div>
 					
-					<div>
-						<h5>Pick series 2 color:</h5>
-						<div id="series-1" class="">
-							<svg>
-								<rect fill="rgb(102,194,165)" width="15" height="15" x="5"></rect>
-								<rect fill="rgb(252,141,98)" width="15" height="15" x="25"></rect>
-								<rect fill="rgb(141,160,203)" width="15" height="15" x="45"></rect>
-								<rect fill="rgb(231,138,195)" width="15" height="15" x="65"></rect>
-								<rect fill="rgb(166,216,84)" width="15" height="15" x="85"></rect>
-							</svg>
+					<div id="series-options" style="clear: both;"></div>
+					
+					<div style="clear: both; float: right;">
+						<button id="remove-series-button" class="btn no-padding" style="">
+							<span class="glyphicon glyphicon-minus" aria-hidden="true">
+						</button>
+						
+						<button id="add-series-button" class="btn no-padding" style="">
+							<span class="glyphicon glyphicon-plus" aria-hidden="true">
+						</button>
+					</div>
+					
+					<div style="clear: both;">
+						<div id="color-palettes" style="">
+							<h5 class="vertical-spaced">Pick a color scheme:</h5>
+							<div id="ramps"></div>
+						</div>
+						
+						<div style="clear: both;">
+							<button id="save-button">Save as default view</button>
 						</div>
 					</div>
-				</div>
-				-->
-				
-				<div>
-					<button id="save-button">Save as default view</button>
 				</div>
 			</div>
 		</div>
@@ -117,14 +63,15 @@
 			<div id='map' style="background-color: #808080;"></div>
 			
 			<div id="container" style="max-height: 300px; margin: 0px 0px 0px 0px; position: relative; bottom: 215px;">
-				<div style="position: relative; bottom: -175px; margin-left: 76px; z-index: 2;">
+				<div id="detail-container" style="height: 300px;"></div>
+				
+				<div style="position: relative; top: -120px; margin-left: 76px;">
 					<button id="toggle-details-button" class="btn btn-sm" style="background-color: rgba(221, 221, 221, 0.6);"><span class="glyphicon glyphicon-menu-hamburger" aria-hidden="true"></span></button>
 					<button id="reset-button" class="btn btn-sm" style="background-color: rgba(221, 221, 221, 0.6);"><span class="glyphicon glyphicon-step-backward" aria-hidden="true"></span></button>
 					<button id="playback-button" class="btn btn-sm" style="background-color: rgba(221, 221, 221, 0.6);"><span class="glyphicon glyphicon-play" aria-hidden="true"></span></button>
+					<button id="step-forward-button" class="btn btn-sm" style="background-color: rgba(221, 221, 221, 0.6);"><span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span></button>
 					<span id="current-date" style="background-color: rgba(255, 255, 255, 0.6); float: right; clear: right;"></span>
 				</div>
-				
-				<div id="detail-container" style="height: 300px; z-index: -1;"></div>
 			</div>
 		</div>
 		
