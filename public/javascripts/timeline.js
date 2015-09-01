@@ -5,14 +5,29 @@ timeline.js
 (function() {
 	function MagicMap() {
 		var i,
-		j,
-		temp,
-		currentSVG,
-		svgDocument,
-		thisMap = this;
+			j,
+			temp,
+			svgElement,
+			svg,
+			thisMap = this,
+			mapID;
+		
+		this.mapTypes = [
+			"financialtimes.map-w7l4lfi8",
+			"mapbox.streets",
+			"mapbox.dark"
+		];
+		
+		mapID = getURLParameterByName("map");
+		if(!mapID) {
+			mapID = 0;
+		}
+		temp = this.mapTypes[mapID];
 		
 		L.mapbox.accessToken = 'pk.eyJ1IjoidHBzMjMiLCJhIjoiVHEzc0tVWSJ9.0oYZqcggp29zNZlCcb2esA';
-		this.map = L.mapbox.map('map', 'mapbox.streets'/*'mapbox.dark'*/, { worldCopyJump: true, bounceAtZoomLimits: false, zoom: 2, minZoom: 2})
+		this.map = L.mapbox.map( 'map',
+				temp,
+				{ worldCopyJump: true, bounceAtZoomLimits: false, zoom: 2, minZoom: 2})
 			.setView([30, 0], 2);
 
 		this.heat = []; //null;
@@ -25,11 +40,10 @@ timeline.js
 		this.masterChart = null;
 		this.detailChart = null;
 		this.dataset = [];
-		this.earliestDate = new Date();
-		this.latestDate = new Date(0);
-		this.zeroTime(this.latestDate);
+		this.earliestDate = null;
+		this.latestDate = null;
 		
-		this.vizID = getURLParameterByName("id")
+		this.vizID = getURLParameterByName("id");
 		
 		this.uiSettings = {
 			series: [{index: -1, color: 0}],
@@ -72,7 +86,6 @@ timeline.js
 							seriesToLoad.shift();
 							if(seriesToLoad.length === 0) {
 								for(i = 0; i < thisMap.seriesToLoad.length; i++) {
-									thisMap.displaySet.push({visiblePoints: []});
 									thisMap.load(thisMap.seriesToLoad[i]);
 								}
 							}
@@ -91,50 +104,48 @@ timeline.js
 			getDescriptions([1, 259]);
 		}
 		
+		for(i = 0; i < this.mapTypes.length; i++) {
+			$("#map-selector").append("<option value='" + i + "'>" + this.mapTypes[i] + "</option>");
+		}
+		$("#map-selector").val(mapID);
+		
+		$("#map-selector").change(function() {
+			sessionStorage.uiSettings = JSON.stringify(thisMap.uiSettings);
+			
+			return location.assign(CONTEXT + "?id=" + thisMap.vizID + "&map=" + $(this).val());
+		});
+		
+		
 		this.setGradient = [];
-		/*
 		this.colorSet = [
 			['#1b9e77', '#d95f02', '#7570b3', '#e7298a', '#66a61e'],
 			['#a6cee3', '#1f78b4', '#b2df8a', "#33a02c", "#fb9a99"],
-			['#66c2a5', '#fc8d62', '#8da0cb', "#e78ac3", "#a6d854"]
-		];
-		*/
-		this.colorSet = [
-			['#1b9e77', '#d95f02', '#7570b3', '#e7298a', '#66a61e'],
-			["#33a02c", '#1f78b4', '#b2df8a', '#a6cee3', "#fb9a99"],
 			['#66c2a5', '#fc8d62', '#8da0cb', "#e78ac3", "#a6d854"]
 		];
 		
 		this.uiSettings.colorPalette = 0;
 		this.colors = this.colorSet[this.uiSettings.colorPalette];
 		
-		for(i = 0; i < this.colors.length; i++) {
-			this.setGradient.push({
-				0.0: this.colors[i]
-			});
-		}
-		
-		/*
-		//TODO: figure out how to make svgDocument create children
 		for(i = 0; i < this.colorSet.length; i++) {
-			$("#ramps").append("<div id='palette-" + i + "' class='ramp'><svg id='svg-" + i + "' width='15' height='75'></svg></div>");
+			svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+			svg.setAttribute("width", 15);
+			svg.setAttribute("height", 75);
+			
+			$("#ramps").append("<div id='palette-" + i + "' class='ramp'></div>");
+			$("#palette-" + i ).append(svg);
 			
 			temp = this.colorSet[i];
 			for(j = 0; j < temp.length; j++) {
-				currentSVG = svgDocument.createElementNS("http://www.w3.org/2000/svg", "rect");
-				//currentSVG.setAttributeNS(id = "color-" + i + "-" + j);
-				currentSVG.setAttributeNS(null, "width", 15);
-				currentSVG.setAttributeNS(null, "height", 15);
-				currentSVG.setAttributeNS(null, "y", 15 * j);
-				currentSVG.setAttributeNS(null, "fill", temp[j]);
+				svgElement = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+				svgElement.setAttributeNS(null, "width", 15);
+				svgElement.setAttributeNS(null, "height", 15);
+				svgElement.setAttributeNS(null, "y", 15 * j);
+				svgElement.setAttributeNS(null, "fill", temp[j]);
 				
-				$("#svg-" + i).append(currentSVG);
-				//$("#palette-" + i + " svg").append("<rect id='color-" + i + "-" + j + "'  width='15' height='15' y='" + (15 * j) + "'></rect>");
-				//$("#color-" + i + "-" + j).attr("fill", temp[j]);
+				$(svg).append(svgElement);
 			}
 		}
 		$("#palette-0").addClass("selected");
-		/**/
 		
 		return this;
 	}
@@ -148,7 +159,7 @@ timeline.js
 			this.uiSettings.bBox[0][1] = bounds.getWest();
 			this.uiSettings.bBox[1][0] = bounds.getNorth();
 			this.uiSettings.bBox[1][1] = bounds.getEast();
-			
+
 			$.ajax({
 				url: URL,
 				type: "PUT",
@@ -176,90 +187,56 @@ timeline.js
 			url: URL,
 			success: function(result) {
 				var h,
-				i;
-				
-				thisMap.seriesList[0] = result.result.allSeries;
-				h = 2;
-				while(result.result["allSeries" + h]) {
-					thisMap.seriesList.push(result.result["allSeries" + h]);
-					h++;
-				}
+					i,
+					svg,
+					svgElement;
 				
 				$("#title").text(result.result.title);
 				
+				//console.log(thisMap.seriesDescriptions);
+				thisMap.seriesList = result.result.allSeries;
+				
 				for(h = 0; h < thisMap.seriesList.length; h++) {
-					for(i = 0; i < thisMap.seriesList[h].length; i++) {
-						thisMap.seriesDescriptions[thisMap.seriesList[h][i].id] = {
-							title: thisMap.seriesList[h][i].title,
-							description: thisMap.seriesList[h][i].description
-						};
-					}
+					thisMap.seriesDescriptions[thisMap.seriesList[h].id] = {
+						title: thisMap.seriesList[h].title,
+						description: thisMap.seriesList[h].description
+					};
 				}
 				
-				//console.log(thisMap.seriesDescriptions);
-				
 				if(result.result.uiSetting) {
-					thisMap.uiSettings = JSON.parse(result.result.uiSetting);
+					if(sessionStorage.uiSettings) {
+						thisMap.uiSettings = JSON.parse(sessionStorage.uiSettings);
+						sessionStorage.removeItem("uiSettings");
+					}
+					else {
+						thisMap.uiSettings = JSON.parse(result.result.uiSetting);
+					}
 					
 					for(h = 0; h < thisMap.uiSettings.series.length; h++) {
 						thisMap.seriesToLoad.push(thisMap.uiSettings.series[h].index);
+						
+						thisMap.setGradient.push({
+							0.0: thisMap.colors[thisMap.uiSettings.series[h].color]
+						});
 					}
 					
 					thisMap.map.fitBounds(thisMap.uiSettings.bBox);
 					$("#palette-" + thisMap.uiSettings.colorPalette).click();
 				}
 				else {
-					for(h = 0; h < thisMap.seriesList.length; h++) {
-						thisMap.seriesToLoad.push(thisMap.seriesList[h][0].id);
-						thisMap.uiSettings.series[h] = {index: thisMap.seriesList[h][0].id, color: 0};
-					}
+					//TODO: FIX default page (no ID associated)
+					thisMap.uiSettings.series[0] = {index: thisMap.seriesList[0].id, color: 0};
+					thisMap.seriesToLoad.push(thisMap.uiSettings.series[0].index);
 				}
 				
 				for(i = 0; i < thisMap.seriesToLoad.length; i++) {
-					thisMap.displaySet.push({visiblePoints: []});
 					thisMap.load(thisMap.seriesToLoad[i]);
 				}
 				
-				for(h = 0; h < thisMap.seriesList.length; h++) {
-					$("#series-options").append(
-						"<div>" +
-							"<h5>Select series " + String.fromCharCode(h + 65) + "</h5>" +
-							"<select id='series-" + h + "' style='max-width: 100%;'>" +
-							"</select>" +
-						"</div>"
-					);
-					
-					for(i = 0; i < thisMap.seriesList[h].length; i++) {
-						$("#series-" + h).append("<option value='" + thisMap.seriesList[h][i].id + "'>" + thisMap.seriesList[h][i].title +"</option>");
-					}
+				for(h = 0; h < thisMap.uiSettings.series.length; h++) {
+					thisMap.pushSeries();
 					$("#series-" + h).val(thisMap.uiSettings.series[h].index);
-					$("#series-" + h).change();
-					
-					$("#series-" + h).change(function() {
-						var id = $(this).val(),
-						l,
-						k = $(this).attr("id").split("-")[1];
-console.log("series " + k + ": " + id);
-						
-						thisMap.uiSettings.series[k].index = id;
-						
-						//TODO: recalculate frameOffset, earliest & latest dates after loading is finished
-						//(refactor block to external call -calculate from 0 and length-1 indexes)
-						thisMap.latestDate = new Date(0);
-						thisMap.earliestDate = new Date();
-						
-						thisMap.seriesToLoad = [];
-						for(l = 0; l < thisMap.seriesList.length; l++) {
-							thisMap.seriesToLoad.push($("#series-" + l).val());
-						}
-						
-						for(l = 0; l < thisMap.seriesToLoad.length; l++) {
-							thisMap.displaySet[k].visiblePoints.length = 0;
-							thisMap.load(thisMap.seriesToLoad[l], l);
-						}
-						
-						return;
-					});
+					$("#color-selector-" + h + " #color-" + thisMap.uiSettings.series[h].color).addClass("selected");
 				}
 				
 				return;
@@ -281,10 +258,8 @@ console.log("series " + k + ": " + id);
 		$("#reset-button").click(function() {
 			var i;
 			
-			thisMap.uiSettings.event = null;//TODO: remove if necessary
-			
-			//console.log("Buffer:");
-			//console.log(thisMap.dataset[].buffer);
+			//console.log("Time Group:");
+			//console.log(thisMap.dataset[].timeGroup);
 			thisMap.loadBuffer();
 			
 			for(i = 0; i < thisMap.heat.length; i++) {
@@ -315,8 +290,32 @@ console.log("series " + k + ": " + id);
 			return;
 		});
 		
+		$("#step-forward-button").click(function() {
+			thisMap.playBack = true;
+			thisMap.playBuffer(thisMap.startFrame, thisMap.endFrame);
+			thisMap.packHeat();
+			thisMap.playBack = false;
+			
+			return;
+		});
+		
 		$("#toggle-controls-button").click(function() {
 			$("#control-panel").toggle();
+			
+			return;
+		});
+		
+		$("#remove-series-button").click(function() {
+			thisMap.popSeries();
+			
+			return;
+		});
+		
+		$("#add-series-button").click(function() {
+			var id = thisMap.pushSeries();
+			
+			$("#series-" + id).change();
+			thisMap.setSeriesColor($("#color-selector-" + id + " #color-0")[0]);
 			
 			return;
 		});
@@ -358,6 +357,88 @@ console.log("series " + k + ": " + id);
 		return;
 	}
 	
+	MagicMap.prototype.pushSeries = function() {
+		var optionID = $("#series-options").children().last().index() + 1,
+			thisMap = this;
+		
+		function appendColorSelector(selectorID) {
+			for(i = 0; i < thisMap.colors.length; i++) {
+				$("#color-selector-" + selectorID).append("<div id='color-" + i + "' class='ramp'></div>");
+				svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+				svg.setAttribute("width", 15);
+				svg.setAttribute("height", 15);
+				svgElement = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+				svgElement.setAttributeNS(null, "width", 15);
+				svgElement.setAttributeNS(null, "height", 15);
+				svgElement.setAttributeNS(null, "fill", thisMap.colors[i]);
+				$(svg).append(svgElement);
+				
+				$("#color-selector-" + selectorID + " #color-" + i).append(svg);
+				
+				$("#color-selector-" + selectorID + " #color-" + i).click(function() {
+					thisMap.setSeriesColor(this);
+				});
+			}
+			
+			return;
+		}
+		
+		function appendSeriesSelector(selectorID) {
+			if(selectorID >= thisMap.uiSettings.series.length) {
+				selectorID = thisMap.uiSettings.series.length;
+				thisMap.uiSettings.series.push({ color: 0, index: thisMap.seriesList[0].id });
+			}
+			
+			thisMap.displaySet.push({visiblePoints: []});
+			
+			$("#series-options").append(
+				"<div style='clear: both;'>" +
+					"<h5 class='no-margin'>Select series " + String.fromCharCode(selectorID + 65) + "</h5>" +
+					"<select id='series-" + selectorID + "' style='max-width: 100%;'>" + "</select>" +
+					"<div id='color-selector-" + selectorID + "'></div>" +
+				"</div>"
+			);
+			
+			for(i = 0; i < thisMap.seriesList.length; i++) {
+				$("#series-" + selectorID).append("<option value='" + thisMap.seriesList[i].id + "'>" + thisMap.seriesList[i].title +"</option>");
+			}
+			
+			$("#series-" + selectorID).change(function() {
+				var id = $(this).val(),
+				l,
+				k = $(this).attr("id").split("-")[1];
+console.log("series " + k + ": " + id);
+				
+				thisMap.uiSettings.series[k].index = id;
+				
+				thisMap.seriesToLoad.push(id);
+				thisMap.load(thisMap.seriesToLoad[0], k);
+				
+				return;
+			});
+		}
+		
+		appendSeriesSelector(optionID);
+		appendColorSelector(optionID);
+		
+		return optionID;
+	}
+	
+	MagicMap.prototype.popSeries = function() {
+		var selectorID = $("#series-options").children().last().index();
+		
+		$("#series-" + selectorID).parent().remove();
+		
+		this.detailChart.series[selectorID].remove();
+		this.masterChart.series[selectorID].remove();
+		this.dataset.splice(selectorID, 1);
+		this.displaySet.pop();
+		this.heat[selectorID].setLatLngs([]);
+		this.uiSettings.series.pop();
+		
+		return;
+	}
+	
 	MagicMap.prototype.setColorPalette = function(palette) {
 		var i;
 		
@@ -370,17 +451,59 @@ console.log("series " + k + ": " + id);
 		this.colors = this.colorSet[palette];
 		
 		this.setGradient.length = 0;
-		for(i = 0; i < this.colors.length; i++) {
+		for(i = 0; i < this.uiSettings.series.length; i++) {
 			this.setGradient.push({
-				0.0: this.colors[i]
+				0.0: this.colors[this.uiSettings.series[i].color]
 			});
 		}
 		
 		for(i = 0; i < this.displaySet.length; i++) {
-			this.detailChart.series[i].update({color: this.colors[i]}, true);
-			this.masterChart.series[i].update({color: this.colors[i]}, true);
+			this.detailChart.series[i].update({color: this.colors[this.uiSettings.series[i].color]}, true);
+			this.masterChart.series[i].update({color: this.colors[this.uiSettings.series[i].color]}, true);
 			
 			this.heat[i].setOptions({gradient: this.setGradient[i]});
+		}
+		
+		for(i = 0; i < this.colors.length; i++) {
+			$("#color-" + i + " svg rect").attr("fill", this.colors[i]);
+		}
+		
+		return;
+	}
+	
+	MagicMap.prototype.setSeriesColor = function(colorSelector) {
+		var colorID = colorSelector.id.split("-")[1],
+			selectorID = $(colorSelector).parent().attr("id").split("-")[2],
+			siblings = $(colorSelector).siblings().get(),
+			i;
+		
+		if(!$(colorSelector).hasClass("selected")) {
+			this.uiSettings.series[selectorID].color = colorID;
+			
+			for(i = 0; i < siblings.length; i++) {
+				if($(siblings[i]).hasClass("selected")) {
+					$(siblings[i]).removeClass("selected");
+					break;
+				}
+			}
+			$(colorSelector).addClass("selected");
+			
+			if(!this.heat[selectorID]) {
+				this.heat.push(L.heatLayer(this.displaySet[selectorID].visiblePoints,
+					{
+						minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.1, //radius: 5,
+						gradient: this.setGradient[selectorID]
+					}
+				).addTo(this.map));
+			}
+			
+			this.setGradient[selectorID] = {0.0: this.colors[colorID]};
+			this.heat[selectorID].setOptions({gradient: this.setGradient[selectorID]});
+			
+			if(this.detailChart.series[selectorID]) {
+				this.detailChart.series[selectorID].update({color: this.colors[colorID]}, true);
+				this.masterChart.series[selectorID].update({color: this.colors[colorID]}, true);
+			}
 		}
 		
 		return;
@@ -405,7 +528,7 @@ console.log("series " + k + ": " + id);
 		currentDataset = {
 			seriesID: seriesID,
 			title: "title",
-			buffer: [{point: [], date: null}],
+			timeGroup: [{point: [], date: null}],
 			maxValue: 0,
 			frameAggregate: [0],
 			frameOffset: 0
@@ -416,16 +539,7 @@ console.log("series " + k + ": " + id);
 			this.dataset.push(currentDataset);
 		}
 		else {
-			this.dataset[index] = {
-				seriesID: seriesID,
-				title: "title",
-				buffer: [{point: [], date: null}],
-				maxValue: 0,
-				frameAggregate: [0],
-				frameOffset: 0
-			}
-			
-			currentDataset = this.dataset[index];
+			this.dataset[index] = currentDataset;
 		}
 		
 		$.ajax({
@@ -443,14 +557,7 @@ console.log("series " + k + ": " + id);
 				
 				thisMap.zeroTime(lastDate);
 				
-				currentDataset.title = thisMap.seriesDescriptions[seriesID].title;
-				
-				if(thisMap.earliestDate > lastDate) {
-					thisMap.earliestDate = new Date(lastDate);
-				}
-				else {
-					//lastDate = new Date(thisMap.earliestDate);
-				}
+				currentDataset.title = thisMap.seriesDescriptions[result.results[0].seriesId].title;
 				
 				for(i = 0; i < result.results.length; i++) {
 					if(result.results[i]) {
@@ -462,18 +569,18 @@ console.log("series " + k + ": " + id);
 						deltaTime = inputDate.valueOf() - lastDate.valueOf();
 						
 						while(deltaTime >= threshold) {
-							currentDataset.buffer.push({point: [], date: null});
+							currentDataset.timeGroup.push({point: [], date: null});
 							frame++;
 							filler++;
 							emptyDate = new Date(emptyDate.valueOf() + threshold);
-							currentDataset.buffer[frame].date = emptyDate;
+							currentDataset.timeGroup[frame].date = emptyDate;
 							currentDataset.frameAggregate[frame] = 0;
 							
 							deltaTime -= threshold;
 						}
 						
-						currentDataset.buffer[frame].point.push({latitude: result.results[i].latitude, longitude: result.results[i].longitude, value: result.results[i].value});
-						currentDataset.buffer[frame].date = inputDate;
+						currentDataset.timeGroup[frame].point.push({latitude: result.results[i].latitude, longitude: result.results[i].longitude, value: result.results[i].value});
+						currentDataset.timeGroup[frame].date = inputDate;
 						
 						currentDataset.frameAggregate[frame] += result.results[i].value;
 						
@@ -481,28 +588,40 @@ console.log("series " + k + ": " + id);
 							currentDataset.maxValue = result.results[i].value;
 						}
 						
-						lastDate = currentDataset.buffer[frame].date;
+						lastDate = currentDataset.timeGroup[frame].date;
 					}
 					else {
 						skipped++;
 					}
 				}
-				console.log("Loaded " + (result.results.length - skipped) + " entries");
+				console.log("Loaded " + (result.results.length - skipped) + " entries for " + currentDataset.title);
 				console.log("Skipped " + skipped + " malformed entries");
 				console.log(filler + " days occurred without incidents in this timespan");
 				console.log("Total Frames: " + frame + 1);
-				console.log("Buffer length: " + currentDataset.buffer.length);
-				
-				if(thisMap.latestDate < currentDataset.buffer[frame].date) {
-					thisMap.latestDate = currentDataset.buffer[frame].date;
-				}
+				console.log("Time Groups: " + currentDataset.timeGroup.length);
+				console.log("---");
 				
 				thisMap.seriesToLoad.shift();
 				if(thisMap.seriesToLoad.length === 0) {
+					thisMap.earliestDate = thisMap.dataset[0].timeGroup[0].date;
+					thisMap.latestDate = thisMap.dataset[0].timeGroup[thisMap.dataset[0].timeGroup.length - 1].date;
+					
+					for(i = 1; i < thisMap.dataset.length; i++) {
+						if(thisMap.earliestDate > thisMap.dataset[i].timeGroup[0].date) {
+							thisMap.earliestDate = thisMap.dataset[i].timeGroup[0].date;
+						}
+						
+						if(thisMap.latestDate < thisMap.dataset[i].timeGroup[thisMap.dataset[i].timeGroup.length - 1].date) {
+							thisMap.latestDate = thisMap.dataset[i].timeGroup[thisMap.dataset[i].timeGroup.length - 1].date;
+						}
+					}
+					console.log("Beginning date: " + thisMap.earliestDate);
+					console.log("Ending date: " + thisMap.latestDate);
+					
 					thisMap.frameCount = Math.floor((thisMap.latestDate.valueOf() - thisMap.earliestDate.valueOf()) / threshold) + 1;
 					
 					for(i = 0; i < thisMap.dataset.length; i++) {
-						deltaTime = thisMap.dataset[i].buffer[0].date.valueOf() - thisMap.earliestDate.valueOf();
+						deltaTime = thisMap.dataset[i].timeGroup[0].date.valueOf() - thisMap.earliestDate.valueOf();
 						
 						if(deltaTime !== 0) {
 							thisMap.dataset[i].frameOffset = Math.floor(deltaTime / threshold);
@@ -520,6 +639,7 @@ console.log("series " + k + ": " + id);
 					}
 					
 					console.log("Finished loading. Unpause to begin.");
+					console.log("===");
 				}
 				
 				return;
@@ -533,6 +653,13 @@ console.log("series " + k + ": " + id);
 	}
 	
 	MagicMap.prototype.createChart = function() {
+		var seriesColors = [],
+		i;
+		
+		for(i = 0; i < this.uiSettings.series.length; i++) {
+			seriesColors.push(this.colors[this.uiSettings.series[i].color]);
+		}
+		
 			// create the detail chart
 		function createDetail(masterChart) {
 			// prepare the detail chart
@@ -542,9 +669,9 @@ console.log("series " + k + ": " + id);
 				i;
 			
 			for(i = 0; i < MAGIC_MAP.dataset.length; i++) {
-				detailStart.push(Date.UTC(MAGIC_MAP.dataset[i].buffer[0].date.getUTCFullYear(),
-					MAGIC_MAP.dataset[i].buffer[0].date.getUTCMonth(),
-					MAGIC_MAP.dataset[i].buffer[0].date.getUTCDate()));
+				detailStart.push(Date.UTC(MAGIC_MAP.dataset[i].timeGroup[0].date.getUTCFullYear(),
+					MAGIC_MAP.dataset[i].timeGroup[0].date.getUTCMonth(),
+					MAGIC_MAP.dataset[i].timeGroup[0].date.getUTCDate()));
 			}
 
 			for(i = 0; i < masterChart.series.length; i++) {
@@ -579,7 +706,7 @@ console.log("series " + k + ": " + id);
 						//position: 'absolute'
 					}
 				},
-				colors: MAGIC_MAP.colors,
+				colors: seriesColors, //MAGIC_MAP.colors,
 				credits: {
 					enabled: false
 				},
@@ -655,9 +782,9 @@ console.log("series " + k + ": " + id);
 						type: 'area',
 						name: String.fromCharCode(i + 65) + ": " + MAGIC_MAP.dataset[i].title,
 						pointInterval: 86400000, //24 * 3600 * 1000,
-						pointStart: Date.UTC(MAGIC_MAP.dataset[i].buffer[0].date.getUTCFullYear(),
-									MAGIC_MAP.dataset[i].buffer[0].date.getUTCMonth(),
-									MAGIC_MAP.dataset[i].buffer[0].date.getUTCDate()),
+						pointStart: Date.UTC(MAGIC_MAP.dataset[i].timeGroup[0].date.getUTCFullYear(),
+									MAGIC_MAP.dataset[i].timeGroup[0].date.getUTCMonth(),
+									MAGIC_MAP.dataset[i].timeGroup[0].date.getUTCDate()),
 						data: MAGIC_MAP.dataset[i].frameAggregate //y-value array
 					}
 				);
@@ -682,7 +809,7 @@ console.log("series " + k + ": " + id);
 						}
 					}
 				},
-				colors: MAGIC_MAP.colors,
+				colors: seriesColors, //MAGIC_MAP.colors,
 				title: {
 					text: null
 				},
@@ -804,6 +931,7 @@ console.log("series " + k + ": " + id);
 		this.zeroTime(minDate);
 		this.zeroTime(maxDate);
 		
+		console.log("***");
 		console.log("min: " + min);
 		console.log("min date: " + minDate);
 		console.log("max: " + max);
@@ -860,6 +988,7 @@ console.log("series " + k + ": " + id);
 		}
 		
 		console.log("Selection: " + startFrame + "->" + endFrame);
+		console.log("***");
 		MAGIC_MAP.playSection(startFrame, endFrame);
 		
 		MAGIC_MAP.uiSettings.timeSelectionEvent = {xAxis: []};
@@ -911,18 +1040,18 @@ console.log("series " + k + ": " + id);
 			}
 		}
 		
-		for(setID = 0; setID < this.dataset.length; setID++) {
+		for(setID = 0; setID < this.displaySet.length; setID++) {
 			setFrame = this.frame - this.dataset[setID].frameOffset;
 			adjustedStart = startFrame - this.dataset[setID].frameOffset;
 			adjustedEnd = endFrame - this.dataset[setID].frameOffset;
 			
-			if(this.dataset[setID].buffer[setFrame]) {
-				for(i = 0; i < this.dataset[setID].buffer[setFrame].point.length; i++) {
-					if(this.dataset[setID].buffer[setFrame].point[i].value > 0) {
-						this.displaySet[setID].visiblePoints.push([this.dataset[setID].buffer[setFrame].point[i].latitude,
-							this.dataset[setID].buffer[setFrame].point[i].longitude,
+			if(this.dataset[setID].timeGroup[setFrame]) {
+				for(i = 0; i < this.dataset[setID].timeGroup[setFrame].point.length; i++) {
+					if(this.dataset[setID].timeGroup[setFrame].point[i].value > 0) {
+						this.displaySet[setID].visiblePoints.push([this.dataset[setID].timeGroup[setFrame].point[i].latitude,
+							this.dataset[setID].timeGroup[setFrame].point[i].longitude,
 							0.7,
-							(this.dataset[setID].buffer[setFrame].point[i].value / this.dataset[setID].maxValue)]);
+							(this.dataset[setID].timeGroup[setFrame].point[i].value / this.dataset[setID].maxValue)]);
 					}
 				}
 				
@@ -930,12 +1059,12 @@ console.log("series " + k + ": " + id);
 					this.masterChart.xAxis[0].removePlotLine('date-line');
 					
 					if(this.playBack) {
-						currentDate = this.dataset[setID].buffer[setFrame].date;
+						currentDate = this.dataset[setID].timeGroup[setFrame].date;
 						dateString = (currentDate.getUTCMonth() + 1) + '/' + currentDate.getUTCDate() + '/' + currentDate.getUTCFullYear();
 						$("#current-date").text(dateString);
 						
-					console.log(currentDate);
-					console.log(dateString);
+					//console.log(currentDate);
+					//console.log(dateString);
 						
 						this.masterChart.xAxis[0].addPlotLine({
 							value: currentDate.valueOf(),
@@ -944,10 +1073,10 @@ console.log("series " + k + ": " + id);
 							id: 'date-line'
 						});
 					}
-					else if(this.dataset[setID].buffer[adjustedStart] && this.dataset[setID].buffer[adjustedEnd]) {
-						currentDate = this.dataset[setID].buffer[adjustedStart].date;
+					else if(this.dataset[setID].timeGroup[adjustedStart] && this.dataset[setID].timeGroup[adjustedEnd]) {
+						currentDate = this.dataset[setID].timeGroup[adjustedStart].date;
 						dateString = (currentDate.getUTCMonth() + 1) + '/' + currentDate.getUTCDate() + '/' + currentDate.getUTCFullYear() + " - ";
-						currentDate = this.dataset[setID].buffer[adjustedEnd].date;
+						currentDate = this.dataset[setID].timeGroup[adjustedEnd].date;
 						dateString += (currentDate.getUTCMonth() + 1) + '/' + currentDate.getUTCDate() + '/' + currentDate.getUTCFullYear();
 						$("#current-date").text(dateString);
 					}
@@ -1019,7 +1148,7 @@ console.log((endFrame - startFrame) + " frames");
 	MagicMap.prototype.packHeat = function() {
 		var setID;
 		
-		for(setID = 0; setID < this.dataset.length; setID++) {
+		for(setID = 0; setID < this.displaySet.length; setID++) {
 			if(!this.heat[setID]) {
 				this.heat.push(L.heatLayer(this.displaySet[setID].visiblePoints,
 					{
@@ -1091,5 +1220,7 @@ console.log((endFrame - startFrame) + " frames");
 	$(document).ready(function() {
 		window.MAGIC_MAP = new MagicMap();
 		MAGIC_MAP.start();
+		
+		return;
 	});
 })();
