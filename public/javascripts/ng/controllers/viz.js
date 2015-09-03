@@ -97,10 +97,12 @@ app.controller('Viz', function($scope, $rootScope, api) {
 	}
 	
 	function updateAllSeries(viz){
+		var wasPristine = $scope.form.$pristine();
 		if (viz && $scope.allSeries){
 			check(viz.allSeries.map(byId), 'isSelected');
 		}
-		$scope.form.$setPristine();
+		if (wasPristine)
+			$scope.form.$setPristine();
 
 		function byId(series) { return series.id; }
 		
