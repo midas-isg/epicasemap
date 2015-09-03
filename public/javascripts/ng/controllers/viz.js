@@ -97,7 +97,7 @@ app.controller('Viz', function($scope, $rootScope, api) {
 	}
 	
 	function updateAllSeries(viz){
-		var wasPristine = $scope.form.$pristine();
+		var wasPristine = $scope.form.$pristine;
 		if (viz && $scope.allSeries){
 			check(viz.allSeries.map(byId), 'isSelected');
 		}
