@@ -1,6 +1,11 @@
-package interactors.security;
+package interactors.security.password;
 
 import static org.fest.assertions.Assertions.assertThat;
+import interactors.security.SecurityFactory;
+import interactors.security.password.HashSpec;
+import interactors.security.password.HashedPassword;
+import interactors.security.password.Hasher;
+import interactors.security.password.Authority;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
@@ -15,7 +20,7 @@ import org.junit.Test;
 
 public class TestPasswordAuthority {
 	private static final String appSalt = "app";
-	private static PasswordAuthority authority;
+	private static Authority authority;
 	
 	@BeforeClass
 	public static void createHashSpec(){
@@ -55,9 +60,9 @@ public class TestPasswordAuthority {
 	
 	@Test
 	public void testInvalidAlgorithm() throws Exception {
-		final HashSpec spec = SecurityFactory.makeHashSpec();
+		final HashSpec spec = PasswordFactory.makeHashSpec();
 		spec.setAlgorithm("Invalid");
-		PasswordAuthority  authority = SecurityFactory.makePasswordAuthority(spec);
+		Authority  authority = PasswordFactory.makeAuthority(spec);
 		assertRuntimeExceptionCausedBy(NoSuchAlgorithmException.class, () -> {
 			authority.hash("password", "salt");
 		});
