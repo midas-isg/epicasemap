@@ -213,11 +213,17 @@ timeline.js
 					}
 					
 					for(h = 0; h < thisMap.uiSettings.series.length; h++) {
-						thisMap.seriesToLoad.push(thisMap.uiSettings.series[h].index);
-						
-						thisMap.setGradient.push({
-							0.0: thisMap.colors[thisMap.uiSettings.series[h].color]
-						});
+						if(thisMap.seriesDescriptions[thisMap.uiSettings.series[h].index]) {
+							thisMap.seriesToLoad.push(thisMap.uiSettings.series[h].index);
+							
+							thisMap.setGradient.push({
+								0.0: thisMap.colors[thisMap.uiSettings.series[h].color]
+							});
+						}
+						else {
+							thisMap.uiSettings.series.splice(h, 1);
+							h--;
+						}
 					}
 					
 					thisMap.map.fitBounds(thisMap.uiSettings.bBox);
@@ -249,7 +255,7 @@ timeline.js
 		return;
 	}
 	
-	MagicMap.prototype.start = function() {
+	MagicMap.prototype.initialize = function() {
 		var thisMap = this;
 		
 		document.getElementById('body').onkeyup = this.handleInput;
@@ -1219,7 +1225,7 @@ console.log((endFrame - startFrame) + " frames");
 	
 	$(document).ready(function() {
 		window.MAGIC_MAP = new MagicMap();
-		MAGIC_MAP.start();
+		MAGIC_MAP.initialize();
 		
 		return;
 	});
