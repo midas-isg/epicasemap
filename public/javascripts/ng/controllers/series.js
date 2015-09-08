@@ -44,7 +44,7 @@ app.controller('Series', function($scope, $rootScope, api) {
 				close();
 			}, function (err){
 				emitDone();
-				error('Failed to delete the series!');
+				error(err.data && err.data.userMessage);
 			});
 	};
 	$scope.close = function() {

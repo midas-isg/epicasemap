@@ -19,8 +19,8 @@ import interactors.series_data_file.Validator;
 
 import javax.persistence.EntityManager;
 
-import play.db.jpa.JPA;
 import models.SeriesDataFile;
+import play.db.jpa.JPA;
 
 public class Factory {
 	private Factory() {
@@ -40,18 +40,31 @@ public class Factory {
 	}
 
 	public static SeriesRule makeSeriesRule(EntityManager em) {
+		return makeSeriesRule(em, null);
+	}
+
+	private static SeriesRule makeSeriesRule(EntityManager em, VizRule vizRule) {
 		SeriesDao dao = new SeriesDao(em);
-		final SeriesRule seriesRule = new SeriesRule(dao);
+		SeriesRule seriesRule = new SeriesRule(dao);
 		seriesRule.setCoordinateRule(makeCoordinateRule(em));
 		seriesRule.setSeriesDataRule(makeSeriesDataRule(em));
+		if (vizRule == null)
+			vizRule = makeVizRule(em, seriesRule);
+		seriesRule.setVizRule(vizRule);
 		return seriesRule;
 	}
 
 	public static VizRule makeVizRule(EntityManager em) {
+		return makeVizRule(em, null);
+	}
+
+	private static VizRule makeVizRule(EntityManager em, SeriesRule seriesRule) {
 		VizDao dao = new VizDao(em);
 		VizRule vizRule = new VizRule(dao);
-		final SeriesRule rule = makeSeriesRule(em);
-		vizRule.setSeriesRule(rule);
+		if (seriesRule == null) 
+			seriesRule = makeSeriesRule(em, vizRule);
+		vizRule.setSeriesRule(seriesRule);
+
 		return vizRule;
 	}
 

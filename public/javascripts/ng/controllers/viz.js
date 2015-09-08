@@ -92,7 +92,7 @@ app.controller('Viz', function($scope, $rootScope, api) {
 			$scope.allSeries = rsp.data.results;
 			updateAllSeries($scope.model);
 		}, function(err){
-			error("Failed to read all Series!");
+			error("Failed to load your Series!");
 		});
 	}
 	
