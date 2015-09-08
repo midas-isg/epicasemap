@@ -44,7 +44,7 @@ app.controller('Vizs', function($scope, $rootScope, api) {
 		api.finding(urlPath).then(function(rsp) {
 			$scope.models = rsp.data.results;
 		}, function(err){
-			$scope.error = 'Failed to load all Visualizations!';
+			$scope.error = 'Failed to load your Visualizations!';
 			error($scope.error);
 		});
 	}
@@ -57,7 +57,7 @@ app.controller('Vizs', function($scope, $rootScope, api) {
 				var model = rsp.data.result;
 				$scope.edit(model);
 			}, function(err){
-				$scope.error = 'Visualization with ID = ' + id + " was not found!";
+				$scope.error = err.data && err.data.userMessage;
 				alert($scope.error);
 			});
 		}

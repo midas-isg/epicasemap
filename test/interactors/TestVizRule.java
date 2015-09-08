@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import models.entities.Series;
-import models.entities.Viz;
+import models.entities.Visualization;
 import models.view.VizInput;
 
 import org.junit.Test;
@@ -25,7 +25,7 @@ public class TestVizRule {
 
 	@Test
 	public void toVizWithNullSeriesIdsAllSeriesIsNull() throws Exception {
-		final Viz actual = sut.toViz(new VizInput());
+		final Visualization actual = sut.toViz(new VizInput());
 		assertThat(actual.getAllSeries()).isNull();
 	}
 	
@@ -48,7 +48,7 @@ public class TestVizRule {
 
 	@Test
 	public void fromVizWithNullAllSeries() throws Exception {
-		final Viz data = new Viz();
+		final Visualization data = new Visualization();
 		data.setAllSeries(null);
 		final VizInput actual = sut.fromViz(data);
 		assertThat(actual.getSeriesIds()).isNull();
@@ -56,7 +56,7 @@ public class TestVizRule {
 
 	@Test
 	public void fromVizWithAllSeries() throws Exception {
-		Viz data = new Viz();
+		Visualization data = new Visualization();
 		List<Long> seriesIds = asList(1L, 111L);
 		final List<Series> seriesList = makeSeriesList(seriesIds);
 		data.setAllSeries(seriesList);

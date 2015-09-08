@@ -16,8 +16,8 @@ import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
-import models.NotFoundException;
 import models.entities.Entity;
+import models.exceptions.NotFound;
 import models.filters.Filter;
 import models.filters.Pagination;
 import models.filters.TimestampRange;
@@ -181,7 +181,7 @@ public class JpaAdaptor {
 		final T t = em.find(clazz, id);
 		if (t == null){
 			final String message = clazz.getSimpleName() + " with ID = " + id + " was not found!";
-			throw new NotFoundException(message);
+			throw new NotFound(message);
 		}
 		return t;
 	}

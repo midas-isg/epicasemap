@@ -22,7 +22,7 @@ app.controller('SeriesCollection', function($scope, $rootScope, api) {
 		api.finding(urlPath).then(function(rsp) {
 			$scope.models = rsp.data.results;
 		}, function(err){
-			error('Failed to load all Series');
+			error('Failed to load your Series');
 		});
 	}
 	
@@ -34,7 +34,7 @@ app.controller('SeriesCollection', function($scope, $rootScope, api) {
 				var model = rsp.data.result;
 				$scope.edit(model);
 			}, function(err){
-				alert(err.data);
+				alert(err.data && err.data.userMessage);
 			});
 		}
 	}

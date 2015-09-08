@@ -13,8 +13,8 @@ import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 
-@Entity
-public class Viz extends MetaData {
+@Entity(name="viz")
+public class Visualization extends MetaData {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
@@ -28,7 +28,7 @@ public class Viz extends MetaData {
 	@Column(columnDefinition = "TEXT")
 	private String uiSetting;
 
-	public Viz() {
+	public Visualization() {
 		allSeries = new ArrayList<>();
 	}
 
@@ -77,7 +77,7 @@ public class Viz extends MetaData {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		Viz other = (Viz) obj;
+		Visualization other = (Visualization) obj;
 		if (allSeries == null) {
 			if (other.allSeries != null)
 				return false;
