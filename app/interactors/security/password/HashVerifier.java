@@ -1,4 +1,4 @@
-package interactors.security;
+package interactors.security.password;
 
 class HashVerifier{
 	HashVerifier(){

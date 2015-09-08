@@ -1,10 +1,10 @@
-package interactors.security;
+package interactors.security.password;
 
-public class PasswordAuthority {
+public class Authority {
 	private Hasher hasher; 
 	private HashVerifier verifier;
 	
-	public PasswordAuthority(Hasher hasher, HashVerifier verifier){
+	public Authority(Hasher hasher, HashVerifier verifier){
 		this.hasher = hasher;
 		this.verifier = verifier;
 	}

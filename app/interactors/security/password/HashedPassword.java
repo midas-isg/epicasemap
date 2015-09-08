@@ -1,4 +1,4 @@
-package interactors.security;
+package interactors.security.password;
 
 public class HashedPassword extends HashParameter{
 	private String hash;

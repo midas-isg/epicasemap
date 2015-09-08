@@ -6,9 +6,9 @@ import gateways.configuration.AppKey;
 import gateways.database.jpa.JpaAdaptor;
 import integrations.app.App;
 import integrations.server.Server;
-import interactors.security.HashKit;
-import interactors.security.HashedPassword;
 import interactors.security.SecurityFactory;
+import interactors.security.password.HashKit;
+import interactors.security.password.HashedPassword;
 
 import org.junit.Test;
 
