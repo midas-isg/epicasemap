@@ -18,7 +18,7 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class TestPasswordAuthority {
+public class TestAuthority {
 	private static final String appSalt = "app";
 	private static Authority authority;
 	
