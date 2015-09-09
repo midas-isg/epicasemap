@@ -259,7 +259,7 @@ timeline.js
 		var thisMap = this;
 		
 		document.getElementById('body').onkeyup = this.handleInput;
-		setInterval(this.loop, 0);
+		setInterval(this.loop, 100);
 		
 		$("#reset-button").click(function() {
 			var i;
@@ -288,6 +288,13 @@ timeline.js
 			var i;
 			
 			$("#detail-container *").toggle();
+			
+			if($("#detail-container").css("pointer-events") === "auto") {
+				$("#detail-container").css("pointer-events", "none");
+			}
+			else {
+				$("#detail-container").css("pointer-events", "auto");
+			}
 			
 			for(i = 0; i < thisMap.displaySet.length; i++) {
 				thisMap.detailChart.series[i].update({color: thisMap.colors[i]}, true);
@@ -907,11 +914,6 @@ console.log("series " + k + ": " + id);
 		// make the container smaller and add a second container for the master chart
 		var $container = $('#container');
 		
-		//$('<div id="detail-container">').appendTo($container);
-		$('<div id="master-container">')
-			.css({ position: 'relative', bottom: 115, height: 125, 'background-color': 'rgba(255, 255, 255, 0.1)' })
-			.appendTo($container);
-			
 		// create master and in its callback, create the detail chart
 		createMaster();
 		
