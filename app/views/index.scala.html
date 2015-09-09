@@ -62,16 +62,17 @@
 		<div id="visualization" style="">
 			<div id='map' style="background-color: #808080;"></div>
 			
-			<div id="container" style="max-height: 300px; margin: 0px 0px 0px 0px; position: relative; bottom: 215px;">
-				<div id="detail-container" style="height: 300px;"></div>
-				
-				<div style="position: relative; top: -120px; margin-left: 76px;">
-					<button id="toggle-details-button" class="btn btn-sm" style="background-color: rgba(221, 221, 221, 0.6);"><span class="glyphicon glyphicon-menu-hamburger" aria-hidden="true"></span></button>
-					<button id="reset-button" class="btn btn-sm" style="background-color: rgba(221, 221, 221, 0.6);"><span class="glyphicon glyphicon-step-backward" aria-hidden="true"></span></button>
-					<button id="playback-button" class="btn btn-sm" style="background-color: rgba(221, 221, 221, 0.6);"><span class="glyphicon glyphicon-play" aria-hidden="true"></span></button>
-					<button id="step-forward-button" class="btn btn-sm" style="background-color: rgba(221, 221, 221, 0.6);"><span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span></button>
+			<div id="container" style="max-height: 300px; margin: 0px 0px 0px 0px; position: relative; bottom: 215px; pointer-events: none;">
+				<div style="position: relative; bottom: -180px; margin-left: 76px; z-index: 1;">
+					<button id="toggle-details-button" class="btn btn-sm" style="background-color: rgba(221, 221, 221, 0.6); pointer-events: auto;"><span class="glyphicon glyphicon-menu-hamburger" aria-hidden="true"></span></button>
+					<button id="reset-button" class="btn btn-sm" style="background-color: rgba(221, 221, 221, 0.6); pointer-events: auto;"><span class="glyphicon glyphicon-step-backward" aria-hidden="true"></span></button>
+					<button id="playback-button" class="btn btn-sm" style="background-color: rgba(221, 221, 221, 0.6); pointer-events: auto;"><span class="glyphicon glyphicon-play" aria-hidden="true"></span></button>
+					<button id="step-forward-button" class="btn btn-sm" style="background-color: rgba(221, 221, 221, 0.6); pointer-events: auto;"><span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span></button>
 					<span id="current-date" style="background-color: rgba(255, 255, 255, 0.6); float: right; clear: right;"></span>
 				</div>
+				
+				<div id="detail-container" style="height: 300px; pointer-events: auto;"></div>
+				<div id="master-container" style="position: relative; bottom: 115px; height: 125px; background-color: rgba(255, 255, 255, 0.1); pointer-events: auto;"></div>
 			</div>
 		</div>
 		
