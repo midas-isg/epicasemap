@@ -52,15 +52,21 @@
 						</div>
 						
 						<div class="vertical-spaced" style="clear: both;">
-							<label>Render time (more time may smooth playback): </label><br>
+							<h5 class="no-margin">Minimum render time (more time may smooth playback): </h5>
 							<input id="render-delay" style="max-width: 80%;" type="number" min="0" value="100">
-							<label style="width: 5%;">ms</label>
+							<span style="width: 5%;">ms</span>
 						</div>
 						
 						<div class="vertical-spaced" style="clear: both;">
-							<label>Redraw every: </label><br>
+							<h5 class="no-margin">Redraw every: </h5>
 							<input id="days-per-frame" style="max-width: 80%;" type="number" min="1" value="1">
-							<label style="width: 5%;">day(s)</label>
+							<span style="width: 5%;">day(s)</span>
+						</div>
+						
+						<div class="vertical-spaced" style="clear: both;">
+							<h5 class="no-margin">Point decay: </h5>
+							<div style="clear: both;"><span style="float: left;">Slower</span> <span style="float: right;">Faster</span></div>
+							<input id="point-decay" style="max-width: 80%;" type="range" min="0" value="" max="1" step="0.001">
 						</div>
 						
 						<div class="vertical-spaced" style="clear: both;">
