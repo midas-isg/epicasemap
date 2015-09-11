@@ -42,6 +42,7 @@ timeline.js
 		this.dataset = [];
 		this.earliestDate = null;
 		this.latestDate = null;
+		this.loopIntervalID;
 		
 		this.vizID = getURLParameterByName("id");
 		
@@ -49,7 +50,9 @@ timeline.js
 			series: [{index: -1, color: 0}],
 			colorPalette: 0,
 			bBox: [[], []],
-			timeSelectionEvent: null
+			timeSelectionEvent: null,
+			daysPerFrame: 1,
+			renderDelay: 100
 		};
 		
 		this.seriesList = [];
@@ -210,6 +213,14 @@ timeline.js
 					}
 					else {
 						thisMap.uiSettings = JSON.parse(result.result.uiSetting);
+						
+						if(!thisMap.uiSettings.daysPerFrame) {
+							thisMap.uiSettings.daysPerFrame = 1;
+						}
+						
+						if(!thisMap.uiSettings.renderDelay && (thisMap.uiSettings.renderDelay != 0)) {
+							thisMap.uiSettings.renderDelay = 100;
+						}
 					}
 					
 					for(h = 0; h < thisMap.uiSettings.series.length; h++) {
@@ -259,7 +270,7 @@ timeline.js
 		var thisMap = this;
 		
 		document.getElementById('body').onkeyup = this.handleInput;
-		setInterval(this.loop, 100);
+		this.loopIntervalID = setInterval(this.loop, 0);
 		
 		$("#reset-button").click(function() {
 			var i;
@@ -339,6 +350,8 @@ timeline.js
 				thisMap.uiSettings.colorPalette = 0;
 				thisMap.setColorPalette(0);
 			}
+			
+			return;
 		});
 		
 		$("#palette-1").click(function() {
@@ -346,6 +359,8 @@ timeline.js
 				thisMap.uiSettings.colorPalette = 1;
 				thisMap.setColorPalette(1);
 			}
+			
+			return;
 		});
 		
 		$("#palette-2").click(function() {
@@ -353,6 +368,28 @@ timeline.js
 				thisMap.uiSettings.colorPalette = 2;
 				thisMap.setColorPalette(2);
 			}
+			
+			return;
+		});
+		
+		$("#render-delay").change(function() {
+			if($(this).val() < 0) {
+				$(this).val(0);
+			}
+			
+			thisMap.uiSettings.renderDelay = $(this).val();
+			
+			return;
+		});
+		
+		$("#days-per-frame").change(function() {
+			if($(this).val() < 1) {
+				$(this).val(1);
+			}
+			
+			thisMap.uiSettings.daysPerFrame = $(this).val();
+			
+			return;
 		});
 		
 		$("#save-button").click(function() {
@@ -608,7 +645,14 @@ console.log("series " + k + ": " + id);
 					}
 				}
 				console.log("Loaded " + (result.results.length - skipped) + " entries for " + currentDataset.title);
-				console.log("Skipped " + skipped + " malformed entries");
+				
+				if(skipped > 0) {
+					console.warn("Skipped " + skipped + " malformed entries");
+				}
+				else {
+					console.log("Skipped " + skipped + " malformed entries");
+				}
+				
 				console.log(filler + " days occurred without incidents in this timespan");
 				console.log("Total Frames: " + frame + 1);
 				console.log("Time Groups: " + currentDataset.timeGroup.length);
@@ -917,7 +961,7 @@ console.log("series " + k + ": " + id);
 		// create master and in its callback, create the detail chart
 		createMaster();
 		
-		//TODO: transfer mouse events from detail container to map
+		//BONUS: transfer mouse events from detail container to map for all browsers
 		//$('#detail-container').mousedown(function(event) { event.stopImmediatePropagation(); return $('.leaflet-layer').mousedown(); });
 		//$('#detail-container').mousemove(function(event) { event.stopImmediatePropagation(); return $('.leaflet-layer').mousemove(); });
 		
@@ -1063,7 +1107,7 @@ console.log("series " + k + ": " + id);
 					}
 				}
 				
-				if(!dateString) {
+				if(!dateString && ((this.frame % this.uiSettings.daysPerFrame) === 0)) {
 					this.masterChart.xAxis[0].removePlotLine('date-line');
 					
 					if(this.playBack) {
@@ -1176,6 +1220,8 @@ console.log((endFrame - startFrame) + " frames");
 
 	MagicMap.prototype.loop = function() {
 		function process(thisMap) {
+			var renderTime;
+			
 			if(!thisMap.paused) {
 				if(!thisMap.playBack) {
 					thisMap.evolve();//TEST.timeMethod(thisMap.evolve);
@@ -1184,8 +1230,30 @@ console.log((endFrame - startFrame) + " frames");
 					thisMap.playBuffer(thisMap.startFrame, thisMap.endFrame);//TEST.timeMethod(thisMap.playBuffer);
 				}
 				
-				thisMap.packHeat();
+				if((thisMap.frame % thisMap.uiSettings.daysPerFrame) === 0) {
+					renderTime = new Date();
+					thisMap.packHeat();
+					renderTime = new Date() - renderTime;
+					
+					if((thisMap.uiSettings.renderDelay - renderTime) > 0) {
+						clearInterval(thisMap.loopIntervalID);
+						
+						setTimeout(function() {
+								return thisMap.loopIntervalID = setInterval(thisMap.loop, 0);
+							},
+							(thisMap.uiSettings.renderDelay - renderTime)
+						);
+					}
+					
+					/*
+					while((new Date() - renderTime) < thisMap.uiSettings.renderDelay) {
+						//pause here
+					}
+					*/
+				}
 			}
+			
+			return;
 		}
 		
 		process(MAGIC_MAP);
@@ -1208,7 +1276,7 @@ console.log((endFrame - startFrame) + " frames");
 			break;
 			
 			default:
-				console.log("event.which code: " + event.which);
+				//console.log("event.which code: " + event.which);
 			break;
 		}
 		
