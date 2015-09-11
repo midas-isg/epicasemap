@@ -48,10 +48,22 @@
 					<div style="clear: both;">
 						<div id="color-palettes" style="">
 							<h5 class="vertical-spaced">Pick a color scheme:</h5>
-							<div id="ramps"></div>
+							<div id="ramps" style=""></div>
 						</div>
 						
-						<div style="clear: both;">
+						<div class="vertical-spaced" style="clear: both;">
+							<label>Render time (more time may smooth playback): </label><br>
+							<input id="render-delay" style="max-width: 80%;" type="number" min="0" value="100">
+							<label style="width: 5%;">ms</label>
+						</div>
+						
+						<div class="vertical-spaced" style="clear: both;">
+							<label>Redraw every: </label><br>
+							<input id="days-per-frame" style="max-width: 80%;" type="number" min="1" value="1">
+							<label style="width: 5%;">day(s)</label>
+						</div>
+						
+						<div class="vertical-spaced" style="clear: both;">
 							<button id="save-button">Save as default view</button>
 						</div>
 					</div>
