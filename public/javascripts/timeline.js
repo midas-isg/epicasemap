@@ -52,7 +52,8 @@ timeline.js
 			bBox: [[], []],
 			timeSelectionEvent: null,
 			daysPerFrame: 1,
-			renderDelay: 100
+			renderDelay: 50,
+			pointDecay: 0.0231
 		};
 		
 		this.seriesList = [];
@@ -214,12 +215,14 @@ timeline.js
 					else {
 						thisMap.uiSettings = JSON.parse(result.result.uiSetting);
 						
-						if(!thisMap.uiSettings.daysPerFrame) {
-							thisMap.uiSettings.daysPerFrame = 1;
-						}
+						thisMap.uiSettings.daysPerFrame = (thisMap.uiSettings.daysPerFrame | 1);
 						
 						if(!thisMap.uiSettings.renderDelay && (thisMap.uiSettings.renderDelay != 0)) {
-							thisMap.uiSettings.renderDelay = 100;
+							thisMap.uiSettings.renderDelay = 50;
+						}
+						
+						if(!thisMap.uiSettings.pointDecay) {
+							thisMap.uiSettings.pointDecay = 0.0231;
 						}
 					}
 					
@@ -255,6 +258,15 @@ timeline.js
 					$("#series-" + h).val(thisMap.uiSettings.series[h].index);
 					$("#color-selector-" + h + " #color-" + thisMap.uiSettings.series[h].color).addClass("selected");
 				}
+				
+				$("#render-delay").val(thisMap.uiSettings.renderDelay);
+				$("#render-delay").change();
+				
+				$("#days-per-frame").val(thisMap.uiSettings.daysPerFrame);
+				$("#days-per-frame").change();
+				
+				$("#point-decay").val(thisMap.uiSettings.pointDecay);
+				$("#point-decay").change();
 				
 				return;
 			},
@@ -381,6 +393,8 @@ timeline.js
 			
 			return;
 		});
+		$("#render-delay").val(thisMap.uiSettings.renderDelay);
+		$("#render-delay").change();
 		
 		$("#days-per-frame").change(function() {
 			if($(this).val() < 1) {
@@ -391,6 +405,20 @@ timeline.js
 			
 			return;
 		});
+		$("#days-per-frame").val(thisMap.uiSettings.daysPerFrame);
+		$("#days-per-frame").change();
+		
+		$("#point-decay").change(function() {
+			if($(this).val() < 0.0001) {
+				$(this).val(0.0001);
+			}
+			
+			thisMap.uiSettings.pointDecay = $(this).val();
+			
+			return;
+		});
+		$("#point-decay").val(thisMap.uiSettings.pointDecay);
+		$("#point-decay").change();
 		
 		$("#save-button").click(function() {
 			thisMap.saveVisualization();
@@ -1138,7 +1166,7 @@ console.log("series " + k + ": " + id);
 			if(this.playBack) {
 				for(i = 0; i < this.displaySet[setID].visiblePoints.length; i++) {
 					if(this.displaySet[setID].visiblePoints[i][2] > 0.00) {
-						this.displaySet[setID].visiblePoints[i][2] -= 0.0231;
+						this.displaySet[setID].visiblePoints[i][2] -= this.uiSettings.pointDecay;
 					}
 					else {
 						this.displaySet[setID].visiblePoints.splice(i, 1);
