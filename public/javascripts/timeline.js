@@ -46,13 +46,15 @@ timeline.js
 		
 		this.vizID = getURLParameterByName("id");
 		
+		this.suggestedDelay = 50;
+		
 		this.uiSettings = {
 			series: [{index: -1, color: 0}],
 			colorPalette: 0,
 			bBox: [[], []],
 			timeSelectionEvent: null,
 			daysPerFrame: 1,
-			renderDelay: 50,
+			renderDelay: null,
 			pointDecay: 0.0231
 		};
 		
@@ -216,10 +218,6 @@ timeline.js
 						thisMap.uiSettings = JSON.parse(result.result.uiSetting);
 						
 						thisMap.uiSettings.daysPerFrame = (thisMap.uiSettings.daysPerFrame | 1);
-						
-						if(!thisMap.uiSettings.renderDelay && (thisMap.uiSettings.renderDelay != 0)) {
-							thisMap.uiSettings.renderDelay = 50;
-						}
 						
 						if(!thisMap.uiSettings.pointDecay) {
 							thisMap.uiSettings.pointDecay = 0.0231;
@@ -393,8 +391,15 @@ timeline.js
 			
 			return;
 		});
-		$("#render-delay").val(thisMap.uiSettings.renderDelay);
+		$("#render-delay").val(this.uiSettings.renderDelay);
 		$("#render-delay").change();
+		
+		$("#calibrate-button").click(function() {
+			$("#render-delay").val(thisMap.suggestedDelay);
+			$("#render-delay").change();
+			
+			return;
+		});
 		
 		$("#days-per-frame").change(function() {
 			if($(this).val() < 1) {
@@ -624,6 +629,10 @@ console.log("series " + k + ": " + id);
 			url: URL,
 			success: function(result) {
 				var i,
+				j,
+				temp,
+				largestConcentration = 0,
+				mostConcentratedFrame = 0,
 				frame = 0,
 				skipped = 0,
 				filler = 0,
@@ -714,7 +723,38 @@ console.log("series " + k + ": " + id);
 					}
 					
 					thisMap.createChart(); //call this after loading all datasets
-					thisMap.packHeat();
+					
+					//total timespan of dataseries
+					deltaTime = (thisMap.latestDate.valueOf() - thisMap.earliestDate.valueOf()) / threshold;
+					
+					for(i = 0; i < deltaTime; i++) {
+						temp = 0;
+						
+						for(j = 0; j < thisMap.dataset.length; j++) {
+							if(thisMap.dataset[j].timeGroup[thisMap.dataset[j].frameOffset + i]) {
+								temp += thisMap.dataset[j].timeGroup[thisMap.dataset[j].frameOffset + i].length;
+								
+								if(largestConcentration < temp) {
+									largestConcentration = temp
+									mostConcentratedFrame = i;
+								}
+							}
+						}
+					}
+					
+					//calculate the time to render it
+					deltaTime = new Date();
+					thisMap.playSection(mostConcentratedFrame, mostConcentratedFrame + 1);
+					deltaTime = new Date().valueOf() - deltaTime.valueOf();
+					
+					//then use that as the default render delay if it doesn't already exist
+					thisMap.suggestedDelay = deltaTime;
+					
+					if(!thisMap.uiSettings.renderDelay) {
+						$("#render-delay").val(deltaTime);
+						$("#render-delay").change();
+					}
+					
 					thisMap.loadBuffer();
 					thisMap.paused = true;
 					
@@ -1272,12 +1312,6 @@ console.log((endFrame - startFrame) + " frames");
 							(thisMap.uiSettings.renderDelay - renderTime)
 						);
 					}
-					
-					/*
-					while((new Date() - renderTime) < thisMap.uiSettings.renderDelay) {
-						//pause here
-					}
-					*/
 				}
 			}
 			
