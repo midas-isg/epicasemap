@@ -48,10 +48,28 @@
 					<div style="clear: both;">
 						<div id="color-palettes" style="">
 							<h5 class="vertical-spaced">Pick a color scheme:</h5>
-							<div id="ramps"></div>
+							<div id="ramps" style=""></div>
 						</div>
 						
-						<div style="clear: both;">
+						<div class="vertical-spaced" style="clear: both;">
+							<h5 class="no-margin">Minimum render time (more time may smooth playback): </h5>
+							<input id="render-delay" style="max-width: 80%;" type="number" min="0" value="">
+							<span style="width: 5%;">ms</span>
+						</div>
+						
+						<div class="vertical-spaced" style="clear: both;">
+							<h5 class="no-margin">Redraw every: </h5>
+							<input id="days-per-frame" style="max-width: 80%;" type="number" min="1" value="">
+							<span style="width: 5%;">day(s)</span>
+						</div>
+						
+						<div class="vertical-spaced" style="clear: both;">
+							<h5 class="no-margin">Point decay: </h5>
+							<div style="clear: both;"><span style="float: left;">Slower</span> <span style="float: right;">Faster</span></div>
+							<input id="point-decay" style="max-width: 80%;" type="range" min="0.0001" value="" max="1" step="0.0001">
+						</div>
+						
+						<div class="vertical-spaced" style="clear: both;">
 							<button id="save-button">Save as default view</button>
 						</div>
 					</div>
@@ -62,16 +80,17 @@
 		<div id="visualization" style="">
 			<div id='map' style="background-color: #808080;"></div>
 			
-			<div id="container" style="max-height: 300px; margin: 0px 0px 0px 0px; position: relative; bottom: 215px;">
-				<div id="detail-container" style="height: 300px;"></div>
-				
-				<div style="position: relative; top: -120px; margin-left: 76px;">
-					<button id="toggle-details-button" class="btn btn-sm" style="background-color: rgba(221, 221, 221, 0.6);"><span class="glyphicon glyphicon-menu-hamburger" aria-hidden="true"></span></button>
-					<button id="reset-button" class="btn btn-sm" style="background-color: rgba(221, 221, 221, 0.6);"><span class="glyphicon glyphicon-step-backward" aria-hidden="true"></span></button>
-					<button id="playback-button" class="btn btn-sm" style="background-color: rgba(221, 221, 221, 0.6);"><span class="glyphicon glyphicon-play" aria-hidden="true"></span></button>
-					<button id="step-forward-button" class="btn btn-sm" style="background-color: rgba(221, 221, 221, 0.6);"><span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span></button>
+			<div id="container" style="max-height: 300px; margin: 0px 0px 0px 0px; position: relative; bottom: 215px; pointer-events: none;">
+				<div style="position: relative; bottom: -180px; margin-left: 76px; z-index: 1;">
+					<button id="toggle-details-button" class="btn btn-sm" style="background-color: rgba(221, 221, 221, 0.6); pointer-events: auto;"><span class="glyphicon glyphicon-menu-hamburger" aria-hidden="true"></span></button>
+					<button id="reset-button" class="btn btn-sm" style="background-color: rgba(221, 221, 221, 0.6); pointer-events: auto;"><span class="glyphicon glyphicon-step-backward" aria-hidden="true"></span></button>
+					<button id="playback-button" class="btn btn-sm" style="background-color: rgba(221, 221, 221, 0.6); pointer-events: auto;"><span class="glyphicon glyphicon-play" aria-hidden="true"></span></button>
+					<button id="step-forward-button" class="btn btn-sm" style="background-color: rgba(221, 221, 221, 0.6); pointer-events: auto;"><span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span></button>
 					<span id="current-date" style="background-color: rgba(255, 255, 255, 0.6); float: right; clear: right;"></span>
 				</div>
+				
+				<div id="detail-container" style="height: 300px; pointer-events: auto;"></div>
+				<div id="master-container" style="position: relative; bottom: 115px; height: 125px; background-color: rgba(255, 255, 255, 0.1); pointer-events: auto;"></div>
 			</div>
 		</div>
 		
