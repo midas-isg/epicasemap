@@ -47,6 +47,7 @@ timeline.js
 		this.vizID = getURLParameterByName("id");
 		
 		this.suggestedDelay = 50;
+		this.mostConcentratedFrame = 0;
 		
 		this.uiSettings = {
 			series: [{index: -1, color: 0}],
@@ -395,6 +396,7 @@ timeline.js
 		$("#render-delay").change();
 		
 		$("#calibrate-button").click(function() {
+			thisMap.suggestDelay();
 			$("#render-delay").val(thisMap.suggestedDelay);
 			$("#render-delay").change();
 			
@@ -631,8 +633,6 @@ console.log("series " + k + ": " + id);
 				var i,
 				j,
 				temp,
-				largestConcentration = 0,
-				mostConcentratedFrame = 0,
 				frame = 0,
 				skipped = 0,
 				filler = 0,
@@ -640,7 +640,8 @@ console.log("series " + k + ": " + id);
 				lastDate = new Date(result.results[0].timestamp),
 				emptyDate,
 				inputDate,
-				deltaTime;
+				deltaTime,
+				largestConcentration = 0;
 				
 				thisMap.zeroTime(lastDate);
 				
@@ -732,26 +733,19 @@ console.log("series " + k + ": " + id);
 						
 						for(j = 0; j < thisMap.dataset.length; j++) {
 							if(thisMap.dataset[j].timeGroup[thisMap.dataset[j].frameOffset + i]) {
-								temp += thisMap.dataset[j].timeGroup[thisMap.dataset[j].frameOffset + i].length;
-								
-								if(largestConcentration < temp) {
-									largestConcentration = temp
-									mostConcentratedFrame = i;
-								}
+								temp += thisMap.dataset[j].timeGroup[thisMap.dataset[j].frameOffset + i].point.length;
+							}
+							
+							if(largestConcentration < temp) {
+								largestConcentration = temp
+								thisMap.mostConcentratedFrame = i;
 							}
 						}
 					}
 					
-					//calculate the time to render it
-					deltaTime = new Date();
-					thisMap.playSection(mostConcentratedFrame, mostConcentratedFrame + 1);
-					deltaTime = new Date().valueOf() - deltaTime.valueOf();
-					
-					//then use that as the default render delay if it doesn't already exist
-					thisMap.suggestedDelay = deltaTime;
-					
+					thisMap.suggestDelay();
 					if(!thisMap.uiSettings.renderDelay) {
-						$("#render-delay").val(deltaTime);
+						$("#render-delay").val(thisMap.suggestedDelay);
 						$("#render-delay").change();
 					}
 					
@@ -773,6 +767,38 @@ console.log("series " + k + ": " + id);
 				return;
 			}
 		});
+		
+		return;
+	}
+	
+	MagicMap.prototype.suggestDelay = function() {
+		var temp,
+			threshold = 86400000, //ms in a day
+			renderTime,
+			frame = this.frame,
+			startFrame = this.startFrame,
+			endFrame = this.endFrame;
+		
+		this.frame = this.mostConcentratedFrame;
+		this.startFrame = this.mostConcentratedFrame;
+		this.endFrame = this.mostConcentratedFrame;
+		
+		for(i = 0; i < this.displaySet.length; i++) {
+			//empty visiblePoints array
+			this.displaySet[i].visiblePoints.length = 0; //hopefully the old data is garbage collected!
+		}
+		
+		//TODO: find out why the times are inconsistent with initial findings
+		//calculate the time to render it
+		renderTime = new Date().valueOf();
+		this.playBuffer(this.mostConcentratedFrame, this.mostConcentratedFrame +1);
+		this.packHeat();
+		temp = new Date().valueOf();
+		renderTime = temp - renderTime;
+		//then use that as the default render delay if it doesn't already exist
+		this.suggestedDelay = renderTime;
+		
+		this.playSection(startFrame, endFrame);
 		
 		return;
 	}
@@ -1063,7 +1089,7 @@ console.log("series " + k + ": " + id);
 			// reverse engineer the last part of the data
 			$.each(this.masterChart.series[i].data, function() {
 				if((this.x >= min) && (this.x <= max)) {
-					detailSeries[i].detailData.push([this.x, this.y])
+					detailSeries[i].detailData.push([this.x, this.y]);
 				}
 			});
 		}
