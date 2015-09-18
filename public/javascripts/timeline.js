@@ -299,6 +299,11 @@ timeline.js
 			return;
 		});
 		
+		$("#backstep-button").click(function() {
+			//
+			return;
+		});
+		
 		$("#playback-button").click(function() {
 			thisMap.paused = !thisMap.paused;
 			//console.log(new Date()); //real-time timestamp
@@ -774,8 +779,6 @@ console.log("series " + k + ": " + id);
 	MagicMap.prototype.suggestDelay = function() {
 		var temp,
 			threshold = 86400000, //ms in a day
-			renderTime,
-			frame = this.frame,
 			startFrame = this.startFrame,
 			endFrame = this.endFrame;
 		
@@ -788,19 +791,29 @@ console.log("series " + k + ": " + id);
 			this.displaySet[i].visiblePoints.length = 0; //hopefully the old data is garbage collected!
 		}
 		
-		//TODO: find out why the times are inconsistent with initial findings
 		//calculate the time to render it
-		renderTime = new Date().valueOf();
-		this.playBuffer(this.mostConcentratedFrame, this.mostConcentratedFrame +1);
-		this.packHeat();
-		temp = new Date().valueOf();
-		renderTime = temp - renderTime;
-		//then use that as the default render delay if it doesn't already exist
-		this.suggestedDelay = renderTime;
+		this.suggestedDelay = this.timeMethod(function() {
+			MAGIC_MAP.playBuffer(MAGIC_MAP.mostConcentratedFrame, MAGIC_MAP.mostConcentratedFrame);
+			MAGIC_MAP.packHeat();
+			
+			return;
+		});
 		
 		this.playSection(startFrame, endFrame);
 		
 		return;
+	}
+	
+	MagicMap.prototype.timeMethod = function(method) {
+		var renderTime = new Date().valueOf();
+		
+		function getEndTime(){
+			method();
+			
+			return new Date().valueOf();
+		}
+		
+		return (getEndTime() - renderTime);
 	}
 	
 	MagicMap.prototype.createChart = function() {
@@ -1313,42 +1326,43 @@ console.log((endFrame - startFrame) + " frames");
 	}
 
 	MagicMap.prototype.loop = function() {
-		function process(thisMap) {
-			var renderTime;
-			
-			if(!thisMap.paused) {
-				if(!thisMap.playBack) {
-					thisMap.evolve();//TEST.timeMethod(thisMap.evolve);
-				}
-				else {
-					thisMap.playBuffer(thisMap.startFrame, thisMap.endFrame);//TEST.timeMethod(thisMap.playBuffer);
-				}
-				
-				if((thisMap.frame % thisMap.uiSettings.daysPerFrame) === 0) {
-					renderTime = new Date();
-					thisMap.packHeat();
-					renderTime = new Date() - renderTime;
-					
-					if((thisMap.uiSettings.renderDelay - renderTime) > 0) {
-						clearInterval(thisMap.loopIntervalID);
-						
-						setTimeout(function() {
-								return thisMap.loopIntervalID = setInterval(thisMap.loop, 0);
-							},
-							(thisMap.uiSettings.renderDelay - renderTime)
-						);
-					}
-				}
-			}
-			
-			return;
-		}
-		
-		process(MAGIC_MAP);
+		MAGIC_MAP.processFrame();
 		
 		return;
 	}
-
+	
+	MagicMap.prototype.processFrame = function() {
+		var renderTime,
+			thisMap = this;
+		
+		if(!this.paused) {
+			if(!this.playBack) {
+				this.evolve();//TEST.timeMethod(this.evolve);
+			}
+			else {
+				this.playBuffer(this.startFrame, this.endFrame);//TEST.timeMethod(this.playBuffer);
+			}
+			
+			if((this.frame % this.uiSettings.daysPerFrame) === 0) {
+				renderTime = new Date();
+				this.packHeat();
+				renderTime = new Date() - renderTime;
+				
+				if((this.uiSettings.renderDelay - renderTime) > 0) {
+					clearInterval(this.loopIntervalID);
+					
+					this.loopIntervalID = setTimeout(function() {
+							return setInterval(thisMap.loop, 0);
+						},
+						(this.uiSettings.renderDelay - renderTime)
+					);
+				}
+			}
+		}
+		
+		return;
+	}
+	
 	MagicMap.prototype.handleInput = function(event) {
 		switch(event.which) {
 			case 13:
