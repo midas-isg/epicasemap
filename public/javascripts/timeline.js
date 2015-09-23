@@ -783,11 +783,22 @@ console.log("series " + k + ": " + id);
 						}
 					}
 					
-					thisMap.suggestDelay();
-					if(!thisMap.uiSettings.renderDelay) {
-						$("#render-delay").val(thisMap.suggestedDelay);
-						$("#render-delay").change();
-					}
+					thisMap.map.whenReady(function() {
+							setTimeout(function() {
+									thisMap.suggestDelay();
+									if(!thisMap.uiSettings.renderDelay) {
+										$("#render-delay").val(thisMap.suggestedDelay);
+										$("#render-delay").change();
+									}
+									
+									return;
+								},
+								1000
+							);
+							
+							return;
+						}
+					);
 					
 					thisMap.loadBuffer();
 					thisMap.paused = true;
@@ -812,32 +823,34 @@ console.log("series " + k + ": " + id);
 	}
 	
 	MagicMap.prototype.suggestDelay = function() {
-		var temp,
+		var thisMap = this,
+			startFrame,
 			threshold = 86400000, //ms in a day
-			startFrame = this.startFrame,
-			endFrame = this.endFrame,
+			originalFrame = this.frame,
 			pointLifeSpan = Math.ceil(1 / this.uiSettings.pointDecay);
 		
-		this.frame = this.mostConcentratedFrame;
-		this.startFrame = this.mostConcentratedFrame;
-		this.endFrame = this.mostConcentratedFrame;
-		
-		temp = MAGIC_MAP.mostConcentratedFrame - pointLifeSpan;
-		if(temp < 0) {
-			temp = MAGIC_MAP.mostConcentratedFrame;
+		startFrame = this.mostConcentratedFrame - pointLifeSpan;
+		if(startFrame < 0) {
+			startFrame = 0;
 		}
 		
-		//TODO: Ensure proper data initilialization & function usage to setup for rendering
-		MAGIC_MAP.playBuffer(temp, MAGIC_MAP.mostConcentratedFrame);
+		this.frame = startFrame;
 		
 		//calculate the time to render the frame along with preexisting decaying points
 		this.suggestedDelay = this.timeMethod(function() {
-			MAGIC_MAP.packHeat();
+			var i;
+			
+			for(i = startFrame; i < thisMap.mostConcentratedFrame; i++) {
+				thisMap.playBuffer(startFrame, thisMap.endFrame);
+			}
+			
+			thisMap.packHeat();
 			
 			return;
 		});
 		
-		this.playSection(startFrame, endFrame);
+		this.frame = originalFrame;
+		this.playSection(this.startFrame, this.endFrame);
 		
 		return;
 	}
@@ -1193,10 +1206,6 @@ console.log("series " + k + ": " + id);
 		return;
 	}
 	
-	MagicMap.prototype.evolve = function() {
-		return;
-	}
-
 	MagicMap.prototype.loadBuffer = function() {
 		var i;
 		
@@ -1363,44 +1372,34 @@ console.log((endFrame - startFrame) + " frames");
 	}
 
 	MagicMap.prototype.loop = function() {
-		MAGIC_MAP.processFrame();
+		var thisMap = MAGIC_MAP,
+			loopTime = thisMap.timeMethod(thisMap.processFrame),
+			waitTime = thisMap.uiSettings.renderDelay - loopTime;
+			
+		if(waitTime > 0) {
+			clearInterval(thisMap.loopIntervalID);
+			
+			setTimeout(function() {
+					thisMap.loopIntervalID = setInterval(thisMap.loop, 0);
+					
+					return;
+				},
+				waitTime
+			);
+		}
 		
 		return;
 	}
 	
 	MagicMap.prototype.processFrame = function() {
-		var initialTime,
-			renderTime,
-			waitTime,
-			thisMap = this;
+		var thisMap = MAGIC_MAP;
 		
-		if(!this.paused) {
-			if(!this.playBack) {
-				this.evolve();//TEST.timeMethod(this.evolve);
-			}
-			else {
-				this.playBuffer(this.startFrame, this.endFrame);//TEST.timeMethod(this.playBuffer);
-			}
-			
-			if((this.frame % this.uiSettings.daysPerFrame) === 0) {
-				//TODO: renderer may not be the bottleneck after all!
-				renderTime = this.timeMethod(function() {
-					thisMap.packHeat();
-					
-					return;
-				});
+		if(!thisMap.paused) {
+			if(thisMap.playBack) {
+				thisMap.playBuffer(thisMap.startFrame, thisMap.endFrame);
 				
-				waitTime = this.uiSettings.renderDelay - renderTime;
-				if(waitTime > 0) {
-					clearInterval(this.loopIntervalID);
-					
-					setTimeout(function() {
-							thisMap.loopIntervalID = setInterval(thisMap.loop, 0);
-							
-							return;
-						},
-						waitTime
-					);
+				if((thisMap.frame % thisMap.uiSettings.daysPerFrame) === 0) {
+					thisMap.packHeat();
 				}
 			}
 		}
