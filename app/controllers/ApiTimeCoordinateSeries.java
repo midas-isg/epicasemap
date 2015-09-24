@@ -9,6 +9,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 
 import models.entities.Coordinate;
+import models.exceptions.Unauthorized;
 import models.filters.CoordinateFilter;
 
 import org.joda.time.DateTime;
@@ -24,16 +25,20 @@ import com.wordnik.swagger.annotations.ApiParam;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
 
+import controllers.security.Restricted;
+import controllers.security.Restricted.Access;
+
 @Api(value = "/series/time-coordinate", description = "Endpoints for Time-Coordinate Series")
 public class ApiTimeCoordinateSeries extends Controller {
 	private static final String paginationVal = " of resturned elements as pagination";
 	private static final String dateVal = " timestamp in ISO format. "
-				+ "e.g. 20015-01-01, 20015-01-01T13:59-05:00. "
+				+ "e.g. 2015-01-01, 2015-01-01T13:59-05:00. "
 				+ "For more details, see http://www.w3.org/TR/NOTE-datetime";
 
 	@ApiOperation(httpMethod = "GET", nickname = "list", value = "Lists the Time-Coordinate Series by Series ID")
 	@ApiResponses({ @ApiResponse(code = OK, message = "Success") })
 	@Transactional
+	@Restricted({Access.VIZ, Access.READ, Access.CHANGE})
 	public static Result get(
 			@ApiParam(value = "ID of the Series", required = true) 
 			@PathParam("id") 
@@ -54,6 +59,8 @@ public class ApiTimeCoordinateSeries extends Controller {
 			@ApiParam(value = "the offset" + paginationVal, required = false) 
 			@QueryParam("offset") 
 			int offset) {
+		if (! AuthorizationHelper.isSeriesPermitted(seriesId))
+			throw new Unauthorized("Unauthorized to read the data of the Series with ID = " + seriesId);
 		CoordinateRule rule = Factory.makeCoordinateRule(JPA.em());
 		CoordinateFilter filter = buildCoordinateFilter(seriesId,
 				startInclusive, endExclusive, limit, offset);

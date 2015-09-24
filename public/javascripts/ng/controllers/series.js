@@ -75,7 +75,7 @@ app.controller('Series', function($scope, $rootScope, api) {
 	function loadCoordinates(seriesId){
 		if (! seriesId)
 			return;
-		var path = 'series/' + seriesId + '/time-coordinate';
+		var path = 'series/' + seriesId + '/data'; //'/time-coordinate';
 		api.finding(path).then(success, fail);
 		
 		function success(rsp) {
@@ -83,8 +83,11 @@ app.controller('Series', function($scope, $rootScope, api) {
 			populateAdditionInfo(rsp.data.results);
 		}
 		
-		function fail(reason){
-			error('Failed to load the time-coordinate data!');
+		function fail(err){
+			if (err.data)
+				error(err.data.userMessage);
+			else
+				error('Failed to load the time-coordinate data!');
 		}
 	}
 

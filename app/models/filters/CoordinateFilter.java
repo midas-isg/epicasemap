@@ -1,19 +1,16 @@
 package models.filters;
 
 import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 
-public class CoordinateFilter implements Pagination, TimestampRange, Filter {
+public class CoordinateFilter
+extends GenericFilter 
+implements Pagination, TimestampRange, Filter {
 	
 	@JsonIgnore
 	private Long seriesId;
-	
-	private Map<String, Object> equalities;
 	
 	private Date startTimestampInclusive;
 	private Date endTimestampExclusive;
@@ -22,27 +19,12 @@ public class CoordinateFilter implements Pagination, TimestampRange, Filter {
 	private Integer limit;
 	private Integer offset;
 	
-	private LinkedHashMap<String, Order> order;
-
-	public Map<String, List<?>>  getInOperators(){
-		return null;
-	}
-
 	public Long getSeriesId() {
 		return seriesId;
 	}
 
 	public void setSeriesId(Long seriesId) {
 		this.seriesId = seriesId;
-	}
-
-	@Override
-	public Map<String, Object> getEqualities() {
-		return equalities;
-	}
-
-	public void setEqualities(Map<String, Object> equalityMap) {
-		this.equalities = equalityMap;
 	}
 
 	@Override
@@ -94,14 +76,4 @@ public class CoordinateFilter implements Pagination, TimestampRange, Filter {
 	public void setOffset(Integer offset) {
 		this.offset = offset;
 	}
-
-	@Override
-	public LinkedHashMap<String, Order> getOrder() {
-		return order;
-	}
-	
-	public void setOrder(LinkedHashMap<String, Order> map) {
-		order = map;
-	}
-
 }

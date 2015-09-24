@@ -4,12 +4,16 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.ManyToOne;
 
 @Entity
 public class Series extends MetaData {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
+	
+	@ManyToOne
+	private Account owner;
 
 	@Override
 	public Long getId() {
@@ -21,21 +25,14 @@ public class Series extends MetaData {
 		this.id = id;
 	}
 
-/*	public String getTitle() {
-		return title;
+	
+	public Account getOwner() {
+		return owner;
 	}
 
-	public void setTitle(String title) {
-		this.title = title;
+	public void setOwner(Account owner) {
+		this.owner = owner;
 	}
-
-	public String getDescription() {
-		return description;
-	}
-
-	public void setDescription(String description) {
-		this.description = description;
-	}*/
 
 	@Override
 	public int hashCode() {

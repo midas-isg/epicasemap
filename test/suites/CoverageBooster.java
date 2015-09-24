@@ -6,9 +6,9 @@ import gateways.configuration.AppKey;
 import gateways.database.jpa.JpaAdaptor;
 import integrations.app.App;
 import integrations.server.Server;
-import interactors.security.SecurityFactory;
 import interactors.security.password.HashKit;
 import interactors.security.password.HashedPassword;
+import interactors.security.password.PasswordFactory;
 
 import org.junit.Test;
 
@@ -21,6 +21,7 @@ import controllers.ApiSeries;
 import controllers.ApiTimeCoordinateSeries;
 import controllers.ApiViz;
 import controllers.Application;
+import controllers.AuthorizationHelper;
 import controllers.Factory;
 import controllers.ResponseHelper;
 
@@ -33,7 +34,8 @@ public class CoverageBooster extends TestCase {
 		testPrivateConstructors(
 				ResponseHelper.class,
 				Factory.class,
-				SecurityFactory.class,
+				AuthorizationHelper.class,
+				PasswordFactory.class,
 				HashKit.class
 		);
 		Application.swagger();
@@ -69,6 +71,7 @@ public class CoverageBooster extends TestCase {
 		new JpaAdaptor(null);
 		ignoreDefaultConstructorsForTests();
 		new HashedPassword();
+		new SeriesDataFileHelper();
 	}
 
 	private void ignoreDefaultConstructorsForControllers() {
