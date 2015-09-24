@@ -8,7 +8,9 @@ import java.util.List;
 import javax.ws.rs.PathParam;
 
 import models.entities.Series;
+import models.exceptions.Unauthorized;
 import models.filters.Filter;
+import models.filters.SeriesFilter;
 import play.data.Form;
 import play.db.jpa.JPA;
 import play.db.jpa.Transactional;
@@ -23,9 +25,10 @@ import com.wordnik.swagger.annotations.ApiParam;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
 
+import controllers.security.Restricted;
+import controllers.security.Restricted.Access;
 @Api(value = "/series", description = "Endpoints for Series")
 public class ApiSeries extends Controller {
-	
 	private static final String ex = "series.json";
 	private static final String exBody = "See an example of body at "
 			+ "<a href='assets/examples/api/" + ex + "'>" + ex + "</a> ";
@@ -54,27 +57,40 @@ public class ApiSeries extends Controller {
 	@ApiOperation(httpMethod = "GET", nickname = "list", value = "Lists all Series")
 	@ApiResponses({ @ApiResponse(code = OK, message = "Success") })
 	@Transactional
+	@Restricted({Access.READ, Access.CHANGE})
 	public static Result get() {
-		Filter filter = null;
-		List<Series> results = find(filter);
-		return ResponseHelper.okAsWrappedJsonArray(results, filter);
+		List<Long> ids = AuthorizationHelper.findPermittedSeriesIds();
+		SeriesFilter seriesfilter = new SeriesFilter();
+		seriesfilter.setIds(ids);
+		List<Series> results = find(seriesfilter);
+		return ResponseHelper.okAsWrappedJsonArray(results, seriesfilter);
 	}
 
 	@Transactional
-	public static List<Series> find(Filter filter) {
+	public static List<Series> find(SeriesFilter filter) {
 		return makeRule().query(filter);
 	}
 
 	@ApiOperation(httpMethod = "GET", nickname = "read", value = "Returns the Series by ID")
-	@ApiResponses({ @ApiResponse(code = OK, message = "Success") })
+	@ApiResponses({ 
+		@ApiResponse(code = OK, message = "Success"), 
+		@ApiResponse(code = NOT_FOUND, message = "Not found"),
+		@ApiResponse(code = UNAUTHORIZED, message = "Access denied") })
 	@Transactional
+	@Restricted({Access.VIZ, Access.READ, Access.CHANGE})
 	public static Result read(
 			@ApiParam(value = "ID of the series", required = true)
 			@PathParam("id")
 			long id) {
 		Series result = makeRule().read(id);
+		checkSeriesPermission(id, "read");
 		Filter filter = null;
 		return ResponseHelper.okAsWrappedJsonObject(result, filter);
+	}
+
+	private static void checkSeriesPermission(long id, String action) {
+		if (! AuthorizationHelper.isSeriesPermitted(id))
+			throw new Unauthorized("Unauthorized to " + action + " the Series with ID = " + id);
 	}
 	
 	@ApiOperation(httpMethod = "PUT", nickname = "update", value = "Updates the Series", 
@@ -84,13 +100,17 @@ public class ApiSeries extends Controller {
 			+ "Currently, no content in the body. ")
 	@ApiResponses({
 			@ApiResponse(code = OK, message = "(Not used yet)"),
-			@ApiResponse(code = NO_CONTENT, message = "Success") })
+			@ApiResponse(code = NO_CONTENT, message = "Success"), 
+			@ApiResponse(code = NOT_FOUND, message = "Not found"),
+			@ApiResponse(code = UNAUTHORIZED, message = "Access denied") })
 	@ApiImplicitParams({ 
 	@ApiImplicitParam(required = true, value = exBody, dataType = inputType, paramType = "body") })
 	@Transactional
+	@Restricted({Access.CHANGE})
 	public static Result put(
 		@ApiParam(value = "ID of the Series", required = true) @PathParam("id") long id) {
 		final Series data = seriesForm.bindFromRequest().get();
+		checkSeriesPermission(id, "update");
 		makeRule().update(id, data);
 		setResponseLocationFromRequest();
 		return noContent();
@@ -102,12 +122,16 @@ public class ApiSeries extends Controller {
 			+ "Currently, no content in the body. ")
 	@ApiResponses({ 
 			@ApiResponse(code = OK, message = "(Not used yet)"),
-			@ApiResponse(code = NO_CONTENT, message = "Success") })
+			@ApiResponse(code = NO_CONTENT, message = "Success"), 
+			@ApiResponse(code = NOT_FOUND, message = "Not found"),
+			@ApiResponse(code = UNAUTHORIZED, message = "Access denied") })
 	@Transactional
+	@Restricted({Access.CHANGE})
 	public static Result delete(
 			@ApiParam(value = "ID of the Series", required = true) 
 			@PathParam("id") 
 				long id) {
+		checkSeriesPermission(id, "delete");
 		deleteById(id);
 		setResponseLocationFromRequest();
 		return noContent();
@@ -118,13 +142,16 @@ public class ApiSeries extends Controller {
 					+ "and returns the upload status in response header. "
 					+ "(returns more information in response body.)")
 			@ApiResponses({ 
-					@ApiResponse(code = CREATED, message = "success"),
-					@ApiResponse(code = BAD_REQUEST, message = "failure") })
+					@ApiResponse(code = CREATED, message = "Success"),
+					@ApiResponse(code = NOT_FOUND, message = "Not found"),
+					@ApiResponse(code = UNAUTHORIZED, message = "Access denied") })
 	@Transactional
+	@Restricted({Access.CHANGE})
 	public static Result uploadData(
 			@ApiParam(value = "ID of the Series", required = true) 
 			@PathParam("id") 
 				long id) {
+		checkSeriesPermission(id, "upload data to");
 		return UploadSeries.upload(id);
 	}
 
@@ -140,4 +167,20 @@ public class ApiSeries extends Controller {
 		return makeRule().create(data);
 	}
 	
+	@Transactional
+	@Restricted({Access.READ, Access.CHANGE})
+	public static Result getData(
+			Long seriesId,
+			String startInclusive,
+			String endExclusive,
+			Integer limit,
+			int offset) {
+		
+		return ApiTimeCoordinateSeries.get(seriesId,
+				startInclusive,
+				endExclusive,
+				limit,
+				offset);
+	}
+
 }

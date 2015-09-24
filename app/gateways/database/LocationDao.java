@@ -3,8 +3,6 @@ package gateways.database;
 import gateways.database.jpa.DataAccessObject;
 import gateways.database.jpa.JpaAdaptor;
 
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -30,20 +28,17 @@ public class LocationDao extends DataAccessObject<Location> {
 	}
 
 	private void populateEqualities(LocationFilter filter) {
-		Map<String, Object> equalityMap = new HashMap<>();
+		Map<String, Object> equalityMap = filter.getEqualities();
 		equalityMap.put("alsId", filter.getAlsId());
 		equalityMap.put("latitude", filter.getLatitude());
 		equalityMap.put("longitude", filter.getLongitude());
-		filter.setEqualities(equalityMap);
 	}
 
 	private void populateInOperators(LocationFilter filter) {
-		Map<String, List<?>> inMap = new HashMap<>();
+		Map<String, List<?>> inMap = filter.getInOperators();
 		inMap.put("id", filter.getIds());
-		filter.setInOperators(inMap);
 	}
 
 	private void populateOrder(LocationFilter filter) {
-		filter.setOrder(new LinkedHashMap<>());
 	}
 }

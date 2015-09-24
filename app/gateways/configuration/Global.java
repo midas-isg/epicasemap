@@ -4,6 +4,7 @@ import java.lang.reflect.Method;
 
 import models.exceptions.ConstraintViolation;
 import models.exceptions.NotFound;
+import models.exceptions.Unauthorized;
 import play.Application;
 import play.GlobalSettings;
 import play.Logger;
@@ -47,7 +48,10 @@ public class Global extends GlobalSettings {
 				} catch (ConstraintViolation e) {
 					final Status status = forbidden(toErrorMessageInJson(e));
 					return Promise.<Result>pure(status);
-				} catch (RuntimeException|Error e) {
+				} catch (Unauthorized e) {
+					final Status status = unauthorized(toErrorMessageInJson(e));
+					return Promise.<Result>pure(status);
+				}catch (RuntimeException|Error e) {
 					throw e;
 				} catch (Throwable e) {
 					throw new RuntimeException(e);

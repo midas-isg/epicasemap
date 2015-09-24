@@ -1,20 +1,20 @@
 package interactors.security.password;
 
-import interactors.security.password.HashSpec;
-import interactors.security.password.HashVerifier;
-import interactors.security.password.Hasher;
-import interactors.security.password.Authority;
 
 public class PasswordFactory {
 	private PasswordFactory(){}
 
-	public static Authority makeAuthority(){
+	public static Authenticator makeAuthority(String appSalt){
 		HashSpec spec = makeHashSpec();
-		return makeAuthority(spec);
+		return makeAuthority(spec, appSalt);
 	}
 
-	static Authority makeAuthority(HashSpec spec) {
-		return new Authority(new Hasher(spec), new HashVerifier());
+	static Authenticator makeAuthority(HashSpec spec, String appSalt) {
+		return new Authenticator(makeHasher(spec, appSalt), new HashVerifier());
+	}
+
+	static Hasher makeHasher(HashSpec spec, String appSalt) {
+		return new Hasher(spec, appSalt);
 	}
 	
 	static HashSpec makeHashSpec() {

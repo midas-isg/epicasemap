@@ -11,7 +11,7 @@ import models.entities.Series;
 import models.entities.Visualization;
 import models.exceptions.ConstraintViolation;
 import models.filters.CoordinateFilter;
-import models.filters.Filter;
+import models.filters.SeriesFilter;
 
 public class SeriesRule extends CrudRule<Series> {
 	private SeriesDao dao; 
@@ -23,7 +23,7 @@ public class SeriesRule extends CrudRule<Series> {
 		this.dao = dao;
 	}
 
-	public List<Series> query(Filter filter) {
+	public List<Series> query(SeriesFilter filter) {
 		return dao.query(filter);
 	}
 
@@ -50,7 +50,9 @@ public class SeriesRule extends CrudRule<Series> {
 			}
 		}
 		if (! vizIds.isEmpty()){
-			final String message = "The Series could not be deleted as it is referred by the Visualization(s) with the following IDs " + vizIds;
+			final String message = "The Series could not be deleted "
+					+ "as it is referred by the Visualization(s) "
+					+ "with the following IDs " + vizIds;
 			throw new ConstraintViolation(message);
 		}
 	}

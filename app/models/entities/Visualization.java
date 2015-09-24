@@ -12,6 +12,9 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity(name="viz")
 public class Visualization extends MetaData {
@@ -27,6 +30,10 @@ public class Visualization extends MetaData {
 
 	@Column(columnDefinition = "TEXT")
 	private String uiSetting;
+
+	@ManyToOne
+	@JsonIgnore
+	private Account owner;
 
 	public Visualization() {
 		allSeries = new ArrayList<>();
@@ -58,6 +65,15 @@ public class Visualization extends MetaData {
 		this.uiSetting = uiSetting;
 	}
 
+	
+	public Account getOwner() {
+		return owner;
+	}
+
+	public void setOwner(Account owner) {
+		this.owner = owner;
+	}
+	
 	@Override
 	public int hashCode() {
 		final int prime = 31;

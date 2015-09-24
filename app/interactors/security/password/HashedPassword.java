@@ -6,10 +6,9 @@ public class HashedPassword extends HashParameter{
 	public HashedPassword() {
 	}
 
-	HashedPassword(HashParameter hp) {
+	public void copy(HashParameter hp) {
 		setSalt(hp.getSalt());
-		setIterationCount(hp.getIterationCount());
-		setAlgorithm(hp.getAlgorithm());
+		super.copy(hp);
 	}
 
 	public String getHash() {
@@ -28,7 +27,7 @@ class HashParameter extends HashSpec{
 	HashParameter() {
 	}
 
-	HashParameter(HashSpec spec) {
+	void copy(HashSpec spec) {
         setAlgorithm(spec.getAlgorithm());
         setHashByteSize(spec.getHashByteSize());
         setIterationCount(spec.getIterationCount());

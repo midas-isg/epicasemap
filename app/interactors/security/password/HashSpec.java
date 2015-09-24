@@ -3,7 +3,7 @@ package interactors.security.password;
 public class HashSpec {
 	private int hashByteSize;
 	private int saltByteSize;
-	private int iterationCount;
+	private Integer iterationCount;
 	private String algorithm;
 
 	public int getHashByteSize() {
@@ -18,7 +18,7 @@ public class HashSpec {
 	public void setSaltByteSize(int saltByteSize) {
 		this.saltByteSize = saltByteSize;
 	}
-	public int getIterationCount() {
+	public Integer getIterationCount() {
 		return iterationCount;
 	}
 	public void setIterationCount(int iterationCount) {

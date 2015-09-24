@@ -1,0 +1,30 @@
+@(form: Form[models.SignIn])
+
+@imports = {
+}
+
+@main("Log in", imports) {
+	@helper.form(routes.Login.submit) {
+		@if(flash.contains("message")) {
+			<p class="message">
+				@flash.get("message")
+			</p>
+		}
+		
+		@if(form.hasGlobalErrors) {
+			<p class="error">
+				@form.globalError.message
+			</p>
+		}
+		
+		<p>
+			<input type="email" name="email" placeholder="Email" value="@form("email").value">
+		</p>
+		<p>
+			<input type="password" name="password" placeholder="Password">
+		</p>
+		<p>
+			<button type="submit">Log in</button>
+		</p>
+	}
+}

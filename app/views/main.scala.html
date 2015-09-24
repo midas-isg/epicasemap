@@ -40,6 +40,7 @@
 					<ul class=" nav navbar-nav" id="navigation_menu">
 						@managementMenu
 						@api
+						@login
 					</ul>
 				</div>
 			</div>
@@ -59,6 +60,11 @@
 		</footer>
 	</body>
 </html>
+
+@login = {
+	@menuItem(routes.Login.login.url, "Log in")
+	@menuItem(routes.Login.logout.url, "Log out")
+}
 
 @api = {
 	@menuItem(routes.Application.swagger.url, "API")

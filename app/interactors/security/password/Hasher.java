@@ -12,14 +12,16 @@ import javax.crypto.spec.PBEKeySpec;
 /** Salted password hashing. http://crackstation.net/hashing-security.htm */
 class Hasher {
 	private HashSpec spec;
+	private String appSaltHex;
 	
-	Hasher(HashSpec hashSpec){
+	Hasher(HashSpec hashSpec, String appSalt){
 		spec = hashSpec;
+		appSaltHex = HashKit.toHex(appSalt.getBytes());
 	}
 	
-    String hash(String password, HashParameter hp, String appSalt) {
+    String hash(String password, HashParameter hp) {
     	final char[] passwordChars = password.toCharArray();
-    	final String comboSalt = hp.getSalt() + HashKit.toHex(appSalt.getBytes());
+    	final String comboSalt = hp.getSalt() + appSaltHex;
 		final byte[] salt = HashKit.fromHex(comboSalt);
     	final int iterations = hp.getIterationCount();
 		final int bits = hp.getHashByteSize() * 8;
@@ -50,7 +52,8 @@ class Hasher {
 	}
 
 	HashParameter makeHashParameter() {
-        HashParameter hp = new HashParameter(spec);
+        HashParameter hp = new HashParameter();
+        hp.copy(spec);
         byte[] salt = generateRandomSalt(spec.getSaltByteSize());
         hp.setSalt(HashKit.toHex(salt));
 		return hp;

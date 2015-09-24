@@ -3,7 +3,6 @@ package gateways.database;
 import gateways.database.jpa.DataAccessObject;
 import gateways.database.jpa.JpaAdaptor;
 
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,13 +26,11 @@ public class CoordinateDao extends DataAccessObject<Coordinate> {
 	public List<Coordinate> query(CoordinateFilter filter) {
 		final String timestamp = "timestamp";
 		filter.setTimestampAttribute(timestamp);
-		Map<String, Object> equalityMap = new HashMap<>();
+		Map<String, Object> equalityMap = filter.getEqualities();
 		equalityMap.put("seriesId", filter.getSeriesId());
-		filter.setEqualities(equalityMap);
 		
-		LinkedHashMap<String, Order> order = new LinkedHashMap<>();
+		LinkedHashMap<String, Order> order = filter.getOrders();
 		order.put(timestamp, Filter.Order.ASC);
-		filter.setOrder(order);
 		return super.query(filter);
 	}
 }
