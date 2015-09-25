@@ -421,14 +421,6 @@ timeline.js
 		$("#render-delay").val(this.uiSettings.renderDelay);
 		$("#render-delay").change();
 		
-		$("#calibrate-button").click(function() {
-			thisMap.suggestDelay();
-			$("#render-delay").val(thisMap.suggestedDelay);
-			$("#render-delay").change();
-			
-			return;
-		});
-		
 		$("#days-per-frame").change(function() {
 			if($(this).val() < 1) {
 				$(this).val(1);
@@ -1375,7 +1367,12 @@ console.log((endFrame - startFrame) + " frames");
 		var thisMap = MAGIC_MAP,
 			loopTime = thisMap.timeMethod(thisMap.processFrame),
 			waitTime = thisMap.uiSettings.renderDelay - loopTime;
-			
+		
+		if(loopTime > thisMap.suggestedDelay) {
+			thisMap.suggestedDelay = loopTime;
+			$("#suggested-delay").text(thisMap.suggestedDelay);
+		}
+		
 		if(waitTime > 0) {
 			clearInterval(thisMap.loopIntervalID);
 			
