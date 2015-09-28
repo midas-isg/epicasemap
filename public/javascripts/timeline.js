@@ -130,6 +130,8 @@ timeline.js
 			['#66c2a5', '#fc8d62', '#8da0cb', "#e78ac3", "#a6d854"]
 		];
 		
+		this.debugColor = ['#ff0000'];
+		
 		this.uiSettings.colorPalette = 0;
 		this.colors = this.colorSet[this.uiSettings.colorPalette];
 		
@@ -492,7 +494,7 @@ timeline.js
 				thisMap.uiSettings.series.push({ color: 0, index: thisMap.seriesList[0].id });
 			}
 			
-			thisMap.displaySet.push({visiblePoints: []});
+			thisMap.displaySet.push({visiblePoints: [], secondValues: []});
 			
 			$("#series-options").append(
 				"<div style='clear: both;'>" +
@@ -536,7 +538,10 @@ console.log("series " + k + ": " + id);
 		this.masterChart.series[selectorID].remove();
 		this.dataset.splice(selectorID, 1);
 		this.displaySet.pop();
-		this.heat[selectorID].setLatLngs([]);
+		
+		this.heat[(selectorID << 1)].setLatLngs([]);
+		this.heat[(selectorID << 1) + 1].setLatLngs([]);
+		
 		this.uiSettings.series.pop();
 		
 		return;
@@ -564,7 +569,8 @@ console.log("series " + k + ": " + id);
 			this.detailChart.series[i].update({color: this.colors[this.uiSettings.series[i].color]}, true);
 			this.masterChart.series[i].update({color: this.colors[this.uiSettings.series[i].color]}, true);
 			
-			this.heat[i].setOptions({gradient: this.setGradient[i]});
+			this.heat[(i << 1)].setOptions({gradient: this.setGradient[i]});
+			this.heat[(i << 1) + 1].setOptions({gradient: this.debugColor});
 		}
 		
 		for(i = 0; i < this.colors.length; i++) {
@@ -591,17 +597,25 @@ console.log("series " + k + ": " + id);
 			}
 			$(colorSelector).addClass("selected");
 			
-			if(!this.heat[selectorID]) {
+			if(!this.heat[(selectorID << 1)]) {
 				this.heat.push(L.heatLayer(this.displaySet[selectorID].visiblePoints,
 					{
-						minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.1, //radius: 5,
+						minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.1, radius: 10,
 						gradient: this.setGradient[selectorID]
+					}
+				).addTo(this.map));
+				
+				this.heat.push(L.heatLayer(this.displaySet[selectorID].secondValues,
+					{
+						minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.1, radius: 20,
+						gradient: this.debugColor //this.setGradient[selectorID]
 					}
 				).addTo(this.map));
 			}
 			
 			this.setGradient[selectorID] = {0.0: this.colors[colorID]};
-			this.heat[selectorID].setOptions({gradient: this.setGradient[selectorID]});
+			this.heat[(selectorID << 1)].setOptions({gradient: this.setGradient[selectorID]});
+			this.heat[(selectorID << 1) + 1].setOptions({gradient: this.debugColor});
 			
 			if(this.detailChart.series[selectorID]) {
 				this.detailChart.series[selectorID].update({color: this.colors[colorID]}, true);
@@ -670,6 +684,8 @@ console.log("series " + k + ": " + id);
 				
 				for(i = 0; i < result.results.length; i++) {
 					if(result.results[i]) {
+							result.results[i].secondValue = result.results[i].value + (5 * Math.random());
+							
 						inputDate = new Date(result.results[i].timestamp);
 						thisMap.zeroTime(inputDate);
 						
@@ -688,7 +704,7 @@ console.log("series " + k + ": " + id);
 							deltaTime -= threshold;
 						}
 						
-						currentDataset.timeGroup[frame].point.push({latitude: result.results[i].latitude, longitude: result.results[i].longitude, value: result.results[i].value});
+						currentDataset.timeGroup[frame].point.push({latitude: result.results[i].latitude, longitude: result.results[i].longitude, value: result.results[i].value, secondValue: result.results[i].secondValue});
 						currentDataset.timeGroup[frame].date = inputDate;
 						
 						currentDataset.frameAggregate[frame] += result.results[i].value;
@@ -1212,6 +1228,7 @@ console.log("series " + k + ": " + id);
 		for(i = 0; i < this.displaySet.length; i++) {
 			//empty visiblePoints array
 			this.displaySet[i].visiblePoints.length = 0; //hopefully the old data is garbage collected!
+			this.displaySet[i].secondValues.length = 0;
 		}
 		
 		$("#playback-button").removeClass("disabled");
@@ -1234,6 +1251,7 @@ console.log("series " + k + ": " + id);
 			for(i = 0; i < this.displaySet.length; i++) {
 				//empty visiblePoints array
 				this.displaySet[i].visiblePoints.length = 0; //hopefully the old data is garbage collected!
+				this.displaySet[i].secondValues.length = 0;
 			}
 		}
 		
@@ -1249,6 +1267,12 @@ console.log("series " + k + ": " + id);
 							this.dataset[setID].timeGroup[setFrame].point[i].longitude,
 							0.7,
 							(this.dataset[setID].timeGroup[setFrame].point[i].value / this.dataset[setID].maxValue)]);
+						
+						this.displaySet[setID].secondValues.push([this.dataset[setID].timeGroup[setFrame].point[i].latitude,
+							this.dataset[setID].timeGroup[setFrame].point[i].longitude,
+							0.24,
+							/*(this.dataset[setID].timeGroup[setFrame].point[i].secondValue / this.dataset[setID].maxValue) << 1*/
+							(this.dataset[setID].timeGroup[setFrame].point[i].secondValue / this.dataset[setID].timeGroup[setFrame].point[i].value)]);
 					}
 				}
 				
@@ -1284,9 +1308,11 @@ console.log("series " + k + ": " + id);
 				for(i = 0; i < this.displaySet[setID].visiblePoints.length; i++) {
 					if(this.displaySet[setID].visiblePoints[i][2] > 0.00) {
 						this.displaySet[setID].visiblePoints[i][2] -= this.uiSettings.pointDecay;
+						this.displaySet[setID].secondValues[i][2] -= (this.uiSettings.pointDecay * 0.3);
 					}
 					else {
 						this.displaySet[setID].visiblePoints.splice(i, 1);
+						this.displaySet[setID].secondValues.splice(i, 1);
 						i--;
 					}
 				}
@@ -1325,6 +1351,7 @@ console.log("series " + k + ": " + id);
 		for(i = 0; i < this.displaySet.length; i++) {
 			//empty visiblePoints array
 			this.displaySet[i].visiblePoints.length = 0; //hopefully the old data is garbage collected!
+			this.displaySet[i].secondValues.length = 0;
 		}
 		
 console.log((endFrame - startFrame) + " frames");
@@ -1346,16 +1373,24 @@ console.log((endFrame - startFrame) + " frames");
 		var setID;
 		
 		for(setID = 0; setID < this.displaySet.length; setID++) {
-			if(!this.heat[setID]) {
+			if(!this.heat[setID << 1]) {
 				this.heat.push(L.heatLayer(this.displaySet[setID].visiblePoints,
 					{
-						minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.1, //radius: 5,
+						minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.1, radius: 10,
 						gradient: this.setGradient[setID]
+					}
+				).addTo(this.map));
+				
+				this.heat.push(L.heatLayer(this.displaySet[setID].secondValues,
+					{
+						minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.1, radius: 20,
+						gradient: this.debugColor //this.setGradient[setID]
 					}
 				).addTo(this.map));
 			}
 			else {
-				this.heat[setID].setLatLngs(this.displaySet[setID].visiblePoints);
+				this.heat[(setID << 1)].setLatLngs(this.displaySet[setID].visiblePoints);
+				this.heat[(setID << 1) + 1].setLatLngs(this.displaySet[setID].secondValues);
 			}
 //console.log(this.heat[setID]._latlngs);
 		}
