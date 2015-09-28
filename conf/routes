@@ -10,6 +10,8 @@ GET     /manage/series              controllers.Application.manageSeries()
 #Login
 GET     /login                      controllers.Login.login()
 POST    /login                      controllers.Login.submit()
+GET     /register                   controllers.Login.promptRegistration()
+POST    /register                   controllers.Login.register()
 GET     /logout                     controllers.Login.logout()
 
 # Test page
