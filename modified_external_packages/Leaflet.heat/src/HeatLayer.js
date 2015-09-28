@@ -31,9 +31,11 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
 
     setOptions: function (options) {
         L.setOptions(this, options);
-        if (this._heat) {
+		
+        if(this._heat) {
             this._updateOptions();
         }
+		
         return this.redraw();
     },
 
@@ -78,13 +80,18 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
     },
 
     _initCanvas: function () {
-        var canvas = this._canvas = L.DomUtil.create('canvas', 'leaflet-heatmap-layer leaflet-layer');
+		var canvas,
+			size,
+			animated,
+			radiusFactor = this.options.radius || this.defaultRadius;
+		
+        canvas = this._canvas = L.DomUtil.create('canvas', 'leaflet-heatmap-layer leaflet-layer');
 
-        var size = this._map.getSize();
+        size = this._map.getSize();
         canvas.width  = size.x;
         canvas.height = size.y;
 
-        var animated = this._map.options.zoomAnimation && L.Browser.any3d;
+        animated = this._map.options.zoomAnimation && L.Browser.any3d;
         L.DomUtil.addClass(canvas, 'leaflet-zoom-' + (animated ? 'animated' : 'hide'));
 
         this._heat = simpleheat(canvas);
@@ -97,11 +104,11 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
 			colored,
 			p;
 			
-			if (!this._circle) {
+			if(!this._circle) {
 				this.radius(this.defaultRadius);
 			}
 			
-			if (!this._grad) {
+			if(!this._grad) {
 				this.gradient(this.defaultGradient);
 			}
 			
@@ -112,7 +119,7 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
 				
 				//data[i][2] cannot be NaN so make work-around
 				if(p[2] && (p[2] > 0)) {
-					this.radius((p[3] >= 0.1 ? p[3] : 0.1) * 10, 0.1);
+					this.radius((p[3] >= 0.1 ? p[3] : 0.1) * radiusFactor, 0.1);
 					
 					//ctx.globalAlpha = 1.0;
 					ctx.globalAlpha = Math.max(p[2], minOpacity === undefined ? 0.05 : minOpacity);
