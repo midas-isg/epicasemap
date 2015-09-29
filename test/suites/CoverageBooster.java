@@ -21,9 +21,9 @@ import controllers.ApiSeries;
 import controllers.ApiTimeCoordinateSeries;
 import controllers.ApiViz;
 import controllers.Application;
-import controllers.AuthorizationHelper;
 import controllers.Factory;
 import controllers.ResponseHelper;
+import controllers.security.AuthorizationKit;
 
 public class CoverageBooster extends TestCase {
 	@Test
@@ -34,7 +34,7 @@ public class CoverageBooster extends TestCase {
 		testPrivateConstructors(
 				ResponseHelper.class,
 				Factory.class,
-				AuthorizationHelper.class,
+				AuthorizationKit.class,
 				PasswordFactory.class,
 				HashKit.class
 		);

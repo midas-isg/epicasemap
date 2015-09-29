@@ -25,6 +25,7 @@ import com.wordnik.swagger.annotations.ApiParam;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
 
+import controllers.security.AuthorizationKit;
 import controllers.security.Restricted;
 import controllers.security.Restricted.Access;
 @Api(value = "/series", description = "Endpoints for Series")
@@ -59,7 +60,7 @@ public class ApiSeries extends Controller {
 	@Transactional
 	@Restricted({Access.READ, Access.CHANGE})
 	public static Result get() {
-		List<Long> ids = AuthorizationHelper.findPermittedSeriesIds();
+		List<Long> ids = AuthorizationKit.findPermittedSeriesIds();
 		SeriesFilter seriesfilter = new SeriesFilter();
 		seriesfilter.setIds(ids);
 		List<Series> results = find(seriesfilter);
@@ -82,14 +83,14 @@ public class ApiSeries extends Controller {
 			@ApiParam(value = "ID of the series", required = true)
 			@PathParam("id")
 			long id) {
-		Series result = makeRule().read(id);
 		checkSeriesPermission(id, "read");
+		Series result = makeRule().read(id);
 		Filter filter = null;
 		return ResponseHelper.okAsWrappedJsonObject(result, filter);
 	}
 
 	private static void checkSeriesPermission(long id, String action) {
-		if (! AuthorizationHelper.isSeriesPermitted(id))
+		if (! AuthorizationKit.isSeriesPermitted(id))
 			throw new Unauthorized("Unauthorized to " + action + " the Series with ID = " + id);
 	}
 	
@@ -108,9 +109,10 @@ public class ApiSeries extends Controller {
 	@Transactional
 	@Restricted({Access.CHANGE})
 	public static Result put(
-		@ApiParam(value = "ID of the Series", required = true) @PathParam("id") long id) {
-		final Series data = seriesForm.bindFromRequest().get();
+		@ApiParam(value = "ID of the Series", required = true) @PathParam("id") 
+				long id) {
 		checkSeriesPermission(id, "update");
+		final Series data = seriesForm.bindFromRequest().get();
 		makeRule().update(id, data);
 		setResponseLocationFromRequest();
 		return noContent();

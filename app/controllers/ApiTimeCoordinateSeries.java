@@ -25,6 +25,7 @@ import com.wordnik.swagger.annotations.ApiParam;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
 
+import controllers.security.AuthorizationKit;
 import controllers.security.Restricted;
 import controllers.security.Restricted.Access;
 
@@ -59,7 +60,7 @@ public class ApiTimeCoordinateSeries extends Controller {
 			@ApiParam(value = "the offset" + paginationVal, required = false) 
 			@QueryParam("offset") 
 			int offset) {
-		if (! AuthorizationHelper.isSeriesPermitted(seriesId))
+		if (! AuthorizationKit.isSeriesPermitted(seriesId))
 			throw new Unauthorized("Unauthorized to read the data of the Series with ID = " + seriesId);
 		CoordinateRule rule = Factory.makeCoordinateRule(JPA.em());
 		CoordinateFilter filter = buildCoordinateFilter(seriesId,

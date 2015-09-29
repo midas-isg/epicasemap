@@ -1,20 +1,22 @@
-package controllers;
+package controllers.security;
 
 import interactors.AuthorizationRule;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import models.filters.Restriction;
 import play.db.jpa.JPA;
 import play.mvc.Controller;
 import play.mvc.Http.Context;
-import controllers.security.Restricted;
+import controllers.Factory;
 import controllers.security.Restricted.Access;
 
 
-public class AuthorizationHelper {
-	private AuthorizationHelper() {
+public class AuthorizationKit {
+	private static final String ID = "id";
+
+	private AuthorizationKit() {
 	}
 	
 	public static boolean isSeriesPermitted(Long seriesId) {
@@ -24,33 +26,37 @@ public class AuthorizationHelper {
 		return permittedSeriesIds.contains(seriesId);
 	}
 
-	static List<Long> findPermittedSeriesIds() {
+	public static List<Long> findPermittedSeriesIds() {
 		final Long accountId = readAccountId();
 		List<Access> accesses = readAccesses();
 		if (accountId == null && accesses == null)
 			return null;
 		final Restriction restriction = new Restriction(accountId, accesses);
-		return makeAuthorizationRule().findSeriesIds(restriction);
+		return makeRule().findSeriesIds(restriction);
 	}
 
-	private static AuthorizationRule makeAuthorizationRule() {
-		return Factory.makeAuthorizationRule(JPA.em());
+	static void writeAccountId(Context ctx, Object value) {
+		ctx.args.put(ID, value);
 	}
-
+	
 	private static Long readAccountId() {
-		final String accountId = read("id");
+		final String accountId = readString(ID);
 		if (accountId == null)
 			return null;
 
 		return Long.parseLong(accountId);
 	}
 
-	private static String read(String key) {
+	private static String readString(String key) {
+		final Object val = read(key);
+		return val == null ? null : val.toString();
+	}
+
+	private static Object read(String key) {
 		final Context ctx = ctx();
 		if (ctx == null)
 			return null;
-		final Object val = ctx.args.get(key);
-		return val == null ? null : val.toString();
+		return ctx.args.get(key);
 	}
 
 	private static Context ctx() {
@@ -61,15 +67,16 @@ public class AuthorizationHelper {
 		}
 	}
 
+	static void writeAccesses(Context ctx, Access[] accesses) {
+		ctx.args.put(Restricted.KEY, Arrays.asList(accesses));
+	}
+
+	@SuppressWarnings("unchecked")
 	private static List<Access> readAccesses() {
-		final String restriction = read(Restricted.KEY);
-		if (restriction == null)
-			return null;
-		final String[] tokens = restriction.split(Restricted.DELIMITER);
-		List<Access> accesses = new ArrayList<>(tokens.length); 
-		for (String token : tokens){
-			accesses.add(Access.valueOf(token));
-		}
-		return accesses;
+		return (List<Access>)read(Restricted.KEY);
+	}
+	
+	private static AuthorizationRule makeRule() {
+		return Factory.makeAuthorizationRule(JPA.em());
 	}
 }

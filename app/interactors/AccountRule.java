@@ -1,13 +1,17 @@
 package interactors;
 
+import play.Logger;
 import gateways.database.AccountDao;
 import gateways.database.jpa.DataAccessObject;
 import interactors.security.Credential;
 import interactors.security.password.Authenticator;
 import interactors.security.password.HashedPassword;
+import models.Registration;
 import models.SignIn;
 import models.entities.Account;
 import models.entities.Password;
+import models.exceptions.ConstraintViolation;
+import models.exceptions.Unauthorized;
 import models.filters.AccountFilter;
 
 
@@ -24,17 +28,32 @@ public class AccountRule extends CrudRule<Account> {
 		this.authenticator = authenticator;
 	}
 
-	public Account create(Credential credential, SignIn signIn) {
-		final HashedPassword hp = authenticator.hash(signIn.getPassword());
-		Account account = new Account();
-		Password password = new Password();
-		account.setPassword(password);
-		password.copy(hp);
-		password.setHash(hp.getHash());
-		account.setEmail(signIn.getEmail());
-		account.setName(credential.getName());
+	public Account register(Registration input) {
+		checkEmailUniqueness(input.getEmail());
+		Account account = newAccount(input);
 		create(account);
 		return account;
+	}
+
+	private void checkEmailUniqueness(final String email) {
+		if (findAccount(email) != null)
+			throw new ConstraintViolation(email + " was already registered.");
+	}
+
+	private Account newAccount(Registration input) {
+		Account account = new Account();
+		account.setPassword(newPassword(input.getPassword()));
+		account.setEmail(input.getEmail());
+		account.setName(input.getName());
+		return account;
+	}
+
+	private Password newPassword(String passwordInPainText) {
+		Password password = new Password();
+		final HashedPassword hp = authenticator.hash(passwordInPainText);
+		password.copy(hp);
+		password.setHash(hp.getHash());
+		return password;
 	}
 
 	@Override
@@ -43,21 +62,15 @@ public class AccountRule extends CrudRule<Account> {
 	}
 
 	public Credential authenticate(SignIn signIn) {
-		final Account account = findAccount(signIn.getEmail());
-		if (account == null)
-			return null;
-		if (authenticator.verify(signIn.getPassword(), account.getPassword()))
-			return newCredential(account);
-		return null;
-	}
-
-	public Credential register(Credential credential, SignIn signIn) {
-		final Account account = findAccount(signIn.getEmail());
-		if (account != null){
-			return null;
+		try {
+			final Account account = findAccount(signIn.getEmail());
+			final String passwordInPainText = signIn.getPassword();
+			if (authenticator.verify(passwordInPainText, account.getPassword()))
+				return newCredential(account);
+		} catch (Throwable t) {
+			Logger.warn(signIn + ": authentication failed!", t);
 		}
-		create(credential, signIn);
-		return credential;
+		throw new Unauthorized("Invalid email and/or password.");
 	}
 
 	private Credential newCredential(Account account) {

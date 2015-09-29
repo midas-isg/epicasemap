@@ -19,4 +19,9 @@ public  class SignIn {
 	public void setPassword(String password) {
 		this.password = password;
 	}
+
+	@Override
+	public String toString() {
+		return "email=" + email; // SHOULD NOT include password!
+	}
 }

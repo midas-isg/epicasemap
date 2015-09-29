@@ -4,7 +4,7 @@
 }
 
 @main("Log in", imports) {
-	@helper.form(routes.Login.submit) {
+	@helper.form(routes.User.login) {
 		@if(flash.contains("message")) {
 			<p class="message">
 				@flash.get("message")
