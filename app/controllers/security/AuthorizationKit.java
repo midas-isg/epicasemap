@@ -79,4 +79,8 @@ public class AuthorizationKit {
 	private static AuthorizationRule makeRule() {
 		return Factory.makeAuthorizationRule(JPA.em());
 	}
+	
+	public static boolean hasLoggedIn(){
+		return Authentication.readAccountId(ctx()) != null;
+	}
 }

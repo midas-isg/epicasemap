@@ -1,7 +1,8 @@
 @import play.api.Play.current
 @import play.api.Play
+@import controllers.security.AuthorizationKit
 
-@(title: String, imports: Html = Html(""))(content: Html)
+@(title: String, imports: Html = Html(""), hasLoggedIn:Boolean=AuthorizationKit.hasLoggedIn)(content: Html)
 
 <!DOCTYPE html>
 
@@ -62,17 +63,20 @@
 </html>
 
 @login = {
-	@menuItem(routes.User.login.url, "Log in")
-	@menuItem(routes.User.logout.url, "Log out")
+	@if(hasLoggedIn){
+		@menuItem(routes.User.logout.url, "Log out")
+	} else {
+		@menuItem(routes.User.login.url, "Log in")
+	}
 }
 
 @api = {
-	@menuItem(routes.Application.swagger.url, "API")
+	@menuItem(routes.Application.swagger.url, "API", hasLoggedIn)
 }
 
 @managementMenu = {
 	@menu("Manage", Seq(
-		menuItem(routes.Application.manageSeries.url, "Series"),
+		menuItem(routes.Application.manageSeries.url, "Series", hasLoggedIn),
 		menuItem(routes.Application.manageVizs.url, "Visualizations")
 	))
 }
@@ -85,8 +89,11 @@
 	</li>
 }
 
-@menuItem(href:String, text:String) = {
-	<li>
-		<a class="menu-item navbar-link" href="@href">@text</a>
-	</li>
+@menuItem(href:String, text:String, toBeShown:Boolean = true) = {
+	@if(toBeShown){
+		<li>
+			<a class="menu-item navbar-link" href="@href">@text</a>
+		</li>
+	}
 }
+
