@@ -42,6 +42,7 @@ timeline.js
 		this.dataset = [];
 		this.earliestDate = null;
 		this.latestDate = null;
+		this.loopIntervalID;
 		
 		this.vizID = getURLParameterByName("id");
 		
@@ -49,7 +50,10 @@ timeline.js
 			series: [{index: -1, color: 0}],
 			colorPalette: 0,
 			bBox: [[], []],
-			timeSelectionEvent: null
+			timeSelectionEvent: null,
+			daysPerFrame: 1,
+			renderDelay: 50,
+			pointDecay: 0.0231
 		};
 		
 		this.seriesList = [];
@@ -210,14 +214,30 @@ timeline.js
 					}
 					else {
 						thisMap.uiSettings = JSON.parse(result.result.uiSetting);
+						
+						thisMap.uiSettings.daysPerFrame = (thisMap.uiSettings.daysPerFrame | 1);
+						
+						if(!thisMap.uiSettings.renderDelay && (thisMap.uiSettings.renderDelay != 0)) {
+							thisMap.uiSettings.renderDelay = 50;
+						}
+						
+						if(!thisMap.uiSettings.pointDecay) {
+							thisMap.uiSettings.pointDecay = 0.0231;
+						}
 					}
 					
 					for(h = 0; h < thisMap.uiSettings.series.length; h++) {
-						thisMap.seriesToLoad.push(thisMap.uiSettings.series[h].index);
-						
-						thisMap.setGradient.push({
-							0.0: thisMap.colors[thisMap.uiSettings.series[h].color]
-						});
+						if(thisMap.seriesDescriptions[thisMap.uiSettings.series[h].index]) {
+							thisMap.seriesToLoad.push(thisMap.uiSettings.series[h].index);
+							
+							thisMap.setGradient.push({
+								0.0: thisMap.colors[thisMap.uiSettings.series[h].color]
+							});
+						}
+						else {
+							thisMap.uiSettings.series.splice(h, 1);
+							h--;
+						}
 					}
 					
 					thisMap.map.fitBounds(thisMap.uiSettings.bBox);
@@ -239,6 +259,15 @@ timeline.js
 					$("#color-selector-" + h + " #color-" + thisMap.uiSettings.series[h].color).addClass("selected");
 				}
 				
+				$("#render-delay").val(thisMap.uiSettings.renderDelay);
+				$("#render-delay").change();
+				
+				$("#days-per-frame").val(thisMap.uiSettings.daysPerFrame);
+				$("#days-per-frame").change();
+				
+				$("#point-decay").val(thisMap.uiSettings.pointDecay);
+				$("#point-decay").change();
+				
 				return;
 			},
 			error: function() {
@@ -249,11 +278,11 @@ timeline.js
 		return;
 	}
 	
-	MagicMap.prototype.start = function() {
+	MagicMap.prototype.initialize = function() {
 		var thisMap = this;
 		
 		document.getElementById('body').onkeyup = this.handleInput;
-		setInterval(this.loop, 0);
+		this.loopIntervalID = setInterval(this.loop, 0);
 		
 		$("#reset-button").click(function() {
 			var i;
@@ -282,6 +311,13 @@ timeline.js
 			var i;
 			
 			$("#detail-container *").toggle();
+			
+			if($("#detail-container").css("pointer-events") === "auto") {
+				$("#detail-container").css("pointer-events", "none");
+			}
+			else {
+				$("#detail-container").css("pointer-events", "auto");
+			}
 			
 			for(i = 0; i < thisMap.displaySet.length; i++) {
 				thisMap.detailChart.series[i].update({color: thisMap.colors[i]}, true);
@@ -326,6 +362,8 @@ timeline.js
 				thisMap.uiSettings.colorPalette = 0;
 				thisMap.setColorPalette(0);
 			}
+			
+			return;
 		});
 		
 		$("#palette-1").click(function() {
@@ -333,6 +371,8 @@ timeline.js
 				thisMap.uiSettings.colorPalette = 1;
 				thisMap.setColorPalette(1);
 			}
+			
+			return;
 		});
 		
 		$("#palette-2").click(function() {
@@ -340,7 +380,45 @@ timeline.js
 				thisMap.uiSettings.colorPalette = 2;
 				thisMap.setColorPalette(2);
 			}
+			
+			return;
 		});
+		
+		$("#render-delay").change(function() {
+			if($(this).val() < 0) {
+				$(this).val(0);
+			}
+			
+			thisMap.uiSettings.renderDelay = $(this).val();
+			
+			return;
+		});
+		$("#render-delay").val(thisMap.uiSettings.renderDelay);
+		$("#render-delay").change();
+		
+		$("#days-per-frame").change(function() {
+			if($(this).val() < 1) {
+				$(this).val(1);
+			}
+			
+			thisMap.uiSettings.daysPerFrame = $(this).val();
+			
+			return;
+		});
+		$("#days-per-frame").val(thisMap.uiSettings.daysPerFrame);
+		$("#days-per-frame").change();
+		
+		$("#point-decay").change(function() {
+			if($(this).val() < 0.0001) {
+				$(this).val(0.0001);
+			}
+			
+			thisMap.uiSettings.pointDecay = $(this).val();
+			
+			return;
+		});
+		$("#point-decay").val(thisMap.uiSettings.pointDecay);
+		$("#point-decay").change();
 		
 		$("#save-button").click(function() {
 			thisMap.saveVisualization();
@@ -595,7 +673,14 @@ console.log("series " + k + ": " + id);
 					}
 				}
 				console.log("Loaded " + (result.results.length - skipped) + " entries for " + currentDataset.title);
-				console.log("Skipped " + skipped + " malformed entries");
+				
+				if(skipped > 0) {
+					console.warn("Skipped " + skipped + " malformed entries");
+				}
+				else {
+					console.log("Skipped " + skipped + " malformed entries");
+				}
+				
 				console.log(filler + " days occurred without incidents in this timespan");
 				console.log("Total Frames: " + frame + 1);
 				console.log("Time Groups: " + currentDataset.timeGroup.length);
@@ -901,15 +986,10 @@ console.log("series " + k + ": " + id);
 		// make the container smaller and add a second container for the master chart
 		var $container = $('#container');
 		
-		//$('<div id="detail-container">').appendTo($container);
-		$('<div id="master-container">')
-			.css({ position: 'relative', bottom: 115, height: 125, 'background-color': 'rgba(255, 255, 255, 0.1)' })
-			.appendTo($container);
-			
 		// create master and in its callback, create the detail chart
 		createMaster();
 		
-		//TODO: transfer mouse events from detail container to map
+		//BONUS: transfer mouse events from detail container to map for all browsers
 		//$('#detail-container').mousedown(function(event) { event.stopImmediatePropagation(); return $('.leaflet-layer').mousedown(); });
 		//$('#detail-container').mousemove(function(event) { event.stopImmediatePropagation(); return $('.leaflet-layer').mousemove(); });
 		
@@ -1055,7 +1135,7 @@ console.log("series " + k + ": " + id);
 					}
 				}
 				
-				if(!dateString) {
+				if(!dateString && ((this.frame % this.uiSettings.daysPerFrame) === 0)) {
 					this.masterChart.xAxis[0].removePlotLine('date-line');
 					
 					if(this.playBack) {
@@ -1086,7 +1166,7 @@ console.log("series " + k + ": " + id);
 			if(this.playBack) {
 				for(i = 0; i < this.displaySet[setID].visiblePoints.length; i++) {
 					if(this.displaySet[setID].visiblePoints[i][2] > 0.00) {
-						this.displaySet[setID].visiblePoints[i][2] -= 0.0231;
+						this.displaySet[setID].visiblePoints[i][2] -= this.uiSettings.pointDecay;
 					}
 					else {
 						this.displaySet[setID].visiblePoints.splice(i, 1);
@@ -1168,6 +1248,8 @@ console.log((endFrame - startFrame) + " frames");
 
 	MagicMap.prototype.loop = function() {
 		function process(thisMap) {
+			var renderTime;
+			
 			if(!thisMap.paused) {
 				if(!thisMap.playBack) {
 					thisMap.evolve();//TEST.timeMethod(thisMap.evolve);
@@ -1176,8 +1258,30 @@ console.log((endFrame - startFrame) + " frames");
 					thisMap.playBuffer(thisMap.startFrame, thisMap.endFrame);//TEST.timeMethod(thisMap.playBuffer);
 				}
 				
-				thisMap.packHeat();
+				if((thisMap.frame % thisMap.uiSettings.daysPerFrame) === 0) {
+					renderTime = new Date();
+					thisMap.packHeat();
+					renderTime = new Date() - renderTime;
+					
+					if((thisMap.uiSettings.renderDelay - renderTime) > 0) {
+						clearInterval(thisMap.loopIntervalID);
+						
+						setTimeout(function() {
+								return thisMap.loopIntervalID = setInterval(thisMap.loop, 0);
+							},
+							(thisMap.uiSettings.renderDelay - renderTime)
+						);
+					}
+					
+					/*
+					while((new Date() - renderTime) < thisMap.uiSettings.renderDelay) {
+						//pause here
+					}
+					*/
+				}
 			}
+			
+			return;
 		}
 		
 		process(MAGIC_MAP);
@@ -1200,7 +1304,7 @@ console.log((endFrame - startFrame) + " frames");
 			break;
 			
 			default:
-				console.log("event.which code: " + event.which);
+				//console.log("event.which code: " + event.which);
 			break;
 		}
 		
@@ -1219,7 +1323,7 @@ console.log((endFrame - startFrame) + " frames");
 	
 	$(document).ready(function() {
 		window.MAGIC_MAP = new MagicMap();
-		MAGIC_MAP.start();
+		MAGIC_MAP.initialize();
 		
 		return;
 	});
