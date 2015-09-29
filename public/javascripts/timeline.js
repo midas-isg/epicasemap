@@ -494,7 +494,7 @@ timeline.js
 				thisMap.uiSettings.series.push({ color: 0, index: thisMap.seriesList[0].id });
 			}
 			
-			thisMap.displaySet.push({visiblePoints: [], secondValues: []});
+			thisMap.displaySet.push({visiblePoints: [], secondValues: [], hide: false});
 			
 			$("#series-options").append(
 				"<div style='clear: both;'>" +
@@ -570,7 +570,7 @@ console.log("series " + k + ": " + id);
 			this.masterChart.series[i].update({color: this.colors[this.uiSettings.series[i].color]}, true);
 			
 			this.heat[(i << 1)].setOptions({gradient: this.setGradient[i]});
-			this.heat[(i << 1) + 1].setOptions({gradient: this.debugColor});
+			this.heat[(i << 1) + 1].setOptions({gradient: this.setGradient[i] /*this.debugColor*/});
 		}
 		
 		for(i = 0; i < this.colors.length; i++) {
@@ -608,14 +608,14 @@ console.log("series " + k + ": " + id);
 				this.heat.push(L.heatLayer(this.displaySet[selectorID].secondValues,
 					{
 						minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.1, radius: 20,
-						gradient: this.debugColor //this.setGradient[selectorID]
+						gradient: this.setGradient[selectorID] //this.debugColor
 					}
 				).addTo(this.map));
 			}
 			
 			this.setGradient[selectorID] = {0.0: this.colors[colorID]};
 			this.heat[(selectorID << 1)].setOptions({gradient: this.setGradient[selectorID]});
-			this.heat[(selectorID << 1) + 1].setOptions({gradient: this.debugColor});
+			this.heat[(selectorID << 1) + 1].setOptions({gradient: this.setGradient[selectorID] /*this.debugColor*/});
 			
 			if(this.detailChart.series[selectorID]) {
 				this.detailChart.series[selectorID].update({color: this.colors[colorID]}, true);
@@ -647,6 +647,7 @@ console.log("series " + k + ": " + id);
 			title: "title",
 			timeGroup: [{point: [], date: null}],
 			maxValue: 0,
+			standardDeviation: 0,
 			frameAggregate: [0],
 			frameOffset: 0
 		},
@@ -676,7 +677,9 @@ console.log("series " + k + ": " + id);
 				deltaTime,
 				largestConcentration = 0,
 				sumArray,
-				pointLifeSpan = Math.ceil(1 / thisMap.uiSettings.pointDecay);
+				pointLifeSpan = Math.ceil(1 / thisMap.uiSettings.pointDecay),
+				datasetAverage = 0,
+				datasetVariance = 0;
 				
 				thisMap.zeroTime(lastDate);
 				
@@ -704,6 +707,8 @@ console.log("series " + k + ": " + id);
 							deltaTime -= threshold;
 						}
 						
+						datasetAverage += result.results[i].value;
+						
 						currentDataset.timeGroup[frame].point.push({latitude: result.results[i].latitude, longitude: result.results[i].longitude, value: result.results[i].value, secondValue: result.results[i].secondValue});
 						currentDataset.timeGroup[frame].date = inputDate;
 						
@@ -719,6 +724,7 @@ console.log("series " + k + ": " + id);
 						skipped++;
 					}
 				}
+				
 				console.log("Loaded " + (result.results.length - skipped) + " entries for " + currentDataset.title);
 				
 				if(skipped > 0) {
@@ -732,6 +738,16 @@ console.log("series " + k + ": " + id);
 				console.log("Total Frames: " + frame + 1);
 				console.log("Time Groups: " + currentDataset.timeGroup.length);
 				console.log("---");
+				
+				datasetAverage /= result.results.length;
+				
+				for(i = 0; i < result.results.length; i++) {
+					temp = (result.results[i].value - datasetAverage);
+					temp *= temp;
+					datasetVariance += temp;
+				}
+				datasetVariance /= result.results.length;
+				currentDataset.standardDeviation = Math.sqrt(datasetVariance);
 				
 				thisMap.seriesToLoad.shift();
 				if(thisMap.seriesToLoad.length === 0) {
@@ -765,6 +781,7 @@ console.log("series " + k + ": " + id);
 					//total timespan of dataseries
 					deltaTime = (thisMap.latestDate.valueOf() - thisMap.earliestDate.valueOf()) / threshold;
 					
+					//set the largestConcentration of points equal to the sum of the frame of the most concentrated lifecycle to display
 					sumArray = [];
 					for(i = 0; i < deltaTime; i++) {
 						temp = 0;
@@ -1012,6 +1029,7 @@ console.log("series " + k + ": " + id);
 				);
 			}
 			
+			//TODO: hide/show displaySets that are toggled off/on via legend
 			MAGIC_MAP.masterChart = $('#master-container').highcharts({
 				chart: {
 					reflow: false,
@@ -1271,8 +1289,8 @@ console.log("series " + k + ": " + id);
 						this.displaySet[setID].secondValues.push([this.dataset[setID].timeGroup[setFrame].point[i].latitude,
 							this.dataset[setID].timeGroup[setFrame].point[i].longitude,
 							0.24,
-							/*(this.dataset[setID].timeGroup[setFrame].point[i].secondValue / this.dataset[setID].maxValue) << 1*/
-							(this.dataset[setID].timeGroup[setFrame].point[i].secondValue / this.dataset[setID].timeGroup[setFrame].point[i].value)]);
+							//0.5 + (this.dataset[setID].timeGroup[setFrame].point[i].secondValue / (6 * this.dataset[setID].standardDeviation))
+							0.5 + (this.dataset[setID].timeGroup[setFrame].point[i].secondValue / (this.dataset[setID].timeGroup[setFrame].point[i].value + 5.0))]);
 					}
 				}
 				
@@ -1374,23 +1392,47 @@ console.log((endFrame - startFrame) + " frames");
 		
 		for(setID = 0; setID < this.displaySet.length; setID++) {
 			if(!this.heat[setID << 1]) {
-				this.heat.push(L.heatLayer(this.displaySet[setID].visiblePoints,
-					{
-						minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.1, radius: 10,
-						gradient: this.setGradient[setID]
-					}
-				).addTo(this.map));
 				
-				this.heat.push(L.heatLayer(this.displaySet[setID].secondValues,
-					{
-						minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.1, radius: 20,
-						gradient: this.debugColor //this.setGradient[setID]
-					}
-				).addTo(this.map));
+				if(this.displaySet[setID].hide) {
+					this.heat.push(L.heatLayer([],
+						{
+							minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.1, radius: 10,
+							gradient: this.setGradient[setID]
+						}
+					).addTo(this.map));
+					
+					this.heat.push(L.heatLayer([],
+						{
+							minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.1, radius: 20,
+							gradient: this.setGradient[setID] //this.debugColor
+						}
+					).addTo(this.map));
+				}
+				else {
+					this.heat.push(L.heatLayer(this.displaySet[setID].visiblePoints,
+						{
+							minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.1, radius: 10,
+							gradient: this.setGradient[setID]
+						}
+					).addTo(this.map));
+					
+					this.heat.push(L.heatLayer(this.displaySet[setID].secondValues,
+						{
+							minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.1, radius: 20,
+							gradient: this.setGradient[setID] //this.debugColor
+						}
+					).addTo(this.map));
+				}
 			}
 			else {
-				this.heat[(setID << 1)].setLatLngs(this.displaySet[setID].visiblePoints);
-				this.heat[(setID << 1) + 1].setLatLngs(this.displaySet[setID].secondValues);
+				if(this.displaySet[setID].hide) {
+					this.heat[(setID << 1)].setLatLngs([]);
+					this.heat[(setID << 1) + 1].setLatLngs([]);
+				}
+				else{
+					this.heat[(setID << 1)].setLatLngs(this.displaySet[setID].visiblePoints);
+					this.heat[(setID << 1) + 1].setLatLngs(this.displaySet[setID].secondValues);
+				}
 			}
 //console.log(this.heat[setID]._latlngs);
 		}
