@@ -1,6 +1,7 @@
 @import play.api.Play.current
 @import play.api.Play
 @import controllers.security.AuthorizationKit
+@import controllers.security.Authentication
 
 @(title: String, imports: Html = Html(""), hasLoggedIn:Boolean=AuthorizationKit.hasLoggedIn)(content: Html)
 
@@ -64,7 +65,10 @@
 
 @login = {
 	@if(hasLoggedIn){
-		@menuItem(routes.User.logout.url, "Log out")
+		@menu(Authentication.readAccountName(ctx()), Seq(
+			menuItem(routes.User.logout.url, "Log out")
+		))
+	
 	} else {
 		@menuItem(routes.User.login.url, "Log in")
 	}

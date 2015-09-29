@@ -7,6 +7,7 @@ import play.mvc.Result;
 import play.mvc.Security;
 
 public class Authentication extends Security.Authenticator {
+	private static final String NAME = "name";
 	private static final String ID = "id";
 
 	@Override
@@ -24,10 +25,14 @@ public class Authentication extends Security.Authenticator {
 	
 	public static void cacheCredential(Credential credential) {
 		Controller.session(ID, "" + credential.getId());
-		Controller.session("name", credential.getName());
+		Controller.session(NAME, credential.getName());
 	}
 	
 	public static String readAccountId(Context ctx) {
 		return ctx.session().get(ID);
+	}
+	
+	public static String readAccountName(Context ctx) {
+		return ctx.session().get(NAME);
 	}
 }
