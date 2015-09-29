@@ -3,8 +3,9 @@ package interactors;
 import static org.fest.assertions.Assertions.assertThat;
 import integrations.app.App;
 import interactors.security.Credential;
-import models.SignIn;
+import models.Registration;
 import models.entities.Account;
+import models.exceptions.Unauthorized;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -22,11 +23,11 @@ public class TestSecurityRule {
 	public static void populateDb(){
 		runWithTransaction(() ->{
 			AccountRule rule = Factory.makeAccountRule(JPA.em());
-			SignIn signIn = newSignIn(email, password);
-			final Credential c = new Credential(null, "name");
-			final Account account = rule.create(c, signIn);
+			String name = "name";
+			Registration signIn = newRegistration(email, password, name);
+			final Account account = rule.register(signIn);
 			assertThat(account.getId()).isPositive();
-			credential = new Credential(account.getId(), "name");
+			credential = new Credential(account.getId(), name);
 		});
 	}
 	
@@ -47,15 +48,24 @@ public class TestSecurityRule {
 	}
 
 	private Credential authenticate(String email, String password) {
-		AccountRule rule = Factory.makeAccountRule(JPA.em());
-		SignIn signIn = newSignIn(email, password);
-		return rule.authenticate(signIn);
+		Registration signIn = newRegistration(email, password, null);
+		return authenticate(signIn);
 	}
 
-	private static SignIn newSignIn(String email, String password) {
-		SignIn signIn = new SignIn();
+	private Credential authenticate(Registration signIn) {
+		AccountRule rule = Factory.makeAccountRule(JPA.em());
+		try {
+			return rule.authenticate(signIn);
+		} catch (Unauthorized e){
+			return null;
+		}
+	}
+
+	private static Registration newRegistration(String email, String passwd, String name) {
+		Registration signIn = new Registration();
 		signIn.setEmail(email);
-		signIn.setPassword(password);
+		signIn.setPassword(passwd);
+		signIn.setName(name);
 		return signIn;
 	}
 

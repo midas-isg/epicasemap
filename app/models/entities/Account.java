@@ -1,5 +1,6 @@
 package models.entities;
 
+import javax.persistence.Column;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -28,6 +29,7 @@ public class Account implements models.entities.Entity {
 		this.id = id;
 	}
 
+	@Column(unique=true)
 	public String getEmail() {
 		return email;
 	}

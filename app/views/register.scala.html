@@ -4,7 +4,7 @@
 }
 
 @main("Registration", imports) {
-	@helper.form(routes.Login.register) {
+	@helper.form(routes.User.register) {
 		@if(flash.contains("message")) {
 			<p class="message">
 				@flash.get("message")
