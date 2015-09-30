@@ -3,6 +3,8 @@ timeline.js
 */
 
 (function() {
+	var DEBUG = false;
+	
 	function MagicMap() {
 		var i,
 			j,
@@ -160,8 +162,10 @@ timeline.js
 	}
 	
 	MagicMap.prototype.saveVisualization = function() {
+		if(DEBUG) { console.log("[DEBUG] called saveVisualization()"); }
+		
 		var URL = CONTEXT + "/api/vizs/" + this.vizID + "/ui-setting",
-		bounds = this.map.getBounds();
+			bounds = this.map.getBounds();
 		
 		if(this.vizID) {
 			this.uiSettings.bBox[0][0] = bounds.getSouth();
@@ -189,8 +193,10 @@ timeline.js
 	}
 	
 	MagicMap.prototype.loadVisualization = function(vizID) {
+		if(DEBUG) { console.log("[DEBUG] called loadVisualization()"); }
+		
 		var URL = CONTEXT + "/api/vizs/" + vizID,
-		thisMap = this;
+			thisMap = this;
 		
 		$.ajax({
 			url: URL,
@@ -280,6 +286,8 @@ timeline.js
 	}
 	
 	MagicMap.prototype.initialize = function() {
+		if(DEBUG) { console.log("[DEBUG] called initialize()"); }
+		
 		var thisMap = this;
 		
 		document.getElementById('body').onkeyup = this.handleInput;
@@ -463,6 +471,8 @@ timeline.js
 	}
 	
 	MagicMap.prototype.pushSeries = function() {
+		if(DEBUG) { console.log("[DEBUG] called pushSeries()"); }
+		
 		var optionID = $("#series-options").children().last().index() + 1,
 			thisMap = this;
 		
@@ -530,6 +540,8 @@ console.log("series " + k + ": " + id);
 	}
 	
 	MagicMap.prototype.popSeries = function() {
+		if(DEBUG) { console.log("[DEBUG] called popSeries()"); }
+		
 		var selectorID = $("#series-options").children().last().index();
 		
 		$("#series-" + selectorID).parent().remove();
@@ -548,6 +560,8 @@ console.log("series " + k + ": " + id);
 	}
 	
 	MagicMap.prototype.setColorPalette = function(palette) {
+		if(DEBUG) { console.log("[DEBUG] called setColorPalette()"); }
+		
 		var i;
 		
 		for(i = 0; i < 3; i++) {
@@ -581,6 +595,8 @@ console.log("series " + k + ": " + id);
 	}
 	
 	MagicMap.prototype.setSeriesColor = function(colorSelector) {
+		if(DEBUG) { console.log("[DEBUG] called setSeriesColor()"); }
+		
 		var colorID = colorSelector.id.split("-")[1],
 			selectorID = $(colorSelector).parent().attr("id").split("-")[2],
 			siblings = $(colorSelector).siblings().get(),
@@ -600,22 +616,22 @@ console.log("series " + k + ": " + id);
 			if(!this.heat[(selectorID << 1)]) {
 				this.heat.push(L.heatLayer(this.displaySet[selectorID].visiblePoints,
 					{
-						minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.1, radius: 10,
+						minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.01, radius: 10,
 						gradient: this.setGradient[selectorID]
 					}
 				).addTo(this.map));
 				
 				this.heat.push(L.heatLayer(this.displaySet[selectorID].secondValues,
 					{
-						minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.1, radius: 20,
-						gradient: this.setGradient[selectorID] //this.debugColor
+						minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.01, radius: 10,
+						gradient: this.debugColor //this.setGradient[selectorID]
 					}
 				).addTo(this.map));
 			}
 			
 			this.setGradient[selectorID] = {0.0: this.colors[colorID]};
 			this.heat[(selectorID << 1)].setOptions({gradient: this.setGradient[selectorID]});
-			this.heat[(selectorID << 1) + 1].setOptions({gradient: this.setGradient[selectorID] /*this.debugColor*/});
+			this.heat[(selectorID << 1) + 1].setOptions({gradient: /*this.setGradient[selectorID]*/ this.debugColor});
 			
 			if(this.detailChart.series[selectorID]) {
 				this.detailChart.series[selectorID].update({color: this.colors[colorID]}, true);
@@ -627,6 +643,8 @@ console.log("series " + k + ": " + id);
 	}
 	
 	MagicMap.prototype.updatePlaybackInterface = function() {
+		if(DEBUG) { console.log("[DEBUG] called updatePlaybackInterface()"); }
+		
 		if(!MAGIC_MAP.paused) {
 			$("#playback-button span").removeClass("glyphicon-play")
 				.addClass("glyphicon-pause");
@@ -641,17 +659,19 @@ console.log("series " + k + ": " + id);
 	}
 
 	MagicMap.prototype.load = function(seriesID, index) {
+		if(DEBUG) { console.log("[DEBUG] called load()"); }
+		
 		var URL = CONTEXT + "/api/series/" + seriesID + "/time-coordinate",
-		currentDataset = {
-			seriesID: seriesID,
-			title: "title",
-			timeGroup: [{point: [], date: null}],
-			maxValue: 0,
-			standardDeviation: 0,
-			frameAggregate: [0],
-			frameOffset: 0
-		},
-		thisMap = this;
+			currentDataset = {
+				seriesID: seriesID,
+				title: "title",
+				timeGroup: [{point: [], date: null}],
+				maxValue: 0,
+				standardDeviation: 0,
+				frameAggregate: [0],
+				frameOffset: 0
+			},
+			thisMap = this;
 		
 		if(!index && (index !== 0)) {
 			this.dataset.push(currentDataset);
@@ -664,22 +684,22 @@ console.log("series " + k + ": " + id);
 			url: URL,
 			success: function(result) {
 				var i,
-				j,
-				k,
-				temp,
-				frame = 0,
-				skipped = 0,
-				filler = 0,
-				threshold = 86400000, //ms in a day
-				lastDate = new Date(result.results[0].timestamp),
-				emptyDate,
-				inputDate,
-				deltaTime,
-				largestConcentration = 0,
-				sumArray,
-				pointLifeSpan = Math.ceil(1 / thisMap.uiSettings.pointDecay),
-				datasetAverage = 0,
-				datasetVariance = 0;
+					j,
+					k,
+					temp,
+					frame = 0,
+					skipped = 0,
+					filler = 0,
+					threshold = 86400000, //ms in a day
+					lastDate = new Date(result.results[0].timestamp),
+					emptyDate,
+					inputDate,
+					deltaTime,
+					largestConcentration = 0,
+					sumArray,
+					pointLifeSpan = Math.ceil(1 / thisMap.uiSettings.pointDecay),
+					datasetAverage = 0,
+					datasetVariance = 0;
 				
 				thisMap.zeroTime(lastDate);
 				
@@ -687,8 +707,8 @@ console.log("series " + k + ": " + id);
 				
 				for(i = 0; i < result.results.length; i++) {
 					if(result.results[i]) {
-							result.results[i].secondValue = result.results[i].value + (5 * Math.random());
-							
+result.results[i].secondValue = 0; //((i % 5) * 0.25);
+						
 						inputDate = new Date(result.results[i].timestamp);
 						thisMap.zeroTime(inputDate);
 						
@@ -848,6 +868,8 @@ console.log("series " + k + ": " + id);
 	}
 	
 	MagicMap.prototype.suggestDelay = function() {
+		if(DEBUG) { console.log("[DEBUG] called suggestDelay()"); }
+		
 		var thisMap = this,
 			startFrame,
 			threshold = 86400000, //ms in a day
@@ -892,8 +914,10 @@ console.log("series " + k + ": " + id);
 	}
 	
 	MagicMap.prototype.createChart = function() {
+		if(DEBUG) { console.log("[DEBUG] called createChart()"); }
+		
 		var seriesColors = [],
-		i;
+			i;
 		
 		for(i = 0; i < this.uiSettings.series.length; i++) {
 			seriesColors.push(this.colors[this.uiSettings.series[i].color]);
@@ -1152,6 +1176,8 @@ console.log("series " + k + ": " + id);
 	}
 	
 	MagicMap.prototype.doSelection = function(event) {
+		if(DEBUG) { console.log("[DEBUG] called doSelection()"); }
+		
 		var extremesObject = event.xAxis[0],
 			min = extremesObject.min,
 			max = extremesObject.max,
@@ -1233,6 +1259,8 @@ console.log("series " + k + ": " + id);
 	}
 	
 	MagicMap.prototype.loadBuffer = function() {
+		if(DEBUG) { console.log("[DEBUG] called loadBuffer()"); }
+		
 		var i;
 		
 		this.frame = 0;
@@ -1255,13 +1283,15 @@ console.log("series " + k + ": " + id);
 	}
 
 	MagicMap.prototype.playBuffer = function(startFrame, endFrame) {
+		if(DEBUG) { console.log("[DEBUG] called playBuffer()"); }
+		
 		var i,
-		setID,
-		setFrame,
-		currentDate,
-		dateString = null,
-		adjustedStart,
-		adjustedEnd;
+			setID,
+			setFrame,
+			currentDate,
+			dateString = null,
+			adjustedStart,
+			adjustedEnd;
 		
 		if(this.reset) {
 			this.reset = false;
@@ -1290,7 +1320,7 @@ console.log("series " + k + ": " + id);
 							this.dataset[setID].timeGroup[setFrame].point[i].longitude,
 							0.24,
 							//0.5 + (this.dataset[setID].timeGroup[setFrame].point[i].secondValue / (6 * this.dataset[setID].standardDeviation))
-							0.5 + (this.dataset[setID].timeGroup[setFrame].point[i].secondValue / (this.dataset[setID].timeGroup[setFrame].point[i].value + 5.0))]);
+							this.dataset[setID].timeGroup[setFrame].point[i].secondValue * this.dataset[setID].timeGroup[setFrame].point[i].value]);
 					}
 				}
 				
@@ -1358,6 +1388,8 @@ console.log("series " + k + ": " + id);
 	}
 	
 	MagicMap.prototype.playSection = function(startFrame, endFrame) {
+		if(DEBUG) { console.log("[DEBUG] called playSection()"); }
+		
 		var i;
 		
 		this.playBack = false;
@@ -1388,38 +1420,39 @@ console.log((endFrame - startFrame) + " frames");
 	}
 
 	MagicMap.prototype.packHeat = function() {
+		if(DEBUG) { console.log("[DEBUG] called packHeat()"); }
+		
 		var setID;
 		
 		for(setID = 0; setID < this.displaySet.length; setID++) {
 			if(!this.heat[setID << 1]) {
-				
 				if(this.displaySet[setID].hide) {
 					this.heat.push(L.heatLayer([],
 						{
-							minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.1, radius: 10,
+							minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.01, radius: 10,
 							gradient: this.setGradient[setID]
 						}
 					).addTo(this.map));
 					
 					this.heat.push(L.heatLayer([],
 						{
-							minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.1, radius: 20,
-							gradient: this.setGradient[setID] //this.debugColor
+							minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.01, radius: 10,
+							gradient: /*this.setGradient[setID]*/ this.debugColor
 						}
 					).addTo(this.map));
 				}
 				else {
 					this.heat.push(L.heatLayer(this.displaySet[setID].visiblePoints,
 						{
-							minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.1, radius: 10,
+							minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.01, radius: 10,
 							gradient: this.setGradient[setID]
 						}
 					).addTo(this.map));
 					
 					this.heat.push(L.heatLayer(this.displaySet[setID].secondValues,
 						{
-							minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.1, radius: 20,
-							gradient: this.setGradient[setID] //this.debugColor
+							minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.01, radius: 10,
+							gradient: /*this.setGradient[setID]*/ this.debugColor
 						}
 					).addTo(this.map));
 				}
@@ -1429,7 +1462,7 @@ console.log((endFrame - startFrame) + " frames");
 					this.heat[(setID << 1)].setLatLngs([]);
 					this.heat[(setID << 1) + 1].setLatLngs([]);
 				}
-				else{
+				else {
 					this.heat[(setID << 1)].setLatLngs(this.displaySet[setID].visiblePoints);
 					this.heat[(setID << 1) + 1].setLatLngs(this.displaySet[setID].secondValues);
 				}

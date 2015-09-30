@@ -84,6 +84,7 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
 			size,
 			animated,
 			radiusFactor = this.options.radius || this.defaultRadius;
+			optionsBlur = this.options.blur || 0;
 		
         canvas = this._canvas = L.DomUtil.create('canvas', 'leaflet-heatmap-layer leaflet-layer');
 
@@ -102,10 +103,11 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
 			var ctx = this._ctx,
 			i,
 			colored,
-			p;
+			p,
+			radius;
 			
 			if(!this._circle) {
-				this.radius(this.defaultRadius);
+				this.radius(radiusFactor, optionsBlur); //this.radius(this.defaultRadius);
 			}
 			
 			if(!this._grad) {
@@ -117,12 +119,14 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
 			for(i = 0; i < this._data.length; i++) {
 				p = this._data[i];
 				
+				radius = p[3] * radiusFactor;
 				//data[i][2] cannot be NaN so make work-around
-				if(p[2] && (p[2] > 0)) {
-					this.radius((p[3] >= 0.1 ? p[3] : 0.1) * radiusFactor, 0.1);
+				if(p[2] && (p[2] > 0) && (radius >= 1)) {
+					//this.radius(radius >= 1 ? radius : 1, optionsBlur);
+					this.radius(radius, optionsBlur);
 					
-					//ctx.globalAlpha = 1.0;
-					ctx.globalAlpha = Math.max(p[2], minOpacity === undefined ? 0.05 : minOpacity);
+					//ctx.globalAlpha = Math.max(p[2], minOpacity === undefined ? 0.05 : minOpacity);
+					ctx.globalAlpha = Math.max(p[2], minOpacity === undefined ? 0 : minOpacity);
 					ctx.drawImage(this._circle, p[0] - this._r, p[1] - this._r);
 				}
 			}
