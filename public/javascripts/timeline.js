@@ -286,9 +286,11 @@ timeline.js
 	}
 	
 	MagicMap.prototype.initialize = function() {
+		"use strict";
 		if(DEBUG) { console.log("[DEBUG] called initialize()"); }
 		
-		var thisMap = this;
+		var thisMap = this,
+		i;
 		
 		document.getElementById('body').onkeyup = this.handleInput;
 		this.loopIntervalID = setInterval(this.loop, 0);
@@ -391,33 +393,22 @@ timeline.js
 			return;
 		});
 		
-		//TODO: refactor palette click code without causing closure issues
-		$("#palette-0").click(function() {
-			if(!$("#palette-0").hasClass("selected")) {
-				thisMap.uiSettings.colorPalette = 0;
-				thisMap.setColorPalette(0);
-			}
-			
-			return;
-		});
+		for(i = 0; i < 3; i++) {
+			setColorPaletteClickEvent(i);
+		}
 		
-		$("#palette-1").click(function() {
-			if(!$("#palette-1").hasClass("selected")) {
-				thisMap.uiSettings.colorPalette = 1;
-				thisMap.setColorPalette(1);
-			}
+		function setColorPaletteClickEvent(index) {
+			$("#palette-" + index).click(function() {
+				if(!$("#palette-" + index).hasClass("selected")) {
+					thisMap.uiSettings.colorPalette = index;
+					thisMap.setColorPalette(index);
+				}
+				
+				return;
+			});
 			
 			return;
-		});
-		
-		$("#palette-2").click(function() {
-			if(!$("#palette-2").hasClass("selected")) {
-				thisMap.uiSettings.colorPalette = 2;
-				thisMap.setColorPalette(2);
-			}
-			
-			return;
-		});
+		}
 		
 		$("#render-delay").change(function() {
 			if($(this).val() < 0) {
