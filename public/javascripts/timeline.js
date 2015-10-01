@@ -623,15 +623,15 @@ console.log("series " + k + ": " + id);
 				
 				this.heat.push(L.heatLayer(this.displaySet[selectorID].secondValues,
 					{
-						minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.01, radius: 10,
-						gradient: this.debugColor //this.setGradient[selectorID]
+						minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.01, radius: 20,
+						gradient: this.setGradient[selectorID] //this.debugColor
 					}
 				).addTo(this.map));
 			}
 			
 			this.setGradient[selectorID] = {0.0: this.colors[colorID]};
 			this.heat[(selectorID << 1)].setOptions({gradient: this.setGradient[selectorID]});
-			this.heat[(selectorID << 1) + 1].setOptions({gradient: /*this.setGradient[selectorID]*/ this.debugColor});
+			this.heat[(selectorID << 1) + 1].setOptions({gradient: this.setGradient[selectorID] /*this.debugColor*/});
 			
 			if(this.detailChart.series[selectorID]) {
 				this.detailChart.series[selectorID].update({color: this.colors[colorID]}, true);
@@ -707,7 +707,7 @@ console.log("series " + k + ": " + id);
 				
 				for(i = 0; i < result.results.length; i++) {
 					if(result.results[i]) {
-result.results[i].secondValue = 0; //((i % 5) * 0.25);
+result.results[i].secondValue = -((i % 5) * 0.25) - 0.5;
 						
 						inputDate = new Date(result.results[i].timestamp);
 						thisMap.zeroTime(inputDate);
@@ -1318,9 +1318,9 @@ result.results[i].secondValue = 0; //((i % 5) * 0.25);
 						
 						this.displaySet[setID].secondValues.push([this.dataset[setID].timeGroup[setFrame].point[i].latitude,
 							this.dataset[setID].timeGroup[setFrame].point[i].longitude,
-							0.24,
+							0.7,
 							//0.5 + (this.dataset[setID].timeGroup[setFrame].point[i].secondValue / (6 * this.dataset[setID].standardDeviation))
-							this.dataset[setID].timeGroup[setFrame].point[i].secondValue * this.dataset[setID].timeGroup[setFrame].point[i].value]);
+							this.dataset[setID].timeGroup[setFrame].point[i].secondValue]);
 					}
 				}
 				
@@ -1356,7 +1356,7 @@ result.results[i].secondValue = 0; //((i % 5) * 0.25);
 				for(i = 0; i < this.displaySet[setID].visiblePoints.length; i++) {
 					if(this.displaySet[setID].visiblePoints[i][2] > 0.00) {
 						this.displaySet[setID].visiblePoints[i][2] -= this.uiSettings.pointDecay;
-						this.displaySet[setID].secondValues[i][2] -= (this.uiSettings.pointDecay * 0.3);
+						this.displaySet[setID].secondValues[i][2] -= this.uiSettings.pointDecay;
 					}
 					else {
 						this.displaySet[setID].visiblePoints.splice(i, 1);
@@ -1436,8 +1436,8 @@ console.log((endFrame - startFrame) + " frames");
 					
 					this.heat.push(L.heatLayer([],
 						{
-							minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.01, radius: 10,
-							gradient: /*this.setGradient[setID]*/ this.debugColor
+							minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.01, radius: 20,
+							gradient: this.setGradient[setID] //this.debugColor
 						}
 					).addTo(this.map));
 				}
@@ -1451,8 +1451,8 @@ console.log((endFrame - startFrame) + " frames");
 					
 					this.heat.push(L.heatLayer(this.displaySet[setID].secondValues,
 						{
-							minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.01, radius: 10,
-							gradient: /*this.setGradient[setID]*/ this.debugColor
+							minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.01, radius: 20,
+							gradient: this.setGradient[setID] //this.debugColor
 						}
 					).addTo(this.map));
 				}

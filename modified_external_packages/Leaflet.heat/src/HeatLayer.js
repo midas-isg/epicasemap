@@ -99,6 +99,28 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
 		
 		
 		/* _heat Object Extension */
+		this._heat.radius2 = function (r, blur) {
+			blur = blur === undefined ? 15 : blur;
+
+			// create a grayscale blurred circle image that we'll use for drawing points
+			var circle = this._circle = document.createElement('canvas'),
+				ctx = circle.getContext('2d'),
+				r2 = this._r = (-r) + blur;
+
+			circle.width = circle.height = r2 * 2;
+
+			ctx.shadowOffsetX = ctx.shadowOffsetY = 200;
+			ctx.shadowBlur = blur;
+			ctx.shadowColor = 'black';
+
+			ctx.beginPath();
+			ctx.arc(r2 - 200, r2 - 200, -r, 0, Math.PI * 2, true);
+			ctx.closePath();
+			ctx.stroke(); //ctx.fill();
+
+			return this;
+		}
+		
 		this._heat.draw2 = function(minOpacity) {
 			var ctx = this._ctx,
 			i,
@@ -121,13 +143,20 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
 				
 				radius = p[3] * radiusFactor;
 				//data[i][2] cannot be NaN so make work-around
-				if(p[2] && (p[2] > 0) && (radius >= 1)) {
-					//this.radius(radius >= 1 ? radius : 1, optionsBlur);
-					this.radius(radius, optionsBlur);
-					
-					//ctx.globalAlpha = Math.max(p[2], minOpacity === undefined ? 0.05 : minOpacity);
-					ctx.globalAlpha = Math.max(p[2], minOpacity === undefined ? 0 : minOpacity);
-					ctx.drawImage(this._circle, p[0] - this._r, p[1] - this._r);
+				if(p[2] && (p[2] > 0)) {
+					if(radius > 0) {
+						this.radius(radius >= 1 ? radius : 1, optionsBlur);
+						
+						ctx.globalAlpha = Math.max(p[2], minOpacity === undefined ? 0 : minOpacity);
+						ctx.drawImage(this._circle, p[0] - this._r, p[1] - this._r);
+					}
+					else {
+						//negatives are treated as hollow circles
+						this.radius2(radius <= -1 ? radius : -1, optionsBlur);
+						
+						ctx.globalAlpha = Math.max(p[2], minOpacity === undefined ? 0 : minOpacity);
+						ctx.drawImage(this._circle, p[0] - this._r, p[1] - this._r);
+					}
 				}
 			}
 			
@@ -214,7 +243,7 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
                     cell[0] = (cell[0] * cell[2] + p.x * k) / (cell[2] + k); // x
                     cell[1] = (cell[1] * cell[2] + p.y * k) / (cell[2] + k); // y
                     cell[2] += k; // cumulated intensity value
-					cell[3] += radius;
+					cell[3] = radius;
                 }
             }
         }
