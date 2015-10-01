@@ -1031,6 +1031,18 @@ result.results[i].secondValue = -((i % 5) * 0.25) - 0.5;
 			var i,
 				dataSeries = [];
 			
+			function attachToggleEvent(selectorID) {
+				MAGIC_MAP.displaySet[selectorID].hide = false;
+				
+				$($("g.highcharts-legend-item")[selectorID]).click(function() {
+					MAGIC_MAP.displaySet[selectorID].hide = !MAGIC_MAP.displaySet[selectorID].hide;
+					
+					return;
+				});
+				
+				return;
+			}
+			
 			for(i = 0; i < MAGIC_MAP.dataset.length; i++) {
 				dataSeries.push({
 						type: 'area',
@@ -1061,6 +1073,22 @@ result.results[i].secondValue = -((i % 5) * 0.25) - 0.5;
 							MAGIC_MAP.doSelection(event);
 							
 							return false;
+						},
+						load: function() {
+							console.log("~~~~~~~Series length: " + this.series.length);
+							var i;
+							
+							for(i = 0; i < this.series.length; i++) {
+								attachToggleEvent(i);
+							}
+							
+							return;
+						},
+						addSeries: function() {
+							console.log("~~~~~~~Series length: " + this.series.length);
+							attachToggleEvent(this.series.length - 1);
+							
+							return;
 						}
 					}
 				},
