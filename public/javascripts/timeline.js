@@ -66,6 +66,7 @@ timeline.js
 		this.seriesToLoad = [];
 		
 		this.showControlPanel = false;
+		this.showSecondary = false;
 		
 		this.playBack = false;
 		this.displaySet = [];
@@ -356,6 +357,13 @@ timeline.js
 			for(i = 0; i < thisMap.displaySet.length; i++) {
 				thisMap.detailChart.series[i].update({color: thisMap.colors[i]}, true);
 			}
+			
+			return;
+		});
+		
+		$("#toggle-secondary-button").click(function() {
+			thisMap.showSecondary = !thisMap.showSecondary;
+			thisMap.packHeat();
 			
 			return;
 		});
@@ -1036,6 +1044,7 @@ result.results[i].secondValue = -((i % 5) * 0.25) - 0.5;
 				
 				$($("g.highcharts-legend-item")[selectorID]).click(function() {
 					MAGIC_MAP.displaySet[selectorID].hide = !MAGIC_MAP.displaySet[selectorID].hide;
+					MAGIC_MAP.packHeat();
 					
 					return;
 				});
@@ -1075,7 +1084,6 @@ result.results[i].secondValue = -((i % 5) * 0.25) - 0.5;
 							return false;
 						},
 						load: function() {
-							console.log("~~~~~~~Series length: " + this.series.length);
 							var i;
 							
 							for(i = 0; i < this.series.length; i++) {
@@ -1085,7 +1093,7 @@ result.results[i].secondValue = -((i % 5) * 0.25) - 0.5;
 							return;
 						},
 						addSeries: function() {
-							console.log("~~~~~~~Series length: " + this.series.length);
+							//this may never be called the way things are currently implemented...
 							attachToggleEvent(this.series.length - 1);
 							
 							return;
@@ -1468,12 +1476,22 @@ console.log((endFrame - startFrame) + " frames");
 						}
 					).addTo(this.map));
 					
-					this.heat.push(L.heatLayer(this.displaySet[setID].secondValues,
-						{
-							minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.01, radius: 20,
-							gradient: this.setGradient[setID] //this.debugColor
-						}
-					).addTo(this.map));
+					if(this.showSecondary) {
+						this.heat.push(L.heatLayer(this.displaySet[setID].secondValues,
+							{
+								minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.01, radius: 20,
+								gradient: this.setGradient[setID] //this.debugColor
+							}
+						).addTo(this.map));
+					}
+					else {
+							this.heat.push(L.heatLayer([],
+							{
+								minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.01, radius: 20,
+								gradient: this.setGradient[setID] //this.debugColor
+							}
+						).addTo(this.map));
+					}
 				}
 			}
 			else {
@@ -1483,7 +1501,13 @@ console.log((endFrame - startFrame) + " frames");
 				}
 				else {
 					this.heat[(setID << 1)].setLatLngs(this.displaySet[setID].visiblePoints);
-					this.heat[(setID << 1) + 1].setLatLngs(this.displaySet[setID].secondValues);
+					
+					if(this.showSecondary) {
+						this.heat[(setID << 1) + 1].setLatLngs(this.displaySet[setID].secondValues);
+					}
+					else {
+						this.heat[(setID << 1) + 1].setLatLngs([]);
+					}
 				}
 			}
 //console.log(this.heat[setID]._latlngs);
