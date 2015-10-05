@@ -8,11 +8,11 @@ import java.util.stream.Collectors;
 
 import models.entities.MetaData;
 import models.entities.Series;
-import models.entities.Viz;
+import models.entities.Visualization;
 import models.filters.Filter;
 import models.view.VizInput;
 
-public class VizRule extends CrudRule<Viz> {
+public class VizRule extends CrudRule<Visualization> {
 	private VizDao dao;
 	private SeriesRule seriesRule;
 	
@@ -22,7 +22,7 @@ public class VizRule extends CrudRule<Viz> {
 	}
 	
 	public long create(VizInput input) {
-		final Viz data = toViz(input);
+		final Visualization data = toViz(input);
 		return super.create(data);
 	}
 
@@ -31,10 +31,10 @@ public class VizRule extends CrudRule<Viz> {
 		return dao;
 	}
 	
-	public Viz toViz(VizInput input) {
+	public Visualization toViz(VizInput input) {
 		if (input == null)
 			return null;
-		Viz result = new Viz();
+		Visualization result = new Visualization();
 		copy(result, input);
 		final List<Long> ids = input.getSeriesIds();
 		result.setAllSeries(toAllSeries(ids));
@@ -61,7 +61,7 @@ public class VizRule extends CrudRule<Viz> {
 		seriesRule = rule;
 	}
 
-	public VizInput fromViz(Viz data) {
+	public VizInput fromViz(Visualization data) {
 		if (data == null)
 			return null;
 		
@@ -72,7 +72,7 @@ public class VizRule extends CrudRule<Viz> {
 		return input;
 	}
 	
-	public List<Viz> query(Filter filter) {
+	public List<Visualization> query(Filter filter) {
 		return dao.query(filter);
 	}
 
@@ -89,7 +89,7 @@ public class VizRule extends CrudRule<Viz> {
 	}
 
 	public void updateUiSetting(long id, String data) {
-		Viz original = read(id);
+		Visualization original = read(id);
 		original.setUiSetting(data);
 		update(id, original);
 	}

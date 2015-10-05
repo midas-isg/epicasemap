@@ -9,7 +9,7 @@ import java.util.List;
 
 import javax.ws.rs.PathParam;
 
-import models.entities.Viz;
+import models.entities.Visualization;
 import models.filters.Filter;
 import models.view.VizInput;
 import play.data.Form;
@@ -66,7 +66,7 @@ public class ApiViz extends Controller {
 			@ApiParam(value = "ID of the Viz", required = true) 
 			@PathParam("id") 
 			long id) {
-		Viz data = makeRule().read(id);
+		Visualization data = makeRule().read(id);
 		Filter filter = null;
 		return okAsWrappedJsonObject(data, filter);
 	}
@@ -76,7 +76,7 @@ public class ApiViz extends Controller {
 	@Transactional
 	public static Result find() {
 		Filter filter = null;
-		List<Viz> data = makeRule().query(filter);
+		List<Visualization> data = makeRule().query(filter);
 		return okAsWrappedJsonArray(data, filter);
 	}
 
@@ -88,7 +88,7 @@ public class ApiViz extends Controller {
 			@ApiParam(value = "ID of the Viz", required = true) 
 			@PathParam("id") 
 			long id) {
-		Viz data = makeRule().read(id);
+		Visualization data = makeRule().read(id);
 		if (data == null)
 			return notFound("Viz with ID=" + id + " not found!");
 		String uiSetting = data.getUiSetting();
@@ -109,7 +109,7 @@ public class ApiViz extends Controller {
 	public static Result put(
 			@ApiParam(value = "ID of the Viz", required = true) @PathParam("id") long id) {
 		final VizInput input = vizForm.bindFromRequest().get();
-		final Viz data = makeRule().toViz(input);
+		final Visualization data = makeRule().toViz(input);
 		update(id, data);
 		setResponseLocationFromRequest();
 		return noContent();
@@ -136,7 +136,7 @@ public class ApiViz extends Controller {
 			setResponseLocationFromRequest();
 			return noContent();
 		}
-	public static void update(long id, Viz data) {
+	public static void update(long id, Visualization data) {
 		makeRule().update(id, data);
 	}
 
@@ -165,7 +165,7 @@ public class ApiViz extends Controller {
 		return Factory.makeVizRule(JPA.em());
 	}
 
-	public static VizInput from(Viz data) {
+	public static VizInput from(Visualization data) {
 		return makeRule().fromViz(data);
 	}
 }

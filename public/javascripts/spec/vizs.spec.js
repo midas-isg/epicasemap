@@ -3,15 +3,24 @@
 app.test.workaroundForRealHttpCallsUsingNgMockAndNgMockE2E();
 
 describe('Controller: Vizs', function() {
-	var asynCallAfterTruthy = app.test.asynCallAfterTruthy;
 	var $scope;
+	var api;
+	var asynCallAfterTruthy = app.test.asynCallAfterTruthy;
+	
 	app.test.init('Vizs');
 	beforeEach(function(){
 		$scope = app.test.scope.vizs;
+		api = app.test.getApi();
 	});
 	
 	describe('when loaded ', function() {
-		it('should load all Vizs', assertLoadAllVizs);
+		it('should load all Vizs', function (done){
+			var models = 'models';
+			asynCallAfterTruthy($scope, models, done, function() {
+				expect($scope[models]).toBeNonEmptyArray();
+				app.test.setValidViz($scope[models][0]);
+			});
+		});
 	});
 	
 	let loadVizs = 'loadVizs';
@@ -19,6 +28,7 @@ describe('Controller: Vizs', function() {
 		beforeEach(function(done){
 			asynCallAfterTruthy($scope, 'models', done, function() {
 				$scope.models = null;
+				spyOn(api, 'finding').and.callThrough();
 				$scope.$emit(loadVizs);
 			});
 		});
@@ -28,16 +38,38 @@ describe('Controller: Vizs', function() {
 	function assertLoadAllVizs(done){
 		var models = 'models';
 		asynCallAfterTruthy($scope, models, done, function() {
+			expect(api.finding).toHaveBeenCalled();
 			expect($scope[models]).toBeNonEmptyArray();
 			app.test.setValidViz($scope[models][0]);
 		});
 	}
 
-	describe('when loaded with an ID', function() {
+	describe(`when ${loadVizs} was receipted but failed to connect`, function() {
+		beforeEach(function(done){
+			asynCallAfterTruthy($scope, 'models', done, function() {
+				var deferred = app.test.defer();
+				$scope.models = null;
+				spyOn(api, 'finding').and.returnValue(deferred.promise);
+				$scope.$emit(loadVizs);
+				spyOn(api, 'alert').and.callThrough();
+				deferred.reject();
+			});
+		});
+		it('should show an error', function (done){
+			var error = 'error';
+			asynCallAfterTruthy($scope, error, done, function() {
+				expect(api.finding).toHaveBeenCalled();
+				expect($scope[error]).toBeDefined();
+				expect(api.alert).toHaveBeenCalledWith($scope.test.dom.$alertParent, 'Error: ' + $scope[error], 'alert-danger');
+			});
+		});
+	});
+	
+	describe('when loaded with an valid ID', function() {
 		beforeEach(app.test.injectController('Viz'));
 		beforeEach(function(){
-			spyOn(app.test.getApi(), 'getUrlQuery').and.returnValue({id:app.test.getValidViz().id});	
-			$scope.loadModelHavingGivenId();
+			spyOn(api, 'getUrlQuery').and.returnValue({id:app.test.getValidViz().id});	
+			$scope.test.loadModels();
 		});
 		it('should load the Viz', function(done) {
     		var $scope = app.test.scope.viz;
@@ -46,6 +78,25 @@ describe('Controller: Vizs', function() {
 				var viz = $scope[model]; 
 				expect(viz).toBeObject();
 				expect(viz.id).toBe(app.test.getValidViz().id);
+			});
+		});
+	});
+
+	describe('when loaded with an invalid ID', function() {
+		var invalidId = -1;
+		beforeEach(app.test.injectController('Viz'));
+		beforeEach(function(){
+			spyOn(api, 'getUrlQuery').and.returnValue({id:invalidId});	
+			spyOn(api, 'alert').and.callThrough();
+			$scope.test.loadModels();
+		});
+		it('should show a warning', function(done) {
+			var error = 'error';
+			asynCallAfterTruthy($scope, error, done, function() {
+				expect(api.getUrlQuery).toHaveBeenCalled();
+				let msg = $scope[error];
+				expect(msg).toContain(invalidId + "");
+				expect(api.alert).toHaveBeenCalledWith($scope.test.dom.$alertParent, msg, undefined);
 			});
 		});
 	});

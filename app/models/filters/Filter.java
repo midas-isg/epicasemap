@@ -15,5 +15,9 @@ public interface Filter {
 	
 	public abstract Map<String, List<?>> getInOperators();
 	
-	public abstract LinkedHashMap<String, Order> getOrder();
+	public abstract LinkedHashMap<String, Order> getOrders();
+	
+	public abstract Map<String, Object> getDisjunctiveEqualities();
+
+	public abstract Restriction getRestriction();
 }

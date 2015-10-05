@@ -92,15 +92,17 @@ app.controller('Viz', function($scope, $rootScope, api) {
 			$scope.allSeries = rsp.data.results;
 			updateAllSeries($scope.model);
 		}, function(err){
-			error("Failed to read all Series!");
+			error("Failed to load your Series!");
 		});
 	}
 	
 	function updateAllSeries(viz){
+		var wasPristine = $scope.form.$pristine;
 		if (viz && $scope.allSeries){
 			check(viz.allSeries.map(byId), 'isSelected');
 		}
-		$scope.form.$setPristine();
+		if (wasPristine)
+			$scope.form.$setPristine();
 
 		function byId(series) { return series.id; }
 		

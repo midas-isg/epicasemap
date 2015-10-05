@@ -12,7 +12,8 @@ app.test = (function(){ 'use strict'; `comment: use ES6`;
 		deleteViz,
 		setValidViz: function(viz) {the.validViz = viz},
 		getValidViz,
-		getApi: function() {return the.api}
+		getApi: function() {return the.api},
+		defer: function() {return the.q.defer()}
 	};
 	
 	function getValidViz(){
@@ -26,7 +27,6 @@ app.test = (function(){ 'use strict'; `comment: use ES6`;
 		        }
 		    });
 		}
-		
 		return the.validViz;
 	}
 	
@@ -46,7 +46,7 @@ app.test = (function(){ 'use strict'; `comment: use ES6`;
 			}
 		});
 	}
-
+	
 	function init(controllerName) {
 		var originalTimeout;
 		var suiName = controllerName || 'api';
@@ -77,8 +77,9 @@ app.test = (function(){ 'use strict'; `comment: use ES6`;
 	
 	function injectController(name, key){
 		key = key || name.toLowerCase();
-		return inject(function($rootScope, api, _$controller_, _$httpBackend_){
+		return inject(function($rootScope, api, _$controller_, _$httpBackend_, $q){
 			initApi(api, _$httpBackend_);
+			the.q = $q;
 			scope.root = $rootScope;
 			scope[key] = $rootScope.$new();
 			_$controller_(name, {

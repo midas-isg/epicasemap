@@ -44,7 +44,8 @@ app.controller('SeriesData', function($scope, $rootScope, api) {
        		loadCoordinates($scope.seriesId);
 		}, function (reason){
         	emitDone();
-    		api.alert(dom.$alertParent, reason.statusText + ': ' + reason.data, 'alert-danger');
+    		api.alert(dom.$alertParent, reason.statusText + 
+    				': ' + reason.data && reason.data.userMessage, 'alert-danger');
 		});
         
         function emitDone(){

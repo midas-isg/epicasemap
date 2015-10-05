@@ -16,13 +16,16 @@ app.controller('SeriesCollection', function($scope, $rootScope, api) {
 	$scope.edit = function(series) {
 		$rootScope.$emit('editSeries', series);
 	};
+	$scope.permit = function(series) {
+		$rootScope.$emit('editSeriesPermissions', series);
+	};
 	$scope.count = function(array) { return array && array.length || 0;	};
 	
 	function loadSeries(){
 		api.finding(urlPath).then(function(rsp) {
 			$scope.models = rsp.data.results;
 		}, function(err){
-			error('Failed to load all Series');
+			error('Failed to load your Series');
 		});
 	}
 	
@@ -34,7 +37,7 @@ app.controller('SeriesCollection', function($scope, $rootScope, api) {
 				var model = rsp.data.result;
 				$scope.edit(model);
 			}, function(err){
-				alert(err.data);
+				alert(err.data && err.data.userMessage);
 			});
 		}
 	}
