@@ -11,6 +11,9 @@ app.service("api", function($http, $q, $location) {
 	this.reading = function(path, id, cfg) {
 		return this.gettingFromUrl(makeUrl(path, id), cfg);
 	};
+	this.putting = function(path, body, cfg) {
+		return requesting('put', makeUrl(path), cfg, body);
+	};
 	this.deleting = function(path, id, cfg) {
 		return requesting('delete', makeUrl(path, id), cfg);
 	};
@@ -20,16 +23,40 @@ app.service("api", function($http, $q, $location) {
     this.uploading = uploading;
 	this.getUrlQuery = function() {
 		return $location.search();
-	}
+	};
 	this.toDateText = toDateText;
 	this.alert = function($parent, message, classes){
 		this.removeAllAlerts($parent);
 		alert($parent, message, classes);
-	}
+	};
 	this.removeAllAlerts = function($parent){
 		$parent.find('.alert').alert("close");
-	}
-	
+	};
+	this.option2mode = function(option){
+		switch(option) {
+	    case 'ur':
+	    	return {use:true, read:true};
+	    case 'urc':
+	    	return {use:true, read:true, change:true};
+	    case 'urcp':
+	    	return {use:true, read:true, change:true, permit:true};
+	    default:
+	    	return {use:true};
+		}
+	};
+	this.mode2option = function (mode){
+		var option = '';
+		if (mode.use)
+			option += 'u'; 
+		if (mode.read)
+			option += 'r';
+		if (mode.change)
+			option += 'c';
+		if (mode.permit)
+			option += 'p';
+		return option;
+	};
+
 	function alert($parent, message, classes){
 		if (! classes)
 			classes = 'alert-warning';

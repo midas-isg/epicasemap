@@ -1,0 +1,14 @@
+@import tags._
+
+@* Series Permission modal dialog *@
+@()
+@bs_modal("seriesPermissionModal", "SeriesPermission", "Series Permission Editor", "close()")(editor())(modal_buttons("Permission"))
+
+@editor(labelSize:Int=2) = {
+	<h4>
+		Update access to the account
+	</h4>
+	<form name='form' class="form-horizontal" role="form">
+		@series_permission_selector()
+	</form>
+}

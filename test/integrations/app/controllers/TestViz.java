@@ -14,7 +14,7 @@ import java.util.List;
 import javax.persistence.EntityManager;
 
 import models.entities.Series;
-import models.entities.Viz;
+import models.entities.Visualization;
 import models.view.VizInput;
 
 import org.junit.Test;
@@ -33,9 +33,9 @@ public class TestViz {
 		App.newWithInMemoryDbWithDbOpen().runWithTransaction(callback);
 	}
 
-	private static Viz persistThenDetachNewViz() {
+	private static Visualization persistThenDetachNewViz() {
 		EntityManager em = JPA.em();
-		Viz data = new Viz();
+		Visualization data = new Visualization();
 		em.persist(data);
 		em.detach(data);
 		return data;
@@ -54,7 +54,7 @@ public class TestViz {
 	@Test
 	public void read() {
 		runWithTransaction(() -> {
-			Viz persistedData = persistThenDetachNewViz();
+			Visualization persistedData = persistThenDetachNewViz();
 			testRead(persistedData);
 		});
 	}
@@ -62,7 +62,7 @@ public class TestViz {
 	@Test
 	public void update() {
 		runWithTransaction(() -> {
-			Viz persistedData = persistThenDetachNewViz();
+			Visualization persistedData = persistThenDetachNewViz();
 			testUpdate(persistedData.getId());
 		});
 	}
@@ -70,7 +70,7 @@ public class TestViz {
 	@Test
 	public void delete() {
 		runWithTransaction(() -> {
-			Viz dataForDelete = persistThenDetachNewViz();
+			Visualization dataForDelete = persistThenDetachNewViz();
 			testDelete(dataForDelete.getId());
 		});
 	}
@@ -82,7 +82,7 @@ public class TestViz {
 
 	@Test
 	public void createComplex() throws Exception {
-		Viz data = new Viz();
+		Visualization data = new Visualization();
 		runWithTransaction(() -> {
 			Series s1 = TestSeries.persistThenDetachNewSeries();
 			List<Series> list = asList(s1);
@@ -96,34 +96,34 @@ public class TestViz {
 	}
 
 	private void testCrud() {
-		Viz data = testCreate();
+		Visualization data = testCreate();
 		testRead(data);
 		final Long id = data.getId();
 		testUpdate(id);
 		testDelete(id);
 	}
 
-	private Viz testCreate() {
-		return testCreate(new Viz());
+	private Visualization testCreate() {
+		return testCreate(new Visualization());
 	}
 
-	private Viz testCreate(Viz newData) {
+	private Visualization testCreate(Visualization newData) {
 		final long id = actCreate(newData);
 		newData.setId(id);
 		detachAndAssertWithDatabase(newData);
 		return newData;
 	}
 
-	private void detachAndAssertWithDatabase(Viz expected) {
+	private void detachAndAssertWithDatabase(Visualization expected) {
 		detachThenAssertWithDatabase(expected.getId(), expected);
 	}
 
-	private long actCreate(Viz newData) {
+	private long actCreate(Visualization newData) {
 		VizInput input = ApiViz.from(newData);
 		return ApiViz.create(input);
 	}
 
-	private void testRead(Viz expected) {
+	private void testRead(Visualization expected) {
 		long id = expected.getId();
 
 		final Result response = ApiViz.read(id);
@@ -138,7 +138,7 @@ public class TestViz {
 	}
 
 	private void testUpdate(long id) {
-		Viz dataToUpdate = new Viz();
+		Visualization dataToUpdate = new Visualization();
 		dataToUpdate.setTitle("title");
 		ApiViz.update(id, dataToUpdate);
 		detachThenAssertWithDatabase(id, dataToUpdate);
@@ -148,7 +148,7 @@ public class TestViz {
 		ApiViz.deleteById(id);
 
 		final EntityManager em = JPA.em();
-		Viz del = em.find(Viz.class, id);
+		Visualization del = em.find(Visualization.class, id);
 		assertThat(del).isNull();
 	}
 }

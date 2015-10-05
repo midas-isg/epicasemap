@@ -1,22 +1,26 @@
-"use strict";
-
 app.controller('Vizs', function($scope, $rootScope, api) {
+	"use strict";
 	var urlPath = 'vizs';
 	var dom = cacheDom();
 	populateScope();
+	loadModels();
 	bindEvents();
 
 	function cacheDom(){
 		return {$alertParent: $("#vizs-body")};
 	}
 	
+	function loadModels(){
+		loadModelHavingGivenId();
+		loadVizs();
+	}
+	
 	function populateScope(){
-		$scope.loadModelHavingGivenId = loadModelHavingGivenId;
 	    $scope.addNew = function() {
 	    	$scope.edit({allSeries:[]});
 		};
 		$scope.edit = function(viz) {
-			$rootScope.$emit('editViz', viz);
+			$scope.$emit('editViz', viz);
 		};
 		$scope.count = function(array) { 
 			return array && array.length || 0;	
@@ -24,26 +28,27 @@ app.controller('Vizs', function($scope, $rootScope, api) {
 		$scope.go = function(viz) {
 			window.open(CONTEXT + '?id=' + viz.id, '_top');
 		};
+		$scope.test = {
+			loadModels: loadModels,
+			dom: dom
+		};
 	}
 	
 	function bindEvents(){
-		$(document).ready(function(){
-			loadModelHavingGivenId();
-			loadVizs();
-		});
 		$rootScope.$on('loadVizs', function(event) {
 			loadVizs();
 		});
-
-		function loadVizs(){
-			api.finding(urlPath).then(function(rsp) {
-				$scope.models = rsp.data.results;
-			}, function(err){
-				error('Failed to load all Visualizations!');
-			});
-		}
 	}
 
+	function loadVizs(){
+		api.finding(urlPath).then(function(rsp) {
+			$scope.models = rsp.data.results;
+		}, function(err){
+			$scope.error = 'Failed to load your Visualizations!';
+			error($scope.error);
+		});
+	}
+ 
 	function loadModelHavingGivenId(){
 	    var urlQuery = api.getUrlQuery();
 		var id = urlQuery && urlQuery.id;
@@ -52,7 +57,8 @@ app.controller('Vizs', function($scope, $rootScope, api) {
 				var model = rsp.data.result;
 				$scope.edit(model);
 			}, function(err){
-				alert('Visualization with ID = ' + id + " was not found!");
+				$scope.error = err.data && err.data.userMessage;
+				alert($scope.error);
 			});
 		}
 	}
