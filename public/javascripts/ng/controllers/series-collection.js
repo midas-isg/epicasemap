@@ -16,6 +16,9 @@ app.controller('SeriesCollection', function($scope, $rootScope, api) {
 	$scope.edit = function(series) {
 		$rootScope.$emit('editSeries', series);
 	};
+	$scope.permit = function(series) {
+		$rootScope.$emit('editSeriesPermissions', series);
+	};
 	$scope.count = function(array) { return array && array.length || 0;	};
 	
 	function loadSeries(){

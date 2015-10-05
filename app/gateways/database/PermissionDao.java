@@ -8,24 +8,25 @@ import java.util.Map;
 
 import javax.persistence.EntityManager;
 
-import models.entities.Permission;
+import models.entities.SeriesPermission;
 import models.filters.GenericFilter;
 import models.filters.Restriction;
 import controllers.security.Restricted.Access;
 
-public class PermissionDao extends DataAccessObject<Permission> {
+public class PermissionDao extends DataAccessObject<SeriesPermission> {
 	public PermissionDao(EntityManager em){
 		this(new JpaAdaptor(em));
 	}
 
 	private PermissionDao(JpaAdaptor helper){
-		super(Permission.class, helper);
+		super(SeriesPermission.class, helper);
 	}
 	
-	public List<Permission> query(GenericFilter filter) {
+	public List<SeriesPermission> query(GenericFilter filter) {
 		final Restriction restriction = filter.getRestriction();
 		final Map<String, Object> equalities = filter.getEqualities();
 		equalities.put("account.id", restriction.accountId);
+		equalities.put("series.id", restriction.seriesId);
 
 		final Map<String, Object> disjunctions = filter.getDisjunctiveEqualities();
 		if (restriction.accesses != null){

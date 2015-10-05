@@ -7,16 +7,18 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import models.entities.Permission;
+import models.entities.Mode;
 import models.entities.Series;
+import models.entities.SeriesPermission;
 import models.filters.GenericFilter;
 import models.filters.Restriction;
 import models.filters.SeriesFilter;
 
-public class AuthorizationRule extends CrudRule<Permission> {
+public class AuthorizationRule extends CrudRule<SeriesPermission> {
 	private final long publicAccountId = 1L;
 	private PermissionDao dao;
 	private SeriesRule seriesRule;
+	private AccountRule accountRule;
 
 	public AuthorizationRule(PermissionDao dao){
 		this.dao = dao;
@@ -26,8 +28,12 @@ public class AuthorizationRule extends CrudRule<Permission> {
 		this.seriesRule = seriesRule;
 	}
 
+	public void setAccountRule(AccountRule accountRule) {
+		this.accountRule = accountRule;
+	}
+
 	@Override
-	protected DataAccessObject<Permission> getDao() {
+	protected DataAccessObject<SeriesPermission> getDao() {
 		return dao;
 	}
 
@@ -44,7 +50,7 @@ public class AuthorizationRule extends CrudRule<Permission> {
 	}
 
 	private Stream<Long> streamSeriesIds(Restriction restriction) {
-		List<Permission> permissions = findPermissions(restriction);
+		List<SeriesPermission> permissions = findPermissions(restriction);
 		return permissions.stream()
 				.map(permission -> permission.getSeries().getId());
 	}
@@ -55,9 +61,23 @@ public class AuthorizationRule extends CrudRule<Permission> {
 		return seriesRule.query(filter);
 	}
 
-	private List<Permission> findPermissions(Restriction restriction) {
+	public List<SeriesPermission> findPermissions(Restriction restriction) {
 		GenericFilter filter = new GenericFilter();
 		filter.setRestriction(restriction);
 		return dao.query(filter);
+	}
+
+	public long grantSeries(long accountId, Mode mode, long seriesId) {
+		SeriesPermission p = new SeriesPermission();
+		p.setAccount(accountRule.read(accountId));
+		p.setSeries(seriesRule.read(seriesId));
+		p.copy(mode);
+		return create(p);
+	}
+
+	public void updateMode(long id, Mode mode) {
+		SeriesPermission original = read(id);
+		original.copy(mode);
+		update(id, original);
 	}
 }

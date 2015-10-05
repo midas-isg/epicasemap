@@ -1,11 +1,13 @@
 package controllers;
 
 
+import static controllers.ResponseHelper.*;
 import static play.data.Form.form;
 import interactors.AccountRule;
 import interactors.security.Credential;
 import models.Registration;
 import models.SignIn;
+import models.filters.AccountFilter;
 import play.data.Form;
 import play.db.jpa.JPA;
 import play.db.jpa.Transactional;
@@ -81,5 +83,12 @@ public class User extends Controller {
 		session().clear();
 		flash("message", "You've been logged out");
 		return redirect(routes.User.login());
+	}
+	
+	@Transactional
+	public static Result get() {
+		final AccountRule rule = Factory.makeAccountRule(JPA.em());
+		AccountFilter filter = null;
+		return okAsWrappedJsonArray(rule.query(filter), filter);
 	}
 }

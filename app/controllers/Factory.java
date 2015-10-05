@@ -117,6 +117,7 @@ public class Factory {
 		final PermissionDao dao = new PermissionDao(em);
 		final AuthorizationRule authorizationRule = new AuthorizationRule(dao);
 		authorizationRule.setSeriesRule(makeSeriesRule(em));
+		authorizationRule.setAccountRule(makeAccountRule(em));
 		return authorizationRule;
 	}
 }

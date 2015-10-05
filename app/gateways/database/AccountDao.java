@@ -22,8 +22,10 @@ public class AccountDao extends DataAccessObject<Account> {
 	}
 	
 	public List<Account> query(AccountFilter filter) {
-		Map<String, Object> equalityMap = filter.getEqualities();
-		equalityMap.put("email", filter.getEmail());
+		if (filter != null){
+			Map<String, Object> equalityMap = filter.getEqualities();
+			equalityMap.put("email", filter.getEmail());
+		}
 		return super.query(filter);
 	}
 }

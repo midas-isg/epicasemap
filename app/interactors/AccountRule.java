@@ -1,11 +1,13 @@
 package interactors;
 
-import play.Logger;
 import gateways.database.AccountDao;
 import gateways.database.jpa.DataAccessObject;
 import interactors.security.Credential;
 import interactors.security.password.Authenticator;
 import interactors.security.password.HashedPassword;
+
+import java.util.List;
+
 import models.Registration;
 import models.SignIn;
 import models.entities.Account;
@@ -13,6 +15,7 @@ import models.entities.Password;
 import models.exceptions.ConstraintViolation;
 import models.exceptions.Unauthorized;
 import models.filters.AccountFilter;
+import play.Logger;
 
 
 
@@ -87,5 +90,9 @@ public class AccountRule extends CrudRule<Account> {
 		} catch (Exception e){
 			return null;
 		}
+	}
+
+	public List<Account> query(AccountFilter filter) {
+		return dao.query(filter);
 	}
 }
