@@ -2,12 +2,21 @@
 app.controller('SeriesPermissions', function($scope, $rootScope, api) {
 	"use strict"
 	$scope.view = {};
-	
 	$scope.dialog = $('#seriesPermissionsModal');
 	$scope.alertParent = $scope.dialog.find('.modal-body');
     $scope.dialog.on('shown.bs.modal', function (e) {
     	$scope.dialog.find('form').find(':input:enabled:visible:first').focus();
     });
+    $scope.dialog.on('hide.bs.modal', function (e) {
+    	var isOK = true;
+		if ($scope.form.$dirty)
+			isOK = confirm("Selected accounts have not been added. \nOK = Close without adding");
+		if ( ! isOK) {
+			e.preventDefault();
+        	e.stopImmediatePropagation();
+        }
+    });
+	$scope.$watch('permissions', refreshACL);
     $rootScope.$on('editSeriesPermissions', function(event, series) {
     	editPermissions(series);
 	});
@@ -19,7 +28,12 @@ app.controller('SeriesPermissions', function($scope, $rootScope, api) {
     	$rootScope.$emit('editPermission', permissionId);
 	}
     $scope.addPermissions = function(){
+    	$scope.form.$setPristine();
     	var selectedAccounts = _.filter($scope.accounts, isSelected);
+    	if (selectedAccounts.length < 1){
+    		error("Please select at least one account!");
+    		return;
+    	}
     	var selectedAccountIds = _.map(selectedAccounts, id);
     	grant(selectedAccountIds, api.option2mode($scope.option), $scope.model.id);
     	_.each($scope.accounts, function(it){ delete it.isSelected; });
@@ -30,6 +44,25 @@ app.controller('SeriesPermissions', function($scope, $rootScope, api) {
 	$scope.close = function() {
 		$scope.dialog.modal('hide');
 	};
+	$scope.isHidden = function(it){
+		return it.hide;
+	}
+	
+	function refreshACL(){
+		var permissions = $scope.permissions;
+		var accounts = $scope.accounts;
+		if (permissions){
+			if (accounts){
+				var accountIds = _.map(permissions, accountId);
+				accountIds.push($scope.model.owner.id);
+				_.each(accounts, function(a){
+					a.hide = (accountIds.indexOf(a.id) >= 0)
+				});
+			}
+		}
+		
+		function accountId(p){return p.account.id}
+	}
 	
 	function editPermissions(series) {
 		$scope.model = series;
@@ -99,6 +132,7 @@ app.controller('SeriesPermissions', function($scope, $rootScope, api) {
 		
 		function success(rsp) {
 			$scope.accounts = rsp.data.results;
+			refreshACL();
 		}
 		
 		function fail(err){
@@ -107,10 +141,6 @@ app.controller('SeriesPermissions', function($scope, $rootScope, api) {
 			else
 				error('Failed to load accounts!');
 		}
-	}
-
-	function close(){
-		$scope.close();
 	}
 
 	function success(message){
