@@ -6,7 +6,7 @@
 			Seq("account.name", "Account"),
 			Seq("use", "Use"),
 			Seq("read", "Read"),
-			Seq("change", "Change"),
+			Seq("change", "Edit"),
 			Seq("permit", "Manage")
 	), accountOrders:Seq[Seq[String]] = Seq(
 			Seq("name", "Account")
@@ -23,22 +23,24 @@
 ) = {
 	<div class='row'>
 		<div class='col-md-7'>
-			<form class="form-horizontal" role="form">
+			<div class="form-horizontal">
 				@form_group_readonly("Title", "{{model.title}}", "Title", labelSize)
-			</form>
+			</div>
 			@dataSection("view.hideData")
 		</div>
 		<div class='col-md-5'>
-			<form class="form-horizontal" role="form">
+			<div class="form-horizontal">
 				@form_group_readonly("ID", "{{model.id}}", "ID", labelSize)
-			</form>
+			</div>
 			<h4>
 				Allow access to new account(s)
 			</h4>
-			@table_filterable("accounts", "account", "accounts", accountOrders, accountMore)
 			<form name='form' class="form-horizontal" role="form">
+				@table_filterable("accounts", "account", " accounts", accountOrders, accountMore)
 				@series_permission_selector()
-				<button class='btn btn-primary' ng-click='addPermissions()'>Add</button>
+				<button class='btn btn-primary' 
+				title='Add the selected account(s) above with the selected access level.' 
+				ng-disabled='form.$pristine' ng-click='addPermissions()'>Add</button>
 			</form>
 		</div>
 	</div>
@@ -58,9 +60,9 @@
 	)
 ) = {
 	<h4>
-		The Series can be accessed by {{count(permissions) | number}} @unit("account")
+		The Series can be accessed by {{count(permissions) | number}} @unit("other account")
 	</h4>
-	@table_filterable("viewPermissions", "permission", "accounts", orders, permissionMore)
+	@table_filterable("viewPermissions", "permission", "other accounts", orders, permissionMore)
 }
 
 @unit(text:String) = {@span_if_else("(permissions.length > 1)", Html(text +"s"), Html(text))}
