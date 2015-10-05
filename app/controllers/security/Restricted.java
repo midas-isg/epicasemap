@@ -14,9 +14,10 @@ public @interface Restricted {
 	public static final String KEY = Restricted.class.getSimpleName();
 	public static final String DELIMITER = ",";
 	public enum Access {
-		VIZ,
+		USE,
 		READ,
-		CHANGE
+		CHANGE,
+		PERMIT
 	}
 	Access[] value();
 }

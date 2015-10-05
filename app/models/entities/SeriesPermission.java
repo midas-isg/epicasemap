@@ -5,17 +5,18 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 
-@Entity
-public class Permission implements models.entities.Entity {
+@Table(
+	uniqueConstraints=@UniqueConstraint(columnNames={"account_id", "series_id"})
+)
+@Entity(name="series_permission")
+public class SeriesPermission extends Mode implements models.entities.Entity {
 	private Long id;
 	private Account account;
 	private Series series;
 	
-	private Boolean viz;
-	private Boolean read;
-	private Boolean change;
-
 	@Override
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -45,28 +46,11 @@ public class Permission implements models.entities.Entity {
 	public void setSeries(Series series) {
 		this.series = series;
 	}
-
-	public Boolean getViz() {
-		return viz;
-	}
-
-	public void setViz(Boolean viz) {
-		this.viz = viz;
-	}
-
-	public Boolean getRead() {
-		return read;
-	}
-
-	public void setRead(Boolean read) {
-		this.read = read;
-	}
-
-	public Boolean getChange() {
-		return change;
-	}
-
-	public void setChange(Boolean change) {
-		this.change = change;
+	
+	public void copy(Mode mode){
+		setUse(mode.getUse());
+		setRead(mode.getRead());
+		setChange(mode.getChange());
+		setPermit(mode.getPermit());
 	}
 }
