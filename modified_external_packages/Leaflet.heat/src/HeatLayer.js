@@ -31,9 +31,11 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
 
     setOptions: function (options) {
         L.setOptions(this, options);
-        if (this._heat) {
+		
+        if(this._heat) {
             this._updateOptions();
         }
+		
         return this.redraw();
     },
 
@@ -78,30 +80,59 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
     },
 
     _initCanvas: function () {
-        var canvas = this._canvas = L.DomUtil.create('canvas', 'leaflet-heatmap-layer leaflet-layer');
+		var canvas,
+			size,
+			animated,
+			radiusFactor = this.options.radius || this.defaultRadius;
+			optionsBlur = this.options.blur || 0;
+		
+        canvas = this._canvas = L.DomUtil.create('canvas', 'leaflet-heatmap-layer leaflet-layer');
 
-        var size = this._map.getSize();
+        size = this._map.getSize();
         canvas.width  = size.x;
         canvas.height = size.y;
 
-        var animated = this._map.options.zoomAnimation && L.Browser.any3d;
+        animated = this._map.options.zoomAnimation && L.Browser.any3d;
         L.DomUtil.addClass(canvas, 'leaflet-zoom-' + (animated ? 'animated' : 'hide'));
 
         this._heat = simpleheat(canvas);
 		
 		
 		/* _heat Object Extension */
+		this._heat.radius2 = function (r, blur) {
+			blur = blur === undefined ? 15 : blur;
+
+			// create a grayscale blurred circle image that we'll use for drawing points
+			var circle = this._circle = document.createElement('canvas'),
+				ctx = circle.getContext('2d'),
+				r2 = this._r = (-r) + blur;
+
+			circle.width = circle.height = r2 * 2;
+
+			ctx.shadowOffsetX = ctx.shadowOffsetY = 200;
+			ctx.shadowBlur = blur;
+			ctx.shadowColor = 'black';
+
+			ctx.beginPath();
+			ctx.arc(r2 - 200, r2 - 200, -r, 0, Math.PI * 2, true);
+			ctx.closePath();
+			ctx.stroke(); //ctx.fill();
+
+			return this;
+		}
+		
 		this._heat.draw2 = function(minOpacity) {
 			var ctx = this._ctx,
 			i,
 			colored,
-			p;
+			p,
+			radius;
 			
-			if (!this._circle) {
-				this.radius(this.defaultRadius);
+			if(!this._circle) {
+				this.radius(radiusFactor, optionsBlur); //this.radius(this.defaultRadius);
 			}
 			
-			if (!this._grad) {
+			if(!this._grad) {
 				this.gradient(this.defaultGradient);
 			}
 			
@@ -110,13 +141,22 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
 			for(i = 0; i < this._data.length; i++) {
 				p = this._data[i];
 				
+				radius = p[3] * radiusFactor;
 				//data[i][2] cannot be NaN so make work-around
 				if(p[2] && (p[2] > 0)) {
-					this.radius((p[3] >= 0.1 ? p[3] : 0.1) * 10, 0.1);
-					
-					//ctx.globalAlpha = 1.0;
-					ctx.globalAlpha = Math.max(p[2], minOpacity === undefined ? 0.05 : minOpacity);
-					ctx.drawImage(this._circle, p[0] - this._r, p[1] - this._r);
+					if(radius > 0) {
+						this.radius(radius >= 1 ? radius : 1, optionsBlur);
+						
+						ctx.globalAlpha = Math.max(p[2], minOpacity === undefined ? 0 : minOpacity);
+						ctx.drawImage(this._circle, p[0] - this._r, p[1] - this._r);
+					}
+					else {
+						//negatives are treated as hollow circles
+						this.radius2(radius <= -1 ? radius : -1, optionsBlur);
+						
+						ctx.globalAlpha = Math.max(p[2], minOpacity === undefined ? 0 : minOpacity);
+						ctx.drawImage(this._circle, p[0] - this._r, p[1] - this._r);
+					}
 				}
 			}
 			
@@ -203,7 +243,7 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
                     cell[0] = (cell[0] * cell[2] + p.x * k) / (cell[2] + k); // x
                     cell[1] = (cell[1] * cell[2] + p.y * k) / (cell[2] + k); // y
                     cell[2] += k; // cumulated intensity value
-					cell[3] += radius;
+					cell[3] = radius;
                 }
             }
         }
