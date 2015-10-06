@@ -5,14 +5,14 @@ import gateways.database.jpa.JpaAdaptor;
 
 import javax.persistence.EntityManager;
 
-import models.entities.Viz;
+import models.entities.Visualization;
 
-public class VizDao extends DataAccessObject<Viz> {
+public class VizDao extends DataAccessObject<Visualization> {
 	public VizDao(EntityManager em){
 		this(new JpaAdaptor(em));
 	}
 
 	private VizDao(JpaAdaptor helper){
-		super(Viz.class, helper);
+		super(Visualization.class, helper);
 	}
 }

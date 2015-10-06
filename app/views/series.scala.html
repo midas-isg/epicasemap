@@ -5,6 +5,8 @@
 	@script_asset("javascripts/ng/controllers/series-collection.js")
 	@script_asset("javascripts/ng/controllers/series.js")
 	@script_asset("javascripts/ng/controllers/series-data.js")
+	@script_asset("javascripts/ng/controllers/series-permissions.js")
+	@script_asset("javascripts/ng/controllers/series-permission.js")
 }
 
 @main("Series Management", imports) {
@@ -12,6 +14,8 @@
 		@metadata_manager("Series", "Series", "series")
 		@series_dialog()
 		@series_data_dialog()
+		@series_permissions_dialog()
+		@series_permission_dialog()
 		@busy_dialog()
 	</article>
 }

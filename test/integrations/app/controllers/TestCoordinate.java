@@ -125,10 +125,8 @@ public class TestCoordinate {
     		final String timestamp = "timestamp";
     		filter.setTimestampAttribute(timestamp);
     		filter.setOffset(0);
-    		filter.setEqualities(java.util.Collections.emptyMap());
-    		LinkedHashMap<String, Filter.Order> order = new LinkedHashMap<>();
+    		LinkedHashMap<String, Filter.Order> order = filter.getOrders();// new LinkedHashMap<>();
 			order.put(timestamp, Filter.Order.DESC);
-    		filter.setOrder(order);
     		List<Coordinate> results = jpa.query(Coordinate.class, filter);
     		Coordinate privious = results.get(0);
     		for (Coordinate result : results){
