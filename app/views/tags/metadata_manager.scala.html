@@ -10,15 +10,23 @@
 	@table_filterable("models", prefix, plural, 
 			Seq(Seq("id", "ID"), Seq("title", "Title"), Seq("version", "Version")),
 			if(more == null){
-				Seq(Seq(Html("action-1"), Html("Edit"), buttonEdit()))
+				Seq(
+					Seq(
+						Html("action-2"), Html("Actions"), buttons()
+					)
+				)
 			} else {
 				more
 			}
 	)
 </section>
 
-@buttonEdit() = {
+@buttons() = {
 	<button title='edit' class='btn btn-xs' ng-click='edit(it)'>
 		@bs_icon("edit")
 	</button>
+	<button title='edit permissions' class='btn btn-xs' ng-click='permit(it)'>
+		@bs_icon("eye-close")
+	</button>
 }
+

@@ -3,15 +3,17 @@
 @* filter elements usually used with filter_repeat tag*@
 @(models:String, prefix:String, plural:String, options:Seq[Seq[String]]) 
 <fieldset id='@{prefix}Filter' ng-init='@{prefix}Order="@options(0)(0)"'>
-	<label>filter: </label>
-	<input placeholder="Filter your @plural" autofocus 
+	<label>@bs_icon("search")</label>
+	<input placeholder="Filter for @plural" autofocus 
 	ng-model="@{prefix}Query" >
-	<label>order by: </label> 
-	<select ng-model="@{prefix}Order">
-		@for(option <- options){
-			<option value="@(option(0))">@(option(1))</option>
-		}
-	</select> 
+	@if(options.size > 1){
+		<label>order by: </label> 
+		<select ng-model="@{prefix}Order">
+			@for(option <- options){
+				<option value="@(option(0))">@(option(1))</option>
+			}
+		</select> 
+	}
 	<input title='ascending order' id="@{prefix}Asc" type="radio" ng-model="@{prefix}Dir" name="@{prefix}Dir" checked>
 	<label title='ascending order' for="@{prefix}Asc"> @bs_icon("sort-by-attributes") </label> 
 	<input title='descending order' id='@{prefix}Des' type="radio" ng-model="@{prefix}Dir" name="@{prefix}Dir" value="reverse">

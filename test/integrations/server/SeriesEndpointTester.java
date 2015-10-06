@@ -1,6 +1,7 @@
 package integrations.server;
 
 import static com.fasterxml.jackson.databind.node.JsonNodeType.NULL;
+import static com.fasterxml.jackson.databind.node.JsonNodeType.OBJECT;
 import static com.fasterxml.jackson.databind.node.JsonNodeType.STRING;
 import static org.fest.assertions.Assertions.assertThat;
 import static suites.Helper.assertNodeType;
@@ -20,7 +21,6 @@ public class SeriesEndpointTester {
 
 	private void testRead() {
 		JsonNode root = testJsonObjectResponse(url() + "/1");
-		assertDefaultFilter(root.get("filter"));
 		assertSeriesObject(root.get("result"));
 	}
 
@@ -28,10 +28,9 @@ public class SeriesEndpointTester {
 		return () -> newInstance().testDefaultParameters();
 	}
 
-	private void testDefaultParameters() {
+	private void testDefaultParameters() {		
 		JsonNode root = testJsonResponseMin(url(), 1);
 		assertSeriesArray(root.get("results"));
-		assertDefaultFilter(root.get("filter"));
 	}
 
 	private void assertSeriesArray(JsonNode results) {
@@ -50,8 +49,10 @@ public class SeriesEndpointTester {
 		final String versionKey = "version";
 		final String licenseKey = "license";
 		final String isVersionOfKey = "isVersionOf";
+		final String owner = "owner";
 		
-		assertThat(fields).containsOnly(idKey, titleKey, desKey, creatorKey, publisherKey, licenseKey, versionKey, isVersionOfKey);
+		assertThat(fields).containsOnly(idKey, titleKey, desKey, creatorKey,
+				publisherKey, licenseKey, versionKey, isVersionOfKey, owner);
 		assertThat(node.get(idKey).asLong()).isPositive();
 		
 		assertNodeType(node.get(titleKey), STRING);
@@ -62,12 +63,9 @@ public class SeriesEndpointTester {
 		assertNodeType(node.get(licenseKey), STRING, NULL);
 		assertNodeType(node.get(versionKey), STRING, NULL);
 		assertNodeType(node.get(isVersionOfKey), STRING, NULL);
+		assertNodeType(node.get(owner), OBJECT, NULL);
 	}
 
-	private void assertDefaultFilter(JsonNode filter) {
-		assertNodeType(filter, NULL);
-	}
-	
 	private static SeriesEndpointTester newInstance() {
 		return new SeriesEndpointTester();
 	}

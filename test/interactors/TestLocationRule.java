@@ -29,7 +29,8 @@ public class TestLocationRule {
 		
 		String expected = "";
 		try{
-		locId = rule.getLocation(987654321L).getId();
+			final long invalidAlsId = 0L;
+			locId = rule.getLocation(invalidAlsId).getId();
 		}
 		catch(Exception e){
 			expected = e.getMessage();

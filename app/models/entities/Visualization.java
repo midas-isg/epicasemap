@@ -12,9 +12,12 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
 
-@Entity
-public class Viz extends MetaData {
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+@Entity(name="viz")
+public class Visualization extends MetaData {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
@@ -28,7 +31,11 @@ public class Viz extends MetaData {
 	@Column(columnDefinition = "TEXT")
 	private String uiSetting;
 
-	public Viz() {
+	@ManyToOne
+	@JsonIgnore
+	private Account owner;
+
+	public Visualization() {
 		allSeries = new ArrayList<>();
 	}
 
@@ -58,6 +65,15 @@ public class Viz extends MetaData {
 		this.uiSetting = uiSetting;
 	}
 
+	
+	public Account getOwner() {
+		return owner;
+	}
+
+	public void setOwner(Account owner) {
+		this.owner = owner;
+	}
+	
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -77,7 +93,7 @@ public class Viz extends MetaData {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		Viz other = (Viz) obj;
+		Visualization other = (Visualization) obj;
 		if (allSeries == null) {
 			if (other.allSeries != null)
 				return false;
