@@ -3,7 +3,7 @@ timeline.js
 */
 
 (function() {
-	var DEBUG = true;
+	var DEBUG = false;
 	
 	function MagicMap() {
 		var i,
