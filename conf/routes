@@ -25,7 +25,7 @@ GET     /api.json*path              controllers.ApiHelpController.getResource(pa
 
 
 # API
-GET     /api/series                 controllers.ApiSeries.get()
+GET     /api/series                 controllers.ApiSeries.list()
 POST    /api/series                 controllers.ApiSeries.post()
 GET     /api/series/:id             controllers.ApiSeries.read(id:Long)
 PUT		/api/series/:id             controllers.ApiSeries.put(id:Long)
@@ -43,7 +43,7 @@ PUT		/api/series/:id/data         controllers.ApiSeries.uploadData(id:Long)
 POST    /api/locations/bulk-lables  controllers.ApiLocation.getBulkLables()
 GET     /api/locations/:id          controllers.ApiLocation.read(id:Long)
 
-GET     /api/vizs                   controllers.ApiViz.find()
+GET     /api/vizs                   controllers.ApiViz.list()
 POST	/api/vizs					controllers.ApiViz.post()
 GET     /api/vizs/:id               controllers.ApiViz.read(id:Long)
 PUT     /api/vizs/:id               controllers.ApiViz.put(id:Long)

@@ -35,11 +35,11 @@ app.service("api", function($http, $q, $location) {
 	this.option2mode = function(option){
 		switch(option) {
 	    case 'ur':
-	    	return {use:true, read:true};
+	    	return {use:true, read_data:true};
 	    case 'urc':
-	    	return {use:true, read:true, change:true};
+	    	return {use:true, read_data:true, change:true};
 	    case 'urcp':
-	    	return {use:true, read:true, change:true, permit:true};
+	    	return {use:true, read_data:true, change:true, permit:true};
 	    default:
 	    	return {use:true};
 		}
@@ -48,7 +48,7 @@ app.service("api", function($http, $q, $location) {
 		var option = '';
 		if (mode.use)
 			option += 'u'; 
-		if (mode.read)
+		if (mode.read_data)
 			option += 'r';
 		if (mode.change)
 			option += 'c';
