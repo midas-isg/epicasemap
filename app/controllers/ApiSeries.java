@@ -1,7 +1,7 @@
 package controllers;
 
 import static controllers.ResponseHelper.setResponseLocationFromRequest;
-import interactors.AuthorizationRule;
+import interactors.SeriesAuthorizer;
 import interactors.SeriesRule;
 
 import java.util.List;
@@ -9,12 +9,12 @@ import java.util.List;
 import javax.ws.rs.PathParam;
 
 import models.entities.Mode;
-import models.entities.SeriesPermission;
 import models.entities.Series;
+import models.entities.SeriesPermission;
 import models.exceptions.Unauthorized;
 import models.filters.Filter;
+import models.filters.MetaFilter;
 import models.filters.Restriction;
-import models.filters.SeriesFilter;
 import models.view.ModeWithAccountId;
 import play.data.Form;
 import play.db.jpa.JPA;
@@ -64,17 +64,17 @@ public class ApiSeries extends Controller {
 	@ApiOperation(httpMethod = "GET", nickname = "list", value = "Lists all Series")
 	@ApiResponses({ @ApiResponse(code = OK, message = "Success") })
 	@Transactional
-	@Restricted({Access.USE, Access.READ, Access.CHANGE})
-	public static Result get() {
-		List<Long> ids = AuthorizationKit.findPermittedSeriesIds();
-		SeriesFilter seriesfilter = new SeriesFilter();
-		seriesfilter.setIds(ids);
+	//@Restricted({Access.USE, Access.READ_DATA, Access.CHANGE})
+	public static Result list() {
+		//List<Long> ids = AuthorizationKit.findPermittedSeriesIds();
+		MetaFilter seriesfilter = new MetaFilter();
+		//seriesfilter.setIds(ids);
 		List<Series> results = find(seriesfilter);
 		return ResponseHelper.okAsWrappedJsonArray(results, seriesfilter);
 	}
 
 	@Transactional
-	public static List<Series> find(SeriesFilter filter) {
+	public static List<Series> find(MetaFilter filter) {
 		return makeRule().query(filter);
 	}
 
@@ -84,12 +84,12 @@ public class ApiSeries extends Controller {
 		@ApiResponse(code = NOT_FOUND, message = "Not found"),
 		@ApiResponse(code = UNAUTHORIZED, message = "Access denied") })
 	@Transactional
-	@Restricted({Access.USE, Access.READ, Access.CHANGE})
+	//@Restricted({Access.USE, Access.READ, Access.CHANGE})
 	public static Result read(
 			@ApiParam(value = "ID of the series", required = true)
 			@PathParam("id")
 			long id) {
-		checkSeriesPermission(id, "read");
+		//checkSeriesPermission(id, "read");
 		Series result = makeRule().read(id);
 		Filter filter = null;
 		return ResponseHelper.okAsWrappedJsonObject(result, filter);
@@ -176,7 +176,7 @@ public class ApiSeries extends Controller {
 	}
 	
 	@Transactional
-	@Restricted({Access.READ, Access.CHANGE})
+	@Restricted({Access.READ_DATA, Access.CHANGE})
 	public static Result getData(
 			Long seriesId,
 			String startInclusive,
@@ -195,13 +195,13 @@ public class ApiSeries extends Controller {
 	@Restricted({Access.PERMIT})
 	public static Result getPermissions(long id) {
 		checkSeriesPermission(id, "see the permissions of");
-		Restriction r = new Restriction(null, null, id);
-		List<?> results = makeAuthorizationRule().findPermissions(r);
+		Restriction r = new Restriction(null, null, id, null);
+		List<?> results = makeSeriesAuthorizer().findPermissions(r);
 		return ResponseHelper.okAsWrappedJsonArray(results, null);
 	}
 
-	private static AuthorizationRule makeAuthorizationRule() {
-		return Factory.makeAuthorizationRule(JPA.em());
+	private static SeriesAuthorizer makeSeriesAuthorizer() {
+		return Factory.makeSeriesAuthorizer(JPA.em());
 	}
 	
 	@Transactional
@@ -211,14 +211,14 @@ public class ApiSeries extends Controller {
 		ModeWithAccountId data = modeForm.bindFromRequest().get();
 		final List<Long> accountIds = data.getAccountIds();
 		for (Long accountId : accountIds)
-			makeAuthorizationRule().grantSeries(accountId, data, seriesId);
+			makeSeriesAuthorizer().permit(accountId, data, seriesId);
 		return created();
 	}
 	
 	@Transactional
 	@Restricted({Access.PERMIT})
 	public static Result deletePermission(long id) {
-		final AuthorizationRule authorizationRule = makeAuthorizationRule();
+		final SeriesAuthorizer authorizationRule = makeSeriesAuthorizer();
 		final Long sId = findSeriesIdByPermissionId(authorizationRule, id);
 		checkSeriesPermission(sId, "delete the permission of");
 		authorizationRule.delete(id);
@@ -227,7 +227,7 @@ public class ApiSeries extends Controller {
 	}
 
 	private static Long findSeriesIdByPermissionId(
-			final AuthorizationRule authorizationRule, long id) {
+			final SeriesAuthorizer authorizationRule, long id) {
 		final SeriesPermission permission = authorizationRule.read(id);
 		final Long sId = permission.getSeries().getId();
 		return sId;
@@ -236,7 +236,7 @@ public class ApiSeries extends Controller {
 	@Transactional
 	@Restricted({Access.PERMIT})
 	public static Result putMode(long id) {
-		final AuthorizationRule authorizationRule = makeAuthorizationRule();
+		final SeriesAuthorizer authorizationRule = makeSeriesAuthorizer();
 		final Long sId = findSeriesIdByPermissionId(authorizationRule, id);
 		checkSeriesPermission(sId, "update the permission of");
 		Mode data = modeForm.bindFromRequest().get();

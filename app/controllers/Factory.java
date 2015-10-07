@@ -9,13 +9,14 @@ import gateways.database.SeriesDao;
 import gateways.database.SeriesDataDao;
 import gateways.database.VizDao;
 import gateways.webservice.AlsDao;
-import interactors.AuthorizationRule;
+import interactors.AccountRule;
 import interactors.ConfRule;
 import interactors.CoordinateRule;
 import interactors.LocationRule;
-import interactors.AccountRule;
+import interactors.SeriesAuthorizer;
 import interactors.SeriesDataRule;
 import interactors.SeriesRule;
+import interactors.VizAuthorizer;
 import interactors.VizRule;
 import interactors.security.password.Authenticator;
 import interactors.security.password.PasswordFactory;
@@ -26,6 +27,8 @@ import interactors.series_data_file.Validator;
 import javax.persistence.EntityManager;
 
 import models.SeriesDataFile;
+import models.entities.SeriesPermission;
+import models.entities.VizPermission;
 import play.db.jpa.JPA;
 
 public class Factory {
@@ -113,11 +116,20 @@ public class Factory {
 		return rule;
 	}
 	
-	public static AuthorizationRule makeAuthorizationRule(EntityManager em){
-		final PermissionDao dao = new PermissionDao(em);
-		final AuthorizationRule authorizationRule = new AuthorizationRule(dao);
-		authorizationRule.setSeriesRule(makeSeriesRule(em));
-		authorizationRule.setAccountRule(makeAccountRule(em));
-		return authorizationRule;
+	
+	public static SeriesAuthorizer makeSeriesAuthorizer(EntityManager em){
+		final PermissionDao<SeriesPermission> dao = new PermissionDao<>(em, SeriesPermission.class);
+		SeriesAuthorizer authorizer = new SeriesAuthorizer(dao);
+		authorizer.setSeriesRule(makeSeriesRule(em));
+		authorizer.setAccountRule(makeAccountRule(em));
+		return authorizer;
+	}
+
+	public static VizAuthorizer makeVizAuthorizer(EntityManager em){
+		final PermissionDao<VizPermission> dao = new PermissionDao<>(em, VizPermission.class);
+		final VizAuthorizer authorizer = new VizAuthorizer(dao);
+		authorizer.setVizRule(makeVizRule(em));
+		authorizer.setAccountRule(makeAccountRule(em));
+		return authorizer;
 	}
 }

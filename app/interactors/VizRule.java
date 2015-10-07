@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 import models.entities.MetaData;
 import models.entities.Series;
 import models.entities.Visualization;
-import models.filters.Filter;
+import models.filters.MetaFilter;
 import models.view.VizInput;
 
 public class VizRule extends CrudRule<Visualization> {
@@ -72,10 +72,9 @@ public class VizRule extends CrudRule<Visualization> {
 		return input;
 	}
 	
-	public List<Visualization> query(Filter filter) {
+	public List<Visualization> query(MetaFilter filter) {
 		return dao.query(filter);
 	}
-
 
 	private List<Long> toIds(List<Series> input) {
 		return toList(input, it -> it.getId());

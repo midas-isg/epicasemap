@@ -1,6 +1,5 @@
 package controllers;
 
-import static controllers.ResponseHelper.okAsWrappedJsonArray;
 import static controllers.ResponseHelper.okAsWrappedJsonObject;
 import static controllers.ResponseHelper.setResponseLocationFromRequest;
 import interactors.VizRule;
@@ -11,6 +10,7 @@ import javax.ws.rs.PathParam;
 
 import models.entities.Visualization;
 import models.filters.Filter;
+import models.filters.MetaFilter;
 import models.view.VizInput;
 import play.data.Form;
 import play.db.jpa.JPA;
@@ -27,6 +27,10 @@ import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
+
+import controllers.security.AuthorizationKit;
+import controllers.security.Restricted;
+import controllers.security.Restricted.Access;
 
 @Api(value = "/vizs", description = "Endpoints for Vizs", hidden = false)
 public class ApiViz extends Controller {
@@ -71,13 +75,17 @@ public class ApiViz extends Controller {
 		return okAsWrappedJsonObject(data, filter);
 	}
 
-	@ApiOperation(httpMethod = "GET", nickname = "find", value = "Finds all Vizs")
+	@ApiOperation(httpMethod = "GET", nickname = "list", value = "Lists all Vizs")
 	@ApiResponses({ @ApiResponse(code = OK, message = "Success") })
 	@Transactional
-	public static Result find() {
-		Filter filter = null;
-		List<Visualization> data = makeRule().query(filter);
-		return okAsWrappedJsonArray(data, filter);
+	@Restricted({Access.USE, Access.READ_DATA, Access.CHANGE})
+	public static Result list() {
+		List<Long> ids = AuthorizationKit.findPermittedVizIds();
+		MetaFilter filter = new MetaFilter();
+		filter.setIds(ids);
+		List<Visualization> results = makeRule().query(filter);
+		return ResponseHelper.okAsWrappedJsonArray(results, filter);
+
 	}
 
 	@ApiOperation(httpMethod = "GET", nickname = "readUiSetting", value = "Returns the UI Setting of the Viz by ID")
@@ -115,7 +123,6 @@ public class ApiViz extends Controller {
 		return noContent();
 	}
 
-	//
 	@ApiOperation(httpMethod = "PUT", nickname = "updateUiSetting", value = "Updates UI Setting", 
 			notes = "This endpoint does full update only the given UI Setting "
 			+ "of the ViZ idientified by 'id' with submitted JSON object in body "

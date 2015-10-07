@@ -1,6 +1,7 @@
 package controllers.security;
 
-import interactors.AuthorizationRule;
+import interactors.VizAuthorizer;
+import interactors.SeriesAuthorizer;
 
 import java.util.Arrays;
 import java.util.List;
@@ -14,8 +15,6 @@ import controllers.security.Restricted.Access;
 
 
 public class AuthorizationKit {
-	private static final String ID = "id";
-
 	private AuthorizationKit() {
 	}
 	
@@ -32,24 +31,29 @@ public class AuthorizationKit {
 		if (accountId == null && accesses == null)
 			return null;
 		final Restriction restriction = new Restriction(accountId, accesses);
-		return makeRule().findSeriesIds(restriction);
+		return makeSeriesAuthorizer().findSeriesIds(restriction);
 	}
 
-	static void writeAccountId(Context ctx, Object value) {
-		ctx.args.put(ID, value);
+	public static List<Long> findPermittedVizIds() {
+		final Long accountId = readAccountId();
+		List<Access> accesses = readAccesses();
+		if (accountId == null && accesses == null)
+			return null;
+		final Restriction restriction = new Restriction(accountId, accesses);
+		final List<Long> ids = makeVizAuthorizer().findVizIds(restriction);
+		return ids;
 	}
-	
+
+	private static VizAuthorizer makeVizAuthorizer() {
+		return Factory.makeVizAuthorizer(JPA.em());
+	}
+
 	private static Long readAccountId() {
-		final String accountId = readString(ID);
+		final String accountId = Authentication.readAccountId(ctx());
 		if (accountId == null)
 			return null;
 
 		return Long.parseLong(accountId);
-	}
-
-	private static String readString(String key) {
-		final Object val = read(key);
-		return val == null ? null : val.toString();
 	}
 
 	private static Object read(String key) {
@@ -76,8 +80,8 @@ public class AuthorizationKit {
 		return (List<Access>)read(Restricted.KEY);
 	}
 	
-	private static AuthorizationRule makeRule() {
-		return Factory.makeAuthorizationRule(JPA.em());
+	private static SeriesAuthorizer makeSeriesAuthorizer() {
+		return Factory.makeSeriesAuthorizer(JPA.em());
 	}
 	
 	public static boolean hasLoggedIn(){

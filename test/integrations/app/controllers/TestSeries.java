@@ -49,7 +49,7 @@ public class TestSeries {
 
 	private void testReadSeries(Series expected) {
 		long id = expected.getId();
-		final Result response = ApiSeries.get();
+		final Result response = ApiSeries.list();
 		final String content = contentAsString(response);
 		final JsonNode root = Json.parse(content);
 		final JsonNode results = root.get("results");

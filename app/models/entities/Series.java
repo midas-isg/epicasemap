@@ -8,13 +8,11 @@ import javax.persistence.ManyToOne;
 
 @Entity
 public class Series extends MetaData {
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
-	
-	@ManyToOne
 	private Account owner;
 
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Override
 	public Long getId() {
 		return id;
@@ -25,7 +23,7 @@ public class Series extends MetaData {
 		this.id = id;
 	}
 
-	
+	@ManyToOne
 	public Account getOwner() {
 		return owner;
 	}

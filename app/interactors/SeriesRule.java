@@ -11,7 +11,7 @@ import models.entities.Series;
 import models.entities.Visualization;
 import models.exceptions.ConstraintViolation;
 import models.filters.CoordinateFilter;
-import models.filters.SeriesFilter;
+import models.filters.MetaFilter;
 
 public class SeriesRule extends CrudRule<Series> {
 	private SeriesDao dao; 
@@ -23,7 +23,7 @@ public class SeriesRule extends CrudRule<Series> {
 		this.dao = dao;
 	}
 
-	public List<Series> query(SeriesFilter filter) {
+	public List<Series> query(MetaFilter filter) {
 		return dao.query(filter);
 	}
 
