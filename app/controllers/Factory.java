@@ -60,6 +60,7 @@ public class Factory {
 		if (vizRule == null)
 			vizRule = makeVizRule(em, seriesRule);
 		seriesRule.setVizRule(vizRule);
+		seriesRule.setAccountRule(makeAccountRule(em));
 		return seriesRule;
 	}
 
@@ -73,6 +74,7 @@ public class Factory {
 		if (seriesRule == null) 
 			seriesRule = makeSeriesRule(em, vizRule);
 		vizRule.setSeriesRule(seriesRule);
+		vizRule.setAccountRule(makeAccountRule(em));
 
 		return vizRule;
 	}

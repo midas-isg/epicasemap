@@ -6,21 +6,28 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import models.entities.Account;
 import models.entities.Coordinate;
 import models.entities.Series;
 import models.entities.Visualization;
 import models.exceptions.ConstraintViolation;
 import models.filters.CoordinateFilter;
 import models.filters.MetaFilter;
+import models.view.SeriesInput;
 
 public class SeriesRule extends CrudRule<Series> {
 	private SeriesDao dao; 
 	private CoordinateRule coordinateRule;
 	private SeriesDataRule seriesDataRule;
 	private VizRule vizRule; 
-
+	private AccountRule accountRule;
+	
 	public SeriesRule(SeriesDao dao) {
 		this.dao = dao;
+	}
+
+	public void setAccountRule(AccountRule rule) {
+		accountRule = rule;
 	}
 
 	public List<Series> query(MetaFilter filter) {
@@ -83,5 +90,28 @@ public class SeriesRule extends CrudRule<Series> {
 		filter.setSeriesId(seriesId);
 		filter.setOffset(0);
 		return filter;
+	}
+
+	public long createFromInput(SeriesInput input) {
+		return create(toSeries(input));
+	}
+
+	private Series toSeries(SeriesInput input) {
+		if (input == null)
+			return null;
+		Series model = new Series();
+		copyMetadata(model, input);
+		model.setOwner(readAccount(input.getOwnerId()));
+		return model;
+	}
+
+	private Account readAccount(Long id) {
+		if (id == null)
+			return null;
+		return accountRule.read(id);
+	}
+
+	public void updateFromInput(long id, SeriesInput input) {
+		update(id, toSeries(input));
 	}
 }

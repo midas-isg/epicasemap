@@ -14,14 +14,11 @@ import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 @Entity(name="viz")
 public class Visualization extends MetaData {
 	private Long id;
 	private List<Series> allSeries;
 	private String uiSetting;
-	@JsonIgnore
 	private Account owner;
 
 	public Visualization() {

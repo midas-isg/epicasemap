@@ -49,7 +49,7 @@ app.controller('Viz', function($scope, $rootScope, api) {
 			emitBusy();
 			api.deleting('vizs', $scope.model.id).then(close, function(err){
 				emitDone();
-				error('Failed to delete the Visualization!');
+				error('Failed to delete the Visualization!', err);
 			});
 		}
 	};
@@ -92,7 +92,7 @@ app.controller('Viz', function($scope, $rootScope, api) {
 			$scope.allSeries = rsp.data.results;
 			updateAllSeries($scope.model);
 		}, function(err){
-			error("Failed to load your Series!");
+			error("Failed to load your Series!", err);
 		});
 	}
 	
@@ -131,9 +131,9 @@ app.controller('Viz', function($scope, $rootScope, api) {
 	}
 
 	function buildBody(model) {
-		var body = _.omit(model, 'allSeries', 'allSeries2');
+		var body = _.omit(model, 'allSeries', 'owner');
 		body.seriesIds = toSeriesIds('isSelected');
-		body.series2Ids = toSeriesIds('s2');
+		body.ownerId = model.owner && model.owner.id 
 		return body;
 		
 		function toSeriesIds(key){
@@ -164,12 +164,12 @@ app.controller('Viz', function($scope, $rootScope, api) {
 				api.gettingFromUrl(location).then(function(rsp) {
 					$scope.model = rsp.data.result;
 				}, function(err){
-					error('Failed to read the Visualization!');
+					error('Failed to read the Visualization!', err);
 				});
 			}
 		}, function(err){
 			emitDone();
-			error('Failed to save the Visualization!');
+			error('Failed to save the Visualization!', err);
 		});
 	}
 	
@@ -177,7 +177,8 @@ app.controller('Viz', function($scope, $rootScope, api) {
 		alert('Success: ' + message, 'alert-success');
 	}
 	
-	function error(message){
+	function error(defaultMessage, err){
+		var message = err.data.userMessage || defaultMessage;
 		alert('Error: ' + message, 'alert-danger');
 	}
 	

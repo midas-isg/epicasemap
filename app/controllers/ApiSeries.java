@@ -16,11 +16,13 @@ import models.filters.Filter;
 import models.filters.MetaFilter;
 import models.filters.Restriction;
 import models.view.ModeWithAccountId;
+import models.view.SeriesInput;
 import play.data.Form;
 import play.db.jpa.JPA;
 import play.db.jpa.Transactional;
 import play.mvc.Controller;
 import play.mvc.Result;
+import play.mvc.Security;
 
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiImplicitParam;
@@ -30,9 +32,11 @@ import com.wordnik.swagger.annotations.ApiParam;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
 
+import controllers.security.Authentication;
 import controllers.security.AuthorizationKit;
 import controllers.security.Restricted;
 import controllers.security.Restricted.Access;
+
 @Api(value = "/series", description = "Endpoints for Series")
 public class ApiSeries extends Controller {
 	private static final String ex = "series.json";
@@ -40,7 +44,7 @@ public class ApiSeries extends Controller {
 			+ "<a href='assets/examples/api/" + ex + "'>" + ex + "</a> ";
 	public static final String inputType = "models.entities.Series";
 	
-	public static Form<Series> seriesForm = Form.form(Series.class);
+	public static Form<SeriesInput> seriesForm = Form.form(SeriesInput.class);
 	public static Form<ModeWithAccountId> modeForm = Form.form(ModeWithAccountId.class);
 
 	@ApiOperation(httpMethod = "POST", nickname = "create", value = "Creates a new Series", 
@@ -54,9 +58,10 @@ public class ApiSeries extends Controller {
 	@ApiImplicitParam(required = true, value = exBody, dataType = inputType, paramType = "body")
 		})
 	@Transactional
+	@Security.Authenticated(Authentication.class)
 	public static Result post() {
-		Series data = seriesForm.bindFromRequest().get();
-		long id = create(data);
+		SeriesInput data = seriesForm.bindFromRequest().get();
+		long id = makeRule().createFromInput(data);
 		setResponseLocationFromRequest(id + "");
 		return created();
 	}
@@ -64,11 +69,8 @@ public class ApiSeries extends Controller {
 	@ApiOperation(httpMethod = "GET", nickname = "list", value = "Lists all Series")
 	@ApiResponses({ @ApiResponse(code = OK, message = "Success") })
 	@Transactional
-	//@Restricted({Access.USE, Access.READ_DATA, Access.CHANGE})
 	public static Result list() {
-		//List<Long> ids = AuthorizationKit.findPermittedSeriesIds();
 		MetaFilter seriesfilter = new MetaFilter();
-		//seriesfilter.setIds(ids);
 		List<Series> results = find(seriesfilter);
 		return ResponseHelper.okAsWrappedJsonArray(results, seriesfilter);
 	}
@@ -84,12 +86,10 @@ public class ApiSeries extends Controller {
 		@ApiResponse(code = NOT_FOUND, message = "Not found"),
 		@ApiResponse(code = UNAUTHORIZED, message = "Access denied") })
 	@Transactional
-	//@Restricted({Access.USE, Access.READ, Access.CHANGE})
 	public static Result read(
 			@ApiParam(value = "ID of the series", required = true)
 			@PathParam("id")
 			long id) {
-		//checkSeriesPermission(id, "read");
 		Series result = makeRule().read(id);
 		Filter filter = null;
 		return ResponseHelper.okAsWrappedJsonObject(result, filter);
@@ -97,7 +97,8 @@ public class ApiSeries extends Controller {
 
 	private static void checkSeriesPermission(long id, String action) {
 		if (! AuthorizationKit.isSeriesPermitted(id))
-			throw new Unauthorized("Unauthorized to " + action + " the Series with ID = " + id);
+			throw new Unauthorized("Unauthorized to " + action + 
+					" the Series with ID = " + id);
 	}
 	
 	@ApiOperation(httpMethod = "PUT", nickname = "update", value = "Updates the Series", 
@@ -118,8 +119,8 @@ public class ApiSeries extends Controller {
 		@ApiParam(value = "ID of the Series", required = true) @PathParam("id") 
 				long id) {
 		checkSeriesPermission(id, "update");
-		final Series data = seriesForm.bindFromRequest().get();
-		makeRule().update(id, data);
+		final SeriesInput data = seriesForm.bindFromRequest().get();
+		makeRule().updateFromInput(id, data);
 		setResponseLocationFromRequest();
 		return noContent();
 	}
@@ -140,7 +141,7 @@ public class ApiSeries extends Controller {
 			@PathParam("id") 
 				long id) {
 		checkSeriesPermission(id, "delete");
-		deleteById(id);
+		makeRule().delete(id);
 		setResponseLocationFromRequest();
 		return noContent();
 	}
@@ -163,18 +164,10 @@ public class ApiSeries extends Controller {
 		return UploadSeries.upload(id);
 	}
 
-	public static void deleteById(long id) {
-		makeRule().delete(id);
-	}
-
-	public static SeriesRule makeRule() {
+	private static SeriesRule makeRule() {
 		return Factory.makeSeriesRule(JPA.em());
 	}
 
-	public static long create(Series data) {
-		return makeRule().create(data);
-	}
-	
 	@Transactional
 	@Restricted({Access.READ_DATA, Access.CHANGE})
 	public static Result getData(

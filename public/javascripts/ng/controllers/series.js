@@ -44,7 +44,7 @@ app.controller('Series', function($scope, $rootScope, api) {
 				close();
 			}, function (err){
 				emitDone();
-				error(err.data && err.data.userMessage);
+				error('Failed to delete the series!', err);
 			});
 	};
 	$scope.close = function() {
@@ -75,7 +75,7 @@ app.controller('Series', function($scope, $rootScope, api) {
 	function loadCoordinates(seriesId){
 		if (! seriesId)
 			return;
-		var path = 'series/' + seriesId + '/data'; //'/time-coordinate';
+		var path = 'series/' + seriesId + '/data';
 		api.finding(path).then(success, fail);
 		
 		function success(rsp) {
@@ -84,10 +84,7 @@ app.controller('Series', function($scope, $rootScope, api) {
 		}
 		
 		function fail(err){
-			if (err.data)
-				error(err.data.userMessage);
-			else
-				error('Failed to load the time-coordinate data!');
+			error('Failed to load the time-coordinate data!', err);
 		}
 	}
 
@@ -101,7 +98,9 @@ app.controller('Series', function($scope, $rootScope, api) {
 	}
 	
 	function buildBody(model) {
-		return model;
+		var body = _.omit(model, 'owner');
+		body.ownerId = model.owner && model.owner.id 
+		return body;
 	}
 	
 	function isNoData(){
@@ -123,12 +122,12 @@ app.controller('Series', function($scope, $rootScope, api) {
 					if(toUpload)
 						$scope.uploadNewData($scope.model.id);
 				}, function(err){
-					error('Failed to read the series!');
+					error('Failed to read the series!', err);
 				});
 			}
 		}, function(err){
 			emitDone();
-			error('Failed to save the series!');
+			error(msg, err);
 		});
 	}
 	
@@ -136,7 +135,8 @@ app.controller('Series', function($scope, $rootScope, api) {
 		alert('Success: ' + message, 'alert-success');
 	}
 	
-	function error(message){
+	function error(defaultMessage, err){
+		var message = err.data.userMessage || defaultMessage;
 		alert('Error: ' + message, 'alert-danger');
 	}
 	
