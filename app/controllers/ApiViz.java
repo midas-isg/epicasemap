@@ -9,6 +9,7 @@ import java.util.List;
 import javax.ws.rs.PathParam;
 
 import models.entities.Visualization;
+import models.exceptions.Unauthorized;
 import models.filters.Filter;
 import models.filters.MetaFilter;
 import models.view.VizInput;
@@ -16,6 +17,7 @@ import play.data.Form;
 import play.db.jpa.JPA;
 import play.db.jpa.Transactional;
 import play.mvc.Controller;
+import play.mvc.Security;
 import play.mvc.Http.RequestBody;
 import play.mvc.Result;
 
@@ -28,6 +30,7 @@ import com.wordnik.swagger.annotations.ApiParam;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
 
+import controllers.security.Authentication;
 import controllers.security.AuthorizationKit;
 import controllers.security.Restricted;
 import controllers.security.Restricted.Access;
@@ -52,15 +55,18 @@ public class ApiViz extends Controller {
 		@ApiImplicitParam(required = true, value = exBody, dataType = inputType, paramType = "body")
 	})
 	@Transactional
+	@Security.Authenticated(Authentication.class)
 	public static Result post() {
 		VizInput data = vizForm.bindFromRequest().get();
+		final Long accountId = AuthorizationKit.readAccountId();
+		data.setOwnerId(accountId);
 		long id = create(data);
 		setResponseLocationFromRequest(id + "");
 		return created();
 	}
 
 	public static long create(VizInput data) {
-		return makeRule().create(data);
+		return makeRule().createFromInput(data);
 	}
 
 	@ApiOperation(httpMethod = "GET", nickname = "read", value = "Returns the Viz by ID")
@@ -78,11 +84,8 @@ public class ApiViz extends Controller {
 	@ApiOperation(httpMethod = "GET", nickname = "list", value = "Lists all Vizs")
 	@ApiResponses({ @ApiResponse(code = OK, message = "Success") })
 	@Transactional
-	@Restricted({Access.USE, Access.READ_DATA, Access.CHANGE})
 	public static Result list() {
-		List<Long> ids = AuthorizationKit.findPermittedVizIds();
 		MetaFilter filter = new MetaFilter();
-		filter.setIds(ids);
 		List<Visualization> results = makeRule().query(filter);
 		return ResponseHelper.okAsWrappedJsonArray(results, filter);
 
@@ -114,13 +117,19 @@ public class ApiViz extends Controller {
 	@ApiImplicitParams({ 
 		@ApiImplicitParam(required = true, value = exBody, dataType = inputType, paramType = "body") })
 	@Transactional
+	@Restricted({Access.CHANGE})
 	public static Result put(
 			@ApiParam(value = "ID of the Viz", required = true) @PathParam("id") long id) {
+		checkVizPermission(id, "update");
 		final VizInput input = vizForm.bindFromRequest().get();
-		final Visualization data = makeRule().toViz(input);
-		update(id, data);
+		makeRule().updateFromInput(id, input);
 		setResponseLocationFromRequest();
 		return noContent();
+	}
+	
+	private static void checkVizPermission(long id, String action) {
+		if (! AuthorizationKit.isVizPermitted(id))
+			throw new Unauthorized("Unauthorized to " + action + " the Visualization with ID = " + id);
 	}
 
 	@ApiOperation(httpMethod = "PUT", nickname = "updateUiSetting", value = "Updates UI Setting", 
@@ -134,15 +143,18 @@ public class ApiViz extends Controller {
 		@ApiImplicitParams({ 
 			@ApiImplicitParam(required = true, paramType = "body") })
 		@Transactional
-		public static Result putUiSetting(
-				@ApiParam(value = "ID of the Viz", required = true) @PathParam("id") long id) {
-			RequestBody body = request().body();
-			final JsonNode root = body.asJson();
-			String json = root.toString();
-			makeRule().updateUiSetting(id, json);
-			setResponseLocationFromRequest();
-			return noContent();
-		}
+		@Restricted({Access.CHANGE})
+	public static Result putUiSetting(
+			@ApiParam(value = "ID of the Viz", required = true) @PathParam("id") long id) {
+		checkVizPermission(id, "update UI setting of");
+		RequestBody body = request().body();
+		final JsonNode root = body.asJson();
+		String json = root.toString();
+		makeRule().updateUiSetting(id, json);
+		setResponseLocationFromRequest();
+		return noContent();
+	}
+	
 	public static void update(long id, Visualization data) {
 		makeRule().update(id, data);
 	}
@@ -155,10 +167,12 @@ public class ApiViz extends Controller {
 		@ApiResponse(code = OK, message = "(Not used yet)"),
 		@ApiResponse(code = NO_CONTENT, message = "Success") })
 	@Transactional
+	@Restricted({Access.CHANGE})
 	public static Result delete(
 			@ApiParam(value = "ID of the Viz", required = true) 
 			@PathParam("id") 
 			long id) {
+		checkVizPermission(id, "delete");
 		deleteById(id);
 		setResponseLocationFromRequest();
 		return noContent();

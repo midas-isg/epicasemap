@@ -19,13 +19,10 @@ public class AuthorizationKit {
 	}
 	
 	public static boolean isSeriesPermitted(Long seriesId) {
-		final List<Long> permittedSeriesIds = findPermittedSeriesIds();
-		if (permittedSeriesIds == null)
-			return true;
-		return permittedSeriesIds.contains(seriesId);
+		return isPermitted(seriesId, findPermittedSeriesIds());
 	}
 
-	public static List<Long> findPermittedSeriesIds() {
+	private static List<Long> findPermittedSeriesIds() {
 		final Long accountId = readAccountId();
 		List<Access> accesses = readAccesses();
 		if (accountId == null && accesses == null)
@@ -34,7 +31,11 @@ public class AuthorizationKit {
 		return makeSeriesAuthorizer().findSeriesIds(restriction);
 	}
 
-	public static List<Long> findPermittedVizIds() {
+	public static boolean isVizPermitted(Long vizId) {
+		return isPermitted(vizId, findPermittedVizIds());
+	}
+
+	private static List<Long> findPermittedVizIds() {
 		final Long accountId = readAccountId();
 		List<Access> accesses = readAccesses();
 		if (accountId == null && accesses == null)
@@ -44,11 +45,18 @@ public class AuthorizationKit {
 		return ids;
 	}
 
+	private static boolean isPermitted(Long requestedId,
+			final List<Long> permittedIds) {
+		if (permittedIds == null)
+			return true;
+		return permittedIds.contains(requestedId);
+	}
+
 	private static VizAuthorizer makeVizAuthorizer() {
 		return Factory.makeVizAuthorizer(JPA.em());
 	}
 
-	private static Long readAccountId() {
+	public static Long readAccountId() {
 		final String accountId = Authentication.readAccountId(ctx());
 		if (accountId == null)
 			return null;
