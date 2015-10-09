@@ -6,18 +6,22 @@
 	@script_asset("javascripts/ng/controllers/viz.js")
 	@script_asset("javascripts/ng/controllers/series.js")
 	@script_asset("javascripts/ng/controllers/series-data.js")
+	@script_asset("javascripts/ng/controllers/viz-permissions.js")
+	@script_asset("javascripts/ng/controllers/viz-permission.js")
 }
 
 @main("Visualization Management", imports) {
 	<article id='vizs-body'  ng-app='app' ng-controller='Vizs'>
 		@metadata_manager("Visualization", "Visualizations", "viz", 
 			Seq(
-				Seq(Html("action-2"), Html("Actions"), buttons())
+				Seq(Html("action-3"), Html("Actions"), buttons())
 			)
 		)
 		@viz_dialog()
 		@series_dialog()
 		@series_data_dialog()
+		@viz_permissions_dialog()
+		@viz_permission_dialog()
 		@busy_dialog()
 	</article>
 }
@@ -25,6 +29,7 @@
 @buttons() = {
 	@button("play", "go(it)")
 	@button("edit", "edit(it)")
+	@button("eye-close", "permit(it)")
 }
 
 @button(glyph:String, expression:String, title:String=null) = {

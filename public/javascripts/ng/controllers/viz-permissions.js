@@ -1,8 +1,7 @@
-
-app.controller('SeriesPermissions', function($scope, $rootScope, api) {
+app.controller('VizPermissions', function($scope, $rootScope, api) {
 	"use strict"
 	$scope.view = {};
-	$scope.dialog = $('#seriesPermissionsModal');
+	$scope.dialog = $('#vizPermissionsModal');
 	$scope.alertParent = $scope.dialog.find('.modal-body');
     $scope.dialog.on('shown.bs.modal', function (e) {
     	$scope.dialog.find('form').find(':input:enabled:visible:first').focus();
@@ -17,15 +16,15 @@ app.controller('SeriesPermissions', function($scope, $rootScope, api) {
         }
     });
 	$scope.$watch('permissions', refreshACL);
-    $rootScope.$on('editSeriesPermissions', function(event, series) {
-    	editPermissions(series);
+    $rootScope.$on('editVizPermissions', function(event, viz) {
+    	editPermissions(viz);
 	});
-    $rootScope.$on('loadPermissions', function(event, seriesId) {
-    	seriesId = seriesId || $scope.model.id
-    	loadPermissions(seriesId);
+    $rootScope.$on('loadPermissions', function(event, vizId) {
+    	vizId = vizId || $scope.model.id
+    	loadPermissions(vizId);
 	});
     $scope.edit = function(permissionId) {
-    	$rootScope.$emit('editSeriesPermission', permissionId);
+    	$rootScope.$emit('editVizPermission', permissionId);
 	}
     $scope.addPermissions = function(){
     	$scope.form.$setPristine();
@@ -64,8 +63,8 @@ app.controller('SeriesPermissions', function($scope, $rootScope, api) {
 		function accountId(p){return p.account.id}
 	}
 	
-	function editPermissions(series) {
-		$scope.model = series;
+	function editPermissions(viz) {
+		$scope.model = viz;
 		resetView();
 		loadPermissions($scope.model.id);
 		loadAccounts();
@@ -79,10 +78,10 @@ app.controller('SeriesPermissions', function($scope, $rootScope, api) {
 		}
 	};
 	
-	function grant(accountIds, mode, seriesId){
+	function grant(accountIds, mode, vizId){
 		emitBusy();
-		var p = _.extend(mode, {accountIds: accountIds, seriesId: seriesId});
-		var path = 'series/' + seriesId + '/permissions';
+		var p = _.extend(mode, {accountIds: accountIds, vizId: vizId});
+		var path = 'vizs/' + vizId + '/permissions';
 		api.posting(path, p).then(ok, fail);
 		
 		function ok(rsp) {
@@ -101,10 +100,10 @@ app.controller('SeriesPermissions', function($scope, $rootScope, api) {
 		}
 	}
 	
-	function loadPermissions(seriesId){
-		if (! seriesId)
+	function loadPermissions(vizId){
+		if (! vizId)
 			return;
-		var path = 'series/' + seriesId + '/permissions';
+		var path = 'vizs/' + vizId + '/permissions';
 		api.finding(path).then(success, fail);
 		
 		function success(rsp) {
@@ -112,7 +111,7 @@ app.controller('SeriesPermissions', function($scope, $rootScope, api) {
 			$scope.viewPermissions = _.map(rsp.data.results, omit);
 			
 			function omit(e) { 
-				var e1 = _.omit(e, 'series'); 
+				var e1 = _.omit(e, 'visualization'); 
 				e1.account = _.pick(e1.account, 'name');
 				return e1;
 			}

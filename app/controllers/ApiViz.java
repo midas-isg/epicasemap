@@ -2,24 +2,29 @@ package controllers;
 
 import static controllers.ResponseHelper.okAsWrappedJsonObject;
 import static controllers.ResponseHelper.setResponseLocationFromRequest;
+import interactors.VizAuthorizer;
 import interactors.VizRule;
 
 import java.util.List;
 
 import javax.ws.rs.PathParam;
 
+import models.entities.Mode;
 import models.entities.Visualization;
+import models.entities.VizPermission;
 import models.exceptions.Unauthorized;
 import models.filters.Filter;
 import models.filters.MetaFilter;
+import models.filters.Restriction;
+import models.view.ModeWithAccountId;
 import models.view.VizInput;
 import play.data.Form;
 import play.db.jpa.JPA;
 import play.db.jpa.Transactional;
 import play.mvc.Controller;
-import play.mvc.Security;
 import play.mvc.Http.RequestBody;
 import play.mvc.Result;
+import play.mvc.Security;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.wordnik.swagger.annotations.Api;
@@ -43,6 +48,7 @@ public class ApiViz extends Controller {
 	public static final String inputType = "models.view.VizInput";
 
 	public static Form<VizInput> vizForm = Form.form(VizInput.class);
+	public static Form<ModeWithAccountId> modeForm = Form.form(ModeWithAccountId.class);
 
 	@ApiOperation(httpMethod = "POST", nickname = "create", value = "Creates a new Viz", 
 		notes = "This endpoint creates a Viz using submitted JSON object in body "
@@ -188,5 +194,60 @@ public class ApiViz extends Controller {
 
 	public static VizInput from(Visualization data) {
 		return makeRule().fromViz(data);
+	}
+
+	@Transactional
+	@Restricted({Access.PERMIT})
+	public static Result getPermissions(long id) {
+		checkVizPermission(id, "see the permissions of");
+		Restriction r = new Restriction(null, null, null, id);
+		List<?> results = makeVizAuthorizer().findPermissions(r);
+		return ResponseHelper.okAsWrappedJsonArray(results, null);
+	}
+
+	@Transactional
+	@Restricted({Access.PERMIT})
+	public static Result postPermissions(long vizId) {
+		checkVizPermission(vizId, "create the permission of");
+		ModeWithAccountId data = modeForm.bindFromRequest().get();
+		final List<Long> accountIds = data.getAccountIds();
+		final VizAuthorizer authorizer = makeVizAuthorizer();
+		for (Long accountId : accountIds) 
+			authorizer.permit(accountId, data, vizId);
+		
+		return created();
+	}
+	
+	@Transactional
+	@Restricted({Access.PERMIT})
+	public static Result deletePermission(long id) {
+		final VizAuthorizer authorizationRule = makeVizAuthorizer();
+		final Long sId = findVizIdByPermissionId(authorizationRule, id);
+		checkVizPermission(sId, "delete the permission of");
+		authorizationRule.delete(id);
+		setResponseLocationFromRequest();
+		return noContent();
+	}
+
+	private static Long findVizIdByPermissionId(
+			final VizAuthorizer authorizationRule, long id) {
+		final VizPermission permission = authorizationRule.read(id);
+		return permission.getVisualization().getId();
+	}
+	
+	@Transactional
+	@Restricted({Access.PERMIT})
+	public static Result putMode(long id) {
+		final VizAuthorizer authorizationRule = makeVizAuthorizer();
+		final Long sId = findVizIdByPermissionId(authorizationRule, id);
+		checkVizPermission(sId, "update the permission of");
+		Mode data = modeForm.bindFromRequest().get();
+		authorizationRule.updateMode(id, data);
+		setResponseLocationFromRequest();
+		return noContent();
+	}
+
+	private static VizAuthorizer makeVizAuthorizer() {
+		return Factory.makeVizAuthorizer(JPA.em());
 	}
 }

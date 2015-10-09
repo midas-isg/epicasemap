@@ -35,7 +35,7 @@ public class PermissionDao<T extends Permission> extends DataAccessObject<T> {
 		final Map<String, Object> equalities = filter.getEqualities();
 		equalities.put("account.id", restriction.accountId);
 		equalities.put("series.id", restriction.seriesId);
-		equalities.put("viz.id", restriction.vizId);
+		equalities.put("visualization.id", restriction.vizId);
 
 		final Map<String, Object> disjunctions = filter.getDisjunctiveEqualities();
 		if (restriction.accesses != null){
