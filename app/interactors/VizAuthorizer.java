@@ -46,13 +46,13 @@ public class VizAuthorizer extends Authorizer<VizPermission> {
 	private Stream<Long> streamVizIds(Restriction restriction) {
 		List<VizPermission> permissions = findPermissions(restriction);
 		return permissions.stream()
-				.map(permission -> permission.getVisualization().getId());
+				.map(permission -> permission.getViz().getId());
 	}
 
 	@Override
 	protected VizPermission newPermission(long entityId) {
 		final VizPermission p = new VizPermission();
-		p.setVisualization(vizRule.read(entityId));
+		p.setViz(vizRule.read(entityId));
 		return p;
 	}
 }

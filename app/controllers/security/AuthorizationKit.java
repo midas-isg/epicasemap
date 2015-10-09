@@ -15,6 +15,8 @@ import controllers.security.Restricted.Access;
 
 
 public class AuthorizationKit {
+	private static final long PUBLIC_ACCOUNT_ID = 1L;
+
 	private AuthorizationKit() {
 	}
 	
@@ -23,9 +25,9 @@ public class AuthorizationKit {
 	}
 
 	private static List<Long> findPermittedSeriesIds() {
-		final Long accountId = readAccountId();
+		final long accountId = readAccountId();
 		List<Access> accesses = readAccesses();
-		if (accountId == null && accesses == null)
+		if (accesses == null)
 			return null;
 		final Restriction restriction = new Restriction(accountId, accesses);
 		return makeSeriesAuthorizer().findSeriesIds(restriction);
@@ -36,9 +38,9 @@ public class AuthorizationKit {
 	}
 
 	private static List<Long> findPermittedVizIds() {
-		final Long accountId = readAccountId();
+		final long accountId = readAccountId();
 		List<Access> accesses = readAccesses();
-		if (accountId == null && accesses == null)
+		if (accesses == null)
 			return null;
 		final Restriction restriction = new Restriction(accountId, accesses);
 		final List<Long> ids = makeVizAuthorizer().findVizIds(restriction);
@@ -56,10 +58,10 @@ public class AuthorizationKit {
 		return Factory.makeVizAuthorizer(JPA.em());
 	}
 
-	public static Long readAccountId() {
+	public static long readAccountId() {
 		final String accountId = Authentication.readAccountId(ctx());
 		if (accountId == null)
-			return null;
+			return PUBLIC_ACCOUNT_ID;
 
 		return Long.parseLong(accountId);
 	}

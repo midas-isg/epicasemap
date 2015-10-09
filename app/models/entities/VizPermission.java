@@ -9,7 +9,7 @@ import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
 @Table(
-	uniqueConstraints=@UniqueConstraint(columnNames={"account_id", "visualization_id"})
+	uniqueConstraints=@UniqueConstraint(columnNames={"account_id", "viz_id"})
 )
 @Entity(name="viz_permission")
 public class VizPermission extends Permission implements models.entities.Entity {
@@ -23,11 +23,11 @@ public class VizPermission extends Permission implements models.entities.Entity 
 	}
 
 	@ManyToOne
-	public Visualization getVisualization() {
+	public Visualization getViz() {
 		return viz;
 	}
 
-	public void setVisualization(Visualization viz) {
+	public void setViz(Visualization viz) {
 		this.viz = viz;
 	}
 }
