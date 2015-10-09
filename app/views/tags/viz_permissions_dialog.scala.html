@@ -1,0 +1,68 @@
+@import tags._
+
+@* Visualization Permission modal dialog *@
+@(
+	orders:Seq[Seq[String]] = Seq(
+			Seq("account.name", "Account"),
+			Seq("use", "Use"),
+			Seq("read_data", "Read"),
+			Seq("change", "Edit"),
+			Seq("permit", "Manage")
+	), accountOrders:Seq[Seq[String]] = Seq(
+			Seq("name", "Account")
+	)
+)
+@bs_modal("vizPermissionsModal", "VizPermissions", "Visualization Permission Management", "close()")(editor())(buttons)
+
+@buttons={}
+
+@editor(labelSize:Int=2,
+		accountMore:Seq[Seq[Html]] = Seq(
+			Seq(Html("check"), bs_icon("check"), checkbox("isSelected"))
+		)
+) = {
+	<div class='row'>
+		<div class='col-md-7'>
+			<div class="form-horizontal">
+				@form_group_readonly("Title", "{{model.title}}", "Title", labelSize)
+			</div>
+			@dataSection("view.hideData")
+		</div>
+		<div class='col-md-5'>
+			<div class="form-horizontal">
+				@form_group_readonly("ID", "{{model.id}}", "ID", labelSize)
+			</div>
+			<h4>
+				Allow access to new account(s)
+			</h4>
+			<form name='form' class="form-horizontal" role="form">
+				@table_filterable("accounts", "account", " accounts", accountOrders, accountMore)
+				@viz_permission_selector()
+				<button class='btn btn-primary' 
+				title='Add the selected account(s) above with the selected access level.' 
+				ng-disabled='form.$pristine' ng-click='addPermissions()'>Add</button>
+			</form>
+		</div>
+	</div>
+}
+
+@editButton() = {
+	<button title='edit' class='btn btn-xs' ng-click='edit(it)'>
+		@bs_icon("edit")
+	</button>
+}
+
+@checkbox(key:String) = {<input type='checkbox' title='check to select' ng-model='it.@key'>}
+
+@dataSection(varName:String, 
+	permissionMore:Seq[Seq[Html]] = Seq(
+			Seq(Html("action-1"), Html("Edit"), editButton())
+	)
+) = {
+	<h4>
+		The Visualization can be accessed by {{count(permissions) | number}} @unit("other account")
+	</h4>
+	@table_filterable("viewPermissions", "permission", "other accounts", orders, permissionMore)
+}
+
+@unit(text:String) = {@span_if_else("(permissions.length > 1)", Html(text +"s"), Html(text))}

@@ -1,0 +1,14 @@
+@import tags._
+
+@* Visualization Permission modal dialog *@
+@()
+@bs_modal("vizPermissionModal", "VizPermission", "Visualization Permission Editor", "close()")(editor())(modal_buttons("Permission"))
+
+@editor(labelSize:Int=2) = {
+	<h4>
+		Update access to the account
+	</h4>
+	<form name='form' class="form-horizontal" role="form">
+		@viz_permission_selector()
+	</form>
+}

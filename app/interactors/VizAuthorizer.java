@@ -51,6 +51,8 @@ public class VizAuthorizer extends Authorizer<VizPermission> {
 
 	@Override
 	protected VizPermission newPermission(long entityId) {
-		return null;
+		final VizPermission p = new VizPermission();
+		p.setVisualization(vizRule.read(entityId));
+		return p;
 	}
 }

@@ -186,9 +186,9 @@ public class ApiSeries extends Controller {
 
 	@Transactional
 	@Restricted({Access.PERMIT})
-	public static Result getPermissions(long id) {
-		checkSeriesPermission(id, "see the permissions of");
-		Restriction r = new Restriction(null, null, id, null);
+	public static Result getPermissions(long seriesId) {
+		checkSeriesPermission(seriesId, "see the permissions of");
+		Restriction r = new Restriction(null, null, seriesId, null);
 		List<?> results = makeSeriesAuthorizer().findPermissions(r);
 		return ResponseHelper.okAsWrappedJsonArray(results, null);
 	}
@@ -203,8 +203,10 @@ public class ApiSeries extends Controller {
 		checkSeriesPermission(seriesId, "create the permission of");
 		ModeWithAccountId data = modeForm.bindFromRequest().get();
 		final List<Long> accountIds = data.getAccountIds();
-		for (Long accountId : accountIds)
-			makeSeriesAuthorizer().permit(accountId, data, seriesId);
+		final SeriesAuthorizer authorizer = makeSeriesAuthorizer();
+		for (Long accountId : accountIds) 
+			authorizer.permit(accountId, data, seriesId);
+
 		return created();
 	}
 	
@@ -222,8 +224,7 @@ public class ApiSeries extends Controller {
 	private static Long findSeriesIdByPermissionId(
 			final SeriesAuthorizer authorizationRule, long id) {
 		final SeriesPermission permission = authorizationRule.read(id);
-		final Long sId = permission.getSeries().getId();
-		return sId;
+		return permission.getSeries().getId();
 	}
 	
 	@Transactional

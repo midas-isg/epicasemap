@@ -1,9 +1,9 @@
 
-app.controller('SeriesPermission', function($scope, $rootScope, api) {
+app.controller('VizPermission', function($scope, $rootScope, api) {
 	"use strict"
 	$scope.view = {};
 	
-	$scope.dialog = $('#seriesPermissionModal');
+	$scope.dialog = $('#vizPermissionModal');
 	$scope.alertParent = $scope.dialog.find('.modal-body');
     $scope.dialog.on('hide.bs.modal', function (e) {
     	var isOK = true;
@@ -19,7 +19,7 @@ app.controller('SeriesPermission', function($scope, $rootScope, api) {
     $scope.dialog.on('shown.bs.modal', function (e) {
     	$scope.dialog.find('form').find(':input:enabled:visible:first').focus();
     });
-    $rootScope.$on('editSeriesPermission', function(event, permission) {
+    $rootScope.$on('editVizPermission', function(event, permission) {
     	edit(permission);
 	});
 	$scope.submit = function(callback) {
@@ -93,7 +93,7 @@ app.controller('SeriesPermission', function($scope, $rootScope, api) {
 	}
 	
 	function path(permission){
-		return 'series/permissions'
+		return 'vizs/permissions'
 	}
 	
 	function success(message){

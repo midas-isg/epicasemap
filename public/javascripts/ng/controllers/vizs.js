@@ -32,6 +32,9 @@ app.controller('Vizs', function($scope, $rootScope, api) {
 			loadModels: loadModels,
 			dom: dom
 		};
+		$scope.permit = function(viz) {
+			$rootScope.$emit('editVizPermissions', viz);
+		};
 	}
 	
 	function bindEvents(){
