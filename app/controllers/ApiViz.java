@@ -232,7 +232,7 @@ public class ApiViz extends Controller {
 	private static Long findVizIdByPermissionId(
 			final VizAuthorizer authorizationRule, long id) {
 		final VizPermission permission = authorizationRule.read(id);
-		return permission.getVisualization().getId();
+		return permission.getViz().getId();
 	}
 	
 	@Transactional
