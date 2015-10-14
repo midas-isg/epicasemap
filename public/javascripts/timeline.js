@@ -1325,13 +1325,14 @@ result.results[i].secondValue = -((i % 5) * 0.25) - 0.5;
 						this.displaySet[setID].visiblePoints.push([this.dataset[setID].timeGroup[setFrame].point[i].latitude,
 							this.dataset[setID].timeGroup[setFrame].point[i].longitude,
 							0.7,
-							(this.dataset[setID].timeGroup[setFrame].point[i].value / this.dataset[setID].maxValue)]);
+							(this.dataset[setID].timeGroup[setFrame].point[i].value / this.dataset[setID].maxValue),
+							this.dataset[setID].timeGroup[setFrame].point[i].value]);
 						
 						this.displaySet[setID].secondValues.push([this.dataset[setID].timeGroup[setFrame].point[i].latitude,
 							this.dataset[setID].timeGroup[setFrame].point[i].longitude,
 							0.7,
-							//0.5 + (this.dataset[setID].timeGroup[setFrame].point[i].secondValue / (6 * this.dataset[setID].standardDeviation))
-							this.dataset[setID].timeGroup[setFrame].point[i].secondValue]);
+							this.dataset[setID].timeGroup[setFrame].point[i].secondValue],
+							0);
 					}
 				}
 				
@@ -1365,7 +1366,7 @@ result.results[i].secondValue = -((i % 5) * 0.25) - 0.5;
 			
 			if(this.playBack) {
 				for(i = 0; i < this.displaySet[setID].visiblePoints.length; i++) {
-					if(this.displaySet[setID].visiblePoints[i][2] > 0.00) {
+					if(this.displaySet[setID].visiblePoints[i][2] > 0) {
 						this.displaySet[setID].visiblePoints[i][2] -= this.uiSettings.pointDecay;
 						this.displaySet[setID].secondValues[i][2] -= this.uiSettings.pointDecay;
 					}
