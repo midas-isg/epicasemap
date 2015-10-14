@@ -4,7 +4,6 @@ import static org.fest.assertions.Assertions.assertThat;
 import integrations.app.App;
 import interactors.SeriesRule;
 import interactors.series_data_file.Parser.DataPoint;
-import models.SeriesDataFile;
 import models.entities.Location;
 import models.entities.Series;
 import models.entities.SeriesData;

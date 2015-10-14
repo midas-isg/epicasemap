@@ -9,8 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import models.SeriesDataFile;
-
 import org.joda.time.DateTime;
 
 public class Validator {

@@ -2,13 +2,13 @@ package controllers;
 
 import interactors.SeriesRule;
 import interactors.series_data_file.Persister;
+import interactors.series_data_file.SeriesDataFile;
 import interactors.series_data_file.Validator;
 
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 
-import models.SeriesDataFile;
 import play.db.jpa.JPA;
 import play.mvc.Controller;
 import play.mvc.Http.Request;
@@ -16,16 +16,27 @@ import play.mvc.Result;
 
 class UploadSeries extends Controller {
 	static Result upload(long seriesId) {
-		SeriesDataFile dataFile = getFileObject(request());
-		String errors = validate(dataFile);
+		SeriesDataFile dataFile = getSeriesDataFile(request());
+		return uploadSeriesData(seriesId, dataFile);
+	}
+	
+	static Result uploadViaUrl(long seriesId,String url) {
+		SeriesDataFile dataFile = getSeriesDataFile(url);
+		return uploadSeriesData(seriesId, dataFile);
+	}
 
+	private static Result uploadSeriesData(long seriesId,
+			SeriesDataFile dataFile) {
+		String errors = validate(dataFile);
+		Result result;
 		if (errors.equals("")) {
 			int deletedDataSize = deleteExisitingSeriesData(seriesId);
 			int createdDataSize = create(dataFile, seriesId);
-			return created(makeMsg(deletedDataSize, createdDataSize));
+			result = created(makeMsg(deletedDataSize, createdDataSize));
 		} else {
-			return badRequest(errors);
+			result = badRequest(errors);
 		}
+		return result;
 	}
 
 	private static String makeMsg(int deletedDataSize, int createdDataSize) {
@@ -66,11 +77,13 @@ class UploadSeries extends Controller {
 		return stringErrors;
 	}
 
-	private static SeriesDataFile getFileObject(Request request) {
-		SeriesDataFile dataFile = new SeriesDataFile(request.body()
-				.asMultipartFormData().getFiles().get(0).getFile());
-		dataFile.setFile(request.body().asMultipartFormData().getFiles().get(0)
-				.getFile());
+	private static SeriesDataFile getSeriesDataFile(Request request) {
+		
+		SeriesDataFile dataFile = Factory.makeSeriesDataFile(request);
 		return dataFile;
+	}
+	
+	private static SeriesDataFile getSeriesDataFile(String url) {
+		return Factory.makeSeriesDataFile(url);
 	}
 }

@@ -7,7 +7,6 @@ import interactors.series_data_file.Parser.DataPoint;
 
 import java.util.Date;
 
-import models.SeriesDataFile;
 import models.entities.Location;
 import models.entities.Series;
 import models.entities.SeriesData;
