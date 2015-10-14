@@ -1331,8 +1331,8 @@ result.results[i].secondValue = -((i % 5) * 0.25) - 0.5;
 						this.displaySet[setID].secondValues.push([this.dataset[setID].timeGroup[setFrame].point[i].latitude,
 							this.dataset[setID].timeGroup[setFrame].point[i].longitude,
 							0.7,
-							this.dataset[setID].timeGroup[setFrame].point[i].secondValue],
-							0);
+							this.dataset[setID].timeGroup[setFrame].point[i].secondValue,
+							0]);
 					}
 				}
 				
