@@ -162,6 +162,19 @@ public class ApiSeries extends Controller {
 		checkSeriesPermission(id, "upload data to");
 		return UploadSeries.upload(id);
 	}
+	
+	@Transactional
+	@Restricted({Access.CHANGE})
+	public static Result updateDataViaUrl(
+			@ApiParam(value = "ID of the Series", required = true) 
+			@PathParam("id") 
+				long id,
+			@ApiParam(value = "Url of the Series Data", required = true) 
+			@PathParam("url") 
+				String url) {
+		checkSeriesPermission(id, "upload data to");
+		return UploadSeries.uploadViaUrl(id,url);
+	}
 
 	public static void deleteById(long id) {
 		makeRule().delete(id);

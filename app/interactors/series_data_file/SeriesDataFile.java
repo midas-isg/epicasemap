@@ -1,11 +1,16 @@
-package models;
+package interactors.series_data_file;
 
 import static java.util.regex.Pattern.compile;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -14,6 +19,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import play.Logger;
 
 public class SeriesDataFile {
 	public static final String ALS_ID_FORMAT = "alsIdFormat";
@@ -45,8 +52,42 @@ public class SeriesDataFile {
 
 	public SeriesDataFile(File file) {
 		this.file = file;
-		setDelimiter();
-		setFileFormat();
+		setFileAttribs(this.file);
+	}
+
+	public SeriesDataFile(String url) {
+		this.file = readFilefromUrl(url);
+		setFileAttribs(this.file);
+	}
+
+	private void setFileAttribs(File file) {
+		String headerLine = readFirstLine(file);
+		setDelimiter(headerLine);
+		setFileFormat(headerLine);
+	}
+
+	private File readFilefromUrl(String StrUrl) {
+		String line = "";
+		File tempFile;
+		try {
+			tempFile = File.createTempFile("tempUserFile", ".tmp");
+			URL url = new URL(StrUrl);
+			URLConnection conn = url.openConnection();
+			
+			Logger.debug(conn.getContentType());
+			
+			BufferedReader br = new BufferedReader(new InputStreamReader(
+					conn.getInputStream()));
+			BufferedWriter bw = new BufferedWriter(new FileWriter(tempFile));
+			while ((line = br.readLine()) != null) {
+				bw.write(line + "\n");
+			}
+			bw.close();
+			br.close();
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+		return tempFile;
 	}
 
 	public File getFile() {
@@ -82,16 +123,15 @@ public class SeriesDataFile {
 	public String stdHeaderToFileHeader(String header) {
 		return stdHeaderToFileHeaderMap.get(header);
 	}
-	
-	private void setFileFormat() {
-		String headerLine = readFirstLine(file);
-		this.fileFormat = findFormat(delimiter, headerLine);		
+
+	private void setFileFormat(String headerLine) {
+		this.fileFormat = findFormat(delimiter, headerLine);
 	}
 
-	private void setDelimiter() {
-		String headerLine = readFirstLine(file);
+	private void setDelimiter(String headerLine) {
+
 		Character delimChar = findDelimiter(headerLine);
-		this.setDelimiter(delimChar);		
+		this.setDelimiter(delimChar);
 	}
 
 	private void setDelimiter(Character delimChar) {
@@ -102,10 +142,10 @@ public class SeriesDataFile {
 		String regEx = "\\s*\\w+[\\s&&[^\\t]]*(\\W)\\s*\\w*";
 		Pattern pattern = compile(regEx);
 		Matcher matcher = pattern.matcher(line);
-		String delim = "";	
+		String delim = "";
 		if (matcher.find())
 			delim = matcher.group(1);
-			
+
 		return toChar(delim);
 
 	}
@@ -115,11 +155,12 @@ public class SeriesDataFile {
 	}
 
 	private String findFormat(Character delimChar, String line) {
-		String[] headers = line.split(delimChar+"");
-		for(int i=0 ; i < headers.length ; i++){
-			if(areEqual(headers[i], ALS_ID_HEADER))
+		String[] headers = line.split(delimChar + "");
+		for (int i = 0; i < headers.length; i++) {
+			if (areEqual(headers[i], ALS_ID_HEADER))
 				return ALS_ID_FORMAT;
-			if(areEqual(headers[i],LATITUDE_HEADER) || areEqual(headers[i],LONGITUDE_HEADER))
+			if (areEqual(headers[i], LATITUDE_HEADER)
+					|| areEqual(headers[i], LONGITUDE_HEADER))
 				return COORDINATE_FORMAT;
 		}
 		return "";
@@ -145,6 +186,10 @@ public class SeriesDataFile {
 			throw new RuntimeException(e.getMessage());
 		}
 		return line;
+	}
+
+	public void deleteFile() {
+		this.file.delete();	
 	}
 
 }

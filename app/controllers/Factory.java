@@ -21,12 +21,13 @@ import interactors.security.password.Authenticator;
 import interactors.security.password.PasswordFactory;
 import interactors.series_data_file.Parser;
 import interactors.series_data_file.Persister;
+import interactors.series_data_file.SeriesDataFile;
 import interactors.series_data_file.Validator;
 
 import javax.persistence.EntityManager;
 
-import models.SeriesDataFile;
 import play.db.jpa.JPA;
+import play.mvc.Http.Request;
 
 public class Factory {
 	private Factory() {
@@ -119,5 +120,14 @@ public class Factory {
 		authorizationRule.setSeriesRule(makeSeriesRule(em));
 		authorizationRule.setAccountRule(makeAccountRule(em));
 		return authorizationRule;
+	}
+
+	public static SeriesDataFile makeSeriesDataFile(String url) {
+		return new SeriesDataFile(url);
+	}
+
+	public static SeriesDataFile makeSeriesDataFile(Request request) {
+		return new SeriesDataFile(request.body()
+				.asMultipartFormData().getFiles().get(0).getFile());
 	}
 }
