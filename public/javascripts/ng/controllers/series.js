@@ -57,6 +57,23 @@ app.controller('Series', function($scope, $rootScope, api) {
     	$rootScope.$emit('uploadNewSeriesData', seriesId);
 	};
 	$scope.isHiddenButtonSaveThenClose = isNoData;
+	$scope.can = can;
+	$scope.isModelEditable = function(){
+		return isMyModel() || can('change', $scope.model);
+	};
+	
+	function can(access, series){
+		var seriesId = series && series.id;
+		return api.isMy(series) || isSeriesPermitted();
+		
+		function isSeriesPermitted(){
+			return api.isSeriesPermitted($scope.permissions, access, seriesId);
+		}
+	}
+	
+	function isMyModel(){
+		api.isMy($scope.model);
+	}
 
 	function edit(series) {
 		$scope.model = series;
@@ -136,7 +153,7 @@ app.controller('Series', function($scope, $rootScope, api) {
 	}
 	
 	function error(defaultMessage, err){
-		var message = err.data.userMessage || defaultMessage;
+		var message = err.data && err.data.userMessage || defaultMessage;
 		alert('Error: ' + message, 'alert-danger');
 	}
 	

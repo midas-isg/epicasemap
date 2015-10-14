@@ -61,6 +61,8 @@ public class ApiSeries extends Controller {
 	@Security.Authenticated(Authentication.class)
 	public static Result post() {
 		SeriesInput data = seriesForm.bindFromRequest().get();
+		final Long accountId = AuthorizationKit.readAccountId();
+		data.setOwnerId(accountId);
 		long id = makeRule().createFromInput(data);
 		setResponseLocationFromRequest(id + "");
 		return created();

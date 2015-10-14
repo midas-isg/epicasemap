@@ -21,7 +21,7 @@ app.controller('SeriesPermissions', function($scope, $rootScope, api) {
     	editPermissions(series);
 	});
     $rootScope.$on('loadPermissions', function(event, seriesId) {
-    	seriesId = seriesId || $scope.model.id
+    	seriesId = seriesId || ($scope.model && $scope.model.id)
     	loadPermissions(seriesId);
 	});
     $scope.edit = function(permissionId) {

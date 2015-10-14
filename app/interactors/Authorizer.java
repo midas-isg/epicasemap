@@ -13,7 +13,7 @@ import models.filters.Restriction;
 
 
 public abstract class Authorizer<T extends Permission> extends CrudRule<T> {
-	protected final static long publicAccountId = 1L;
+	public final static long publicAccountId = 1L;
 	private AccountRule accountRule;
 	
 	abstract protected T newPermission(long entityId);

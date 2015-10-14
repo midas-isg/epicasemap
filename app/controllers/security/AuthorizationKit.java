@@ -1,5 +1,6 @@
 package controllers.security;
 
+import interactors.Authorizer;
 import interactors.VizAuthorizer;
 import interactors.SeriesAuthorizer;
 
@@ -15,7 +16,6 @@ import controllers.security.Restricted.Access;
 
 
 public class AuthorizationKit {
-	private static final long PUBLIC_ACCOUNT_ID = 1L;
 
 	private AuthorizationKit() {
 	}
@@ -58,10 +58,10 @@ public class AuthorizationKit {
 		return Factory.makeVizAuthorizer(JPA.em());
 	}
 
-	public static long readAccountId() {
+	public static Long readAccountId() {
 		final String accountId = Authentication.readAccountId(ctx());
 		if (accountId == null)
-			return PUBLIC_ACCOUNT_ID;
+			return Authorizer.publicAccountId;
 
 		return Long.parseLong(accountId);
 	}

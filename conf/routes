@@ -14,6 +14,7 @@ GET     /register                   controllers.User.promptRegistration()
 POST    /register                   controllers.User.register()
 GET     /logout                     controllers.User.logout()
 GET     /api/accounts               controllers.User.get()
+GET     /api/accounts/my-permissions controllers.User.getMyPermissions()
 
 # Test page
 GET     /test/acceptance            controllers.Test.acceptance()

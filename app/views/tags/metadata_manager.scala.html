@@ -22,10 +22,10 @@
 </section>
 
 @buttons() = {
-	<button title='edit' class='btn btn-xs' ng-click='edit(it)'>
+	<button title='edit' class='btn btn-xs' ng-click='edit(it)' ng-show='can("read_data", it)'>
 		@bs_icon("edit")
 	</button>
-	<button title='edit permissions' class='btn btn-xs' ng-click='permit(it)'>
+	<button title='edit permissions' class='btn btn-xs' ng-click='permit(it)' ng-show='can("permit", it)'>
 		@bs_icon("eye-close")
 	</button>
 }

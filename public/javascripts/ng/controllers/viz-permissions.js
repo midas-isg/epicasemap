@@ -20,7 +20,7 @@ app.controller('VizPermissions', function($scope, $rootScope, api) {
     	editPermissions(viz);
 	});
     $rootScope.$on('loadPermissions', function(event, vizId) {
-    	vizId = vizId || $scope.model.id
+    	vizId = vizId || ($scope.model && $scope.model.id)
     	loadPermissions(vizId);
 	});
     $scope.edit = function(permissionId) {

@@ -13,6 +13,7 @@
 		<title>@title</title>
 		<script type="application/javascript">
 			var CONTEXT = '@Play.configuration.getString("application.context")';
+			var MY_ID = @AuthorizationKit.readAccountId();
 		</script>
 		
 		<script src='@routes.Assets.at("javascripts/common.js")'></script>

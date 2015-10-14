@@ -1,6 +1,6 @@
-"use strict";
 
 app.service("api", function($http, $q, $location) {
+	"use strict";
 	this.gettingFromUrl = function(url, cfg) {
 		return requesting('get', url, cfg);
 	};
@@ -56,6 +56,30 @@ app.service("api", function($http, $q, $location) {
 			option += 'p';
 		return option;
 	};
+	this.isMy = function(model){
+		var ownerId = model && model.owner && model.owner.id;
+		if (! ownerId)
+			return true;
+		return ownerId === MY_ID;
+	};
+	this.isSeriesPermitted = function(permissions, access, seriesId){
+		return isPermitted(permissions, 'series',  access, seriesId);
+	};
+	this.isVizPermitted = function(permissions, access, vizId){
+		return isPermitted(permissions, 'viz',  access, vizId);
+	};
+
+	function isPermitted(permissions, key, access, id){
+		if (! permissions)
+			return true;
+		var matchedPermissions = _.filter(permissions, matchedId);
+		return _.some(matchedPermissions, function(p) {return p[access]})
+		
+		function matchedId(permission) {
+			var model = permission[key];
+			return model && model.id === id
+		}
+	}
 
 	function alert($parent, message, classes){
 		if (! classes)
