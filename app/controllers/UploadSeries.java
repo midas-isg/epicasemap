@@ -36,9 +36,10 @@ class UploadSeries extends Controller {
 		} else {
 			result = badRequest(errors);
 		}
+		deleteTempFile(dataFile);
 		return result;
 	}
-
+	
 	private static String makeMsg(int deletedDataSize, int createdDataSize) {
 		String msg = deletedDataSize + " existing item(s) deleted." + "\n"
 				+ createdDataSize + " new item(s) created.";
@@ -85,5 +86,9 @@ class UploadSeries extends Controller {
 	
 	private static SeriesDataFile getSeriesDataFile(String url) {
 		return Factory.makeSeriesDataFile(url);
+	}
+	
+	private static void deleteTempFile(SeriesDataFile dataFile) {
+		dataFile.deleteFile();	
 	}
 }
