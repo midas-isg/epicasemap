@@ -1,14 +1,14 @@
 @* Buttons as a footer of a dialog *@
 @(singular:String)
 <button title='Delete the @singular & Close the dialog' class='btn-large btn-danger pull-left' 
-ng-click='removeThenClose()' ng-show='model.id' ng-disabled='isWorking'>
+ng-click='removeThenClose()' ng-show='model.id && isModelEditable()' ng-disabled='isWorking'>
 	@bs_icon("trash") Delete & Close
 </button>
 <button title='Save the @singular & Close the dialog' class='btn-large  btn-primary' 
-ng-click='submitThenClose()' ng-disabled='form.$pristine || isWorking' ng-hide='isHiddenButtonSaveThenClose()'>
+ng-click='submitThenClose()' ng-disabled='form.$pristine || isWorking' ng-hide='isHiddenButtonSaveThenClose() || ! isModelEditable()'>
 	@bs_icon("save") Save & Close
 </button>
 <button title='Save the @singular' class='btn-large btn-primary' 
-ng-click='submit()' ng-disabled='form.$pristine || isWorking'>
+ng-click='submit()' ng-disabled='form.$pristine || isWorking' ng-show='isModelEditable()'>
 	@bs_icon("save") Save
 </button>

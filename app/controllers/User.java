@@ -1,19 +1,31 @@
 package controllers;
 
 
-import static controllers.ResponseHelper.*;
+import static controllers.Factory.makeSeriesAuthorizer;
+import static controllers.Factory.makeVizAuthorizer;
+import static controllers.ResponseHelper.okAsWrappedJsonArray;
+import static interactors.Authorizer.publicAccountId;
 import static play.data.Form.form;
 import interactors.AccountRule;
+import interactors.Authorizer;
+import interactors.SeriesAuthorizer;
+import interactors.VizAuthorizer;
 import interactors.security.Credential;
+
+import java.util.List;
+
 import models.Registration;
 import models.SignIn;
+import models.entities.Permission;
 import models.filters.AccountFilter;
+import models.filters.Restriction;
 import play.data.Form;
 import play.db.jpa.JPA;
 import play.db.jpa.Transactional;
 import play.mvc.Controller;
 import play.mvc.Result;
 import controllers.security.Authentication;
+import controllers.security.AuthorizationKit;
 
 public class User extends Controller {
 	public static Result promptRegistration() {
@@ -91,4 +103,28 @@ public class User extends Controller {
 		AccountFilter filter = null;
 		return okAsWrappedJsonArray(rule.query(filter), filter);
 	}
-}
+
+	@Transactional
+	public static Result getMyPermissions() {
+		final long accountId = AuthorizationKit.readAccountId();
+		final VizAuthorizer vizAuth = makeVizAuthorizer(JPA.em());
+		List<Permission> permissions = findAllPermissions(vizAuth, accountId);
+		final SeriesAuthorizer seriesAuth = makeSeriesAuthorizer(JPA.em());
+		permissions.addAll(findAllPermissions(seriesAuth, accountId));
+		return okAsWrappedJsonArray(permissions, null);
+	}
+
+	private static List<Permission> findAllPermissions(
+			final Authorizer<?> authorizer, long accountId) {
+		List<Permission> permissions = findPermissions(authorizer, accountId);
+		permissions.addAll(findPermissions(authorizer, publicAccountId));
+		return permissions;
+	}
+
+	@SuppressWarnings("unchecked")
+	private static List<Permission> findPermissions(
+			final Authorizer<?> authorizer, long accountId) {
+		Restriction restriction = new Restriction(accountId, null, null, null);
+		return (List<Permission>) authorizer.findPermissions(restriction);
+	}
+}	

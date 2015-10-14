@@ -1,52 +1,42 @@
-"use strict"
-
 app.controller('SeriesCollection', function($scope, $rootScope, api) {
-	var urlPath = 'series';
+	"use strict"
+	var my = app.initCommonControllerFeatures($scope, $rootScope, api);
+	my.dom = cacheDom();
+	populateScope();
+	loadModels();
+	bindEvents();
 
-	$scope.alertParent = $("#series-body");
-	loadModelHavingGivenId();
-	loadSeries();
-    $rootScope.$on('loadSeries', function(event) {
-    	loadSeries();
-	});
-
-    $scope.addNew = function() {
-    	$scope.edit({allSeries:[], allSeries2:[]});
-	};
-	$scope.edit = function(series) {
-		$rootScope.$emit('editSeries', series);
-	};
-	$scope.permit = function(series) {
-		$rootScope.$emit('editSeriesPermissions', series);
-	};
-	$scope.count = function(array) { return array && array.length || 0;	};
+	function cacheDom(){
+		return {$alertParent: $('#series-body')};
+	}
 	
-	function loadSeries(){
-		api.finding(urlPath).then(function(rsp) {
-			$scope.models = rsp.data.results;
-		}, function(err){
-			error('Failed to load your Series');
+	function loadModels(){
+		my.editModelHavingGivenId(my.editSeriesById);
+		loadSeries();
+	}
+	
+	function populateScope(){
+		$scope.can = my.canAccessSeries;
+	    $scope.addNew = function() {
+	    	$scope.edit({});
+		};
+		$scope.edit = function(series) {
+			$rootScope.$emit('editSeries', series);
+		};
+		$scope.permit = function(series) {
+			$rootScope.$emit('editSeriesPermissions', series);
+		};
+		$scope.count = function(array) { return array && array.length || 0;	};
+	}
+	
+	function bindEvents(){
+	    $rootScope.$on('loadSeries', function(event) {
+	    	loadSeries();
 		});
 	}
 	
-	function loadModelHavingGivenId(){
-	    var urlQuery = api.getUrlQuery();
-		var id = urlQuery && urlQuery.id;
-		if (id){
-			api.reading(urlPath, id).then(function(rsp){
-				var model = rsp.data.result;
-				$scope.edit(model);
-			}, function(err){
-				alert(err.data && err.data.userMessage);
-			});
-		}
-	}
-	
-	function error(message){
-		alert('Error: ' + message, 'alert-danger');
-	}
-	
-	function alert(message, classes){
-		api.alert($scope.alertParent, message, classes);
+	function loadSeries(){
+		my.loadSeriesAsModels();
+		my.loadPermissions();
 	}
 });

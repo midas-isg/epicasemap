@@ -44,7 +44,8 @@ app.controller('SeriesPermission', function($scope, $rootScope, api) {
 	$scope.close = function() {
 		$scope.dialog.modal('hide');
 	};
-
+	$scope.isModelEditable = function(){ return true; };
+	
 	function edit(permission) {
 		$scope.model = permission;
 		$scope.option = api.mode2option(permission)

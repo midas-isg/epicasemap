@@ -8,6 +8,8 @@
 	@script_asset("javascripts/ng/controllers/series-data.js")
 	@script_asset("javascripts/ng/controllers/viz-permissions.js")
 	@script_asset("javascripts/ng/controllers/viz-permission.js")
+	@script_asset("javascripts/ng/controllers/series-permissions.js")
+	@script_asset("javascripts/ng/controllers/series-permission.js")
 }
 
 @main("Visualization Management", imports) {
@@ -22,20 +24,16 @@
 		@series_data_dialog()
 		@viz_permissions_dialog()
 		@viz_permission_dialog()
+		@series_permissions_dialog()
+		@series_permission_dialog()
 		@busy_dialog()
 	</article>
 }
 
 @buttons() = {
-	@button("play", "go(it)")
-	@button("edit", "edit(it)")
-	@button("eye-close", "permit(it)", "edit permissions")
-}
-
-@button(glyph:String, expression:String, title:String=null) = {
-	<button title='@text(title, glyph)' class='btn btn-xs' ng-click='@expression'>
-		@bs_icon(glyph)
-	</button>
+	@button_action("play", "go(it)", "can('use', it)")
+	@button_action("edit", "edit(it)", "can('read_data', it)")
+	@button_action("eye-close", "permit(it)", "can('permit', it)", "edit permissions")
 }
 
 @text(a:String, b:String) = {

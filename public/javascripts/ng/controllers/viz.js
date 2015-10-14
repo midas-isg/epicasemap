@@ -69,7 +69,28 @@ app.controller('Viz', function($scope, $rootScope, api) {
 	$scope.invertSelection = function(){
 		invert('isSelected');
 	}
-	
+	$scope.can = can
+	$scope.isModelEditable = function(){
+		return api.isMy($scope.model) || canChangeModel();
+		
+		function canChangeModel(){
+			var modelId = $scope.model && $scope.model.id
+			return api.isVizPermitted($scope.permissions, 'change', modelId)
+		}
+	};
+	$scope.permit = function(series) {
+		$rootScope.$emit('editSeriesPermissions', series);
+	};
+
+	function can(access, series){
+		var seriesId = series && series.id;
+		return api.isMy(series) || isSeriesPermitted();
+		
+		function isSeriesPermitted(){
+			return api.isSeriesPermitted($scope.permissions, access, seriesId);
+		}
+	}
+
 	function invert(key){
 		$scope.allSeries.forEach(function (series) {
 			  series[key] = ! series[key];
@@ -94,6 +115,17 @@ app.controller('Viz', function($scope, $rootScope, api) {
 		}, function(err){
 			error("Failed to load your Series!", err);
 		});
+		
+		loadPermissions();
+		
+		function loadPermissions(){
+			api.finding('accounts/my-permissions').then(function(rsp) {
+				$scope.permissions = rsp.data.results;
+			}, function(err){
+				$scope.error = 'Failed to load your permissions!';
+				alert($scope.error);
+			});
+		}
 	}
 	
 	function updateAllSeries(viz){
@@ -127,7 +159,6 @@ app.controller('Viz', function($scope, $rootScope, api) {
 				$scope.showAll = true;
 			} 
 		}
-
 	}
 
 	function buildBody(model) {
