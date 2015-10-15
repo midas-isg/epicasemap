@@ -67,6 +67,7 @@ timeline.js
 		
 		this.showControlPanel = false;
 		this.showSecondary = false;
+		this.showNumbers = false;
 		
 		this.playBack = false;
 		this.displaySet = [];
@@ -363,6 +364,13 @@ timeline.js
 		
 		$("#toggle-secondary-button").click(function() {
 			thisMap.showSecondary = !thisMap.showSecondary;
+			thisMap.packHeat();
+			
+			return;
+		});
+		
+		$("#toggle-numbers-button").click(function() {
+			thisMap.showNumbers = !thisMap.showNumbers;
 			thisMap.packHeat();
 			
 			return;
@@ -1481,17 +1489,17 @@ console.log((endFrame - startFrame) + " frames");
 			}
 			else {
 				if(this.displaySet[setID].hide) {
-					this.heat[(setID << 1)].setLatLngs([]);
-					this.heat[(setID << 1) + 1].setLatLngs([]);
+					this.heat[(setID << 1)].setLatLngs([], this.showNumbers);
+					this.heat[(setID << 1) + 1].setLatLngs([], this.showNumbers);
 				}
 				else {
-					this.heat[(setID << 1)].setLatLngs(this.displaySet[setID].visiblePoints);
+					this.heat[(setID << 1)].setLatLngs(this.displaySet[setID].visiblePoints, this.showNumbers);
 					
 					if(this.showSecondary) {
-						this.heat[(setID << 1) + 1].setLatLngs(this.displaySet[setID].secondValues);
+						this.heat[(setID << 1) + 1].setLatLngs(this.displaySet[setID].secondValues, this.showNumbers);
 					}
 					else {
-						this.heat[(setID << 1) + 1].setLatLngs([]);
+						this.heat[(setID << 1) + 1].setLatLngs([], this.showNumbers);
 					}
 				}
 			}
