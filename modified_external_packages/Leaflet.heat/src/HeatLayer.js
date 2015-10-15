@@ -19,8 +19,10 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
         L.setOptions(this, options);
     },
 
-    setLatLngs: function (latlngs) {
+    setLatLngs: function (latlngs, showNumbers) {
         this._latlngs = latlngs;
+		this._showNumbers = showNumbers;
+		
         return this.redraw();
     },
 
@@ -84,7 +86,8 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
 			size,
 			animated,
 			radiusFactor = this.options.radius || this.defaultRadius;
-			optionsBlur = this.options.blur || 0;
+			optionsBlur = this.options.blur || 0,
+			thisHeat = this;
 		
         canvas = this._canvas = L.DomUtil.create('canvas', 'leaflet-heatmap-layer leaflet-layer');
 
@@ -159,7 +162,7 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
 						ctx.globalAlpha = Math.max(p[2], minOpacity === undefined ? 0 : minOpacity);
 						ctx.drawImage(this._circle, p[0] - this._r, p[1] - this._r);
 						
-						if(p[4]) {
+						if(p[4] && thisHeat._showNumbers) {
 							this.drawValue(ctx, p[4], p[0], p[1] - (this._r + 1));
 						}
 					}
