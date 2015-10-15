@@ -718,7 +718,7 @@ console.log("series " + k + ": " + id);
 				
 				for(i = 0; i < result.results.length; i++) {
 					if(result.results[i]) {
-result.results[i].secondValue = -((i % 5) * 0.25) - 0.5;
+result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 						
 						inputDate = new Date(result.results[i].timestamp);
 						thisMap.zeroTime(inputDate);
@@ -1339,7 +1339,7 @@ result.results[i].secondValue = -((i % 5) * 0.25) - 0.5;
 						this.displaySet[setID].secondValues.push([this.dataset[setID].timeGroup[setFrame].point[i].latitude,
 							this.dataset[setID].timeGroup[setFrame].point[i].longitude,
 							0.7,
-							this.dataset[setID].timeGroup[setFrame].point[i].secondValue,
+							-this.dataset[setID].timeGroup[setFrame].point[i].secondValue,
 							0]);
 					}
 				}
