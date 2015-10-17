@@ -19,8 +19,10 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
         L.setOptions(this, options);
     },
 
-    setLatLngs: function (latlngs) {
+    setLatLngs: function (latlngs, showNumbers) {
         this._latlngs = latlngs;
+		this._showNumbers = showNumbers;
+		
         return this.redraw();
     },
 
@@ -84,7 +86,8 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
 			size,
 			animated,
 			radiusFactor = this.options.radius || this.defaultRadius;
-			optionsBlur = this.options.blur || 0;
+			optionsBlur = this.options.blur || 0,
+			thisHeat = this;
 		
         canvas = this._canvas = L.DomUtil.create('canvas', 'leaflet-heatmap-layer leaflet-layer');
 
@@ -99,7 +102,16 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
 		
 		
 		/* _heat Object Extension */
-		this._heat.radius2 = function (r, blur) {
+		this._heat.drawValue = function(ctx, value, x, y) {
+			ctx.fillStyle = 'white';
+			ctx.font = "14px Arial";
+			ctx.textAlign = "center";
+			ctx.fillText(value, x, y);
+			
+			return this;
+		}
+		
+		this._heat.radius2 = function(r, blur) {
 			blur = blur === undefined ? 15 : blur;
 
 			// create a grayscale blurred circle image that we'll use for drawing points
@@ -149,6 +161,10 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
 						
 						ctx.globalAlpha = Math.max(p[2], minOpacity === undefined ? 0 : minOpacity);
 						ctx.drawImage(this._circle, p[0] - this._r, p[1] - this._r);
+						
+						if(p[4] && thisHeat._showNumbers) {
+							this.drawValue(ctx, p[4], p[0], p[1] - (this._r + 1));
+						}
 					}
 					else {
 						//negatives are treated as hollow circles
@@ -218,7 +234,8 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
             offsetY = panePos.y % cellSize,
             i, len, p, cell, x, y, j, len2, k,
 			alt,
-			radius;
+			radius,
+			value;
 
         // console.time('process');
         for(i = 0, len = this._latlngs.length; i < len; i++) {
@@ -231,19 +248,22 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
                     this._latlngs[i].alt !== undefined ? this._latlngs[i].alt :
                     this._latlngs[i][2] !== undefined ? +this._latlngs[i][2] : 1;
                 k = alt * v;
-				radius = ((this._latlngs[i][3] !== undefined) ? +this._latlngs[i][3] : 0/*1*/) * v;
+				radius = ((this._latlngs[i][3] !== undefined) ? this._latlngs[i][3] : 0) * v;
+				value = ((this._latlngs[i][4] !== undefined) ? this._latlngs[i][4] : 0);
 
                 grid[y] = grid[y] || [];
                 cell = grid[y][x];
 
-                if (!cell) {
+                if(!cell) {
 					//grid[y][x] = [p.x, p.y, k, k];
-					grid[y][x] = [p.x, p.y, k, radius];
-                } else {
+					grid[y][x] = [p.x, p.y, k, radius, value];
+                }
+				else {
                     cell[0] = (cell[0] * cell[2] + p.x * k) / (cell[2] + k); // x
                     cell[1] = (cell[1] * cell[2] + p.y * k) / (cell[2] + k); // y
                     cell[2] += k; // cumulated intensity value
 					cell[3] = radius;
+					cell[4] = value;
                 }
             }
         }
@@ -252,12 +272,13 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
             if (grid[i]) {
                 for (j = 0, len2 = grid[i].length; j < len2; j++) {
                     cell = grid[i][j];
-                    if (cell) {
+                    if(cell) {
                         data.push([
                             Math.round(cell[0]),
                             Math.round(cell[1]),
                             Math.min(cell[2], max),
-							Math.min(cell[3], max)
+							Math.min(cell[3], max),
+							cell[4]
                         ]);
                     }
                 }
