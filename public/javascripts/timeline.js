@@ -67,6 +67,7 @@ timeline.js
 		
 		this.showControlPanel = false;
 		this.showSecondary = false;
+		this.showNumbers = false;
 		
 		this.playBack = false;
 		this.displaySet = [];
@@ -363,6 +364,13 @@ timeline.js
 		
 		$("#toggle-secondary-button").click(function() {
 			thisMap.showSecondary = !thisMap.showSecondary;
+			thisMap.packHeat();
+			
+			return;
+		});
+		
+		$("#toggle-numbers-button").click(function() {
+			thisMap.showNumbers = !thisMap.showNumbers;
 			thisMap.packHeat();
 			
 			return;
@@ -710,7 +718,7 @@ console.log("series " + k + ": " + id);
 				
 				for(i = 0; i < result.results.length; i++) {
 					if(result.results[i]) {
-result.results[i].secondValue = -((i % 5) * 0.25) - 0.5;
+result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 						
 						inputDate = new Date(result.results[i].timestamp);
 						thisMap.zeroTime(inputDate);
@@ -1325,13 +1333,14 @@ result.results[i].secondValue = -((i % 5) * 0.25) - 0.5;
 						this.displaySet[setID].visiblePoints.push([this.dataset[setID].timeGroup[setFrame].point[i].latitude,
 							this.dataset[setID].timeGroup[setFrame].point[i].longitude,
 							0.7,
-							(this.dataset[setID].timeGroup[setFrame].point[i].value / this.dataset[setID].maxValue)]);
+							(this.dataset[setID].timeGroup[setFrame].point[i].value / this.dataset[setID].maxValue),
+							this.dataset[setID].timeGroup[setFrame].point[i].value]);
 						
 						this.displaySet[setID].secondValues.push([this.dataset[setID].timeGroup[setFrame].point[i].latitude,
 							this.dataset[setID].timeGroup[setFrame].point[i].longitude,
 							0.7,
-							//0.5 + (this.dataset[setID].timeGroup[setFrame].point[i].secondValue / (6 * this.dataset[setID].standardDeviation))
-							this.dataset[setID].timeGroup[setFrame].point[i].secondValue]);
+							-this.dataset[setID].timeGroup[setFrame].point[i].secondValue,
+							0]);
 					}
 				}
 				
@@ -1365,7 +1374,7 @@ result.results[i].secondValue = -((i % 5) * 0.25) - 0.5;
 			
 			if(this.playBack) {
 				for(i = 0; i < this.displaySet[setID].visiblePoints.length; i++) {
-					if(this.displaySet[setID].visiblePoints[i][2] > 0.00) {
+					if(this.displaySet[setID].visiblePoints[i][2] > 0) {
 						this.displaySet[setID].visiblePoints[i][2] -= this.uiSettings.pointDecay;
 						this.displaySet[setID].secondValues[i][2] -= this.uiSettings.pointDecay;
 					}
@@ -1480,17 +1489,17 @@ console.log((endFrame - startFrame) + " frames");
 			}
 			else {
 				if(this.displaySet[setID].hide) {
-					this.heat[(setID << 1)].setLatLngs([]);
-					this.heat[(setID << 1) + 1].setLatLngs([]);
+					this.heat[(setID << 1)].setLatLngs([], this.showNumbers);
+					this.heat[(setID << 1) + 1].setLatLngs([], this.showNumbers);
 				}
 				else {
-					this.heat[(setID << 1)].setLatLngs(this.displaySet[setID].visiblePoints);
+					this.heat[(setID << 1)].setLatLngs(this.displaySet[setID].visiblePoints, this.showNumbers);
 					
 					if(this.showSecondary) {
-						this.heat[(setID << 1) + 1].setLatLngs(this.displaySet[setID].secondValues);
+						this.heat[(setID << 1) + 1].setLatLngs(this.displaySet[setID].secondValues, this.showNumbers);
 					}
 					else {
-						this.heat[(setID << 1) + 1].setLatLngs([]);
+						this.heat[(setID << 1) + 1].setLatLngs([], this.showNumbers);
 					}
 				}
 			}
