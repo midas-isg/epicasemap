@@ -1,35 +1,37 @@
 (function(){ "use strict";
 app.initCommonControllerFeatures = function($scope, $rootScope, api){
 	var my = {};
+	$scope.view = {};
 	
 	my.alertError = alertError;
 	my.alertWarning = alertWarning;
+	my.alertSuccess = alertSuccess;
 	
 	my.loadVizsAsModels = function(){
 		loadAsModels('vizs', 'Visualizations');
-	}
+	};
 	my.editViz = function(viz) {
 		$scope.$emit('editViz', viz);
 	};
 	my.editVizById = function(id){
 		return editModel('vizs', id, 'Visualization', my.editViz);
-	}
+	};
 	
 	my.loadSeriesAsModels = function(){
 		loadAsModels('series', 'Series');
-	}
+	};
 	my.editSeries = function(series) {
 		$scope.$emit('editSeries', series);
 	};
 	my.editSeriesById = function(id){
 		return editModel('series', id, 'Series', my.editSeries);
-	}
+	};
 	
 	my.editModelHavingGivenId = function(callback){
 	    var urlQuery = api.getUrlQuery();
 		var id = urlQuery && urlQuery.id;
 		callback(id);
-	}
+	};
 
 	my.loadPermissions = function(){
 		api.finding('accounts/my-permissions').then(function(rsp) {
@@ -37,7 +39,7 @@ app.initCommonControllerFeatures = function($scope, $rootScope, api){
 		}, function(err){
 			alertWarning(err, textFailToLoad('your permissions'));
 		});
-	}
+	};
 	my.canAccessSeries = function(access, series){
 		return canAccessModel(access, series, api.isSeriesPermitted);
 	};
@@ -45,6 +47,30 @@ app.initCommonControllerFeatures = function($scope, $rootScope, api){
 		return canAccessModel(access, viz, api.isVizPermitted);
 	};
 	
+	my.length = function(array) { 
+		return array && array.length || 0;	
+	};
+	my.confirmNoSaving = function(event, isChanged, callback){
+		var isOK = true;
+		if (isChanged)
+			isOK = confirm("Changes are not saved. \nOK = Close without save");
+		if (isOK) {
+			callback && callback();
+		} else {
+			event.preventDefault();
+			event.stopImmediatePropagation();
+		}
+	};
+	my.emitBusy = function(){
+		$scope.isWorking = true;
+		$rootScope.$emit('modalBusyDialog');
+	}
+	
+	my.emitDone = function(){
+		$scope.isWorking = false;
+		$rootScope.$emit('hideBusyDialog');
+	}
+
 	function loadAsModels(path, plural){
 		api.finding(path).then(function(rsp) {
 			$scope.models = rsp.data.results;
@@ -98,6 +124,12 @@ app.initCommonControllerFeatures = function($scope, $rootScope, api){
 		var message = toUserMessageOrAsTextOrElse(error, defaultText);
 		$scope.lastWarning = message;
 		alert(message);
+	}
+
+	function alertSuccess(error, defaultText){
+		var message = toUserMessageOrAsTextOrElse(error, defaultText);
+		$scope.lastSuccess = message;
+		alert('Success: ' + message, 'alert-success');
 	}
 
 	function alert(message, classes){

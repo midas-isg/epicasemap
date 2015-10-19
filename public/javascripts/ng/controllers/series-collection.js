@@ -17,7 +17,9 @@ app.controller('SeriesCollection', function($scope, $rootScope, api) {
 	
 	function populateScope(){
 		$scope.can = my.canAccessSeries;
-	    $scope.addNew = function() {
+		$scope.count = my.length;
+
+		$scope.addNew = function() {
 	    	$scope.edit({});
 		};
 		$scope.edit = function(series) {
@@ -26,7 +28,6 @@ app.controller('SeriesCollection', function($scope, $rootScope, api) {
 		$scope.permit = function(series) {
 			$rootScope.$emit('editSeriesPermissions', series);
 		};
-		$scope.count = function(array) { return array && array.length || 0;	};
 	}
 	
 	function bindEvents(){
