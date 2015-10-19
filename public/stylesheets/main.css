@@ -78,6 +78,10 @@ table {
 .col-value{width:10em;}
 .col-version{width:10em;}
 .col-check{width:2em;}
+.col-use{width:3em;}
+.col-read_data{width:3em;}
+.col-change{width:3em;}
+.col-permit{width:4.5em;}
 
 /* form */
 .input-group-sm{margin-bottom:0px;}

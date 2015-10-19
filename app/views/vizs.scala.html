@@ -6,10 +6,10 @@
 	@script_asset("javascripts/ng/controllers/viz.js")
 	@script_asset("javascripts/ng/controllers/series.js")
 	@script_asset("javascripts/ng/controllers/series-data.js")
+	@script_asset("javascripts/ng/controllers/permissions.js")
+	@script_asset("javascripts/ng/controllers/permission.js")
 	@script_asset("javascripts/ng/controllers/viz-permissions.js")
-	@script_asset("javascripts/ng/controllers/viz-permission.js")
 	@script_asset("javascripts/ng/controllers/series-permissions.js")
-	@script_asset("javascripts/ng/controllers/series-permission.js")
 }
 
 @main("Visualization Management", imports) {
@@ -33,7 +33,7 @@
 @buttons() = {
 	@button_action("play", "go(it)", "can('use', it)")
 	@button_action("edit", "edit(it)", "can('read_data', it)")
-	@button_action("eye-close", "permit(it)", "can('permit', it)", "edit permissions")
+	@button_action("eye-close", "editPermissions(it)", "can('permit', it)", "edit permissions")
 }
 
 @text(a:String, b:String) = {
