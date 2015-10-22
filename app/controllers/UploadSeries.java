@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 
+import models.entities.SeriesDataUrl;
 import play.db.jpa.JPA;
 import play.mvc.Controller;
 import play.mvc.Http.Request;
@@ -20,9 +21,12 @@ class UploadSeries extends Controller {
 		return uploadSeriesData(seriesId, dataFile);
 	}
 	
-	static Result uploadViaUrl(long seriesId,String url) {
+	static Result uploadViaUrl(long seriesId, String url, boolean overWrite) {
 		SeriesDataFile dataFile = getSeriesDataFile(url);
-		return uploadSeriesData(seriesId, dataFile);
+		if (overWrite || !checksumMatches(seriesId, url, dataFile.getChecksum()))
+			return uploadSeriesData(seriesId, dataFile);
+		else
+			return status(CONFLICT, "url content seems unchanged. Use overWrite parameter to re-write data.");
 	}
 
 	private static Result uploadSeriesData(long seriesId,
@@ -90,5 +94,11 @@ class UploadSeries extends Controller {
 	
 	private static void deleteTempFile(SeriesDataFile dataFile) {
 		dataFile.deleteFile();	
+	}
+
+	private static boolean checksumMatches(long seriesId, String url, String checksum) {
+		List<SeriesDataUrl> result = Factory.makeSeriesDataUrlRule(JPA.em())
+				.query(seriesId, url, checksum);
+		return result.size() > 0;
 	}
 }

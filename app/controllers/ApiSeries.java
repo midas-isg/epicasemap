@@ -9,8 +9,9 @@ import java.util.List;
 import javax.ws.rs.PathParam;
 
 import models.entities.Mode;
-import models.entities.SeriesPermission;
 import models.entities.Series;
+import models.entities.SeriesDataUrl;
+import models.entities.SeriesPermission;
 import models.exceptions.Unauthorized;
 import models.filters.Filter;
 import models.filters.Restriction;
@@ -42,6 +43,7 @@ public class ApiSeries extends Controller {
 	
 	public static Form<Series> seriesForm = Form.form(Series.class);
 	public static Form<ModeWithAccountId> modeForm = Form.form(ModeWithAccountId.class);
+	public static Form<SeriesDataUrl> seriesDataUrlForm = Form.form(SeriesDataUrl.class);
 
 	@ApiOperation(httpMethod = "POST", nickname = "create", value = "Creates a new Series", 
 			notes = "This endpoint creates a Series using submitted JSON object in body "
@@ -169,11 +171,12 @@ public class ApiSeries extends Controller {
 			@ApiParam(value = "ID of the Series", required = true) 
 			@PathParam("id") 
 				long id,
-			@ApiParam(value = "Url of the Series Data", required = true) 
-			@PathParam("url") 
-				String url) {
+			@ApiParam(value = "Force overWrite the content", required = false) 
+			@PathParam("overWrite") 
+				boolean overWrite) {
 		checkSeriesPermission(id, "upload data to");
-		return UploadSeries.uploadViaUrl(id,url);
+		String url = seriesDataUrlForm.bindFromRequest().get().getUrl();
+		return UploadSeries.uploadViaUrl(id, url, overWrite);
 	}
 
 	public static void deleteById(long id) {

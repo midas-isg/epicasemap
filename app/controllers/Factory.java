@@ -7,6 +7,7 @@ import gateways.database.LocationDao;
 import gateways.database.PermissionDao;
 import gateways.database.SeriesDao;
 import gateways.database.SeriesDataDao;
+import gateways.database.SeriesDataUrlDao;
 import gateways.database.VizDao;
 import gateways.webservice.AlsDao;
 import interactors.AuthorizationRule;
@@ -15,6 +16,7 @@ import interactors.CoordinateRule;
 import interactors.LocationRule;
 import interactors.AccountRule;
 import interactors.SeriesDataRule;
+import interactors.SeriesDataUrlRule;
 import interactors.SeriesRule;
 import interactors.VizRule;
 import interactors.security.password.Authenticator;
@@ -55,6 +57,7 @@ public class Factory {
 		final SeriesRule seriesRule = new SeriesRule(dao);
 		seriesRule.setCoordinateRule(makeCoordinateRule(em));
 		seriesRule.setSeriesDataRule(makeSeriesDataRule(em));
+		seriesRule.setSeriesDataUrlRule(makeSeriesDataUrlRule(em));
 		if (vizRule == null)
 			vizRule = makeVizRule(em, seriesRule);
 		seriesRule.setVizRule(vizRule);
@@ -93,6 +96,7 @@ public class Factory {
 		persister.setLocationRule(makeLocationRule(JPA.em()));
 		persister.setSeriesRule(makeSeriesRule(JPA.em()));
 		persister.setSeriesDataRule(makeSeriesDataRule(JPA.em()));
+		persister.setSeriesDataUrlRule(makeSeriesDataUrlRule(JPA.em()));
 		persister.setParser(new Parser(dataFile));
 		persister.setSeriesDataFile(dataFile);
 		return persister;
@@ -129,5 +133,10 @@ public class Factory {
 	public static SeriesDataFile makeSeriesDataFile(Request request) {
 		return new SeriesDataFile(request.body()
 				.asMultipartFormData().getFiles().get(0).getFile());
+	}
+	
+	public static SeriesDataUrlRule makeSeriesDataUrlRule(EntityManager em) {
+		SeriesDataUrlDao seriesDataUrlDao = new SeriesDataUrlDao(em);
+		return new SeriesDataUrlRule(seriesDataUrlDao);
 	}
 }

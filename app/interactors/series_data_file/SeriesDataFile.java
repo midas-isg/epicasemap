@@ -5,6 +5,7 @@ import static java.util.regex.Pattern.compile;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -20,7 +21,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import play.Logger;
+import org.apache.commons.codec.digest.DigestUtils;
 
 public class SeriesDataFile {
 	public static final String ALS_ID_FORMAT = "alsIdFormat";
@@ -45,6 +46,8 @@ public class SeriesDataFile {
 	}
 
 	private File file;
+	private String url;
+	private String checksum;
 	private Character delimiter;
 	private String fileFormat;
 
@@ -56,7 +59,9 @@ public class SeriesDataFile {
 	}
 
 	public SeriesDataFile(String url) {
+		this.setUrl(url);
 		this.file = readFilefromUrl(url);
+		this.checksum = md5sum(this.file);
 		setFileAttribs(this.file);
 	}
 
@@ -73,9 +78,6 @@ public class SeriesDataFile {
 			tempFile = File.createTempFile("tempUserFile", ".tmp");
 			URL url = new URL(StrUrl);
 			URLConnection conn = url.openConnection();
-			
-			Logger.debug(conn.getContentType());
-			
 			BufferedReader br = new BufferedReader(new InputStreamReader(
 					conn.getInputStream()));
 			BufferedWriter bw = new BufferedWriter(new FileWriter(tempFile));
@@ -190,6 +192,30 @@ public class SeriesDataFile {
 
 	public void deleteFile() {
 		this.file.delete();	
+	}
+	
+	private String md5sum(File file) {
+		String md5;
+		try {
+		FileInputStream fis = new FileInputStream(file);
+		md5 = DigestUtils.md5Hex(fis);
+		fis.close();
+		} catch (IOException e){
+			throw new RuntimeException(e);
+		}
+		return md5;
+	}
+
+	public String getChecksum() {
+		return checksum;
+	}
+
+	public String getUrl() {
+		return url;
+	}
+
+	public void setUrl(String url) {
+		this.url = url;
 	}
 
 }

@@ -1,6 +1,7 @@
 package integrations.server;
 
 import static play.mvc.Http.Status.BAD_REQUEST;
+import static play.mvc.Http.Status.CONFLICT;
 import static play.mvc.Http.Status.CREATED;
 import static suites.Helper.assertAreEqual;
 
@@ -27,6 +28,9 @@ public class UploadSeriesEndpointTester {
 	private static final int timeout = 100_000;
 	private final String basePath = "/api/series/";
 	private final long seriesId = 1000_000L;
+	private String alsIdFormatURL = "http://localhost:9000/epidemap/assets/input/series-data/examples/test_alsId_format.txt";
+	
+	//TODO: move all new File() to seriesDataFileHleper 
 
 	public static Runnable test() {
 		return () -> newInstance().testUpload();
@@ -34,7 +38,17 @@ public class UploadSeriesEndpointTester {
 
 	public void testUpload() {
 
-		WSResponse resp = uploadMultiPartFormData();
+		WSResponse resp = uploadAlsIdFormatWithURL(seriesId, true);
+		assertStatus(resp, CREATED);
+
+		resp = uploadAlsIdFormatWithURL(seriesId, false);
+		assertStatus(resp, CONFLICT);
+		
+		resp = uploadAlsIdFormatWithURL(seriesId, true);
+		assertBody(resp, "5 existing item(s) deleted.\n"
+				+ "5 new item(s) created.");
+
+		resp = uploadMultiPartFormData();
 		assertStatus(resp, CREATED);
 
 		WSResponse response = uploadDataWithAlsIdFormat(seriesId);
@@ -56,14 +70,34 @@ public class UploadSeriesEndpointTester {
 
 		response = uploadDataWithErrorWithAlsIdFormat(seriesId);
 		assertStatus(response, BAD_REQUEST);
-		assertBody(response, "Line 1: number of columns is 4. should be 3.\n"
-				+ "Line 1: \"lat\" column name is not allowed in alsIdFormat format.\n");
-		
+		assertBody(
+				response,
+				"Line 1: number of columns is 4. should be 3.\n"
+						+ "Line 1: \"lat\" column name is not allowed in alsIdFormat format.\n");
+
 		response = uploadDataWithErrorWithCoordinateFormat(seriesId);
 		assertStatus(response, BAD_REQUEST);
-		assertBody(response, "Line 1: number of columns is 5. should be 4.\n"
-				+ "Line 1: \"error\" column name is not allowed in coordinateFormat format.\n");
+		assertBody(
+				response,
+				"Line 1: number of columns is 5. should be 4.\n"
+						+ "Line 1: \"error\" column name is not allowed in coordinateFormat format.\n");
 
+	}
+
+	private WSResponse uploadAlsIdFormatWithURL(long seriesId, boolean overWrite) {
+
+		String body = "url=" + alsIdFormatURL ;
+		String url = buildUrl(seriesId, overWrite);
+		WSRequestHolder req = WS.url(url).setContentType(
+				"application/x-www-form-urlencoded");
+		WSResponse response = req.put(body).get(timeout);
+		return response;
+	}
+
+	private String buildUrl(long seriesId, boolean overWrite) {
+		String url = Server.makeTestUrl(basePath) + seriesId
+				+ "/data-url?overWrite=" + overWrite;
+		return url;
 	}
 
 	private WSResponse uploadMultiPartFormData() {
@@ -89,7 +123,7 @@ public class UploadSeriesEndpointTester {
 
 	private WSResponse uploadDataWithAlsIdFormatWithTab(long seriesId) {
 		File file = new File(
-				"test/resources/input-files/test_alsId_format_tab.txt");
+				"public/input/series-data/test/test_alsId_format_tab.txt");
 		String url = buildUrl(seriesId);
 		WSResponse response = sendMultiPartRequest(file, url);
 		return response;
@@ -100,7 +134,7 @@ public class UploadSeriesEndpointTester {
 		WSResponse response;
 
 		File file = new File(
-				"test/resources/input-files/test_coordinate_format_with_errors.txt");
+				"public/input/series-data/test/test_coordinate_format_with_errors.txt");
 		String url = buildUrl(seriesId);
 		response = sendMultiPartRequest(file, url);
 		return response;
@@ -110,7 +144,7 @@ public class UploadSeriesEndpointTester {
 			throws RuntimeException {
 		WSResponse response;
 		File file = new File(
-				"test/resources/input-files/test_alsId_format_with_errors.txt");
+				"public/input/series-data/test/test_alsId_format_with_errors.txt");
 		String url = buildUrl(seriesId);
 		response = sendMultiPartRequest(file, url);
 		return response;
@@ -121,7 +155,7 @@ public class UploadSeriesEndpointTester {
 		WSResponse response;
 
 		File file = new File(
-				"test/resources/input-files/test_coordinate_format.txt");
+				"public/input/series-data/examples/test_coordinate_format.txt");
 		String url = buildUrl(seriesId);
 		response = sendMultiPartRequest(file, url);
 		return response;
@@ -129,7 +163,7 @@ public class UploadSeriesEndpointTester {
 
 	private WSResponse uploadDataWithAlsIdFormat(Long seriesId)
 			throws RuntimeException {
-		File file = new File("test/resources/input-files/test_alsId_format.txt");
+		File file = new File("public/input/series-data/examples/test_alsId_format.txt");
 		String url = buildUrl(seriesId);
 		WSResponse response = sendMultiPartRequest(file, url);
 		return response;
