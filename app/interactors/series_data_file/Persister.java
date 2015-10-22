@@ -2,14 +2,17 @@ package interactors.series_data_file;
 
 import interactors.LocationRule;
 import interactors.SeriesDataRule;
+import interactors.SeriesDataUrlRule;
 import interactors.SeriesRule;
 import interactors.series_data_file.Parser.DataPoint;
 
 import java.util.Date;
+import java.util.List;
 
 import models.entities.Location;
 import models.entities.Series;
 import models.entities.SeriesData;
+import models.entities.SeriesDataUrl;
 
 import org.joda.time.DateTime;
 
@@ -18,6 +21,7 @@ public class Persister {
 	private LocationRule locationRule;
 	private SeriesRule seriesRule;
 	private SeriesDataRule seriesDataRule;
+	private SeriesDataUrlRule seriesDataUrlRule;
 	private Parser parser;
 	private SeriesDataFile dataFile;
 	private Series series;
@@ -25,7 +29,10 @@ public class Persister {
 	public int persistSeriesDataFile(Long seriesId) {
 
 		this.series = seriesRule.read(seriesId);
-		return persistSeriesData();
+		int numCreated = persistSeriesData();
+		if (dataFile.getUrl() != null)
+			updateOrCreateUrl(series, dataFile.getUrl(), dataFile.getChecksum());
+		return numCreated;
 	}
 
 	private int persistSeriesData() {
@@ -124,4 +131,18 @@ public class Persister {
 
 	}
 
+	public void setSeriesDataUrlRule(SeriesDataUrlRule seriesDataUrlRule) {
+		this.seriesDataUrlRule = seriesDataUrlRule;
+	}
+
+	private void updateOrCreateUrl(Series series, String url, String checksum) {
+		List<SeriesDataUrl> seriesDataUrl = seriesDataUrlRule.query(series
+				.getId());
+		if (seriesDataUrl.isEmpty())
+			seriesDataUrlRule.createNew(series, url, checksum);
+		else {
+			seriesDataUrl.get(0).setUrl(url);
+			seriesDataUrl.get(0).setChecksum(checksum);
+		}
+	}
 }

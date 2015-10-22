@@ -8,16 +8,18 @@ import java.util.Set;
 
 import models.entities.Coordinate;
 import models.entities.Series;
+import models.entities.SeriesDataUrl;
 import models.entities.Visualization;
 import models.exceptions.ConstraintViolation;
 import models.filters.CoordinateFilter;
 import models.filters.SeriesFilter;
 
 public class SeriesRule extends CrudRule<Series> {
-	private SeriesDao dao; 
+	private SeriesDao dao;
 	private CoordinateRule coordinateRule;
 	private SeriesDataRule seriesDataRule;
-	private VizRule vizRule; 
+	private VizRule vizRule;
+	private SeriesDataUrlRule seriesDataUrlRule;
 
 	public SeriesRule(SeriesDao dao) {
 		this.dao = dao;
@@ -36,7 +38,16 @@ public class SeriesRule extends CrudRule<Series> {
 	public void delete(long id) {
 		validateConstrains(id);
 		deleteAllSeriesData(id);
+		deleteSeriesDataUrl(id);
 		super.delete(id);
+	}
+
+	private int deleteSeriesDataUrl(long id) {
+		List<SeriesDataUrl> result = seriesDataUrlRule.query(id);
+		for (SeriesDataUrl seriesDataUrl : result) {
+			seriesDataUrlRule.delete(seriesDataUrl.getId());
+		}
+		return result.size();
 	}
 
 	private void validateConstrains(long id) {
@@ -83,5 +94,9 @@ public class SeriesRule extends CrudRule<Series> {
 		filter.setSeriesId(seriesId);
 		filter.setOffset(0);
 		return filter;
+	}
+
+	public void setSeriesDataUrlRule(SeriesDataUrlRule seriesDataUrlRule) {
+		this.seriesDataUrlRule = seriesDataUrlRule;		
 	}
 }
