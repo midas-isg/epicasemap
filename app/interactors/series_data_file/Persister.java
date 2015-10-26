@@ -30,8 +30,7 @@ public class Persister {
 
 		this.series = seriesRule.read(seriesId);
 		int numCreated = persistSeriesData();
-		if (dataFile.getUrl() != null)
-			updateOrCreateUrl(series, dataFile.getUrl(), dataFile.getChecksum());
+		updateSeriesDataUrl(series,dataFile.getUrl(),dataFile.getChecksum());
 		return numCreated;
 	}
 
@@ -134,15 +133,12 @@ public class Persister {
 	public void setSeriesDataUrlRule(SeriesDataUrlRule seriesDataUrlRule) {
 		this.seriesDataUrlRule = seriesDataUrlRule;
 	}
-
-	private void updateOrCreateUrl(Series series, String url, String checksum) {
-		List<SeriesDataUrl> seriesDataUrl = seriesDataUrlRule.query(series
-				.getId());
-		if (seriesDataUrl.isEmpty())
-			seriesDataUrlRule.createNew(series, url, checksum);
-		else {
-			seriesDataUrl.get(0).setUrl(url);
-			seriesDataUrl.get(0).setChecksum(checksum);
-		}
+	
+	private void updateSeriesDataUrl(Series series, String seriesDataUrl, String checksum) {
+		List<SeriesDataUrl> result = seriesDataUrlRule.query(series.getId());
+		if(! result.isEmpty())
+			seriesDataUrlRule.delete(series.getId());
+		if (seriesDataUrl != null)
+			seriesDataUrlRule.createNew(series, seriesDataUrl, checksum);
 	}
 }

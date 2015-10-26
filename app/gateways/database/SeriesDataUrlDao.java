@@ -23,7 +23,8 @@ public class SeriesDataUrlDao extends DataAccessObject<SeriesDataUrl> {
 	public List<SeriesDataUrl> queryDao(SeriesDataUrlFilter filter) {
 
 		Map<String, Object> equalityMap = filter.getEqualities();
-		equalityMap.put("series", filter.getSeriesId());
+		//equalityMap.put("series", filter.getSeriesId());
+		equalityMap.put("id", filter.getId());
 		equalityMap.put("url", filter.getUrl());
 		equalityMap.put("checksum", filter.getChecksum());
 		return super.query(filter);
