@@ -43,7 +43,7 @@ public class SeriesDataUrlRule extends CrudRule<SeriesDataUrl> {
 	private SeriesDataUrlFilter buildSeriesDataUrlFilter(long seriesId,
 			String url, String checksum) {
 		SeriesDataUrlFilter filter = new SeriesDataUrlFilter();
-		filter.setSeriesId(seriesId);
+		filter.setId(seriesId);
 		filter.setUrl(url);
 		filter.setChecksum(checksum);
 		return filter;

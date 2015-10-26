@@ -1,12 +1,13 @@
 package models.filters;
 
+import models.entities.Series;
 
 public class SeriesDataUrlFilter extends GenericFilter implements Filter {
 
 	private Long id;
 	private String url;
 	private String checksum;
-	private Long seriesId;
+	private Series series;
 
 	public Long getId() {
 		return id;
@@ -32,11 +33,11 @@ public class SeriesDataUrlFilter extends GenericFilter implements Filter {
 		this.checksum = checksum;
 	}
 
-	public Long getSeriesId() {
-		return seriesId;
+	public Series getSeries() {
+		return series;
 	}
 
-	public void setSeriesId(Long seriesId) {
-		this.seriesId = seriesId;
+	public void setSeries(Series series) {
+		this.series = series;
 	}
 }
