@@ -2,16 +2,21 @@ package controllers;
 
 import static controllers.ResponseHelper.okAsWrappedJsonObject;
 import static controllers.ResponseHelper.setResponseLocationFromRequest;
+import static controllers.security.AuthorizationKit.findPermittedSeriesIds;
 import interactors.VizAuthorizer;
 import interactors.VizRule;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.PathParam;
 
 import models.entities.Mode;
+import models.entities.Series;
 import models.entities.Visualization;
 import models.entities.VizPermission;
+import models.exceptions.NotFound;
 import models.exceptions.Unauthorized;
 import models.filters.Filter;
 import models.filters.MetaFilter;
@@ -71,8 +76,23 @@ public class ApiViz extends Controller {
 		return created();
 	}
 
-	public static long create(VizInput data) {
-		return makeRule().createFromInput(data);
+	public static Long create(VizInput data) {
+		checkSeriesUsePermission(data.getOwnerId(), data.getSeriesIds());
+		return makeRule().createFromInput(data); 
+	}
+
+	private static void checkSeriesUsePermission(Long accountId,
+			final List<Long> seriesIds) {
+		if (seriesIds == null || accountId == null)
+			return;
+		final Access access = Access.USE;
+		final List<Long> permittedSeriesIds = findPermittedSeriesIds(
+				accountId, Arrays.asList(access));
+		if (! permittedSeriesIds.containsAll(seriesIds)){
+			seriesIds.removeAll(permittedSeriesIds);
+			throw new Unauthorized("Unauthorized to use the Series: " + seriesIds 
+			+ ". '" + access + "' Access to the Series is required.");
+		}
 	}
 
 	@ApiOperation(httpMethod = "GET", nickname = "read", value = "Returns the Viz by ID")
@@ -127,12 +147,30 @@ public class ApiViz extends Controller {
 	public static Result put(
 			@ApiParam(value = "ID of the Viz", required = true) @PathParam("id") long id) {
 		checkVizPermission(id, "update");
+		
 		final VizInput input = vizForm.bindFromRequest().get();
-		makeRule().updateFromInput(id, input);
+		update(id, input);
 		setResponseLocationFromRequest();
 		return noContent();
 	}
 	
+	public static Visualization update(long id, final VizInput input) {
+		final VizRule rule = makeRule();
+		final Visualization viz = rule.read(id);
+		final List<Long> permittedSeriesIds = viz.getAllSeries().stream()
+				.map(s -> s.getId())
+				.collect(Collectors.toList());
+		final List<Long> seriesIds = input.getSeriesIds();
+		if (seriesIds != null && ! seriesIds.isEmpty()){
+			final List<Long> remainingIds = seriesIds.stream()
+				.filter(sId-> ! permittedSeriesIds.contains(sId))
+				.collect(Collectors.toList());
+			final Long accountId = AuthorizationKit.readAccountId();
+			checkSeriesUsePermission(accountId, remainingIds);
+		}
+		return rule.updateFromInput(id, input);
+	}
+
 	private static void checkVizPermission(long id, String action) {
 		if (! AuthorizationKit.isVizPermitted(id))
 			throw new Unauthorized("Unauthorized to " + action + " the Visualization with ID = " + id);
@@ -161,10 +199,6 @@ public class ApiViz extends Controller {
 		return noContent();
 	}
 	
-	public static void update(long id, Visualization data) {
-		makeRule().update(id, data);
-	}
-
 	@ApiOperation(httpMethod = "DELETE", nickname = "delete", value = "Deletes the Viz", 
 		notes = "This endpoint deletes the given Viz idientified by 'id' "
 		+ "and returns the URI via the 'Location' Header in the response. "
@@ -245,6 +279,35 @@ public class ApiViz extends Controller {
 		authorizationRule.updateMode(id, data);
 		setResponseLocationFromRequest();
 		return noContent();
+	}
+	
+	
+	@Transactional
+	@Restricted({Access.USE})
+	public static Result getSeriesData(
+			Long id,
+			Long seriesId,
+			String startInclusive,
+			String endExclusive,
+			Integer limit,
+			int offset) {
+		checkVizPermission(id, "run");
+		final Visualization viz = makeRule().read(id);
+		final List<Series> allSeries = viz.getAllSeries();
+		boolean seriesIsInViz = allSeries.stream()
+				.anyMatch(series ->series.getId().equals(seriesId));
+		if (! seriesIsInViz)
+			throw new NotFound(toTextIsNotIn(seriesId, id));
+		return ApiTimeCoordinateSeries.get(seriesId,
+				startInclusive,
+				endExclusive,
+				limit,
+				offset);
+	}
+
+	private static String toTextIsNotIn(Long seriesId, Long id) {
+		return "Series with ID = " + seriesId 
+				+ " is not in the Visualization with ID = " + id;
 	}
 
 	private static VizAuthorizer makeVizAuthorizer() {

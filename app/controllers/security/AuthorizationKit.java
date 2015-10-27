@@ -29,6 +29,10 @@ public class AuthorizationKit {
 		List<Access> accesses = readAccesses();
 		if (accesses == null)
 			return null;
+		return findPermittedSeriesIds(accountId, accesses);
+	}
+
+	public static List<Long> findPermittedSeriesIds(long accountId,	List<Access> accesses) {
 		final Restriction restriction = new Restriction(accountId, accesses);
 		return makeSeriesAuthorizer().findSeriesIds(restriction);
 	}
@@ -43,8 +47,7 @@ public class AuthorizationKit {
 		if (accesses == null)
 			return null;
 		final Restriction restriction = new Restriction(accountId, accesses);
-		final List<Long> ids = makeVizAuthorizer().findVizIds(restriction);
-		return ids;
+		return makeVizAuthorizer().findVizIds(restriction);
 	}
 
 	private static boolean isPermitted(Long requestedId,

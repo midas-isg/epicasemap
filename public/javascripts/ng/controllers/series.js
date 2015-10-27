@@ -144,7 +144,7 @@ app.controller('Series', function($scope, $rootScope, api) {
 			}
 		}, function(err){
 			emitDone();
-			error(msg, err);
+			error('Failed to save the series.', err);
 		});
 	}
 	

@@ -44,7 +44,7 @@
 	</button>
 }
 
-@seriesCheckbox = {<input type='checkbox' title='check to select the Series to be avialble to view in the Visualization' ng-disabled='! isModelEditable() || ! can("use", it)' ng-model='it.isSelected'>}
+@seriesCheckbox = {<input type='checkbox' title='check to select the Series to be avialble to view in the Visualization' ng-disabled='! isModelEditable()' ng-model='it.isSelected'>}
 @buttons = {
 	@button_action("edit", "editSeries(it)", "can('read_data', it)")
 	@button_action("eye-close", "permit(it)", "can('permit', it)", "edit permission")

@@ -128,10 +128,17 @@ app.controller('Viz', function($scope, $rootScope, api) {
 		}
 	}
 	
+	function removeIrrelevant(allSeries){
+		return _.filter(allSeries, function(series){
+			return series.isSelected || can('use', series);
+		});
+	}
+	
 	function updateAllSeries(viz){
 		var wasPristine = $scope.form.$pristine;
 		if (viz && $scope.allSeries){
 			check(viz.allSeries.map(byId), 'isSelected');
+			$scope.allSeries = removeIrrelevant($scope.allSeries);
 		}
 		if (wasPristine)
 			$scope.form.$setPristine();
