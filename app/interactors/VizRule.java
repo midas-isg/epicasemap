@@ -35,9 +35,9 @@ public class VizRule extends CrudRule<Visualization> {
 		return create(data);
 	}
 
-	public void updateFromInput(long id, VizInput input) {
+	public Visualization updateFromInput(long id, VizInput input) {
 		final Visualization data = toViz(input);
-		update(id, data);
+		return update(id, data);
 	}
 	
 	@Override

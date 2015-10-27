@@ -8,9 +8,10 @@ describe('Controller: Vizs', function() {
 	var asynCallAfterTruthy = app.test.asynCallAfterTruthy;
 	
 	app.test.init('Vizs');
-	beforeEach(function(){
+	beforeEach(function(done){
 		$scope = app.test.scope.vizs;
 		api = app.test.getApi();
+		app.test.loginAsPublic(done);
 	});
 	
 	describe('when loaded ', function() {

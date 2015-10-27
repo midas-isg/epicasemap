@@ -35,6 +35,7 @@ GET     /api/series/:id/permissions controllers.ApiSeries.getPermissions(id:Long
 POST    /api/series/:id/permissions controllers.ApiSeries.postPermissions(id:Long)
 DELETE  /api/series/permissions/:id controllers.ApiSeries.deletePermission(id:Long)
 PUT     /api/series/permissions/:id/mode controllers.ApiSeries.putMode(id:Long)
+# @Deprecated
 GET     /api/series/:id/time-coordinate   controllers.ApiTimeCoordinateSeries.get(id:Long, startInclusive?=null, endExclusive?=null, limit:java.lang.Integer?=null, offset:Int?=0)
 GET     /api/series/:id/data         controllers.ApiSeries.getData(id:Long, startInclusive?=null, endExclusive?=null, limit:java.lang.Integer?=null, offset:Int?=0)
 PUT     /api/series/:id/data         controllers.ApiSeries.uploadData(id:Long)
@@ -53,6 +54,7 @@ GET     /api/vizs/:id/permissions   controllers.ApiViz.getPermissions(id:Long)
 POST    /api/vizs/:id/permissions   controllers.ApiViz.postPermissions(id:Long)
 DELETE  /api/vizs/permissions/:id   controllers.ApiViz.deletePermission(id:Long)
 PUT     /api/vizs/permissions/:id/mode controllers.ApiViz.putMode(id:Long)
+GET     /api/vizs/:vId/series/:sId/time-coordinate   controllers.ApiViz.getSeriesData(vId:Long, sId:Long, startInclusive?=null, endExclusive?=null, limit:java.lang.Integer?=null, offset:Int?=0)
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.at(path="/public", file)

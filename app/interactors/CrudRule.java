@@ -15,8 +15,8 @@ public abstract class CrudRule<T extends Entity> {
 		return getDao().read(id);
 	}
 
-	public void update(long id, T data) {
-		getDao().update(id, data);
+	public T update(long id, T data) {
+		return getDao().update(id, data);
 	}
 
 	public void delete(long id) {

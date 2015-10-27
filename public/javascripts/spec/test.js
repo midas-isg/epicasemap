@@ -12,10 +12,26 @@ app.test = (function(){ 'use strict'; `comment: use ES6`;
 		deleteViz,
 		setValidViz: function(viz) {the.validViz = viz},
 		getValidViz,
+		loginAsPublic,
 		getApi: function() {return the.api},
 		defer: function() {return the.q.defer()}
 	};
 	
+	function loginAsPublic(done){
+		let body = {email:'public@test.com',password:'public'};
+		post('login', body, done);
+		
+		function post(path, data, success){
+			let url = `${CONTEXT}/${path}`;
+			$.ajax({type: 'POST', url, data, success, error});
+			
+			function error(){
+        		done.fail(`logging in via ${url} returned an error!`);
+			}
+		}
+	}
+	
+
 	function getValidViz(){
 		if (! the.validViz){
 			$.ajax({
@@ -53,7 +69,7 @@ app.test = (function(){ 'use strict'; `comment: use ES6`;
 		
 		beforeAll(function(){
 			originalTimeout = jasmine.DEFAULT_TIMEOUT_INTERVAL;
-			jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000;
+			jasmine.DEFAULT_TIMEOUT_INTERVAL = 1500;
 			console.log(suiName + ': started with', timeoutText());
 		});
 	    beforeEach(module('app'));
