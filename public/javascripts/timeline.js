@@ -217,9 +217,11 @@ timeline.js
 					$("#palette-" + thisMap.uiSettings.colorPalette).click();
 				}
 				else {
-					//TODO: FIX default page (no ID associated)
-					thisMap.uiSettings.series[0] = {index: thisMap.seriesList[0].id, color: 0};
-					thisMap.seriesToLoad.push(thisMap.uiSettings.series[0].index);
+					//no ui-settings defined so just load first five of the series using different colors
+					for(h = 0; (h < thisMap.seriesList.length) && (h < 5); h++) {
+						thisMap.uiSettings.series[h] = {index: thisMap.seriesList[h].id, color: h};
+						thisMap.seriesToLoad.push(thisMap.uiSettings.series[h].index);
+					}
 				}
 				
 				for(i = 0; i < thisMap.seriesToLoad.length; i++) {
@@ -826,6 +828,21 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 					//use timeline selection event object as parameter and trigger master-container/chart selection event
 					if(thisMap.uiSettings.timeSelectionEvent) {
 						thisMap.doSelection(thisMap.uiSettings.timeSelectionEvent);
+					}
+					
+					for(i = 0; i < 3; i++) {
+						$("#palette-" + i).removeClass("selected");
+					}
+					
+					$("#palette-" + thisMap.uiSettings.colorPalette).addClass("selected");
+					
+					thisMap.colors = thisMap.colorSet[thisMap.uiSettings.colorPalette];
+					
+					thisMap.setGradient.length = 0;
+					for(i = 0; i < thisMap.uiSettings.series.length; i++) {
+						thisMap.setGradient.push({
+							0.0: thisMap.colors[thisMap.uiSettings.series[i].color]
+						});
 					}
 					
 					console.log("Finished loading. Unpause to begin.");
