@@ -76,43 +76,7 @@ timeline.js
 			this.loadVisualization(this.vizID);
 		}
 		else {
-			$("#save-button").hide();
-			
-			function getDescriptions(seriesToLoad) {
-				var URL = CONTEXT + "/api/series/",
-				i,
-				j;
-				
-				thisMap.seriesToLoad = seriesToLoad.slice();
-				
-				for(j = 0; j < thisMap.seriesToLoad.length; j++) {
-					$.ajax({
-						url: URL + thisMap.seriesToLoad[j],
-						success: function(result) {
-							thisMap.seriesDescriptions[result.result.id] = {
-								title: result.result.title,
-								description: result.result.description
-							};
-							
-							seriesToLoad.shift();
-							if(seriesToLoad.length === 0) {
-								for(i = 0; i < thisMap.seriesToLoad.length; i++) {
-									thisMap.load(thisMap.seriesToLoad[i]);
-								}
-							}
-							
-							return;
-						},
-						error: function() {
-							return;
-						}
-					});
-				}
-				
-				return;
-			}
-			
-			getDescriptions([1, 259]);
+			location.assign(CONTEXT + "/manage/vizs");
 		}
 		
 		for(i = 0; i < this.mapTypes.length; i++) {
