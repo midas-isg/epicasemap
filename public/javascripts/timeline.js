@@ -61,6 +61,8 @@ timeline.js
 			pointDecay: 0.0231
 		};
 		
+		this.allContainedBox = [[], []];
+		
 		this.seriesList = [];
 		this.seriesDescriptions = {};
 		this.seriesToLoad = [];
@@ -751,13 +753,38 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 					thisMap.earliestDate = thisMap.dataset[0].timeGroup[0].date;
 					thisMap.latestDate = thisMap.dataset[0].timeGroup[thisMap.dataset[0].timeGroup.length - 1].date;
 					
-					for(i = 1; i < thisMap.dataset.length; i++) {
+					for(i = 0; i < thisMap.dataset.length; i++) {
 						if(thisMap.earliestDate > thisMap.dataset[i].timeGroup[0].date) {
 							thisMap.earliestDate = thisMap.dataset[i].timeGroup[0].date;
 						}
 						
 						if(thisMap.latestDate < thisMap.dataset[i].timeGroup[thisMap.dataset[i].timeGroup.length - 1].date) {
 							thisMap.latestDate = thisMap.dataset[i].timeGroup[thisMap.dataset[i].timeGroup.length - 1].date;
+						}
+						
+						thisMap.allContainedBox[0][0] = thisMap.dataset[0].timeGroup[0].point[0].latitude;
+						thisMap.allContainedBox[1][0] = thisMap.dataset[0].timeGroup[0].point[0].latitude;
+						thisMap.allContainedBox[0][1] = thisMap.dataset[0].timeGroup[0].point[0].longitude;
+						thisMap.allContainedBox[1][1] = thisMap.dataset[0].timeGroup[0].point[0].longitude;
+						
+						for(j = 0; j < thisMap.dataset[i].timeGroup.length; j++) {
+							for(k = 0; k < thisMap.dataset[i].timeGroup[j].point.length; k++) {
+								if(thisMap.allContainedBox[0][0] > thisMap.dataset[i].timeGroup[j].point[k].latitude) {
+									thisMap.allContainedBox[0][0] = thisMap.dataset[i].timeGroup[j].point[k].latitude;
+								}
+								
+								if(thisMap.allContainedBox[1][0] < thisMap.dataset[i].timeGroup[j].point[k].latitude) {
+									thisMap.allContainedBox[1][0] = thisMap.dataset[i].timeGroup[j].point[k].latitude;
+								}
+								
+								if(thisMap.allContainedBox[0][1] > thisMap.dataset[i].timeGroup[j].point[k].longitude) {
+									thisMap.allContainedBox[0][1] = thisMap.dataset[i].timeGroup[j].point[k].longitude;
+								}
+								
+								if(thisMap.allContainedBox[1][1] < thisMap.dataset[i].timeGroup[j].point[k].longitude) {
+									thisMap.allContainedBox[1][1] = thisMap.dataset[i].timeGroup[j].point[k].longitude;
+								}
+							}
 						}
 					}
 					console.log("Beginning date: " + thisMap.earliestDate);
@@ -778,7 +805,7 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 					//total timespan of dataseries
 					deltaTime = (thisMap.latestDate.valueOf() - thisMap.earliestDate.valueOf()) / threshold;
 					
-					//set the largestConcentration of points equal to the sum of the frame of the most concentrated lifecycle to display
+					//set the largestConcentration of points to be the sum of the frame of the most concentrated lifecycle to display
 					sumArray = [];
 					for(i = 0; i < deltaTime; i++) {
 						temp = 0;
@@ -828,6 +855,10 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 					//use timeline selection event object as parameter and trigger master-container/chart selection event
 					if(thisMap.uiSettings.timeSelectionEvent) {
 						thisMap.doSelection(thisMap.uiSettings.timeSelectionEvent);
+					}
+					
+					if(!thisMap.uiSettings.bBox[0][0]) {
+						thisMap.map.fitBounds(thisMap.allContainedBox);
 					}
 					
 					for(i = 0; i < 3; i++) {
