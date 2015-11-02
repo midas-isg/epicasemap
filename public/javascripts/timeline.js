@@ -701,7 +701,7 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 							filler++;
 							emptyDate = new Date(emptyDate.valueOf() + threshold);
 							currentDataset.timeGroup[frame].date = emptyDate;
-							currentDataset.frameAggregate[frame] = 0;
+							currentDataset.frameAggregate[frame] = null;//0;
 							
 							deltaTime -= threshold;
 						}
@@ -975,6 +975,7 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 						name: MAGIC_MAP.dataset[i].title, //"Series " + MAGIC_MAP.dataset[i].seriesID,
 						pointStart: detailStart[i],
 						pointInterval: 86400000,//24 * 3600 * 1000,
+						connectNulls: true,
 						data: detailSeries[i].detailData
 					}
 				);
@@ -1071,6 +1072,7 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 						pointStart: Date.UTC(MAGIC_MAP.dataset[i].timeGroup[0].date.getUTCFullYear(),
 									MAGIC_MAP.dataset[i].timeGroup[0].date.getUTCMonth(),
 									MAGIC_MAP.dataset[i].timeGroup[0].date.getUTCDate()),
+						connectNulls: true,
 						data: MAGIC_MAP.dataset[i].frameAggregate //y-value array
 					}
 				);
