@@ -1,4 +1,4 @@
-(function(){ "use strict";
+(function(){ 'use strict';
 app.initCommonControllerFeatures = function($scope, $rootScope, api){
 	var my = {};
 	$scope.view = {};
@@ -60,6 +60,7 @@ app.initCommonControllerFeatures = function($scope, $rootScope, api){
 			event.preventDefault();
 			event.stopImmediatePropagation();
 		}
+		return isOK;
 	};
 	my.emitBusy = function(){
 		$scope.isWorking = true;

@@ -69,7 +69,7 @@ app.test = (function(){ 'use strict'; `comment: use ES6`;
 		
 		beforeAll(function(){
 			originalTimeout = jasmine.DEFAULT_TIMEOUT_INTERVAL;
-			jasmine.DEFAULT_TIMEOUT_INTERVAL = 1500;
+			jasmine.DEFAULT_TIMEOUT_INTERVAL = 2000;
 			console.log(suiName + ': started with', timeoutText());
 		});
 	    beforeEach(module('app'));
