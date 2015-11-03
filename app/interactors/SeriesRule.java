@@ -9,16 +9,19 @@ import java.util.Set;
 import models.entities.Account;
 import models.entities.Coordinate;
 import models.entities.Series;
+import models.entities.SeriesPermission;
 import models.entities.Visualization;
 import models.exceptions.ConstraintViolation;
 import models.filters.CoordinateFilter;
 import models.filters.MetaFilter;
+import models.filters.Restriction;
 import models.view.SeriesInput;
 
 public class SeriesRule extends CrudRule<Series> {
 	private SeriesDao dao; 
 	private CoordinateRule coordinateRule;
 	private SeriesDataRule seriesDataRule;
+	private SeriesAuthorizer seriesAuthorizer;
 	private VizRule vizRule; 
 	private AccountRule accountRule;
 	
@@ -28,6 +31,10 @@ public class SeriesRule extends CrudRule<Series> {
 
 	public void setAccountRule(AccountRule rule) {
 		accountRule = rule;
+	}
+
+	public void setSeriesAuthorizer(SeriesAuthorizer seriesAuthorizer) {
+		this.seriesAuthorizer = seriesAuthorizer;
 	}
 
 	public List<Series> query(MetaFilter filter) {
@@ -43,6 +50,7 @@ public class SeriesRule extends CrudRule<Series> {
 	public void delete(long id) {
 		validateConstrains(id);
 		deleteAllSeriesData(id);
+		deleteAllSeriesPermissions(id);
 		super.delete(id);
 	}
 
@@ -83,6 +91,15 @@ public class SeriesRule extends CrudRule<Series> {
 			seriesDataRule.delete(data.getId());
 		}
 		return seriesData.size();
+	}
+	
+	private int deleteAllSeriesPermissions(long seriesId) {
+		Restriction r = new Restriction(null, null, seriesId, null);
+		final List<SeriesPermission> permissions = seriesAuthorizer.findPermissions(r);
+		for (SeriesPermission permission : permissions) {
+			seriesAuthorizer.delete(permission.getId());
+		}
+		return permissions.size();
 	}
 	
 	private CoordinateFilter buildCoordinateFilter(long seriesId) {

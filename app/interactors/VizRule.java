@@ -9,13 +9,16 @@ import java.util.stream.Collectors;
 import models.entities.Account;
 import models.entities.Series;
 import models.entities.Visualization;
+import models.entities.VizPermission;
 import models.filters.MetaFilter;
+import models.filters.Restriction;
 import models.view.VizInput;
 
 public class VizRule extends CrudRule<Visualization> {
 	private VizDao dao;
 	private SeriesRule seriesRule;
 	private AccountRule accountRule;
+	private VizAuthorizer vizAuthorizer; 
 	
 	public VizRule(VizDao dao) {
 		super();
@@ -28,6 +31,10 @@ public class VizRule extends CrudRule<Visualization> {
 
 	public void setAccountRule(AccountRule rule) {
 		accountRule = rule;
+	}
+
+	public void setVizAuthorizer(VizAuthorizer vizAuthorizer) {
+		this.vizAuthorizer = vizAuthorizer;
 	}
 
 	public long createFromInput(VizInput input) {
@@ -45,6 +52,24 @@ public class VizRule extends CrudRule<Visualization> {
 		return dao;
 	}
 	
+	
+	@Override
+	public void delete(long id) {
+		deleteAllSeriesPermissions(id);
+		super.delete(id);
+	}
+
+
+	private int deleteAllSeriesPermissions(long vizId) {
+		Restriction r = new Restriction(null, null, null, vizId);
+		final List<VizPermission> permissions = vizAuthorizer.findPermissions(r);
+		for (VizPermission permission : permissions) {
+			vizAuthorizer.delete(permission.getId());
+		}
+		return permissions.size();
+	}
+	
+
 	Visualization toViz(VizInput input) {
 		if (input == null)
 			return null;
