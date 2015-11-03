@@ -1,26 +1,21 @@
 app.controller('SeriesCollection', function($scope, $rootScope, api) {
-	"use strict"
+	'use strict';
+	// init controller /////////////////////////////////////////////////////////
 	var my = app.initCommonControllerFeatures($scope, $rootScope, api);
 	my.dom = cacheDom();
 	populateScope();
 	loadModels();
 	bindEvents();
-
+	// init functions //////////////////////////////////////////////////////////
 	function cacheDom(){
 		return {$alertParent: $('#series-body')};
-	}
-	
-	function loadModels(){
-		my.editModelHavingGivenId(my.editSeriesById);
-		loadSeries();
 	}
 	
 	function populateScope(){
 		$scope.can = my.canAccessSeries;
 		$scope.count = my.length;
-
-		$scope.addNew = function() {
-	    	$scope.edit({});
+		$scope.addNew = function() { 
+			$scope.edit({}); 
 		};
 		$scope.edit = function(series) {
 			$rootScope.$emit('editSeries', series);
@@ -30,12 +25,17 @@ app.controller('SeriesCollection', function($scope, $rootScope, api) {
 		};
 	}
 	
+	function loadModels(){
+		my.editModelHavingGivenId(my.editSeriesById);
+		loadSeries();
+	}
+	
 	function bindEvents(){
 	    $rootScope.$on('loadSeries', function(event) {
 	    	loadSeries();
 		});
 	}
-	
+	// helper functions ////////////////////////////////////////////////////////
 	function loadSeries(){
 		my.loadSeriesAsModels();
 		my.loadPermissions();

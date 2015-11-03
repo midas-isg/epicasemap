@@ -1,5 +1,5 @@
 app.makePermissionsController = function($scope, $rootScope, api, modelName, modelRoot, modelTitle){
-	'use strict'
+	'use strict';
 	var prefix = modelName.toLowerCase();
 	var modelKey = modelTitle.toLowerCase();
 	// init controller /////////////////////////////////////////////////////////
