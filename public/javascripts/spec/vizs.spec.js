@@ -8,9 +8,10 @@ describe('Controller: Vizs', function() {
 	var asynCallAfterTruthy = app.test.asynCallAfterTruthy;
 	
 	app.test.init('Vizs');
-	beforeEach(function(){
+	beforeEach(function(done){
 		$scope = app.test.scope.vizs;
 		api = app.test.getApi();
+		app.test.loginAsPublic(done);
 	});
 	
 	describe('when loaded ', function() {
@@ -55,8 +56,8 @@ describe('Controller: Vizs', function() {
 				deferred.reject();
 			});
 		});
-		it('should show an error', function (done){
-			var error = 'error';
+		it('should alert an error', function (done){
+			var error = 'lastError';
 			asynCallAfterTruthy($scope, error, done, function() {
 				expect(api.finding).toHaveBeenCalled();
 				expect($scope[error]).toBeDefined();
@@ -91,7 +92,7 @@ describe('Controller: Vizs', function() {
 			$scope.test.loadModels();
 		});
 		it('should show a warning', function(done) {
-			var error = 'error';
+			var error = 'lastWarning';
 			asynCallAfterTruthy($scope, error, done, function() {
 				expect(api.getUrlQuery).toHaveBeenCalled();
 				let msg = $scope[error];

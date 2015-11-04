@@ -28,6 +28,7 @@ import models.entities.Series;
 import models.view.VizInput;
 import play.libs.Json;
 import play.libs.ws.WS;
+import play.libs.ws.WSRequestHolder;
 import play.libs.ws.WSResponse;
 import suites.Helper;
 
@@ -61,7 +62,7 @@ public class VizEndpointTester {
 		final JsonNode json = toJson(setting);
 		final String input = json.toString();
 		data.input.setUiSetting(input);
-		final WSResponse update = WS.url(url).put(json).get(timeout);
+		final WSResponse update = wsUrlWithAccountId1(url).put(json).get(timeout);
 		assertAreEqual(update.getStatus(), NO_CONTENT);
 		testRead(data);
 		final String location = update.getHeader("LOCATION");
@@ -103,7 +104,8 @@ public class VizEndpointTester {
 		final String name = "update name";
 		final VizInput data = pair.input;
 		data.setTitle(name);
-		final WSResponse update = WS.url(url).put(toJson(data)).get(timeout);
+		data.setOwnerId(1L);
+		final WSResponse update = wsUrlWithAccountId1(url).put(toJson(data)).get(timeout);
 		assertAreEqual(update.getStatus(), NO_CONTENT);
 	}
 
@@ -121,7 +123,7 @@ public class VizEndpointTester {
 		final String json = root + "";
 		toFile("./public/examples/" + basePath + ".json", json);
 		final String url = baseUrl();
-		final WSResponse create = WS.url(url).post(root).get(timeout);
+		final WSResponse create = wsUrlWithAccountId1(url).post(root).get(timeout);
 		assertAreEqual(create.getStatus(), CREATED);
 		final String location = create.getHeader(LOCATION);
 		final long id = toId(location);
@@ -131,6 +133,10 @@ public class VizEndpointTester {
 		pair.id = id;
 		pair.input = input;
 		return pair;
+	}
+
+	private WSRequestHolder wsUrlWithAccountId1(final String url) {
+		return WS.url(url).setHeader("Cookie", "PLAY_SESSION=6a4327b69f21a0cf5294901581c1aa4d289046c3-name=Public+User&id=1");
 	}
 
 	private void toFile(final String filePath, final String content) {
@@ -167,7 +173,7 @@ public class VizEndpointTester {
 	}
 
 	private void testDelete(long id) {
-		final WSResponse delete = WS.url(urlWithId(id)).delete().get(timeout);
+		final WSResponse delete = wsUrlWithAccountId1(urlWithId(id)).delete().get(timeout);
 		assertAreEqual(delete.getStatus(), NO_CONTENT);
 	}
 

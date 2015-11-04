@@ -9,7 +9,7 @@ import java.util.Map;
 import javax.persistence.EntityManager;
 
 import models.entities.Series;
-import models.filters.SeriesFilter;
+import models.filters.MetaFilter;
 
 public class SeriesDao extends DataAccessObject<Series> {
 	public SeriesDao(EntityManager em){
@@ -20,7 +20,7 @@ public class SeriesDao extends DataAccessObject<Series> {
 		super(Series.class, helper);
 	}
 	
-	public List<Series> query(SeriesFilter filter) {
+	public List<Series> query(MetaFilter filter) {
 		if (filter != null){
 			final List<Long> ids = filter.getIds();
 			if (ids != null){

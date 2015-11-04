@@ -1,73 +1,81 @@
-"use strict"
-
-$(document).ready(function() {
-	$("#filterPlaceholderNotToCountAsPartOfForm").replaceWith($("#seriesFilter"));
-});
-
 app.controller('Viz', function($scope, $rootScope, api) {
-	$scope.view = {};
-	$scope.dialog = $('#modal');
-	$scope.alertParent = $scope.dialog.find('.modal-body');
-    loadAllSeries();
-    $scope.$watch('model', function() { updateAllSeries($scope.model); });
-    $scope.dialog.on('hide.bs.modal', function (e) {
-		var isOK = true;
-		if ($scope.form.$dirty)
-			isOK = confirm("Changes are not saved. \nOK = Close without save");
-		if (isOK) {
-			loadVizs();
-		} else {
-			e.preventDefault();
-        	e.stopImmediatePropagation();
-        }
-    });
-    $scope.dialog.on('shown.bs.modal', function (e) {
-    	$scope.dialog.find('form').find(':input:enabled:visible:first').focus();
-    });
-    $rootScope.$on('editViz', function(event, viz) {
-    	edit(viz);
-	});
-    $rootScope.$on('loadSeries', function(event) {
-    	loadAllSeries();
-	});
-	$scope.countSelected = function() {
+	'use strict';
+	// init controller /////////////////////////////////////////////////////////
+	var my = app.initCommonControllerFeatures($scope, $rootScope, api);
+	my.dom = cacheDom();
+	my.apiPath = 'vizs';
+	populateScope();
+	loadModels();
+	bindEvents();
+	// init functions //////////////////////////////////////////////////////////
+	function cacheDom(){
+		var $dialog = $('#modal');
+		return {
+			$alertParent: $dialog.find('.modal-body'),
+			$form: $dialog.find('form'),
+			$dialog: $dialog
+		};
+	}
+	
+	function populateScope(){
+		$scope.can = my.canAccessSeries;
+		$scope.countSelected = countSelected;
+		$scope.editSeries = my.editSeries;
+		$scope.submit = submit;
+		$scope.removeThenClose = removeThenClose;
+		$scope.submitThenClose = function() { $scope.submit(close);	};
+		$scope.close = function() {
+			my.model = $scope.model;
+			$scope.model = null;
+			my.dom.$dialog.modal('hide');
+		};
+		$scope.isShown = function(series) {
+			return $scope.showAll || series.isSelected;
+		};
+		$scope.isHidden = function(series) {
+			return ! $scope.isShown(series);
+		};
+		$scope.invertSelection = function(){
+			invert('isSelected');
+		}
+		$scope.isModelEditable = function(){
+			return my.canAccessViz('change', $scope.model);
+		};
+		$scope.permit = function(series) {
+			$scope.$emit('editSeriesPermissions', series);
+		};
+	}
+
+	function loadModels(){
+	    loadAllSeries();
+	}
+	
+	function bindEvents(){
+		$(document).ready(function() {
+			$('#filterPlaceholderNotToCountAsPartOfForm').replaceWith($('#seriesFilter'));
+		});
+	    $scope.$watch('model', function() { updateAllSeries($scope.model); });
+	    my.dom.$dialog.on('hide.bs.modal', function (e) {
+	    	var isOK = my.confirmNoSaving(e, $scope.form.$dirty, loadVizs);
+	    	if (!isOK)
+	    		$scope.model = my.model;
+	    });
+	    my.dom.$dialog.on('shown.bs.modal', function (e) {
+	    	my.dom.$form.find(':input:enabled:visible:first').focus();
+	    });
+	    $rootScope.$on('editViz', function(event, viz) {
+	    	edit(viz);
+		});
+	    $rootScope.$on('loadSeries', function(event) {
+	    	loadAllSeries();
+		});
+	}
+	// helper functions ////////////////////////////////////////////////////////
+	function countSelected() {
 		var key = 'isSelected';
 		return _.countBy($scope.allSeries, function(s) {
 			return s[key] ? key : 'others';
 		})[key] || 0;
-	};
-	$scope.submit = function(callback) {
-		if ($scope.form.$dirty) {
-			save(callback);
-		} else if (callback) {
-			callback();
-		}
-	};
-	$scope.submitThenClose = function() { $scope.submit(close);	};
-	$scope.removeThenClose = function() {
-		if (confirm("About to delete the Visualization. \nOK = Delete")){
-			emitBusy();
-			api.deleting('vizs', $scope.model.id).then(close, function(err){
-				emitDone();
-				error('Failed to delete the Visualization!');
-			});
-		}
-	};
-	$scope.close = function() {
-		$scope.dialog.modal('hide');
-		$scope.model = null;
-	};
-	$scope.isShown = function(series) {
-		return $scope.showAll || series.isSelected;
-	};
-	$scope.isHidden = function(series) {
-		return ! $scope.isShown(series);
-	};
-	$scope.editSeries = function(series){
-		$rootScope.$emit('editSeries', series);
-	}
-	$scope.invertSelection = function(){
-		invert('isSelected');
 	}
 	
 	function invert(key){
@@ -77,29 +85,52 @@ app.controller('Viz', function($scope, $rootScope, api) {
 		$scope.form.$setDirty();
 	}
 	
-	function close(){
-		emitDone();
-		$scope.form.$setPristine();
-		$scope.close();
-	}
-	
 	function loadVizs(){
-		$rootScope.$emit('loadVizs');
+		$scope.$emit('loadVizs');
 	}
 	
 	function loadAllSeries(){
-		api.finding('series').then(function(rsp) {
+		var doing = api.finding('series');
+		var callback = function(rsp) {
 			$scope.allSeries = rsp.data.results;
 			updateAllSeries($scope.model);
-		}, function(err){
-			error("Failed to load your Series!");
-		});
+		};
+		doThen(doing, callback, "load your Series", false);
+		
+		loadPermissions();
+		
+		function loadPermissions(){
+			api.finding('accounts/my-permissions').then(function(rsp) {
+				$scope.permissions = rsp.data.results;
+			}, function(err){
+				$scope.error = 'Failed to load your permissions!';
+				my.alertError(null, $scope.error);
+			});
+		}
 	}
 	
+	function doThen(doing, callback, doText, shouldAlertSuccess){
+		my.emitBusy();
+		doing.then(function(rsp) {
+			my.emitDone();
+			if (shouldAlertSuccess)
+				my.alertSuccess("Succeed to " + doText);
+			$scope.form.$setPristine();
+			if (callback){
+				callback(rsp);
+			}
+		}, function(err){
+			my.emitDone();
+			my.alertError(err, "Failed to " + doText);
+		});
+	}
+
+
 	function updateAllSeries(viz){
 		var wasPristine = $scope.form.$pristine;
 		if (viz && $scope.allSeries){
 			check(viz.allSeries.map(byId), 'isSelected');
+			$scope.allSeries = removeIrrelevant($scope.allSeries);
 		}
 		if (wasPristine)
 			$scope.form.$setPristine();
@@ -111,15 +142,21 @@ app.controller('Viz', function($scope, $rootScope, api) {
 				  return series[key] = _.contains(ids, series.id);
 			});
 		}
+
+		function removeIrrelevant(allSeries){
+			return _.filter(allSeries, function(series){
+				return series.isSelected || $scope.can('use', series);
+			});
+		}
 	}
 
 	function edit(viz) {
 		$scope.model = viz;
 		resetView();
-		$scope.dialog.modal();
+		my.dom.$dialog.modal();
 		
 		function resetView(){
-			api.removeAllAlerts($scope.alertParent);
+			api.removeAllAlerts(my.dom.$alertParent);
 			$scope.form.$setPristine();
 			if (viz.id) {
 				$scope.showAll = false;
@@ -127,13 +164,12 @@ app.controller('Viz', function($scope, $rootScope, api) {
 				$scope.showAll = true;
 			} 
 		}
-
 	}
 
 	function buildBody(model) {
-		var body = _.omit(model, 'allSeries', 'allSeries2');
+		var body = _.omit(model, 'allSeries', 'owner');
 		body.seriesIds = toSeriesIds('isSelected');
-		body.series2Ids = toSeriesIds('s2');
+		body.ownerId = model.owner && model.owner.id 
 		return body;
 		
 		function toSeriesIds(key){
@@ -152,46 +188,40 @@ app.controller('Viz', function($scope, $rootScope, api) {
 		}
 	}
 	
+	function submit(callback) {
+		if ($scope.form.$dirty) {
+			save(callback);
+		} else if (callback) {
+			callback();
+		}
+	}
+	
 	function save(callback){
-		emitBusy();
 		var body = buildBody($scope.model);
-		api.saving('vizs', body).then(function(location) {
-			emitDone();
-			success('The Visualization was saved');
-			if (callback){
-				callback();
-			} else {
+		var id = $scope.model.id;
+		var doing = api.saving(my.apiPath, body);
+		if (! callback){
+			callback = function(location){
 				api.gettingFromUrl(location).then(function(rsp) {
 					$scope.model = rsp.data.result;
 				}, function(err){
-					error('Failed to read the Visualization!');
+					my.alertError(err, "Failed to read the Visualization!");
 				});
-			}
-		}, function(err){
-			emitDone();
-			error('Failed to save the Visualization!');
-		});
+			};
+		}
+		doThen(doing, callback, "save the Visualization");
 	}
 	
-	function success(message){
-		alert('Success: ' + message, 'alert-success');
+	function removeThenClose() {
+		if (confirm("About to delete the Visualization. \nOK = Delete")){
+			var doing = api.deleting(my.apiPath, $scope.model.id);
+			doThen(doing, close, "delete the Visualization");
+		}
 	}
-	
-	function error(message){
-		alert('Error: ' + message, 'alert-danger');
-	}
-	
-	function alert(message, classes){
-		api.alert($scope.alertParent, message, classes);
-	}
-	
-	function emitBusy(){
-		$scope.isWorking = true;
-		$rootScope.$emit('modalBusyDialog');
-	}
-	
-	function emitDone(){
-		$scope.isWorking = false;
-		$rootScope.$emit('hideBusyDialog');
+
+	function close(){
+		my.emitDone();
+		$scope.form.$setPristine();
+		$scope.close();
 	}
 });

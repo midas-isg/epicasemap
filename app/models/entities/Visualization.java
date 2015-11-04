@@ -14,31 +14,19 @@ import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 @Entity(name="viz")
 public class Visualization extends MetaData {
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
-	@ManyToMany(fetch = FetchType.LAZY)
-	@JoinTable(name = "viz_series", 
-		joinColumns = { @JoinColumn(name = "viz_id", nullable = false) }, 
-		inverseJoinColumns = { @JoinColumn(name = "series_id", nullable = false) }
-	)
 	private List<Series> allSeries;
-
-	@Column(columnDefinition = "TEXT")
 	private String uiSetting;
-
-	@ManyToOne
-	@JsonIgnore
 	private Account owner;
 
 	public Visualization() {
 		allSeries = new ArrayList<>();
 	}
 
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Override
 	public Long getId() {
 		return id;
@@ -49,6 +37,11 @@ public class Visualization extends MetaData {
 		this.id = id;
 	}
 
+	@ManyToMany(fetch = FetchType.LAZY)
+	@JoinTable(name = "viz_series", 
+		joinColumns = { @JoinColumn(name = "viz_id", nullable = false) }, 
+		inverseJoinColumns = { @JoinColumn(name = "series_id", nullable = false) }
+	)
 	public List<Series> getAllSeries() {
 		return allSeries;
 	}
@@ -57,6 +50,7 @@ public class Visualization extends MetaData {
 		this.allSeries = allSeries;
 	}
 
+	@Column(columnDefinition = "TEXT")
 	public String getUiSetting() {
 		return uiSetting;
 	}
@@ -65,7 +59,7 @@ public class Visualization extends MetaData {
 		this.uiSetting = uiSetting;
 	}
 
-	
+	@ManyToOne
 	public Account getOwner() {
 		return owner;
 	}

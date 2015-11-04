@@ -55,7 +55,7 @@ public class SeriesEndpointTester {
 				publisherKey, licenseKey, versionKey, isVersionOfKey, owner);
 		assertThat(node.get(idKey).asLong()).isPositive();
 		
-		assertNodeType(node.get(titleKey), STRING);
+		assertNodeType(node.get(titleKey), STRING, NULL);
 		assertNodeType(node.get(desKey), STRING, NULL);
 		assertNodeType(node.get(desKey), STRING, NULL);
 		assertNodeType(node.get(creatorKey), STRING, NULL);

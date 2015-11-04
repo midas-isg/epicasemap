@@ -2,6 +2,7 @@
 
 @import play.api.Play.current 
 @import play.api.Play
+@import controllers.security.AuthorizationKit
 
 @(title: String, imports: Html = Html(""))(content: Html)
 
@@ -14,6 +15,7 @@
 <title>@title - Jasmine Spec Runner v2.3.4</title>
 <script type="application/javascript">
 	var CONTEXT = '@Play.configuration.getString("application.context")';
+	var MY_ID = @AuthorizationKit.readAccountId();
 </script>
 
 <link rel="shortcut icon" type="image/png"	href='@routes.Assets.at("external_packages/jasmine-2.3.4/jasmine_favicon.png")'>

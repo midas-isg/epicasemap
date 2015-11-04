@@ -7,8 +7,9 @@ describe('Controller: Viz', function() {
 	var $scope;
 	
 	app.test.init('Viz');
-	beforeEach(function(){
+	beforeEach(done => {
 		$scope = app.test.scope.viz;
+		app.test.loginAsPublic(done);
 	});
 	
 	describe('when loaded', shouldLoadAllSeries);
@@ -155,7 +156,7 @@ describe('Controller: Viz', function() {
     }
     
 	function createValidViz(id){
-		return {id:id, allSeries:[], allSeries2:[]};
+		return {id:id, allSeries:[]};
 	}
 
 	function shouldLoadAllSeries(){

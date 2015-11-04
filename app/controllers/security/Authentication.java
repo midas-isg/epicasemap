@@ -28,7 +28,7 @@ public class Authentication extends Security.Authenticator {
 		Controller.session(NAME, credential.getName());
 	}
 	
-	public static String readAccountId(Context ctx) {
+	static String readAccountId(Context ctx) {
 		return ctx.session().get(ID);
 	}
 	
