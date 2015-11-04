@@ -13,6 +13,8 @@ import javax.persistence.Table;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Entity
 @Table(name = "series_data_url")
 public class SeriesDataUrl implements models.entities.Entity {
@@ -30,6 +32,7 @@ public class SeriesDataUrl implements models.entities.Entity {
 		return id;
 	}
 
+	@JsonIgnore
 	@OneToOne
 	@PrimaryKeyJoinColumn(foreignKey = @ForeignKey(value = ConstraintMode.CONSTRAINT))
 	public Series getSeries() {

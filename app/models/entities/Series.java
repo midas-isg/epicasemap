@@ -4,7 +4,9 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
 
 @Entity
 public class Series extends MetaData {
@@ -14,6 +16,10 @@ public class Series extends MetaData {
 	
 	@ManyToOne
 	private Account owner;
+	
+	@OneToOne(mappedBy = "series"/*, cascade = CascadeType.ALL*/)
+	@JoinColumn(name = "id")
+	private SeriesDataUrl seriesDataUrl;
 
 	@Override
 	public Long getId() {
@@ -76,5 +82,13 @@ public class Series extends MetaData {
 	public String toString() {
 		return "Series [id=" + id + ", title=" + this.getTitle() + ", description="
 				+ this.getDescription() + "]";
+	}
+
+	public SeriesDataUrl getSeriesDataUrl() {
+		return seriesDataUrl;
+	}
+
+	public void setSeriesDataUrl(SeriesDataUrl seriesDataUrl) {
+		this.seriesDataUrl = seriesDataUrl;
 	}
 }

@@ -50,12 +50,13 @@ public class SeriesEndpointTester {
 		final String licenseKey = "license";
 		final String isVersionOfKey = "isVersionOf";
 		final String owner = "owner";
+		final String seriesDataUrl = "seriesDataUrl";
 		
 		assertThat(fields).containsOnly(idKey, titleKey, desKey, creatorKey,
-				publisherKey, licenseKey, versionKey, isVersionOfKey, owner);
+				publisherKey, licenseKey, versionKey, isVersionOfKey, owner, seriesDataUrl);
 		assertThat(node.get(idKey).asLong()).isPositive();
 		
-		assertNodeType(node.get(titleKey), STRING);
+		assertNodeType(node.get(titleKey), STRING, NULL);
 		assertNodeType(node.get(desKey), STRING, NULL);
 		assertNodeType(node.get(desKey), STRING, NULL);
 		assertNodeType(node.get(creatorKey), STRING, NULL);
@@ -64,6 +65,7 @@ public class SeriesEndpointTester {
 		assertNodeType(node.get(versionKey), STRING, NULL);
 		assertNodeType(node.get(isVersionOfKey), STRING, NULL);
 		assertNodeType(node.get(owner), OBJECT, NULL);
+		assertNodeType(node.get(seriesDataUrl), OBJECT, NULL);
 	}
 
 	private static SeriesEndpointTester newInstance() {
