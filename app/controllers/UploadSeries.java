@@ -5,6 +5,7 @@ import interactors.series_data_file.Persister;
 import interactors.series_data_file.SeriesDataFile;
 import interactors.series_data_file.Validator;
 
+import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
@@ -18,6 +19,11 @@ import play.mvc.Result;
 class UploadSeries extends Controller {
 	static Result upload(long seriesId) {
 		SeriesDataFile dataFile = getSeriesDataFile(request());
+		return uploadSeriesData(seriesId, dataFile);
+	}
+	
+	static Result uploadFile(long seriesId, File file){
+		SeriesDataFile dataFile = Factory.makeSeriesDataFile(file);
 		return uploadSeriesData(seriesId, dataFile);
 	}
 	

@@ -1,5 +1,7 @@
 package controllers;
 
+import java.io.File;
+
 import gateways.configuration.ConfReader;
 import gateways.database.AccountDao;
 import gateways.database.CoordinateDao;
@@ -128,6 +130,10 @@ public class Factory {
 
 	public static SeriesDataFile makeSeriesDataFile(String url) {
 		return new SeriesDataFile(url);
+	}
+	
+	public static SeriesDataFile makeSeriesDataFile(File file) {
+		return new SeriesDataFile(file);
 	}
 
 	public static SeriesDataFile makeSeriesDataFile(Request request) {

@@ -20,8 +20,13 @@ app.controller('SeriesData', function($scope, $rootScope, api) {
 	    $rootScope.$on('uploadNewSeriesData', showDialog);
 	    dom.$dialog.on('shown.bs.modal', focusFirstFormInput);
 
-		function showDialog(event, seriesId){
-			$scope.seriesId = seriesId;
+	    function showDialog(event, series){
+	    	$scope.series = series;
+			$scope.seriesId = $scope.series.id;
+			if($scope.series.seriesDataUrl != null){
+				$scope.url = $scope.series.seriesDataUrl.url;
+				$scope.radioIn = "url";
+			}
 			api.removeAllAlerts(dom.$alertParent);
 			dom.$dialog.modal();
 		}
