@@ -5,7 +5,7 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 
-public class SeriesFilter extends GenericFilter implements Filter {
+public class MetaFilter extends GenericFilter implements Filter {
 	@JsonIgnore
 	private List<Long> ids;
 

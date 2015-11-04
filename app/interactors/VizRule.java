@@ -6,59 +6,94 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import models.entities.MetaData;
+import models.entities.Account;
 import models.entities.Series;
 import models.entities.Visualization;
-import models.filters.Filter;
+import models.entities.VizPermission;
+import models.filters.MetaFilter;
+import models.filters.Restriction;
 import models.view.VizInput;
 
 public class VizRule extends CrudRule<Visualization> {
 	private VizDao dao;
 	private SeriesRule seriesRule;
+	private AccountRule accountRule;
+	private VizAuthorizer vizAuthorizer; 
 	
 	public VizRule(VizDao dao) {
 		super();
 		this.dao = dao;
 	}
-	
-	public long create(VizInput input) {
-		final Visualization data = toViz(input);
-		return super.create(data);
+
+	public void setSeriesRule(SeriesRule rule) {
+		seriesRule = rule;
 	}
 
+	public void setAccountRule(AccountRule rule) {
+		accountRule = rule;
+	}
+
+	public void setVizAuthorizer(VizAuthorizer vizAuthorizer) {
+		this.vizAuthorizer = vizAuthorizer;
+	}
+
+	public long createFromInput(VizInput input) {
+		final Visualization data = toViz(input);
+		return create(data);
+	}
+
+	public Visualization updateFromInput(long id, VizInput input) {
+		final Visualization data = toViz(input);
+		return update(id, data);
+	}
+	
 	@Override
 	protected VizDao getDao() {
 		return dao;
 	}
 	
-	public Visualization toViz(VizInput input) {
+	
+	@Override
+	public void delete(long id) {
+		deleteAllSeriesPermissions(id);
+		super.delete(id);
+	}
+
+
+	private int deleteAllSeriesPermissions(long vizId) {
+		Restriction r = new Restriction(null, null, null, vizId);
+		final List<VizPermission> permissions = vizAuthorizer.findPermissions(r);
+		for (VizPermission permission : permissions) {
+			vizAuthorizer.delete(permission.getId());
+		}
+		return permissions.size();
+	}
+	
+
+	Visualization toViz(VizInput input) {
 		if (input == null)
 			return null;
 		Visualization result = new Visualization();
 		copy(result, input);
 		final List<Long> ids = input.getSeriesIds();
 		result.setAllSeries(toAllSeries(ids));
-		result.setUiSetting(input.getUiSetting());
+		result.setOwner(readAccount(input.getOwnerId()));
 		return result;
 	}
 
-	private void copy(MetaData dest, MetaData src) {
-		dest.setId(src.getId());
-		dest.setCreator(src.getCreator());
-		dest.setDescription(src.getDescription());
-		dest.setIsVersionOf(src.getIsVersionOf());
-		dest.setLicense(src.getLicense());
-		dest.setPublisher(src.getPublisher());
-		dest.setTitle(src.getTitle());
-		dest.setVersion(src.getVersion());
+	private Account readAccount(Long id) {
+		if (id == null)
+			return null;
+		return accountRule.read(id);
+	}
+
+	private void copy(Visualization dest, VizInput src) {
+		copyMetadata(dest, src);
+		dest.setUiSetting(src.getUiSetting());
 	}
 
 	private List<Series> toAllSeries(List<Long> ids) {
 		return toList(ids, id -> seriesRule.read(id));
-	}
-
-	public void setSeriesRule(SeriesRule rule) {
-		seriesRule = rule;
 	}
 
 	public VizInput fromViz(Visualization data) {
@@ -66,16 +101,15 @@ public class VizRule extends CrudRule<Visualization> {
 			return null;
 		
 		VizInput input = new VizInput();
-		copy(data, input);
+		copyMetadata(data, input);
 		input.setSeriesIds(toIds(data.getAllSeries()));
 		input.setUiSetting(data.getUiSetting());
 		return input;
 	}
 	
-	public List<Visualization> query(Filter filter) {
+	public List<Visualization> query(MetaFilter filter) {
 		return dao.query(filter);
 	}
-
 
 	private List<Long> toIds(List<Series> input) {
 		return toList(input, it -> it.getId());
@@ -93,4 +127,5 @@ public class VizRule extends CrudRule<Visualization> {
 		original.setUiSetting(data);
 		update(id, original);
 	}
+
 }

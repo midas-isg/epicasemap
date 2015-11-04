@@ -1,6 +1,6 @@
 @import tags._
 
-@* Series Permission modal dialog *@
+@* Visualization Permission modal dialog *@
 @(
 	orders:Seq[Seq[String]] = Seq(
 			Seq("account.name", "Account"),
@@ -12,7 +12,7 @@
 			Seq("name", "Account")
 	)
 )
-@bs_modal("seriesPermissionsModal", "SeriesPermissions", "Series Permission Management", "close()")(editor())(buttons)
+@bs_modal("vizPermissionsModal", "VizPermissions", "Visualization Permission Management", "close()")(editor())(buttons)
 
 @buttons={}
 
@@ -37,7 +37,7 @@
 			</h4>
 			<form name='form' class="form-horizontal" role="form">
 				@table_filterable("accounts", "account", " accounts", accountOrders, accountMore)
-				@series_permission_selector()
+				@viz_permission_selector()
 				<button class='btn btn-primary' 
 				title='Add the selected account(s) above with the selected access level.' 
 				ng-disabled='form.$pristine' ng-click='addPermissions()'>Add</button>
@@ -56,11 +56,11 @@
 
 @dataSection(varName:String, 
 	permissionMore:Seq[Seq[Html]] = Seq(
-			Seq(Html("action-1"), Html("Edit"), editButton())
+			Seq(Html("action-1"), Html("Action"), editButton())
 	)
 ) = {
 	<h4>
-		The Series can be accessed by {{count(permissions) | number}} @unit("other account")
+		The Visualization can be accessed by {{count(permissions) | number}} @unit("other account")
 	</h4>
 	@table_filterable("viewPermissions", "permission", "other accounts", orders, permissionMore)
 }
