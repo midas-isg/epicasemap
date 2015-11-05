@@ -59,7 +59,7 @@ timeline.js
 			daysPerFrame: 1,
 			renderDelay: null,
 			pointDecay: 0.0231,
-			dataGapMethod: "bridge"
+			dataGapMethod: "skip"
 		};
 		
 		this.allContainedBox = [[], []];
@@ -448,6 +448,7 @@ timeline.js
 				thisMap.masterChart.series[i].update({ connectNulls: (thisMap.uiSettings.dataGapMethod === "bridge")});
 				thisMap.detailChart.series[i].update({ connectNulls: (thisMap.uiSettings.dataGapMethod === "bridge")});
 				thisMap.masterChart.series[i].setData(zeroSeries[i], true, false, false);
+				thisMap.doSelection(thisMap.uiSettings.timeSelectionEvent);
 			}
 			
 			return;
@@ -900,6 +901,9 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 						});
 					}
 					
+					$('input[value=' + thisMap.uiSettings.dataGapMethod + ']', '#data-gap-handler').attr("checked", true);
+					$("#data-gap-handler").change();
+					
 					console.log("Finished loading. Unpause to begin.");
 					console.log("===");
 				}
@@ -1202,6 +1206,7 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 						events: {
 							legendItemClick: function(event) {
 								MAGIC_MAP.displaySet[event.currentTarget.index].hide = !MAGIC_MAP.displaySet[event.currentTarget.index].hide;
+								MAGIC_MAP.detailChart.series[this.index].setVisible(!this.visible);
 								MAGIC_MAP.packHeat();
 								
 								return;
