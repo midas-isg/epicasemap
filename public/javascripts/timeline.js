@@ -58,7 +58,8 @@ timeline.js
 			timeSelectionEvent: null,
 			daysPerFrame: 1,
 			renderDelay: null,
-			pointDecay: 0.0231
+			pointDecay: 0.0231,
+			dataGapMethod: "bridge"
 		};
 		
 		this.allContainedBox = [[], []];
@@ -430,6 +431,29 @@ timeline.js
 		$("#point-decay").val(thisMap.uiSettings.pointDecay);
 		$("#point-decay").change();
 		
+		
+		$("#data-gap-handler").change(function() {
+			var zeroSeries = [],
+				i,
+				j;
+			
+			thisMap.uiSettings.dataGapMethod = $('input[name=data-gap-option]:checked', '#data-gap-handler').val();
+			
+			for(i = 0; i < thisMap.masterChart.series.length; i++) {
+				zeroSeries[i] = [];
+				for(j = 0; j < thisMap.dataset[i].frameAggregate.length; j++) {
+					zeroSeries[i][j] = (thisMap.uiSettings.dataGapMethod === "zero") ? (thisMap.dataset[i].frameAggregate[j] + 0) : thisMap.dataset[i].frameAggregate[j];
+				}
+				
+				thisMap.masterChart.series[i].update({ connectNulls: (thisMap.uiSettings.dataGapMethod === "bridge")});
+				thisMap.detailChart.series[i].update({ connectNulls: (thisMap.uiSettings.dataGapMethod === "bridge")});
+				thisMap.masterChart.series[i].setData(zeroSeries[i], true, false, false);
+			}
+			
+			return;
+		});
+		
+		
 		$("#save-button").click(function() {
 			thisMap.saveVisualization();
 			return;
@@ -701,7 +725,7 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 							filler++;
 							emptyDate = new Date(emptyDate.valueOf() + threshold);
 							currentDataset.timeGroup[frame].date = emptyDate;
-							currentDataset.frameAggregate[frame] = null;//0;
+							currentDataset.frameAggregate[frame] = null;
 							
 							deltaTime -= threshold;
 						}
