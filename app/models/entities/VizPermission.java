@@ -9,11 +9,11 @@ import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
 @Table(
-	uniqueConstraints=@UniqueConstraint(columnNames={"account_id", "series_id"})
+	uniqueConstraints=@UniqueConstraint(columnNames={"account_id", "viz_id"})
 )
-@Entity(name="series_permission")
-public class SeriesPermission extends Permission implements models.entities.Entity {
-	private Series series;
+@Entity(name="viz_permission")
+public class VizPermission extends Permission implements models.entities.Entity {
+	private Visualization viz;
 	
 	@Override
 	@Id
@@ -23,11 +23,11 @@ public class SeriesPermission extends Permission implements models.entities.Enti
 	}
 
 	@ManyToOne
-	public Series getSeries() {
-		return series;
+	public Visualization getViz() {
+		return viz;
 	}
 
-	public void setSeries(Series series) {
-		this.series = series;
+	public void setViz(Visualization viz) {
+		this.viz = viz;
 	}
 }

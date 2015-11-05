@@ -8,25 +8,34 @@ import java.util.Map;
 
 import javax.persistence.EntityManager;
 
-import models.entities.SeriesPermission;
+import models.entities.Permission;
+import models.filters.Filter;
 import models.filters.GenericFilter;
 import models.filters.Restriction;
 import controllers.security.Restricted.Access;
 
-public class PermissionDao extends DataAccessObject<SeriesPermission> {
-	public PermissionDao(EntityManager em){
-		this(new JpaAdaptor(em));
+public class PermissionDao<T extends Permission> extends DataAccessObject<T> {
+	public PermissionDao(EntityManager em, Class<T> clazz){
+		this(new JpaAdaptor(em), clazz);
 	}
 
-	private PermissionDao(JpaAdaptor helper){
-		super(SeriesPermission.class, helper);
+	private PermissionDao(JpaAdaptor helper, Class<T> clazz){
+		super(clazz, helper);
 	}
 	
-	public List<SeriesPermission> query(GenericFilter filter) {
+	@Override
+	public List<T> query(Filter filter){
+		if (filter instanceof GenericFilter)
+			return  query((GenericFilter)filter);
+		return super.query(filter);
+	}
+	
+	public List<T> query(GenericFilter filter) {
 		final Restriction restriction = filter.getRestriction();
 		final Map<String, Object> equalities = filter.getEqualities();
 		equalities.put("account.id", restriction.accountId);
 		equalities.put("series.id", restriction.seriesId);
+		equalities.put("viz.id", restriction.vizId);
 
 		final Map<String, Object> disjunctions = filter.getDisjunctiveEqualities();
 		if (restriction.accesses != null){

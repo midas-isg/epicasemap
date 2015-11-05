@@ -8,7 +8,20 @@
 	<h4>
 		Update access to the account
 	</h4>
+	<div class='row'>
+		<div class='col-md-8'>
+			<div class="form-horizontal">
+				@form_group_readonly("Series", "{{model.series.title}}", "Series Title", 2)
+			</div>
 	<form name='form' class="form-horizontal" role="form">
 		@series_permission_selector()
 	</form>
+		</div>
+		<div class='col-md-4'>
+			<div class="form-horizontal">
+				@form_group_readonly("Account", "{{model.account.name}}", "Account Name", 3)
+			</div>
+		</div>
+	</div>
+	
 }

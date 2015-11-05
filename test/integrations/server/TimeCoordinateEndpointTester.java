@@ -15,7 +15,7 @@ import java.util.Iterator;
 import com.fasterxml.jackson.databind.JsonNode;
 
 public class TimeCoordinateEndpointTester {
-	private final long seriesId = 2L;
+	private final long seriesId = 4L;
 	
 	private static TimeCoordinateEndpointTester newInstance() {
 		return new TimeCoordinateEndpointTester();
@@ -75,7 +75,7 @@ public class TimeCoordinateEndpointTester {
 		assertThat(fields).containsOnly(id, sid, val, ts, lat, lon, lid);
 		assertThat(node.get(id).asLong()).isPositive();
 		assertThat(node.get(sid).asLong()).isPositive();
-		assertThat(node.get(val).asDouble()).isPositive();
+		assertThat(node.get(val).asDouble()).isGreaterThanOrEqualTo(0.0);
 		assertThat(node.get(ts).asLong()).isPositive();
 		assertValueRange(node.get(lat), 90.0, -90.0);
 		assertValueRange(node.get(lon), 180.0, -180.0);
