@@ -19,7 +19,7 @@
   <div class='form-group input-group-sm row'>
     <label class='control-label col-sm-@labelSize' for='@id'>@label:</label>
     <div class='col-sm-@(12-labelSize)'>
-      <input ng-model='model.@id'  type='text' class='form-control' id='@id' placeholder='@placeholder'>
+      <input ng-model='model.@id' ng-disabled='! isModelEditable()'  type='text' class='form-control' id='@id' placeholder='@placeholder'>
     </div>
   </div>
 }

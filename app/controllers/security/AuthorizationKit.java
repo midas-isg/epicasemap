@@ -1,6 +1,8 @@
 package controllers.security;
 
-import interactors.AuthorizationRule;
+import interactors.Authorizer;
+import interactors.VizAuthorizer;
+import interactors.SeriesAuthorizer;
 
 import java.util.Arrays;
 import java.util.List;
@@ -14,42 +16,57 @@ import controllers.security.Restricted.Access;
 
 
 public class AuthorizationKit {
-	private static final String ID = "id";
 
 	private AuthorizationKit() {
 	}
 	
 	public static boolean isSeriesPermitted(Long seriesId) {
-		final List<Long> permittedSeriesIds = findPermittedSeriesIds();
-		if (permittedSeriesIds == null)
-			return true;
-		return permittedSeriesIds.contains(seriesId);
+		return isPermitted(seriesId, findPermittedSeriesIds());
 	}
 
-	public static List<Long> findPermittedSeriesIds() {
-		final Long accountId = readAccountId();
+	private static List<Long> findPermittedSeriesIds() {
+		final long accountId = readAccountId();
 		List<Access> accesses = readAccesses();
-		if (accountId == null && accesses == null)
+		if (accesses == null)
+			return null;
+		return findPermittedSeriesIds(accountId, accesses);
+	}
+
+	public static List<Long> findPermittedSeriesIds(long accountId,	List<Access> accesses) {
+		final Restriction restriction = new Restriction(accountId, accesses);
+		return makeSeriesAuthorizer().findSeriesIds(restriction);
+	}
+
+	public static boolean isVizPermitted(Long vizId) {
+		return isPermitted(vizId, findPermittedVizIds());
+	}
+
+	private static List<Long> findPermittedVizIds() {
+		final long accountId = readAccountId();
+		List<Access> accesses = readAccesses();
+		if (accesses == null)
 			return null;
 		final Restriction restriction = new Restriction(accountId, accesses);
-		return makeRule().findSeriesIds(restriction);
+		return makeVizAuthorizer().findVizIds(restriction);
 	}
 
-	static void writeAccountId(Context ctx, Object value) {
-		ctx.args.put(ID, value);
+	private static boolean isPermitted(Long requestedId,
+			final List<Long> permittedIds) {
+		if (permittedIds == null)
+			return true;
+		return permittedIds.contains(requestedId);
 	}
-	
-	private static Long readAccountId() {
-		final String accountId = readString(ID);
+
+	private static VizAuthorizer makeVizAuthorizer() {
+		return Factory.makeVizAuthorizer(JPA.em());
+	}
+
+	public static Long readAccountId() {
+		final String accountId = Authentication.readAccountId(ctx());
 		if (accountId == null)
-			return null;
+			return Authorizer.publicAccountId;
 
 		return Long.parseLong(accountId);
-	}
-
-	private static String readString(String key) {
-		final Object val = read(key);
-		return val == null ? null : val.toString();
 	}
 
 	private static Object read(String key) {
@@ -76,8 +93,8 @@ public class AuthorizationKit {
 		return (List<Access>)read(Restricted.KEY);
 	}
 	
-	private static AuthorizationRule makeRule() {
-		return Factory.makeAuthorizationRule(JPA.em());
+	private static SeriesAuthorizer makeSeriesAuthorizer() {
+		return Factory.makeSeriesAuthorizer(JPA.em());
 	}
 	
 	public static boolean hasLoggedIn(){

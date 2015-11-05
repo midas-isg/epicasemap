@@ -73,10 +73,15 @@ table {
 .col-id{width:4em;}
 .col-action-1{width:2.5em;}
 .col-action-2{width:5em;}
+.col-action-3{width:7.5em;}
 .col-date{width:7em;}
 .col-value{width:10em;}
 .col-version{width:10em;}
 .col-check{width:2em;}
+.col-use{width:3em;}
+.col-read_data{width:3em;}
+.col-change{width:3em;}
+.col-permit{width:4.5em;}
 
 /* form */
 .input-group-sm{margin-bottom:0px;}
