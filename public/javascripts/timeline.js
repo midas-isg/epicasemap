@@ -59,7 +59,7 @@ timeline.js
 			daysPerFrame: 1,
 			renderDelay: null,
 			pointDecay: 0.0231,
-			dataGapMethod: "skip"
+			dataGapMethod: "show"
 		};
 		
 		this.allContainedBox = [[], []];
