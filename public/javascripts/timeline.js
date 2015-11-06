@@ -325,7 +325,7 @@ timeline.js
 			}
 			
 			for(i = 0; i < thisMap.displaySet.length; i++) {
-				thisMap.detailChart.series[i].update({color: thisMap.colors[i]}, true);
+				thisMap.detailChart.series[i].update({color: thisMap.colors[thisMap.uiSettings.series[i].color]}, true);
 			}
 			
 			return;
