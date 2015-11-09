@@ -42,6 +42,7 @@ timeline.js
 		this.masterChart = null;
 		this.detailChart = null;
 		this.dataset = [];
+		this.absoluteMaxValue = 0;
 		this.earliestDate = null;
 		this.latestDate = null;
 		this.loopIntervalID;
@@ -618,14 +619,14 @@ console.log("series " + k + ": " + id);
 			if(!this.heat[(selectorID << 1)]) {
 				this.heat.push(L.heatLayer(this.displaySet[selectorID].visiblePoints,
 					{
-						minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.01, radius: 10,
+						minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.01, radius: 20,
 						gradient: this.setGradient[selectorID]
 					}
 				).addTo(this.map));
 				
 				this.heat.push(L.heatLayer(this.displaySet[selectorID].secondValues,
 					{
-						minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.01, radius: 20,
+						minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.01, radius: 30,
 						gradient: this.setGradient[selectorID] //this.debugColor
 					}
 				).addTo(this.map));
@@ -740,6 +741,10 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 						
 						if(currentDataset.maxValue < result.results[i].value) {
 							currentDataset.maxValue = result.results[i].value;
+							
+							if(thisMap.absoluteMaxValue < currentDataset.maxValue) {
+								thisMap.absoluteMaxValue = currentDataset.maxValue;
+							}
 						}
 						
 						lastDate = currentDataset.timeGroup[frame].date;
@@ -1376,7 +1381,8 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 						this.displaySet[setID].visiblePoints.push([this.dataset[setID].timeGroup[setFrame].point[i].latitude,
 							this.dataset[setID].timeGroup[setFrame].point[i].longitude,
 							0.7,
-							(this.dataset[setID].timeGroup[setFrame].point[i].value / this.dataset[setID].maxValue),
+							//(this.dataset[setID].timeGroup[setFrame].point[i].value / this.dataset[setID].maxValue),
+							(this.dataset[setID].timeGroup[setFrame].point[i].value / this.absoluteMaxValue),
 							this.dataset[setID].timeGroup[setFrame].point[i].value]);
 						
 						this.displaySet[setID].secondValues.push([this.dataset[setID].timeGroup[setFrame].point[i].latitude,
@@ -1492,14 +1498,14 @@ console.log((endFrame - startFrame) + " frames");
 				if(this.displaySet[setID].hide) {
 					this.heat.push(L.heatLayer([],
 						{
-							minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.01, radius: 10,
+							minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.01, radius: 20,
 							gradient: this.setGradient[setID]
 						}
 					).addTo(this.map));
 					
 					this.heat.push(L.heatLayer([],
 						{
-							minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.01, radius: 20,
+							minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.01, radius: 30,
 							gradient: this.setGradient[setID] //this.debugColor
 						}
 					).addTo(this.map));
@@ -1507,7 +1513,7 @@ console.log((endFrame - startFrame) + " frames");
 				else {
 					this.heat.push(L.heatLayer(this.displaySet[setID].visiblePoints,
 						{
-							minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.01, radius: 10,
+							minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.01, radius: 20,
 							gradient: this.setGradient[setID]
 						}
 					).addTo(this.map));
@@ -1515,7 +1521,7 @@ console.log((endFrame - startFrame) + " frames");
 					if(this.showSecondary) {
 						this.heat.push(L.heatLayer(this.displaySet[setID].secondValues,
 							{
-								minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.01, radius: 20,
+								minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.01, radius: 30,
 								gradient: this.setGradient[setID] //this.debugColor
 							}
 						).addTo(this.map));
@@ -1523,7 +1529,7 @@ console.log((endFrame - startFrame) + " frames");
 					else {
 							this.heat.push(L.heatLayer([],
 							{
-								minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.01, radius: 20,
+								minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.01, radius: 30,
 								gradient: this.setGradient[setID] //this.debugColor
 							}
 						).addTo(this.map));
