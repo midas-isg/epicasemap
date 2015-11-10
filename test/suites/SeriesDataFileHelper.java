@@ -1,22 +1,20 @@
 package suites;
 
+import interactors.SeriesRule;
 import interactors.series_data_file.Parser;
 import interactors.series_data_file.Persister;
 import interactors.series_data_file.SeriesDataFile;
 import interactors.series_data_file.Validator;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
 
+import play.db.jpa.JPA;
 import models.entities.Location;
 import controllers.Factory;
 
 public class SeriesDataFileHelper {
 
 	public static Parser getParser(SeriesDataFile dataFile) {
-		setStdToFileHeaderMap(dataFile);
 		return new Parser(dataFile);
 		
 	}
@@ -33,23 +31,6 @@ public class SeriesDataFileHelper {
 		File file = new File(
 				"public/input/series-data/examples/test_coordinate_format.txt");
 		return new SeriesDataFile(file);
-	}
-
-	public static void setStdToFileHeaderMap(SeriesDataFile dataFile) {
-		Map<String, String> result = new HashMap<String, String>();
-		Parser parser = new Parser(dataFile);
-
-		Set<String> fileHeaderSet = parser.getFileHeaders();
-		Set<String> stdHeaderSet = dataFile.getHeaders();
-		for (String fileHeader : fileHeaderSet) {
-			for (String stdHeader : stdHeaderSet) {
-				if (fileHeader.equalsIgnoreCase(stdHeader)) {
-					result.put(stdHeader, fileHeader);
-				}
-			}
-		}
-		dataFile.setStdHeaderToFileHeaderMap(result);
-
 	}
 
 	public static SeriesDataFile createTestSeriesDataFileWithAlsIdFormatWithErrors() {
@@ -96,5 +77,9 @@ public class SeriesDataFileHelper {
 	public static SeriesDataFile createTestSeriesDataFileWithUnixLineEnding() {
 		File file = new File("public/input/series-data/test/test_alsId_format_unix_line_ending.txt");
 		return new SeriesDataFile(file);
+	}
+	
+	public static SeriesRule makeSeriesRule(){
+		return Factory.makeSeriesRule(JPA.em());
 	}
 }
