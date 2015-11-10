@@ -138,10 +138,10 @@ public class TestViz {
 	}
 
 	private void testUpdate(long id) {
-		Visualization dataToUpdate = new Visualization();
+		VizInput dataToUpdate = ApiViz.from(new Visualization());
 		dataToUpdate.setTitle("title");
-		ApiViz.update(id, dataToUpdate);
-		detachThenAssertWithDatabase(id, dataToUpdate);
+		Visualization viz = ApiViz.update(id, dataToUpdate);
+		detachThenAssertWithDatabase(id, viz);
 	}
 
 	private void testDelete(long id) {

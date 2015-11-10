@@ -1,30 +1,37 @@
-"use strict";
-
-app.controller("Busy", function($rootScope){
-	var dialog = $('#busy-modal');
-	dialog.find('#busy-modal-close').hide();
+app.controller('Busy', function($rootScope){
+	'use strict';
+	// init controller /////////////////////////////////////////////////////////
+	var my = {}; 
+	my.dom = cacheDom();
+	my.dom.$dialog.find('#busy-modal-close').hide();
+	bindEvents();
+	// init functions //////////////////////////////////////////////////////////
+	function cacheDom(){
+		return { $dialog: $('#busy-modal')};
+	}
 	
-	$rootScope.$on('modalBusyDialog', function(event) {
-		dialog.isDone = false;
-		setTimeout(function() {dialog.modal()}, 1000);
-	});
-
-	dialog.on('show.bs.modal', function (e) {
-		if (dialog.isDone) {
-			e.preventDefault();
-        	e.stopImmediatePropagation();
-        }
-    });
-    
-    $rootScope.$on('hideBusyDialog', function(event) {
-		dialog.isDone = true;
-		dialog.modal('hide');
-	});
-
-    dialog.on('hide.bs.modal', function (e) {
-		if ( ! dialog.isDone) {
-			e.preventDefault();
-        	e.stopImmediatePropagation();
-        }
-    });
+	function bindEvents(){
+		$rootScope.$on('modalBusyDialog', function(event) {
+			my.isDone = false;
+			setTimeout(function() {my.dom.$dialog.modal()}, 1000);
+		});
+		my.dom.$dialog.on('show.bs.modal', function (event) {
+			if (my.isDone) 
+				cancelEvent(event);
+	    });
+	    $rootScope.$on('hideBusyDialog', function(event) {
+			my.isDone = true;
+			my.dom.$dialog.modal('hide');
+		});
+	    my.dom.$dialog.on('hide.bs.modal', function (event) {
+			if (!my.isDone) 
+				cancelEvent(event);
+	    });
+	    
+	    function cancelEvent(event){
+	    	event.preventDefault();
+	    	event.stopImmediatePropagation();
+	    }
+	}
+	// helper functions ////////////////////////////////////////////////////////
 });

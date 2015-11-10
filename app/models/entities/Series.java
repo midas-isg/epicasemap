@@ -12,11 +12,7 @@ import org.hibernate.annotations.ColumnDefault;
 
 @Entity
 public class Series extends MetaData {
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
-	
-	@ManyToOne
 	private Account owner;
 	
 	@OneToOne(mappedBy = "series"/*, cascade = CascadeType.ALL*/)
@@ -26,6 +22,8 @@ public class Series extends MetaData {
 	@ColumnDefault("false")
 	private boolean lock;
 
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Override
 	public Long getId() {
 		return id;
@@ -36,7 +34,7 @@ public class Series extends MetaData {
 		this.id = id;
 	}
 
-	
+	@ManyToOne
 	public Account getOwner() {
 		return owner;
 	}

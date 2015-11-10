@@ -12,14 +12,15 @@ import gateways.database.SeriesDataDao;
 import gateways.database.SeriesDataUrlDao;
 import gateways.database.VizDao;
 import gateways.webservice.AlsDao;
-import interactors.AuthorizationRule;
+import interactors.AccountRule;
 import interactors.ConfRule;
 import interactors.CoordinateRule;
 import interactors.LocationRule;
-import interactors.AccountRule;
+import interactors.SeriesAuthorizer;
 import interactors.SeriesDataRule;
 import interactors.SeriesDataUrlRule;
 import interactors.SeriesRule;
+import interactors.VizAuthorizer;
 import interactors.VizRule;
 import interactors.security.password.Authenticator;
 import interactors.security.password.PasswordFactory;
@@ -29,6 +30,9 @@ import interactors.series_data_file.SeriesDataFile;
 import interactors.series_data_file.Validator;
 
 import javax.persistence.EntityManager;
+
+import models.entities.SeriesPermission;
+import models.entities.VizPermission;
 
 import play.db.jpa.JPA;
 import play.mvc.Http.Request;
@@ -55,6 +59,10 @@ public class Factory {
 	}
 
 	private static SeriesRule makeSeriesRule(EntityManager em, VizRule vizRule) {
+		return makeSeriesRule(em, vizRule, null);
+	}
+	
+	private static SeriesRule makeSeriesRule(EntityManager em, VizRule vizRule, SeriesAuthorizer authorizer) {
 		final SeriesDao dao = new SeriesDao(em);
 		final SeriesRule seriesRule = new SeriesRule(dao);
 		seriesRule.setCoordinateRule(makeCoordinateRule(em));
@@ -63,6 +71,10 @@ public class Factory {
 		if (vizRule == null)
 			vizRule = makeVizRule(em, seriesRule);
 		seriesRule.setVizRule(vizRule);
+		seriesRule.setAccountRule(makeAccountRule(em));
+		if (authorizer == null)
+			authorizer = makeSeriesAuthorizer(em, seriesRule);
+		seriesRule.setSeriesAuthorizer(authorizer);
 		return seriesRule;
 	}
 
@@ -71,11 +83,19 @@ public class Factory {
 	}
 
 	private static VizRule makeVizRule(EntityManager em, SeriesRule seriesRule) {
+		return makeVizRule(em, seriesRule, null);
+	}
+	
+	private static VizRule makeVizRule(EntityManager em, SeriesRule seriesRule, VizAuthorizer authorizer) {
 		final VizDao dao = new VizDao(em);
 		final VizRule vizRule = new VizRule(dao);
 		if (seriesRule == null) 
 			seriesRule = makeSeriesRule(em, vizRule);
 		vizRule.setSeriesRule(seriesRule);
+		vizRule.setAccountRule(makeAccountRule(em));
+		if (authorizer == null) 
+			authorizer = makeVizAuthorizer(em, vizRule);
+		vizRule.setVizAuthorizer(authorizer);
 
 		return vizRule;
 	}
@@ -120,12 +140,32 @@ public class Factory {
 		return rule;
 	}
 	
-	public static AuthorizationRule makeAuthorizationRule(EntityManager em){
-		final PermissionDao dao = new PermissionDao(em);
-		final AuthorizationRule authorizationRule = new AuthorizationRule(dao);
-		authorizationRule.setSeriesRule(makeSeriesRule(em));
-		authorizationRule.setAccountRule(makeAccountRule(em));
-		return authorizationRule;
+	
+	public static SeriesAuthorizer makeSeriesAuthorizer(EntityManager em){
+		return makeSeriesAuthorizer(em, null);
+	}
+	
+	private static SeriesAuthorizer makeSeriesAuthorizer(EntityManager em, SeriesRule seriesRule){
+		final PermissionDao<SeriesPermission> dao = new PermissionDao<>(em, SeriesPermission.class);
+		SeriesAuthorizer authorizer = new SeriesAuthorizer(dao);
+		if (seriesRule == null)
+			seriesRule = makeSeriesRule(em);
+		authorizer.setSeriesRule(seriesRule);
+		authorizer.setAccountRule(makeAccountRule(em));
+		return authorizer;
+	}
+
+	public static VizAuthorizer makeVizAuthorizer(EntityManager em){
+		return makeVizAuthorizer(em, null);
+	}
+	public static VizAuthorizer makeVizAuthorizer(EntityManager em, VizRule vizRule){
+		final PermissionDao<VizPermission> dao = new PermissionDao<>(em, VizPermission.class);
+		final VizAuthorizer authorizer = new VizAuthorizer(dao);
+		if (vizRule == null)
+			vizRule = makeVizRule(em);
+		authorizer.setVizRule(vizRule);
+		authorizer.setAccountRule(makeAccountRule(em));
+		return authorizer;
 	}
 
 	public static SeriesDataFile makeSeriesDataFile(String url) {

@@ -15,7 +15,7 @@ public @interface Restricted {
 	public static final String DELIMITER = ",";
 	public enum Access {
 		USE,
-		READ,
+		READ_DATA,
 		CHANGE,
 		PERMIT
 	}

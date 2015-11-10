@@ -16,7 +16,7 @@
 
 @selectedSeriesSection(varName:String, appendCols:Seq[Seq[Html]] =Seq(
 		Seq(Html("check"), bs_icon("check"), seriesCheckbox),
-		Seq(Html("action-1"), Html("Edit"), editButton)
+		Seq(Html("action-2"), Html("Actions"), buttons)
 	)) = {
 	@section_expandable(varName){
 		<h4 title='selected Series to be avialble to view in the Visualization'>
@@ -34,6 +34,7 @@
 
 @buttonInvert() = {
 	<button title='invert Series selection' class='btn btn-xs' 
+	ng-show='isModelEditable()'
 	ng-click='invertSelection()'>invert selected series</button>
 }
 
@@ -43,8 +44,11 @@
 	</button>
 }
 
-@seriesCheckbox = {<input type='checkbox' title='check to select the Series to be avialble to view in the Visualization' ng-model='it.isSelected'>}
-@editButton = {<button title='edit' class='btn btn-xs' ng-click='editSeries(it)'>@bs_icon("edit")</button>}
+@seriesCheckbox = {<input type='checkbox' title='check to select the Series to be avialble to view in the Visualization' ng-disabled='! isModelEditable()' ng-model='it.isSelected'>}
+@buttons = {
+	@button_action("edit", "editSeries(it)", "can('read_data', it)")
+	@button_action("eye-close", "permit(it)", "can('permit', it)", "edit permission")
+}
 
 @hideSeries = {<span title='i.e. show only selected series'>hide series not selected</span>}
 @showSeries = {<span title='show all series (both selected and not selected)'>show all series</span>}

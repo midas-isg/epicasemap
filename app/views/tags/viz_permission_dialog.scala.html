@@ -1,0 +1,26 @@
+@import tags._
+
+@* Visualization Permission modal dialog *@
+@()
+@bs_modal("vizPermissionModal", "VizPermission", "Visualization Permission Editor", "close()")(editor())(modal_buttons("Permission"))
+
+@editor(labelSize:Int=2) = {
+	<h4>
+		Update access to the account
+	</h4>
+	<div class='row'>
+		<div class='col-md-8'>
+			<div class="form-horizontal">
+				@form_group_readonly("Visualization", "{{model.viz.title}}", "Visualization Title", 3)
+			</div>
+			<form name='form' class="form-horizontal" role="form">
+				@viz_permission_selector("permitted access level for the account", 3)
+			</form>
+		</div>
+		<div class='col-md-4'>
+			<div class="form-horizontal">
+				@form_group_readonly("Account", "{{model.account.name}}", "Account Name", 3)
+			</div>
+		</div>
+	</div>
+}

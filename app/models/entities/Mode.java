@@ -1,11 +1,5 @@
 package models.entities;
 
-import javax.persistence.Inheritance;
-import javax.persistence.InheritanceType;
-import javax.persistence.MappedSuperclass;
-
-@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
-@MappedSuperclass
 public class Mode {
 	private Boolean use;
 	private Boolean read;
@@ -20,11 +14,11 @@ public class Mode {
 		this.use = use;
 	}
 
-	public Boolean getRead() {
+	public Boolean getRead_data() {
 		return read;
 	}
 
-	public void setRead(Boolean read) {
+	public void setRead_data(Boolean read) {
 		this.read = read;
 	}
 

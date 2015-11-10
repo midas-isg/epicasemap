@@ -9,7 +9,6 @@ public class RestrictedAction extends Action<Restricted> {
     public F.Promise<Result> call(Context ctx) {
         try {
         	writeAccesses(ctx);
-        	writeAccountId(ctx);
             return delegate.call(ctx);
         } catch(RuntimeException|Error e) {
             throw e;
@@ -21,8 +20,4 @@ public class RestrictedAction extends Action<Restricted> {
 	private void writeAccesses(Context ctx) {
 		AuthorizationKit.writeAccesses(ctx, configuration.value());
 	}	
-
-	private void writeAccountId(Context ctx) {
-		AuthorizationKit.writeAccountId(ctx, Authentication.readAccountId(ctx));
-	}
 }

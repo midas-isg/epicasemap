@@ -1,0 +1,12 @@
+@(title:String="Access level to permit the seletected account(s)", labelSize:Int=2)
+<div class='form-group input-group-sm'>
+	<label title='@title' class='control-label col-sm-@labelSize'>Level: </label>
+	<div class='col-sm-@(12-labelSize) form-control-static'>
+		<select ng-model='option' ng-init='option="u"'>
+			<option value='u' title='Run the Visualization'>Run Visualization</option>
+			<option value='ur' title='Read Visualization including its Series and above'>Read Series & above</option>
+			<option value='urc' title='Update & delete Visualization and above'>Edit Visualization & above</option>
+			<option value='urcp' title='Grant permissions to any account and above'>Manage permission & above</option>
+		</select> 
+	</div>
+</div>

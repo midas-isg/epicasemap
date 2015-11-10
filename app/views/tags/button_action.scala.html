@@ -1,0 +1,10 @@
+@* Action button *@
+@(glyph:String, expression:String, allow:String, title:String=null)
+
+<button title='@text(title, glyph)' class='btn btn-xs' ng-click='@expression' ng-show='@allow'>
+	@bs_icon(glyph)
+</button>
+
+@text(a:String, b:String) = {
+	@if(a == null){@b}else{@a}
+}
