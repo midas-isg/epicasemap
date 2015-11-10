@@ -4,6 +4,7 @@ import static play.mvc.Http.Status.BAD_REQUEST;
 import static play.mvc.Http.Status.CONFLICT;
 import static play.mvc.Http.Status.CREATED;
 import static suites.Helper.assertAreEqual;
+import interactors.SeriesRule;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -14,6 +15,8 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import models.entities.Series;
+import play.db.jpa.JPA;
 import play.libs.ws.WS;
 import play.libs.ws.WSRequestHolder;
 import play.libs.ws.WSResponse;
@@ -22,6 +25,7 @@ import com.ning.http.client.FluentCaseInsensitiveStringsMap;
 import com.ning.http.multipart.FilePart;
 import com.ning.http.multipart.MultipartRequestEntity;
 import com.ning.http.multipart.Part;
+
 
 public class UploadSeriesEndpointTester {
 
@@ -38,17 +42,50 @@ public class UploadSeriesEndpointTester {
 
 	public void testUpload() {
 
-		WSResponse resp = uploadAlsIdFormatWithURL(seriesId, true);
-		assertStatus(resp, CREATED);
+		testUploadViaUrl();
 
-		resp = uploadAlsIdFormatWithURL(seriesId, false);
-		assertStatus(resp, CONFLICT);
+		testUploadViaMultiPartForm();
 		
-		resp = uploadAlsIdFormatWithURL(seriesId, true);
-		assertBody(resp, "5 existing item(s) deleted.\n"
-				+ "5 new item(s) created.");
+		testSeriesLockOnUpload();
 
-		resp = uploadMultiPartFormData();
+	}
+
+	private void testSeriesLockOnUpload() {
+		setSeriesLock(seriesId,true);
+		uploadDataWithAlsIdFormat(seriesId);
+		Series series = readSeries(seriesId);
+		assertAreEqual(series.getLock(), false);
+		
+		setSeriesLock(seriesId,true);
+		uploadAlsIdFormatWithURL(seriesId, true);
+		series = readSeries(seriesId);
+		assertAreEqual(series.getLock(), false);	
+	}
+
+	private Series readSeries(long id) {
+		Series series = null;
+		try {
+			series = JPA.withTransaction(() -> {
+				SeriesRule rule = suites.SeriesDataFileHelper.makeSeriesRule();
+				return rule.read(id);
+			});
+		} catch (Throwable e) {
+			throw new RuntimeException(e);
+		}
+		return series;
+	}
+
+	private void setSeriesLock(long id, boolean lock) {
+		JPA.withTransaction(() -> {
+			SeriesRule rule = suites.SeriesDataFileHelper.makeSeriesRule();
+			Series series = rule.read(id);
+			series.setLock(lock);
+			rule.update(id, series);
+		});
+	}
+
+	private void testUploadViaMultiPartForm() throws RuntimeException {
+		WSResponse resp = uploadMultiPartFormData();
 		assertStatus(resp, CREATED);
 
 		WSResponse response = uploadDataWithAlsIdFormat(seriesId);
@@ -81,7 +118,18 @@ public class UploadSeriesEndpointTester {
 				response,
 				"Line 1: number of columns is 5. should be 4.\n"
 						+ "Line 1: \"error\" column name is not allowed in coordinateFormat format.\n");
+	}
 
+	private void testUploadViaUrl() {
+		WSResponse resp = uploadAlsIdFormatWithURL(seriesId, true);
+		assertStatus(resp, CREATED);
+
+		resp = uploadAlsIdFormatWithURL(seriesId, false);
+		assertStatus(resp, CONFLICT);
+		
+		resp = uploadAlsIdFormatWithURL(seriesId, true);
+		assertBody(resp, "5 existing item(s) deleted.\n"
+				+ "5 new item(s) created.");
 	}
 
 	private WSResponse uploadAlsIdFormatWithURL(long seriesId, boolean overWrite) {
@@ -163,7 +211,9 @@ public class UploadSeriesEndpointTester {
 
 	private WSResponse uploadDataWithAlsIdFormat(Long seriesId)
 			throws RuntimeException {
+		
 		File file = new File("public/input/series-data/examples/test_alsId_format.txt");
+		//File file = new File("public/input/series-data/examples/PERTUSSIS_Cases_1938-2011.ssv");
 		String url = buildUrl(seriesId);
 		WSResponse response = sendMultiPartRequest(file, url);
 		return response;

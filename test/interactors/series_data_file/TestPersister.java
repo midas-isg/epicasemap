@@ -37,7 +37,6 @@ public class TestPersister {
 
 	private void testPersistSeriesData() throws Exception {
 		SeriesDataFile dataFile = SeriesDataFileHelper.createTestSeriesDataFileWithAlsIdFormat();
-		SeriesDataFileHelper.setStdToFileHeaderMap(dataFile);
 		int expected = 5;
 
 		Persister persister = SeriesDataFileHelper.makePersister(dataFile);
@@ -45,7 +44,6 @@ public class TestPersister {
 		assertThat(created).isEqualTo(expected);
 
 		dataFile = SeriesDataFileHelper.createTestSeriesDataFileWithCoordianteFormat();
-		SeriesDataFileHelper.setStdToFileHeaderMap(dataFile);
 		persister = SeriesDataFileHelper.makePersister(dataFile);
 		created = persister.persistSeriesDataFile(seriesId);
 		assertThat(created).isEqualTo(expected);

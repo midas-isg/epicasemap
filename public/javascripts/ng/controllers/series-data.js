@@ -27,6 +27,7 @@ app.controller('SeriesData', function($scope, $rootScope, api) {
 				$scope.url = $scope.series.seriesDataUrl.url;
 				$scope.radioIn = "url";
 			}
+			$scope.isWorking = $scope.series.lock;
 			api.removeAllAlerts(dom.$alertParent);
 			dom.$dialog.modal();
 		}

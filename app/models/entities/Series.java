@@ -8,6 +8,8 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 
+import org.hibernate.annotations.ColumnDefault;
+
 @Entity
 public class Series extends MetaData {
 	@Id
@@ -20,6 +22,9 @@ public class Series extends MetaData {
 	@OneToOne(mappedBy = "series"/*, cascade = CascadeType.ALL*/)
 	@JoinColumn(name = "id")
 	private SeriesDataUrl seriesDataUrl;
+	
+	@ColumnDefault("false")
+	private boolean lock;
 
 	@Override
 	public Long getId() {
@@ -90,5 +95,13 @@ public class Series extends MetaData {
 
 	public void setSeriesDataUrl(SeriesDataUrl seriesDataUrl) {
 		this.seriesDataUrl = seriesDataUrl;
+	}
+
+	public boolean getLock() {
+		return lock;
+	}
+
+	public void setLock(boolean lock) {
+		this.lock = lock;
 	}
 }

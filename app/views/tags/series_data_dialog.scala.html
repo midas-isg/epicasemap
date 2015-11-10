@@ -22,7 +22,9 @@
 		<span ng-show="form.url.$error.url">Invalid URL</span>
 		</span>
 	</div>
-</form>}
+</form>
+
+}
 
 @radio(id:String, model:String, value:String, text:String) = {
 <div class="form-group">
@@ -39,7 +41,7 @@
 <button
 	title="Replace the existing data with the data in the uploaded file & Close the dialog"
 	class='btn-large btn-danger pull-left' ng-click='uploadThenClose()'
-	ng-disabled='! dataFile' ng-disabled='isWorking' ng-show="radioIn === 'file'">
+	ng-disabled='! dataFile || isWorking' ng-show="radioIn === 'file'">
 	@bs_icon("upload") Upload & Close</button>
 <button
 	title="Replace the existing data with the data in the url content & Close the dialog"

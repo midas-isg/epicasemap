@@ -10,6 +10,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 
+import javax.persistence.EntityManager;
+
+import models.entities.Series;
 import models.entities.SeriesDataUrl;
 import play.db.jpa.JPA;
 import play.mvc.Controller;
@@ -37,40 +40,77 @@ class UploadSeries extends Controller {
 
 	private static Result uploadSeriesData(long seriesId,
 			SeriesDataFile dataFile) {
-		String errors = validate(dataFile);
-		Result result;
-		if (errors.equals("")) {
-			int deletedDataSize = deleteExisitingSeriesData(seriesId);
-			int createdDataSize = create(dataFile, seriesId);
-			result = created(makeMsg(deletedDataSize, createdDataSize));
-		} else {
-			result = badRequest(errors);
+		Result result = null;
+		EntityManager emFromTransactionalAnnoation = JPA.em();
+		try {
+			lockSeries(seriesId, true);
+			result = save(seriesId, dataFile);
+		} finally {
+			lockSeries(seriesId, false);
+			JPA.bindForCurrentThread(emFromTransactionalAnnoation);
 		}
-		deleteTempFile(dataFile);
 		return result;
 	}
-	
+
+	private static Result save(long seriesId, SeriesDataFile dataFile) {
+		Result result = null;
+		try {
+			result = JPA.withTransaction(() -> {
+				Result innerResult = null;
+
+				EntityManager em = JPA.em();
+				Validator validator = Factory.makeValidator(dataFile);
+				Persister persister = Factory.makePersister(dataFile);
+				String errors = validate(validator, dataFile);
+				if (errors.equals("")) {
+					int deletedDataSize = deleteExisitingSeriesData(em,
+							seriesId);
+					int createdDataSize = create(persister, seriesId);
+					innerResult = created(makeMsg(deletedDataSize,
+							createdDataSize));
+				} else {
+					innerResult = badRequest(errors);
+				}
+				deleteTempFile(dataFile);
+				return innerResult;
+			});
+		} catch (Throwable e) {
+			throw new RuntimeException(e);
+		}
+		
+		return result;
+	}
+
+	private static void lockSeries(long seriesId, boolean lock) {
+		JPA.withTransaction(() -> {
+			EntityManager em = JPA.em();
+			SeriesRule rule = Factory.makeSeriesRule(em);
+			Series series = rule.read(seriesId);
+			series.setLock(lock);
+			rule.update(seriesId, series);
+		});
+	}
+
 	private static String makeMsg(int deletedDataSize, int createdDataSize) {
 		String msg = deletedDataSize + " existing item(s) deleted." + "\n"
 				+ createdDataSize + " new item(s) created.";
 		return msg;
 	}
 
-	private static int deleteExisitingSeriesData(Long seriesId) {
-		return makeSeriesRule().deleteAllSeriesData(seriesId);
+	private static int deleteExisitingSeriesData(EntityManager em, Long seriesId) {
+		return makeSeriesRule(em).deleteAllSeriesData(seriesId);
 	}
 
-	private static SeriesRule makeSeriesRule() {
-		return Factory.makeSeriesRule(JPA.em());
+	private static SeriesRule makeSeriesRule(EntityManager em) {
+		return Factory.makeSeriesRule(em);
 	}
 
-	private static int create(SeriesDataFile dataFile, Long seriesId) {
-		Persister persister = Factory.makePersister(dataFile);
+	private static int create(Persister persister, Long seriesId) {
+
 		return persister.persistSeriesDataFile(seriesId);
 	}
 
-	private static String validate(SeriesDataFile dataFile) {
-		Validator validator = Factory.makeValidator(dataFile);
+	private static String validate(Validator validator, SeriesDataFile dataFile) {
 		Map<Long, List<String>> errors = validator.validateDataFile();
 		return joinErrorsAsString(errors);
 	}

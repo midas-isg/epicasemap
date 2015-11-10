@@ -69,6 +69,9 @@ public class SeriesDataFile {
 		String headerLine = readFirstLine(file);
 		setDelimiter(headerLine);
 		setFileFormat(headerLine);
+		if(! fileFormat.isEmpty()){
+			mapFileHeadersToStdHeaders(headerLine,getDelimiter());	
+		}
 	}
 
 	private File readFilefromUrl(String StrUrl) {
@@ -113,7 +116,9 @@ public class SeriesDataFile {
 		Set<String> result = new HashSet<String>();
 		result.add(TIME_HEADER);
 		result.add(VALUE_HEADER);
-		result.addAll(format2UncommonColumns.get(getFileFormat()));
+		String format = getFileFormat();
+		List<String> formatHeader = format2UncommonColumns.get(format);
+		result.addAll(formatHeader);
 		return result;
 	}
 
@@ -167,6 +172,20 @@ public class SeriesDataFile {
 		}
 		return "";
 	}
+	
+	private void mapFileHeadersToStdHeaders(String headerLine, Character delimChar) {
+		Map<String, String> result = new HashMap<String, String>();
+		String[] fileHeaders = headerLine.split(delimChar + "");
+		Set<String> stdHeaderSet = this.getHeaders();
+		for (String fileHeader : fileHeaders) {
+			for (String stdHeader : stdHeaderSet) {
+				if (areEqual(fileHeader,stdHeader)) {
+					result.put(stdHeader, fileHeader);
+				}
+			}
+		}
+		setStdHeaderToFileHeaderMap(result);
+	}
 
 	private boolean areEqual(String header, String string) {
 		return polish(header).equals(string);
@@ -185,7 +204,7 @@ public class SeriesDataFile {
 			line = bf.readLine();
 			bf.close();
 		} catch (IOException e) {
-			throw new RuntimeException(e.getMessage());
+			throw new RuntimeException(e);
 		}
 		return line;
 	}
