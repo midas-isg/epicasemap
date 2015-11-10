@@ -1,36 +1,38 @@
 app.controller('Vizs', function($scope, $rootScope, api) {
-	"use strict";
-	var urlPath = 'vizs';
-	var dom = cacheDom();
+	'use strict';
+	// init controller /////////////////////////////////////////////////////////
+	var my = app.initCommonControllerFeatures($scope, $rootScope, api);
+	my.dom = cacheDom();
+	my.playVizUrl = CONTEXT;
 	populateScope();
 	loadModels();
 	bindEvents();
-
+	// init functions //////////////////////////////////////////////////////////
 	function cacheDom(){
-		return {$alertParent: $("#vizs-body")};
+		return {$alertParent: $('#vizs-body')};
 	}
 	
 	function loadModels(){
-		loadModelHavingGivenId();
+		my.editModelHavingGivenId(my.editVizById);
 		loadVizs();
 	}
 	
 	function populateScope(){
-	    $scope.addNew = function() {
+		$scope.can = my.canAccessViz;
+		$scope.edit = my.editViz;
+		$scope.count = my.length;
+		$scope.addNew = function() {
 	    	$scope.edit({allSeries:[]});
 		};
-		$scope.edit = function(viz) {
-			$scope.$emit('editViz', viz);
-		};
-		$scope.count = function(array) { 
-			return array && array.length || 0;	
-		};
 		$scope.go = function(viz) {
-			window.open(CONTEXT + '?id=' + viz.id, '_top');
+			window.open(my.playVizUrl + '?id=' + viz.id, '_top');
+		};
+		$scope.editPermissions = function(viz) {
+			$scope.$emit('editVizPermissions', viz);
 		};
 		$scope.test = {
 			loadModels: loadModels,
-			dom: dom
+			dom: my.dom
 		};
 	}
 	
@@ -39,35 +41,9 @@ app.controller('Vizs', function($scope, $rootScope, api) {
 			loadVizs();
 		});
 	}
-
+	// helper functions ////////////////////////////////////////////////////////
 	function loadVizs(){
-		api.finding(urlPath).then(function(rsp) {
-			$scope.models = rsp.data.results;
-		}, function(err){
-			$scope.error = 'Failed to load your Visualizations!';
-			error($scope.error);
-		});
-	}
- 
-	function loadModelHavingGivenId(){
-	    var urlQuery = api.getUrlQuery();
-		var id = urlQuery && urlQuery.id;
-		if (id){
-			api.reading(urlPath, id).then(function(rsp){
-				var model = rsp.data.result;
-				$scope.edit(model);
-			}, function(err){
-				$scope.error = err.data && err.data.userMessage;
-				alert($scope.error);
-			});
-		}
-	}
-	
-	function error(message){
-		alert('Error: ' + message, 'alert-danger');
-	}
-	
-	function alert(message, classes){
-		api.alert(dom.$alertParent, message, classes);
+		my.loadVizsAsModels();
+		my.loadPermissions();
 	}
 });
