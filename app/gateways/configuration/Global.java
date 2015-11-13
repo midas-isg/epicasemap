@@ -1,8 +1,11 @@
 package gateways.configuration;
 
+import static play.mvc.Http.Status.SERVICE_UNAVAILABLE;
+
 import java.lang.reflect.Method;
 
 import models.exceptions.ConstraintViolation;
+import models.exceptions.NoConnectionAvailable;
 import models.exceptions.NotFound;
 import models.exceptions.Unauthorized;
 import play.Application;
@@ -51,11 +54,18 @@ public class Global extends GlobalSettings {
 				} catch (Unauthorized e) {
 					final Status status = unauthorized(toErrorMessageInJson(e));
 					return Promise.<Result>pure(status);
+				} catch (NoConnectionAvailable e){
+					final Status status = serviceUnavailable(toErrorMessageInJson(e));
+					return Promise.<Result>pure(status);
 				}catch (RuntimeException|Error e) {
 					throw e;
 				} catch (Throwable e) {
 					throw new RuntimeException(e);
 				}
+			}
+
+			private Status serviceUnavailable(JsonNode content) {
+				return status(SERVICE_UNAVAILABLE, content);
 			}
 
 			private JsonNode toErrorMessageInJson(Exception e) {

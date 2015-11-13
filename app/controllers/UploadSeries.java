@@ -1,19 +1,23 @@
 package controllers;
 
+import gateways.configuration.ConfReader;
 import interactors.SeriesRule;
 import interactors.series_data_file.Persister;
 import interactors.series_data_file.SeriesDataFile;
 import interactors.series_data_file.Validator;
 
 import java.io.File;
+import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 
 import javax.persistence.EntityManager;
+import javax.persistence.Query;
 
 import models.entities.Series;
 import models.entities.SeriesDataUrl;
+import models.exceptions.NoConnectionAvailable;
 import play.db.jpa.JPA;
 import play.mvc.Controller;
 import play.mvc.Http.Request;
@@ -24,24 +28,27 @@ class UploadSeries extends Controller {
 		SeriesDataFile dataFile = getSeriesDataFile(request());
 		return uploadSeriesData(seriesId, dataFile);
 	}
-	
-	static Result uploadFile(long seriesId, File file){
+
+	static Result uploadFile(long seriesId, File file) {
 		SeriesDataFile dataFile = Factory.makeSeriesDataFile(file);
 		return uploadSeriesData(seriesId, dataFile);
 	}
-	
+
 	static Result uploadViaUrl(long seriesId, String url, boolean overWrite) {
 		SeriesDataFile dataFile = getSeriesDataFile(url);
-		if (overWrite || !checksumMatches(seriesId, url, dataFile.getChecksum()))
+		if (overWrite
+				|| !checksumMatches(seriesId, url, dataFile.getChecksum()))
 			return uploadSeriesData(seriesId, dataFile);
 		else
-			return status(CONFLICT, "url content seems unchanged. Use overWrite parameter to re-write data.");
+			return status(CONFLICT,
+					"url content seems unchanged. Use overWrite parameter to re-write data.");
 	}
 
 	private static Result uploadSeriesData(long seriesId,
 			SeriesDataFile dataFile) {
 		Result result = null;
 		EntityManager emFromTransactionalAnnoation = JPA.em();
+		checkConnectionAvailability(emFromTransactionalAnnoation);
 		try {
 			lockSeries(seriesId, true);
 			result = save(seriesId, dataFile);
@@ -77,7 +84,7 @@ class UploadSeries extends Controller {
 		} catch (Throwable e) {
 			throw new RuntimeException(e);
 		}
-		
+
 		return result;
 	}
 
@@ -129,22 +136,45 @@ class UploadSeries extends Controller {
 	}
 
 	private static SeriesDataFile getSeriesDataFile(Request request) {
-		
+
 		SeriesDataFile dataFile = Factory.makeSeriesDataFile(request);
 		return dataFile;
 	}
-	
+
 	private static SeriesDataFile getSeriesDataFile(String url) {
 		return Factory.makeSeriesDataFile(url);
 	}
-	
+
 	private static void deleteTempFile(SeriesDataFile dataFile) {
-		dataFile.deleteFile();	
+		dataFile.deleteFile();
 	}
 
-	private static boolean checksumMatches(long seriesId, String url, String checksum) {
+	private static boolean checksumMatches(long seriesId, String url,
+			String checksum) {
 		List<SeriesDataUrl> result = Factory.makeSeriesDataUrlRule(JPA.em())
 				.query(seriesId, url, checksum);
 		return result.size() > 0;
+	}
+
+	private static void checkConnectionAvailability(EntityManager em)
+			throws NoConnectionAvailable {
+		if (!isConnectionAvailable(em)) {
+			throw new NoConnectionAvailable(
+					"Server is busy. Please try again later");
+		}
+	}
+
+	private static boolean isConnectionAvailable(EntityManager em) {
+		Query query = em
+				.createNativeQuery("SELECT COUNT(*) FROM pg_stat_activity "
+						+ "WHERE application_name = :appNameDb and "
+						+ "datname = :dbName and state = 'idle'");
+		query.setParameter("appNameDb",
+				new ConfReader().readString("app_name_db"));
+		String[] arr = new ConfReader().readString("db.default.url").split("/");
+		String dbName = arr[arr.length - 1];
+		query.setParameter("dbName", dbName);
+		return ((BigInteger) query.getSingleResult()).intValue() >= 2;
+
 	}
 }
