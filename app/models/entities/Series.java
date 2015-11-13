@@ -15,11 +15,8 @@ public class Series extends MetaData {
 	private Long id;
 	private Account owner;
 	
-	@OneToOne(mappedBy = "series"/*, cascade = CascadeType.ALL*/)
-	@JoinColumn(name = "id")
 	private SeriesDataUrl seriesDataUrl;
 	
-	@ColumnDefault("false")
 	private boolean lock;
 
 	@Id
@@ -86,7 +83,9 @@ public class Series extends MetaData {
 		return "Series [id=" + id + ", title=" + this.getTitle() + ", description="
 				+ this.getDescription() + "]";
 	}
-
+	
+	@OneToOne(mappedBy = "series"/*, cascade = CascadeType.ALL*/)
+	@JoinColumn(name = "id")
 	public SeriesDataUrl getSeriesDataUrl() {
 		return seriesDataUrl;
 	}
@@ -95,6 +94,7 @@ public class Series extends MetaData {
 		this.seriesDataUrl = seriesDataUrl;
 	}
 
+	@ColumnDefault("false")
 	public boolean getLock() {
 		return lock;
 	}

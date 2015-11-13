@@ -21,6 +21,8 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import models.exceptions.NotFound;
+
 import org.apache.commons.codec.digest.DigestUtils;
 
 public class SeriesDataFile {
@@ -90,7 +92,7 @@ public class SeriesDataFile {
 			bw.close();
 			br.close();
 		} catch (IOException e) {
-			throw new RuntimeException(e);
+			throw new NotFound("The requested resource could not be found");
 		}
 		return tempFile;
 	}

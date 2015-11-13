@@ -21,19 +21,11 @@
 	@section_expandable(varName){
 		<h4>
 			@span_expandable(varName, head())
-<<<<<<< HEAD
 			<button title="Open the dialog to upload data" class='btn btn-large' 
 			ng-click='uploadNewData(model)' ng-show ='model.id'>
 				@bs_icon("upload") Re-upload data ...
 			</button>
 			</h4>
-=======
-		<button title="Open the dialog to upload data" class='btn btn-large' 
-		ng-click='uploadNewData(model.id)' ng-show ='model.id && isModelEditable()'>
-			@bs_icon("upload") Re-upload data ...
-		</button>
-		</h4>
->>>>>>> 598e1146c25d0f0ecc9b0c5eafabec63bc637678
 	}{
 		@table_filterable("coordinates", "data", "data", orders)
 	}

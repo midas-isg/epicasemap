@@ -38,12 +38,9 @@ PUT     /api/series/permissions/:id/mode controllers.ApiSeries.putMode(id:Long)
 # @Deprecated
 GET     /api/series/:id/time-coordinate   controllers.ApiTimeCoordinateSeries.get(id:Long, startInclusive?=null, endExclusive?=null, limit:java.lang.Integer?=null, offset:Int?=0)
 GET     /api/series/:id/data         controllers.ApiSeries.getData(id:Long, startInclusive?=null, endExclusive?=null, limit:java.lang.Integer?=null, offset:Int?=0)
-<<<<<<< HEAD
+
 PUT		/api/series/:id/data         controllers.ApiSeries.uploadData(id:Long)
 PUT		/api/series/:id/data-url		 controllers.ApiSeries.updateDataViaUrl(id:Long, overWrite: Boolean ?= false)
-=======
-PUT     /api/series/:id/data         controllers.ApiSeries.uploadData(id:Long)
->>>>>>> 598e1146c25d0f0ecc9b0c5eafabec63bc637678
 
 POST    /api/locations/bulk-lables  controllers.ApiLocation.getBulkLables()
 GET     /api/locations/:id          controllers.ApiLocation.read(id:Long)
