@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+<xs:complexType name="row-data">
+	<xs:all minOccurs="0">
+		<xs:element name="year" type="xs:integer"/>
+		<xs:element name="week" type="xs:integer"/>
+		<xs:element name="loc" type="xs:string"/>
+		<xs:element name="state" type="xs:string"/>
+		<xs:element name="country" type="xs:string"/>
+		<xs:element name="loc_type" type="xs:string"/>
+		<xs:element name="number" type="xs:integer"/>
+		<xs:element name="event" type="xs:string"/>
+	</xs:all>
+</xs:complexType>
+
+<xs:element name="result">
+	<xs:complexType>
+		<xs:sequence>
+			<xs:element name="count" type="xs:integer" />
+			<xs:element name="row" type="row-data" minOccurs="0" maxOccurs="unbounded" />
+		</xs:sequence>
+	</xs:complexType>
+</xs:element>
+
+</xs:schema>
