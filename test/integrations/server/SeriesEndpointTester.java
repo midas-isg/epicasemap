@@ -3,6 +3,7 @@ package integrations.server;
 import static com.fasterxml.jackson.databind.node.JsonNodeType.NULL;
 import static com.fasterxml.jackson.databind.node.JsonNodeType.OBJECT;
 import static com.fasterxml.jackson.databind.node.JsonNodeType.STRING;
+import static com.fasterxml.jackson.databind.node.JsonNodeType.BOOLEAN;
 import static org.fest.assertions.Assertions.assertThat;
 import static suites.Helper.assertNodeType;
 import static suites.Helper.testJsonObjectResponse;
@@ -51,9 +52,10 @@ public class SeriesEndpointTester {
 		final String isVersionOfKey = "isVersionOf";
 		final String owner = "owner";
 		final String seriesDataUrl = "seriesDataUrl";
+		final String lock = "lock";
 		
 		assertThat(fields).containsOnly(idKey, titleKey, desKey, creatorKey,
-				publisherKey, licenseKey, versionKey, isVersionOfKey, owner, seriesDataUrl);
+				publisherKey, licenseKey, versionKey, isVersionOfKey, owner, seriesDataUrl, lock);
 		assertThat(node.get(idKey).asLong()).isPositive();
 		
 		assertNodeType(node.get(titleKey), STRING, NULL);
@@ -66,6 +68,7 @@ public class SeriesEndpointTester {
 		assertNodeType(node.get(isVersionOfKey), STRING, NULL);
 		assertNodeType(node.get(owner), OBJECT, NULL);
 		assertNodeType(node.get(seriesDataUrl), OBJECT, NULL);
+		assertNodeType(node.get(lock), BOOLEAN, NULL);
 	}
 
 	private static SeriesEndpointTester newInstance() {

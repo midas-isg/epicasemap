@@ -17,9 +17,12 @@ import com.typesafe.config.ConfigFactory;
 
 public class App {
 	private FakeApplication fakeApp = null;
+	private static String IN_MEMO_DB_CONF_PATH = "test/resources/conf/test_in_memory_DB.conf";
+	private static String TEST_CONF_PATH = "test/resources/conf/test.conf";
+
 
 	public static App newWithTestDb() {
-		return new App("test/resources/conf/test.conf");
+		return new App(TEST_CONF_PATH);
 	}
 
 	public static App newWithInMemoryDbWithDbOpen() {
@@ -27,7 +30,7 @@ public class App {
 	}
 
 	public static App newWithInMemoryDb(String uid) {
-		return new App("test/resources/conf/test_in_memory_DB.conf", uid);
+		return new App(IN_MEMO_DB_CONF_PATH, uid);
 	}
 
 	public static App doNotUseForBoostingupCoverageOnly(String path) {
@@ -44,6 +47,8 @@ public class App {
 
 	private App(String testConfPathname, String uid) {
 		Map<String, Object> configurationMap = readConf(testConfPathname);
+		if(testConfPathname.equals(IN_MEMO_DB_CONF_PATH))
+			((Map<String,Object>)((Map<String,Object>)configurationMap.get("db")).get("default")).put("initSQL", "");
 		keepDatabaseOpen(configurationMap, uid);
 		fakeApp = fakeApplication(configurationMap);
 	}
@@ -78,7 +83,7 @@ public class App {
 		File file = new File(pathname);
 		if (!file.exists())
 			throw new RuntimeException(pathname + " is not found");
-		Config config = ConfigFactory.parseFile(file);
+		Config config = ConfigFactory.parseFile(file).resolve();
 		Configuration configuration = new Configuration(config);
 		return configuration.asMap();
 	}
