@@ -1,6 +1,8 @@
 package controllers;
 
-import gateways.configuration.ConfReader;
+import static gateways.configuration.AppKey.APP_NAME_IN_DB;
+import static gateways.configuration.AppKey.DB_DEFAULT_URL;
+import interactors.ConfRule;
 import interactors.SeriesRule;
 import interactors.series_data_file.Persister;
 import interactors.series_data_file.SeriesDataFile;
@@ -24,6 +26,9 @@ import play.mvc.Http.Request;
 import play.mvc.Result;
 
 class UploadSeries extends Controller {
+	
+	private static int minRequiredConnections = 2;
+	
 	static Result upload(long seriesId) {
 		SeriesDataFile dataFile = getSeriesDataFile(request());
 		return uploadSeriesData(seriesId, dataFile);
@@ -55,6 +60,7 @@ class UploadSeries extends Controller {
 		} finally {
 			lockSeries(seriesId, false);
 			JPA.bindForCurrentThread(emFromTransactionalAnnoation);
+			deleteTempFile(dataFile);
 		}
 		return result;
 	}
@@ -78,7 +84,6 @@ class UploadSeries extends Controller {
 				} else {
 					innerResult = badRequest(errors);
 				}
-				deleteTempFile(dataFile);
 				return innerResult;
 			});
 		} catch (Throwable e) {
@@ -158,23 +163,41 @@ class UploadSeries extends Controller {
 
 	private static void checkConnectionAvailability(EntityManager em)
 			throws NoConnectionAvailable {
-		if (!isConnectionAvailable(em)) {
+		if (availableConnections(em) < minRequiredConnections) {
 			throw new NoConnectionAvailable(
 					"Server is busy. Please try again later");
 		}
 	}
 
-	private static boolean isConnectionAvailable(EntityManager em) {
+	private static int availableConnections(EntityManager em) {
+		Query query = createQuery(em);
+		int n = ((BigInteger) query.getSingleResult()).intValue();
+		return n;
+
+	}
+
+	private static Query createQuery(EntityManager em) {
 		Query query = em
 				.createNativeQuery("SELECT COUNT(*) FROM pg_stat_activity "
 						+ "WHERE application_name = :appNameDb and "
 						+ "datname = :dbName and state = 'idle'");
 		query.setParameter("appNameDb",
-				new ConfReader().readString("app_name_db"));
-		String[] arr = new ConfReader().readString("db.default.url").split("/");
-		String dbName = arr[arr.length - 1];
-		query.setParameter("dbName", dbName);
-		return ((BigInteger) query.getSingleResult()).intValue() >= 2;
+				getAppNameDb());
+		query.setParameter("dbName", getDbName());
+		return query;
+	}
 
+	private static String getDbName() {
+		String[] arr = makeConfRule().readString(DB_DEFAULT_URL.key()).split("/");
+		String dbName = arr[arr.length - 1];
+		return dbName;
+	}
+
+	private static ConfRule makeConfRule() {
+		return Factory.makeConfRule();
+	}
+
+	private static String getAppNameDb() {
+		return makeConfRule().readString(APP_NAME_IN_DB.key());
 	}
 }

@@ -32,7 +32,8 @@ public class UploadSeriesEndpointTester {
 	private static final int timeout = 100_000;
 	private final String basePath = "/api/series/";
 	private final long seriesId = 1000_000L;
-	private String alsIdFormatURL = "http://localhost:9000/epidemap/assets/input/series-data/examples/test_alsId_format.txt";
+	//private String alsIdFormatURL = "http://localhost:3333/epidemap/assets/input/series-data/examples/test_alsId_format.txt";
+	private String alsIdFormatURL = "https://pitt.box.com/shared/static/y6e8o6gg2a9s1q5bpd2dnznfa83qk5bm.txt";
 	
 	//TODO: move all new File() to seriesDataFileHleper 
 
@@ -40,6 +41,7 @@ public class UploadSeriesEndpointTester {
 		return () -> newInstance().testUpload();
 	}
 
+	// fails due to running out of available db connections. Upload Queue will solve the problem 
 	public void testUpload() {
 
 		testUploadViaUrl();
