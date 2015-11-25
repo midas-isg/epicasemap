@@ -25,4 +25,8 @@ public class ClientRule {
 	public WSResponse get(String url){
 		return WS.url(url).get().get(timeout);
 	}
+	
+	public WSResponse getByQuery(String urlQuery){
+		return WS.url(baseUrl + urlQuery).get().get(timeout);
+	}
 }
