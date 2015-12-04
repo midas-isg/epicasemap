@@ -182,7 +182,7 @@ System.out.println("Loaded (" + inputName + ") " + (++loadedAmbiguitiesLists) + 
 			*/
 		}
 		
-		while(loadedAmbiguitiesLists < seriesSize) {
+		while(true) {
 				synchronized(this) {
 					if(loadedAmbiguitiesLists >= seriesSize) {
 						break;
