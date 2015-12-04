@@ -182,8 +182,13 @@ System.out.println("Loaded (" + inputName + ") " + (++loadedAmbiguitiesLists) + 
 			*/
 		}
 		
-		synchronized(this) {
-			while(loadedAmbiguitiesLists < seriesSize) {
+		while(loadedAmbiguitiesLists < seriesSize) {
+				synchronized(this) {
+					if(loadedAmbiguitiesLists >= seriesSize) {
+						break;
+					}
+				}
+				
 				/*
 				try {
 					this.wait(125);
@@ -193,7 +198,6 @@ System.out.println("Loaded (" + inputName + ") " + (++loadedAmbiguitiesLists) + 
 					throw e;
 				}
 				*/
-			}
 		}
 		
 System.out.println("Finished Loading.");
