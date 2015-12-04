@@ -6,19 +6,21 @@ import interactors.ClientRule;
 import interactors.ConfRule;
 
 import java.io.UnsupportedEncodingException;
-import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
+import java.util.regex.Pattern;
 
 import lsparser.xmlparser.ALSIDQueryInput;
 import models.entities.Location;
+import models.entities.NamedLocation;
+import play.libs.F.Promise;
+import play.libs.ws.WS;
 import play.libs.ws.WSResponse;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -39,13 +41,21 @@ public class AlsDao {
 		final ConfRule confRule = Factory.makeConfRule();
 		locationsUrl = confRule.readString(AppKey.ALS_WS_URL.key()) + "/api/locations";
 	}
-
-	public List<Location> getLocations(ALSIDQueryInput alsIDQueryInput) throws URISyntaxException, UnsupportedEncodingException {
-		String urlQuery = "?q=" + URLEncoder.encode(alsIDQueryInput.locationName, "UTF-8");
+	
+	public Promise<List<NamedLocation>> getLocations(ALSIDQueryInput alsIDQueryInput) throws URISyntaxException, UnsupportedEncodingException {
+		String urlQuery = "?q=" + (URLEncoder.encode(alsIDQueryInput.locationName, "UTF-8").replaceAll("\\++", "%20"));
 		ClientRule clientRule = makeAlsClientRule();
-		JsonNode response = clientRule.getByQuery(urlQuery).asJson().get("geoJSON");
+		Promise<WSResponse> promisedWSResponse = clientRule.getAsynchronouslyByQuery(urlQuery);
 		
-		return toLocations(response);
+//System.out.println(urlQuery);
+		
+		return promisedWSResponse.map(wsResponse -> {
+				JsonNode jsonResponse = wsResponse.asJson().get("geoJSON");
+//System.out.println(wsResponse.getAllHeaders());
+//System.out.println(alsIDQueryInput.locationName);
+				
+				return toLocations(jsonResponse, alsIDQueryInput.locationName);
+			});
 	}
 	
 	public Location getLocationFromAls(Long id) {
@@ -80,19 +90,20 @@ public class AlsDao {
 		return location;
 	}
 	
-	List<Location> toLocations(JsonNode geoJSONResponse) {
-		List<Location> locations = new ArrayList<Location>();
+	List<NamedLocation> toLocations(JsonNode geoJSONResponse, String locationName) {
+		List<NamedLocation> locations = new ArrayList<NamedLocation>();
 		JsonNode features = geoJSONResponse.get("features");
 		int featureCount = features.size();
 		JsonNode currentFeature;
-		Location location;
+		NamedLocation location;
 		
 		for(int i = 0; i < featureCount; i++) {
 			currentFeature = features.get(i);
-			location = new Location();
+			location = new NamedLocation();
 			//Map<String, Double> center = centroid(getBbox(jsonResponse));
 			//location.setLatitude(center.get(LATITUDE));
 			//location.setLongitude(center.get(LONGITUDE));
+			location.setName(locationName);
 			location.setLabel(getSpecificName(currentFeature));
 			location.setId(getID(currentFeature));
 			locations.add(location);
