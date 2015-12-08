@@ -122,7 +122,7 @@ public class TychoParser {
 				return false;
 			}
 			
-			void setMap(Queue<Request> requestQueue, Map<String, List> possibleIdentities, int seriesSize) {
+			void setMap(Queue<Request> requestQueue, Map<String, List> possibleIdentities, int uniqueListSize) {
 				Request request = this;
 				
 				request.promisedLocations.map(locations -> {
@@ -133,7 +133,7 @@ public class TychoParser {
 						requestQueue.remove(this);
 					}
 					
-System.out.println("Loaded (" + inputName + ") " + (++loadedAmbiguitiesLists) + " of " + seriesSize + " ambiguities lists, but duplicates were ignored\n");
+System.out.println("Loaded (" + inputName + ") " + (++loadedAmbiguitiesLists) + " of " + uniqueListSize + " ambiguities lists\n");
 					
 					return loadedAmbiguitiesLists;
 				});
@@ -142,83 +142,74 @@ System.out.println("Loaded (" + inputName + ") " + (++loadedAmbiguitiesLists) + 
 			}
 		}
 		
-		final int seriesSize = timeSeries.entries.size();
+		final int totalEntries = timeSeries.entries.size();
+		HashMap<String, ALSIDQueryInput> uniqueEntries = new HashMap<String, ALSIDQueryInput>();
+		String entry;
+		for(int c = 0; c < totalEntries; c++) {
+			entry = timeSeries.entries.get(c).alsIDQueryInput.details.get("country") +
+					timeSeries.entries.get(c).alsIDQueryInput.details.get("state") +
+					timeSeries.entries.get(c).alsIDQueryInput.details.get("locationType") +
+					timeSeries.entries.get(c).alsIDQueryInput.locationName;
+			uniqueEntries.put(entry, timeSeries.entries.get(c).alsIDQueryInput);
+		}
+		final int uniqueListSize = uniqueEntries.size();
+		
 		loadedAmbiguitiesLists = 0;
 		AlsDao alsDAO = new AlsDao();
 		Map<String, List> possibleIdentities = new HashMap<String, List>();
 		Queue<Request> requestQueue = new ConcurrentLinkedQueue<Request>();
 		Request request;
 		
+		Iterator<String> uniqueEntriesIterator = uniqueEntries.keySet().iterator();
 		int i = 0;
-		while(i < seriesSize) {
+		while(uniqueEntriesIterator.hasNext()) {
 			if(requestQueue.size() < REQUEST_LIMIT) {
-				request = new Request(timeSeries.entries.get(i).alsIDQueryInput);
+				request = new Request(uniqueEntries.get(uniqueEntriesIterator.next()));
 				
 				synchronized(this) {
 					requestQueue.add(request);
 				}
 			
 				request.sendRequest(alsDAO);
-				request.setMap(requestQueue, possibleIdentities, seriesSize);
+				request.setMap(requestQueue, possibleIdentities, uniqueListSize);
 				i++;
 			}
-			/*
-			else {
-				//check for outstanding requests
-				synchronized(this) {
-					if(!requestQueue.isEmpty()) {
-						Iterator<Request> queueIterator = requestQueue.iterator();
-						while(queueIterator.hasNext()) {
-							request = queueIterator.next();
-							
-							if(request.timedOut()) {
-								System.out.println("Timed out!");
-								request.sendRequest(alsDAO);
-							}
-						}
-					}
+		}
+		
+		/**/
+		while(true) {
+			synchronized(this) {
+				if(loadedAmbiguitiesLists >= uniqueListSize) {
+					break;
 				}
 			}
-			*/
 		}
+		/**/
 		
-		while(true) {
-				synchronized(this) {
-					if(loadedAmbiguitiesLists >= seriesSize) {
-						break;
-					}
-				}
-				
-				/*
-				try {
-					this.wait(125);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-					throw e;
-				}
-				*/
-		}
-		
+		//perform finishing functions
 System.out.println("Finished Loading.");
-	
-//debug output
-String inputName;
-int ambiguitiesLength = possibleIdentities.size();
-NamedLocation currentLocation;
-Iterator<String> keyIterator= possibleIdentities.keySet().iterator();
 
-System.out.println("Loaded " + i + " lists for each unique identity");
-while(keyIterator.hasNext()) {
-	inputName = keyIterator.next();
-	
-	System.out.println("\n" + inputName);
-	for(int j = 0; j < ambiguitiesLength; j++) {
-		currentLocation = (NamedLocation)possibleIdentities.get(inputName).get(j);
-		System.out.println(currentLocation.getId() + ": " + currentLocation.getLabel());
-	}
-}
-	
+		//printAmibiguities()
+		{
+			//debug output
+			int ambiguitiesLength;
+			String inputName;
+			NamedLocation currentLocation;
+			Iterator<String> keyIterator = possibleIdentities.keySet().iterator();
+			
+			System.out.println("Loaded " + loadedAmbiguitiesLists + " lists for each unique identity");
+			while(keyIterator.hasNext()) {
+				inputName = keyIterator.next();
+				
+				System.out.println("\n" + inputName);
+				ambiguitiesLength = possibleIdentities.get(inputName).size();
+				for(int j = 0; j < ambiguitiesLength; j++) {
+					currentLocation = (NamedLocation)possibleIdentities.get(inputName).get(j);
+					System.out.println(currentLocation.getId() + ": " + currentLocation.getLabel());
+				}
+			}
+		}	
+		
 		//send HashMap for user selection
 		
 		return;
