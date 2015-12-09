@@ -53,8 +53,8 @@ app.controller('Series', function($scope, $rootScope, api) {
 	$scope.isShown = function(series){
 		return true;
 	};
-    $scope.uploadNewData = function(seriesId) {
-    	$rootScope.$emit('uploadNewSeriesData', seriesId);
+    $scope.uploadNewData = function(series) {
+    	$rootScope.$emit('uploadNewSeriesData', series);
 	};
 	$scope.isHiddenButtonSaveThenClose = isNoData;
 	$scope.can = can;

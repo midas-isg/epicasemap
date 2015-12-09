@@ -4,12 +4,20 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
+
+import org.hibernate.annotations.ColumnDefault;
 
 @Entity
 public class Series extends MetaData {
 	private Long id;
 	private Account owner;
+	
+	private SeriesDataUrl seriesDataUrl;
+	
+	private boolean lock;
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -74,5 +82,24 @@ public class Series extends MetaData {
 	public String toString() {
 		return "Series [id=" + id + ", title=" + this.getTitle() + ", description="
 				+ this.getDescription() + "]";
+	}
+	
+	@OneToOne(mappedBy = "series"/*, cascade = CascadeType.ALL*/)
+	@JoinColumn(name = "id")
+	public SeriesDataUrl getSeriesDataUrl() {
+		return seriesDataUrl;
+	}
+
+	public void setSeriesDataUrl(SeriesDataUrl seriesDataUrl) {
+		this.seriesDataUrl = seriesDataUrl;
+	}
+
+	@ColumnDefault("false")
+	public boolean getLock() {
+		return lock;
+	}
+
+	public void setLock(boolean lock) {
+		this.lock = lock;
 	}
 }

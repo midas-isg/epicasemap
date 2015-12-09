@@ -9,8 +9,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import models.SeriesDataFile;
-
 import org.junit.Test;
 
 import play.libs.F.Callback0;
