@@ -45,6 +45,7 @@ public class App {
 		this(testConfPathname, "");
 	}
 
+	@SuppressWarnings("unchecked")
 	private App(String testConfPathname, String uid) {
 		Map<String, Object> configurationMap = readConf(testConfPathname);
 		if(testConfPathname.equals(IN_MEMO_DB_CONF_PATH))
