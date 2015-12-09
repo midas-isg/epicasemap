@@ -1,5 +1,6 @@
 package interactors;
 
+import play.libs.F.Promise;
 import play.libs.ws.WS;
 import play.libs.ws.WSResponse;
 
@@ -24,5 +25,13 @@ public class ClientRule {
 	
 	public WSResponse get(String url){
 		return WS.url(url).get().get(timeout);
+	}
+	
+	public WSResponse getByQuery(String urlQuery){
+		return WS.url(baseUrl + urlQuery).get().get(timeout);
+	}
+	
+	public Promise<WSResponse> getAsynchronouslyByQuery(String urlQuery) {
+		return WS.url(baseUrl + urlQuery).setTimeout((int) 10000/*timeout*/).get();
 	}
 }
