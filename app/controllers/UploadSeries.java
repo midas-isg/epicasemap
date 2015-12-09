@@ -1,7 +1,6 @@
 package controllers;
 
 import static gateways.configuration.AppKey.APP_NAME_IN_DB;
-import static gateways.configuration.AppKey.DB_DEFAULT_URL;
 import interactors.ConfRule;
 import interactors.SeriesRule;
 import interactors.series_data_file.Persister;
@@ -26,9 +25,9 @@ import play.mvc.Http.Request;
 import play.mvc.Result;
 
 class UploadSeries extends Controller {
-	
+
 	private static int minRequiredConnections = 2;
-	
+
 	static Result upload(long seriesId) {
 		SeriesDataFile dataFile = getSeriesDataFile(request());
 		return uploadSeriesData(seriesId, dataFile);
@@ -179,18 +178,9 @@ class UploadSeries extends Controller {
 	private static Query createQuery(EntityManager em) {
 		Query query = em
 				.createNativeQuery("SELECT COUNT(*) FROM pg_stat_activity "
-						+ "WHERE application_name = :appNameDb and "
-						+ "datname = :dbName and state = 'idle'");
-		query.setParameter("appNameDb",
-				getAppNameDb());
-		query.setParameter("dbName", getDbName());
+						+ "WHERE application_name = :appNameDb and state = 'idle'");
+		query.setParameter("appNameDb", getAppNameDb());
 		return query;
-	}
-
-	private static String getDbName() {
-		String[] arr = makeConfRule().readString(DB_DEFAULT_URL.key()).split("/");
-		String dbName = arr[arr.length - 1];
-		return dbName;
 	}
 
 	private static ConfRule makeConfRule() {
