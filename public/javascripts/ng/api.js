@@ -20,7 +20,10 @@ app.service("api", function($http, $q, $location) {
 	this.finding = function(path, cfg) {
 		return this.gettingFromUrl(makeUrl(path), cfg);
 	};
+	
     this.uploading = uploading;
+    this.uploadingViaUrl = uploadingViaUrl;
+    
 	this.getUrlQuery = function() {
 		return $location.search();
 	};
@@ -125,6 +128,20 @@ app.service("api", function($http, $q, $location) {
 	function uploading(path, file, cfg){
         var fd = new FormData();
         fd.append('file', file);
+        return requesting('put', makeUrl(path), modify(cfg), fd);
+        
+        function modify(cfg){
+        	cfg = cfg || {};
+        	cfg.transformRequest = angular.identity;
+        	cfg.headers = cfg.headers || {};
+        	cfg.headers['Content-Type'] = undefined;
+        	return cfg;
+        }
+    }
+	
+	function uploadingViaUrl(path, url, cfg){
+        var fd = new FormData();
+        fd.append('url', url);
         return requesting('put', makeUrl(path), modify(cfg), fd);
         
         function modify(cfg){
