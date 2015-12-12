@@ -8,6 +8,8 @@ import interactors.series_data_file.SeriesDataFile;
 import interactors.series_data_file.Validator;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
@@ -15,7 +17,9 @@ import java.util.StringJoiner;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+import javax.xml.bind.JAXBException;
 
+import lsparser.xmlparser.TychoParser;
 import models.entities.Series;
 import models.entities.SeriesDataUrl;
 import models.exceptions.NoConnectionAvailable;
@@ -47,7 +51,31 @@ class UploadSeries extends Controller {
 			return status(CONFLICT,
 					"url content seems unchanged. Use overWrite parameter to re-write data.");
 	}
+	
+	static Result uploadTychoViaUrl(long seriesId, String url, boolean overWrite) {
+		SeriesDataFile dataFile = getSeriesDataFile(url);
+		//parse as tycho file
+		TychoParser tychoParser = new TychoParser();
+		try {
+			tychoParser.unmarshal(lsparser.tycho.Result.class, new FileInputStream(dataFile.getFile()));
+			tychoParser.getALSIDs();
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+			throw new RuntimeException(e);
+		}
+		overWrite=false;
 
+		//if new or overwrite, return ambiguities list to user
+		
+		if (overWrite
+				|| !checksumMatches(seriesId, url, dataFile.getChecksum()))
+			return uploadSeriesData(seriesId, dataFile);
+		else
+			return status(CONFLICT,
+					"url content seems unchanged. Use overWrite parameter to re-write data.");
+	}
+	
 	private static Result uploadSeriesData(long seriesId,
 			SeriesDataFile dataFile) {
 		Result result = null;
@@ -61,6 +89,7 @@ class UploadSeries extends Controller {
 			JPA.bindForCurrentThread(emFromTransactionalAnnoation);
 			deleteTempFile(dataFile);
 		}
+		
 		return result;
 	}
 

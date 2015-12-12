@@ -4,10 +4,17 @@ app.controller('SeriesData', function($scope, $rootScope, api) {
 	var dom = cacheDom();
 	populateScope();
 	bindEvents();
-	    
+	
 	$scope.radioIn= 'file';
 	$scope.url;
 	$scope.overWrite = false;
+	
+	$scope.urlContentTypes = [
+		"csv",
+		"tycho"
+		//,{type: "apollo"}
+	];
+	$scope.urlContentType = $scope.urlContentTypes[0];
 	
 	function cacheDom(){
 		var dom = {$dialog: $('#dataModal')};
@@ -17,11 +24,11 @@ app.controller('SeriesData', function($scope, $rootScope, api) {
 	}
 	
 	function bindEvents(){
-	    $rootScope.$on('uploadNewSeriesData', showDialog);
-	    dom.$dialog.on('shown.bs.modal', focusFirstFormInput);
+		$rootScope.$on('uploadNewSeriesData', showDialog);
+		dom.$dialog.on('shown.bs.modal', focusFirstFormInput);
 
-	    function showDialog(event, series){
-	    	$scope.series = series;
+		function showDialog(event, series){
+			$scope.series = series;
 			$scope.seriesId = $scope.series.id;
 			if($scope.series.seriesDataUrl != null){
 				$scope.url = $scope.series.seriesDataUrl.url;
@@ -33,8 +40,8 @@ app.controller('SeriesData', function($scope, $rootScope, api) {
 		}
 		
 		function focusFirstFormInput(event) {
-	    	dom.$form.find(':input:enabled:visible:first').focus();
-	    }
+			dom.$form.find(':input:enabled:visible:first').focus();
+		}
 	}
 	
 	function populateScope(){
@@ -42,44 +49,45 @@ app.controller('SeriesData', function($scope, $rootScope, api) {
 		$scope.closeDialog = function() { 
 			dom.$dialog.modal('hide'); 
 		};
-	    $scope.uploadThenClose = uploadThenClose;
-	    $scope.uploadViaUrlThenClose = uploadViaUrlThenClose;
+		$scope.uploadThenClose = uploadThenClose;
+		$scope.uploadViaUrlThenClose = uploadViaUrlThenClose;
 	}
 
 	function uploadThenClose(){
 		$scope.isWorking = true;
 		$rootScope.$emit('modalBusyDialog');
-        api.uploading(makePath(), $scope.dataFile).then(function(rsp) {
-        	emitDone();
-       		$scope.closeDialog();
-       		loadCoordinates($scope.seriesId);
+		api.uploading(makePath(), $scope.dataFile).then(function(rsp) {
+			emitDone();
+	   		$scope.closeDialog();
+	   		loadCoordinates($scope.seriesId);
 		}, function (reason){
-        	emitDone();
-    		api.alert(dom.$alertParent, reason.statusText + 
-    				': ' + reason.data && reason.data.userMessage, 'alert-danger');
+			emitDone();
+			api.alert(dom.$alertParent, reason.statusText + 
+					': ' + reason.data && reason.data.userMessage, 'alert-danger');
 		});
-                     
-        function emitDone(){
-        	$scope.isWorking = false;
-        	$rootScope.$emit('hideBusyDialog');
-        }
+					 
+		function emitDone(){
+			$scope.isWorking = false;
+			$rootScope.$emit('hideBusyDialog');
+		}
 
-        function makePath(){
-        	return 'series/' + $scope.seriesId + '/data';
-        }
-        
-        function loadCoordinates(seriesId) {
-        	$rootScope.$emit('loadCoordinates', seriesId);
-    	}
+		function makePath(){
+			return 'series/' + $scope.seriesId + '/data';
+		}
+		
+		function loadCoordinates(seriesId) {
+			$rootScope.$emit('loadCoordinates', seriesId);
+		}
 	}
 	
-	 function uploadViaUrlThenClose(){
+	function uploadViaUrlThenClose(){
  		$scope.isWorking = true;
  		$rootScope.$emit('modalBusyDialog');
-         api.uploadingViaUrl(makePath(), $scope.url).then(function(rsp) {
-         	emitDone();
-        		$scope.closeDialog();
-        		loadCoordinates($scope.seriesId);
+		
+		api.uploadingViaUrl(makePath(), $scope.url).then(function(rsp) {
+			emitDone();
+				$scope.closeDialog();
+				loadCoordinates($scope.seriesId);
  		}, function (reason){
  			emitDone();
  			var isOK = true;
@@ -91,21 +99,27 @@ app.controller('SeriesData', function($scope, $rootScope, api) {
  				}
  			} else {
  				api.alert(dom.$alertParent, reason.statusText + 
-     				': ' + reason.data && reason.data.userMessage, 'alert-danger');
+	 				': ' + reason.data && reason.data.userMessage, 'alert-danger');
  			}
  		});
-         function emitDone(){
-         	$scope.isWorking = false;
-         	$scope.overWrite = false;
-         	$rootScope.$emit('hideBusyDialog');
-         }
-
-         function makePath(){
-         	return 'series/' + $scope.seriesId + '/data-url' + '?overWrite=' + $scope.overWrite;
-         }
-         
-         function loadCoordinates(seriesId) {
-         	$rootScope.$emit('loadCoordinates', seriesId);
-     	}
- 	}
+		 function emitDone(){
+		 	$scope.isWorking = false;
+		 	$scope.overWrite = false;
+		 	$rootScope.$emit('hideBusyDialog');
+		 }
+		
+		function makePath() {
+console.log($scope.urlContentType);
+			
+			if($scope.urlContentType === "tycho") {
+				return 'series/tycho/' + $scope.seriesId + '/data-url' + '?overWrite=' + $scope.overWrite;
+			}
+			 
+			return 'series/' + $scope.seriesId + '/data-url' + '?overWrite=' + $scope.overWrite;
+		}
+		 
+		 function loadCoordinates(seriesId) {
+		 	$rootScope.$emit('loadCoordinates', seriesId);
+	 	}
+	}
 });
