@@ -19,7 +19,7 @@ app.run(function(){
 		var minHeight = $( "tr:first" ).height() * 3;
 		tc.css('max-height', Math.max(height, minHeight) + 'px');
 	}
-})
+});
 
 app.directive('appFileModel', function ($parse) {
     return {
