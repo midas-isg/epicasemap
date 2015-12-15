@@ -131,11 +131,10 @@ public class TychoParser {
 					
 					synchronized(this) {
 						requestQueue.remove(this);
+						loadedAmbiguitiesLists++;
+System.out.println("Loaded (" + inputName + ") " + loadedAmbiguitiesLists + " of " + uniqueListSize + " ambiguities lists\n");
+						return loadedAmbiguitiesLists;
 					}
-					
-System.out.println("Loaded (" + inputName + ") " + (++loadedAmbiguitiesLists) + " of " + uniqueListSize + " ambiguities lists\n");
-					
-					return loadedAmbiguitiesLists;
 				});
 				
 				return;
