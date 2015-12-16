@@ -50,12 +50,12 @@ public class AlsDao {
 //System.out.println(urlQuery);
 		
 		return promisedWSResponse.map(wsResponse -> {
-				JsonNode jsonResponse = wsResponse.asJson().get("geoJSON");
+			JsonNode jsonResponse = wsResponse.asJson().get("geoJSON");
 //System.out.println(wsResponse.getAllHeaders());
 //System.out.println(alsIDQueryInput.locationName);
-				
-				return toLocations(jsonResponse, alsIDQueryInput.locationName);
-			});
+			
+			return toLocations(jsonResponse, alsIDQueryInput.locationName);
+		});
 	}
 	
 	public Location getLocationFromAls(Long id) {
@@ -90,7 +90,7 @@ public class AlsDao {
 		return location;
 	}
 	
-	List<NamedLocation> toLocations(JsonNode geoJSONResponse, String locationName) {
+	List<NamedLocation> toLocations(JsonNode geoJSONResponse, String inputName) {
 		List<NamedLocation> locations = new ArrayList<NamedLocation>();
 		JsonNode features = geoJSONResponse.get("features");
 		int featureCount = features.size();
@@ -100,10 +100,10 @@ public class AlsDao {
 		for(int i = 0; i < featureCount; i++) {
 			currentFeature = features.get(i);
 			location = new NamedLocation();
-			//Map<String, Double> center = centroid(getBbox(jsonResponse));
+			//Map<String, Double> center = centroid(getBbox(geoJSONResponse));
 			//location.setLatitude(center.get(LATITUDE));
 			//location.setLongitude(center.get(LONGITUDE));
-			location.setName(locationName);
+			location.setInputName(inputName);
 			location.setLabel(getSpecificName(currentFeature));
 			location.setId(getID(currentFeature));
 			locations.add(location);
