@@ -20,6 +20,7 @@ import javax.persistence.Query;
 import javax.xml.bind.JAXBException;
 
 import lsparser.xmlparser.TychoParser;
+import models.entities.NamedLocation;
 import models.entities.Series;
 import models.entities.SeriesDataUrl;
 import models.exceptions.NoConnectionAvailable;
@@ -56,15 +57,25 @@ class UploadSeries extends Controller {
 		SeriesDataFile dataFile = getSeriesDataFile(url);
 		//parse as tycho file
 		TychoParser tychoParser = new TychoParser();
+		Map<String, List<NamedLocation>> ambiguities;
 		try {
 			tychoParser.unmarshal(lsparser.tycho.Result.class, new FileInputStream(dataFile.getFile()));
-			tychoParser.getALSIDs();
+			ambiguities = tychoParser.getALSIDs();
+			
+			/*if(mappings have ambiguities)*/ {
+				overWrite = false;
+				//return ambiguities or error to user
+			}
+			/*else {
+				overWrite = true;
+				//convert to csv
+			}
+			*/
 		}
 		catch(Exception e) {
 			e.printStackTrace();
 			throw new RuntimeException(e);
 		}
-		overWrite=false;
 
 		//if new or overwrite, return ambiguities list to user
 		

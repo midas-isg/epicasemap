@@ -65,7 +65,7 @@ public class TychoParser {
 		return doc;
 	}
 	
-	public void getALSIDs() throws Exception {
+	public Map<String, List<NamedLocation>> getALSIDs() throws Exception {
 		class Request {
 			public ALSIDQueryInput alsIDQueryInput;
 			public Promise<List<NamedLocation>> promisedLocations;
@@ -80,7 +80,6 @@ public class TychoParser {
 			}
 			
 			void sendRequest(AlsDao alsDAO) throws UnsupportedEncodingException, URISyntaxException {
-				//alsDAO = new AlsDao();
 				timeStamp = Calendar.getInstance().getTimeInMillis();
 				promisedLocations = alsDAO.getLocations(alsIDQueryInput);
 				
@@ -122,11 +121,11 @@ public class TychoParser {
 				return false;
 			}
 			
-			void setMap(Queue<Request> requestQueue, Map<String, List> possibleIdentities, int uniqueListSize) {
+			void setMap(Queue<Request> requestQueue, Map<String, List<NamedLocation>> possibleIdentities, int uniqueListSize) {
 				Request request = this;
 				
 				request.promisedLocations.map(locations -> {
-					String inputName = locations.get(0).getName();
+					String inputName = locations.get(0).getInputName();
 					possibleIdentities.put(inputName, locations);
 					
 					synchronized(this) {
@@ -155,7 +154,7 @@ System.out.println("Loaded (" + inputName + ") " + loadedAmbiguitiesLists + " of
 		
 		loadedAmbiguitiesLists = 0;
 		AlsDao alsDAO = new AlsDao();
-		Map<String, List> possibleIdentities = new HashMap<String, List>();
+		Map<String, List<NamedLocation>> possibleIdentities = new HashMap<String, List<NamedLocation>>();
 		Queue<Request> requestQueue = new ConcurrentLinkedQueue<Request>();
 		Request request;
 		
@@ -211,7 +210,7 @@ System.out.println("Finished Loading.");
 		
 		//send HashMap for user selection
 		
-		return;
+		return possibleIdentities;
 	}
 	
 	public void generateCSV() {

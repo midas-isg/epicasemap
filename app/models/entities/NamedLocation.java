@@ -1,13 +1,27 @@
 package models.entities;
 
-public class NamedLocation extends Location{
-	private String name;
+import javax.persistence.Column;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
 
-	public String getName() {
-		return name;
+public class NamedLocation extends Location {
+/*
+	private Long id;
+	private String label;
+	private Long alsId;
+	private Double latitude;
+	private Double longitude;
+	private String geojson;
+*/
+	
+	private String inputName;
+
+	public String getInputName() {
+		return inputName;
 	}
 
-	public void setName(String name) {
-		this.name = name;
+	public void setInputName(String name) {
+		this.inputName = name;
 	}
 }
