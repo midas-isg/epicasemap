@@ -66,7 +66,7 @@ public class AlsDao {
 
 	}
 
-	private ClientRule makeAlsClientRule() {
+	public ClientRule makeAlsClientRule() {
 		return new ClientRule(locationsUrl);
 
 	}
@@ -90,7 +90,7 @@ public class AlsDao {
 		return location;
 	}
 	
-	List<NamedLocation> toLocations(JsonNode geoJSONResponse, String inputName) {
+	public List<NamedLocation> toLocations(JsonNode geoJSONResponse, String inputName) {
 		List<NamedLocation> locations = new ArrayList<NamedLocation>();
 		JsonNode features = geoJSONResponse.get("features");
 		int featureCount = features.size();

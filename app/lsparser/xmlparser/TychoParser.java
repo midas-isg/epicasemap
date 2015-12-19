@@ -4,10 +4,12 @@ import lsparser.tycho.*;
 import gateways.webservice.AlsDao;
 import models.entities.Location;
 import models.entities.NamedLocation;
+import interactors.ClientRule;
 
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -63,6 +65,86 @@ public class TychoParser {
 		timeSeries = new TimeSeries(result.getRow());
 		
 		return doc;
+	}
+	
+	public Map<String, List<NamedLocation>> synchronizedGetALSIDs() throws Exception {
+		class Request {
+			public ALSIDQueryInput alsIDQueryInput;
+			public Promise<List<NamedLocation>> promisedLocations;
+			public long timeStamp;
+			public int timeouts;
+			
+			Request(ALSIDQueryInput alsIDQueryInput) {
+				timeouts = 0;
+				this.alsIDQueryInput = alsIDQueryInput;
+				
+				return;
+			}
+			
+			List<NamedLocation> sendRequest(AlsDao alsDAO) throws UnsupportedEncodingException, URISyntaxException {
+				timeStamp = Calendar.getInstance().getTimeInMillis();
+				
+				String urlQuery = "?q=" + (URLEncoder.encode(alsIDQueryInput.locationName, "UTF-8").replaceAll("\\++", "%20"));
+				ClientRule clientRule = alsDAO.makeAlsClientRule();
+				
+				return alsDAO.toLocations(clientRule.getByQuery(urlQuery).asJson().get("geoJSON"), alsIDQueryInput.locationName);
+			}
+		}
+		
+		final int totalEntries = timeSeries.entries.size();
+		HashMap<String, ALSIDQueryInput> uniqueEntries = new HashMap<String, ALSIDQueryInput>();
+		String entry;
+		for(int c = 0; c < totalEntries; c++) {
+			entry = timeSeries.entries.get(c).alsIDQueryInput.details.get("country") +
+					timeSeries.entries.get(c).alsIDQueryInput.details.get("state") +
+					timeSeries.entries.get(c).alsIDQueryInput.details.get("locationType") +
+					timeSeries.entries.get(c).alsIDQueryInput.locationName;
+			uniqueEntries.put(entry, timeSeries.entries.get(c).alsIDQueryInput);
+		}
+		final int uniqueListSize = uniqueEntries.size();
+		
+		loadedAmbiguitiesLists = 0;
+		AlsDao alsDAO = new AlsDao();
+		List<NamedLocation> resolutionList;
+		Map<String, List<NamedLocation>> possibleIdentities = new HashMap<String, List<NamedLocation>>();
+		Request request;
+		
+		Iterator<String> uniqueEntriesIterator = uniqueEntries.keySet().iterator();
+		while(uniqueEntriesIterator.hasNext()) {
+				request = new Request(uniqueEntries.get(uniqueEntriesIterator.next()));
+				resolutionList = request.sendRequest(alsDAO);
+				possibleIdentities.put(request.alsIDQueryInput.locationName, resolutionList);
+				loadedAmbiguitiesLists++;
+				System.out.println("Loaded (" + request.alsIDQueryInput.locationName + ") " + loadedAmbiguitiesLists + " of " + uniqueListSize + " ambiguities lists\n");
+		}
+		
+		//perform finishing functions
+System.out.println("Finished Loading.");
+
+		//printAmibiguities()
+		{
+			//debug output
+			int ambiguitiesLength;
+			String inputName;
+			NamedLocation currentLocation;
+			Iterator<String> keyIterator = possibleIdentities.keySet().iterator();
+			
+			System.out.println("Loaded " + loadedAmbiguitiesLists + " lists for each unique identity");
+			while(keyIterator.hasNext()) {
+				inputName = keyIterator.next();
+				
+				System.out.println("\n" + inputName);
+				ambiguitiesLength = possibleIdentities.get(inputName).size();
+				for(int j = 0; j < ambiguitiesLength; j++) {
+					currentLocation = (NamedLocation)possibleIdentities.get(inputName).get(j);
+					System.out.println(currentLocation.getId() + ": " + currentLocation.getLabel());
+				}
+			}
+		}	
+		
+		//send HashMap for user selection
+		
+		return possibleIdentities;
 	}
 	
 	public Map<String, List<NamedLocation>> getALSIDs() throws Exception {
