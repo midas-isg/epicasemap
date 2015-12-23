@@ -5,15 +5,21 @@
 <!-- ng-init='radioIn="file"' enctype="{{ radioIn === 'file' ? 'multipart/form-data' : 'application/x-www-form-urlencoded' }}"> -->
 	
 	<div class="form-group">
-		<label ng-bind="currentInputLabel">Input Label</label>
-		<input class="form-control" type="text" name="aliasLabel" ng-init="currentInputLabel" ng-model="aliasLabel" id="aliasLabel">
+		<fieldset>
+			<legend ng-bind="currentInputLabel">Input Label</legend>
+			
+			<div>
+				<label for="aliasLabel">Couldn't find any matches, so try entering an alias: </label>
+				<input class="form-control" type="text" name="aliasLabel" ng-model="aliasLabel" id="aliasLabel">
+			</div>
+		</fieldset>
 	</div>
 
 	@* @radio("urlRadio", "radioIn", "url", "URL") *@
 	<div class='form-group input-group-sm row'>
 		<label class='control-label col-sm-2'>Matched Locations:</label>
 		<div class="form-group col-sm-2">
-			<select class="form-control" ng-model='locationSelection' ng-options="suggestion for suggestion in suggestionsList"></select>
+			<select class="" ng-model='locationSelection' ng-options="suggestion.label for suggestion in suggestionList"></select>
 		</div>
 	</div>
 </form>
