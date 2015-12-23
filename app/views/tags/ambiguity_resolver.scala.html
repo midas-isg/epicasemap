@@ -1,0 +1,43 @@
+@bs_modal("ambiguity-resolver", "AmbiguityResolver", "Ambiguity Resolver", "closeDialog()")(ambiguityResolver())(footer())
+
+@ambiguityResolver() = {
+<form id="form" class="form-horizontal" role="form" name="form">
+<!-- ng-init='radioIn="file"' enctype="{{ radioIn === 'file' ? 'multipart/form-data' : 'application/x-www-form-urlencoded' }}"> -->
+	
+	<div class="form-group">
+		<label ng-bind="currentInputLabel">Input Label</label>
+		<input class="form-control" type="text" name="aliasLabel" ng-init="currentInputLabel" ng-model="aliasLabel" id="aliasLabel">
+	</div>
+
+	@* @radio("urlRadio", "radioIn", "url", "URL") *@
+	<div class='form-group input-group-sm row'>
+		<label class='control-label col-sm-2'>Matched Locations:</label>
+		<div class="form-group col-sm-2">
+			<select class="form-control" ng-model='locationSelection' ng-options="suggestion for suggestion in suggestionsList"></select>
+		</div>
+	</div>
+</form>
+
+}
+
+@*
+@radio(id:String, model:String, value:String, text:String) = {
+<div class="form-group">
+	<div class="radio radio-offset">
+		<label class='control-label' for='@id'>
+			<input type="radio" name="opt" id= "@id" ng-model="@model" value="@value" checked> 
+			<strong>Upload using @text</strong>
+		</label>
+	</div>
+</div>
+}
+*@
+
+@footer() = {
+<button title="Edit previous location" class='btn-large btn-danger pull-left' ng-click='editPreviousEntry()'>
+	<!-- ng-disabled='! dataFile || isWorking' ng-show="radioIn === 'file'"> -->
+	@bs_icon("arrow-left") Previous Entry</button>
+<button title="Edit next location" class='btn-large btn-danger pull-left' ng-click='editNextEntry()'
+	<!-- ng-disabled='form.url.$invalid || isWorking' ng-show="radioIn === 'url'"> -->
+	@bs_icon("arrow-right") Next Entry</button>
+}

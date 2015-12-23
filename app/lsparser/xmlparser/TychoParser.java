@@ -248,6 +248,7 @@ System.out.println("Loaded (" + inputName + ") " + loadedAmbiguitiesLists + " of
 				
 				synchronized(this) {
 					requestQueue.add(request);
+					wait(125);
 				}
 			
 				request.sendRequest(alsDAO);
