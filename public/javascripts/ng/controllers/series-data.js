@@ -101,8 +101,7 @@ app.controller('SeriesData', function($scope, $rootScope, api) {
 				else if(reason.status === 300) /*multiple choices*/ {
 					//for each index of reason.data, summon modal with filtering options for selection, then process when finished
 					console.log("Multiple Choices:");
-					console.log(reason.data);
-					//$rootScope.$emit('');
+					$rootScope.$emit('ambiguityResolver', reason.data);
 				}
 				else if(reason.status === 404) /*not found*/ {
 					//for each index of reason.data, summon modal to edit empty list entries
