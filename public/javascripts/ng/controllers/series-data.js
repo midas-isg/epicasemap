@@ -88,31 +88,44 @@ app.controller('SeriesData', function($scope, $rootScope, api) {
 			emitDone();
 				$scope.closeDialog();
 				loadCoordinates($scope.seriesId);
- 		}, function (reason){
- 			emitDone();
- 			var isOK = true;
- 			if(reason.status == 409){
- 				isOK = confirm("It seems URL content already exists. \nOK = Overwrite existing series data");
- 				if (isOK) {
- 					$scope.overWrite=true;
- 					uploadViaUrlThenClose();
- 				}
- 			} else {
- 				api.alert(dom.$alertParent, reason.statusText + 
-	 				': ' + reason.data && reason.data.userMessage, 'alert-danger');
- 			}
- 		});
-		 function emitDone(){
+			}, function (reason) {
+				emitDone();
+				var isOK = true;
+				if(reason.status === 409) {
+					isOK = confirm("It seems URL content already exists. \nOK = Overwrite existing series data");
+					if (isOK) {
+						$scope.overWrite=true;
+						uploadViaUrlThenClose();
+					}
+				}
+				else if(reason.status === 300) /*multiple choices*/ {
+					//for each index of reason.data, summon modal with filtering options for selection, then process when finished
+					console.log("Multiple Choices:");
+					console.log(reason.data);
+					//$rootScope.$emit('');
+				}
+				else if(reason.status === 404) /*not found*/ {
+					//for each index of reason.data, summon modal to edit empty list entries
+					console.log("Not Found:");
+					console.log(reason.data);
+					//$rootScope.$emit('');
+				}
+				else {
+					api.alert(dom.$alertParent, reason.statusText + 
+						': ' + reason.data && reason.data.userMessage, 'alert-danger');
+				}
+			}
+		);
+		
+		 function emitDone() {
 		 	$scope.isWorking = false;
 		 	$scope.overWrite = false;
 		 	$rootScope.$emit('hideBusyDialog');
 		 }
 		
 		function makePath() {
-console.log($scope.urlContentType);
-			
 			if($scope.urlContentType === "tycho") {
-				return 'series/tycho/' + $scope.seriesId + '/data-url' + '?overWrite=' + $scope.overWrite;
+				return 'series/' + $scope.seriesId + '/data-tycho' + '?overWrite=' + $scope.overWrite;
 			}
 			 
 			return 'series/' + $scope.seriesId + '/data-url' + '?overWrite=' + $scope.overWrite;

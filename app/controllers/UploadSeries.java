@@ -25,9 +25,12 @@ import models.entities.Series;
 import models.entities.SeriesDataUrl;
 import models.exceptions.NoConnectionAvailable;
 import play.db.jpa.JPA;
+import play.libs.Json;
 import play.mvc.Controller;
 import play.mvc.Http.Request;
 import play.mvc.Result;
+import play.mvc.Results;
+import scala.util.parsing.json.JSON;
 
 class UploadSeries extends Controller {
 
@@ -60,12 +63,16 @@ class UploadSeries extends Controller {
 		Map<String, List<NamedLocation>> ambiguities;
 		try {
 			tychoParser.unmarshal(lsparser.tycho.Result.class, new FileInputStream(dataFile.getFile()));
-			ambiguities = tychoParser.getALSIDs();
+			ambiguities = tychoParser.synchronizedGetALSIDs();
 			
-			/*if(mappings have ambiguities)*/ {
+			if(ambiguities.size() > 0) {
 				overWrite = false;
-				//return ambiguities or error to user
+				
+				//convert to JSON
+				//Json.toJson(ambiguities);
+				return Results.status(MULTIPLE_CHOICES, Json.toJson(ambiguities));
 			}
+			//else if(){ return notFound(Json.toJson(ambiguities)); }
 			/*else {
 				overWrite = true;
 				//convert to csv
