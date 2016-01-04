@@ -9,19 +9,18 @@ import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
-import java.util.regex.Pattern;
 
 import lsparser.xmlparser.ALSIDQueryInput;
 import models.entities.Location;
 import models.entities.NamedLocation;
 import play.libs.F.Promise;
-import play.libs.ws.WS;
 import play.libs.ws.WSResponse;
+import scala.collection.concurrent.Debug;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -54,7 +53,7 @@ public class AlsDao {
 //System.out.println(wsResponse.getAllHeaders());
 //System.out.println(alsIDQueryInput.locationName);
 			
-			return toLocations(jsonResponse, alsIDQueryInput.locationName);
+			return toLocations(jsonResponse, alsIDQueryInput);
 		});
 	}
 	
@@ -62,13 +61,12 @@ public class AlsDao {
 		ClientRule clientRule = makeAlsClientRule();
 		Location location = toLocation(clientRule.getById(id));
 		location.setAlsId(id);
+		
 		return location;
-
 	}
 
 	public ClientRule makeAlsClientRule() {
 		return new ClientRule(locationsUrl);
-
 	}
 
 	private Location toLocation(WSResponse wsResponse) {
@@ -76,7 +74,6 @@ public class AlsDao {
 			return toLocation(wsResponse.asJson());
 		else
 			throw new RuntimeException(wsResponse.getStatusText());
-
 	}
 
 	Location toLocation(JsonNode jsonNode) {
@@ -90,11 +87,12 @@ public class AlsDao {
 		return location;
 	}
 	
-	public List<NamedLocation> toLocations(JsonNode geoJSONResponse, String inputName) {
+	public List<NamedLocation> toLocations(JsonNode geoJSONResponse, ALSIDQueryInput alsIDQueryInput) {
 		List<NamedLocation> locations = new ArrayList<NamedLocation>();
 		JsonNode features = geoJSONResponse.get("features");
-		int featureCount = features.size();
 		JsonNode currentFeature;
+		int featureCount = features.size();
+		String inputName = alsIDQueryInput.locationName;
 		NamedLocation location;
 		
 		for(int i = 0; i < featureCount; i++) {
@@ -103,12 +101,28 @@ public class AlsDao {
 			//Map<String, Double> center = centroid(getBbox(geoJSONResponse));
 			//location.setLatitude(center.get(LATITUDE));
 			//location.setLongitude(center.get(LONGITUDE));
-			location.setInputName(inputName);
+			location.setALSIDQueryInput(alsIDQueryInput);
 			location.setLabel(getSpecificName(currentFeature));
-			location.setId(getID(currentFeature));
+			location.setAlsId(getID(currentFeature));
+			location.setLocationTypeName(currentFeature.get("properties").get("locationTypeName").asText());
 			locations.add(location);
-//System.out.print(location.getLabel());
-//System.out.println(" " + location.getId());
+			
+System.out.println("\n" + location.getLabel() + " " + location.getAlsId());
+JsonNode currentProperties = currentFeature.get("properties");
+Iterator<String> childrenNamesIterator = currentProperties.fieldNames();
+String field;
+while(childrenNamesIterator.hasNext()) {
+	field = childrenNamesIterator.next();
+	System.out.println(field + ": " + currentProperties.get(field).asText());
+	
+	if(field.equals("lineage")) {
+		Iterator<JsonNode> lineageIterator = currentProperties.get(field).elements();
+		while(lineageIterator.hasNext()) {
+			System.out.println("\t" + lineageIterator.next().asText());
+		}
+	}
+}
+		
 		}
 //System.out.println(locations.size() + " location(s)\n");
 		
