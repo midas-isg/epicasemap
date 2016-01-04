@@ -1,26 +1,28 @@
-@bs_modal("ambiguity-resolver", "AmbiguityResolver", "Ambiguity Resolver", "closeDialog()")(ambiguityResolver())(footer())
+@bs_modal("ambiguity-resolver", "AmbiguityResolver", "Ambiguities Exist", "closeDialog()")(ambiguityResolver())(footer())
 
 @ambiguityResolver() = {
-<form id="form" class="form-horizontal" role="form" name="form">
+<form id="form" class="form-horizontal" role="form" name="form" style="padding: 5px;">
 <!-- ng-init='radioIn="file"' enctype="{{ radioIn === 'file' ? 'multipart/form-data' : 'application/x-www-form-urlencoded' }}"> -->
 	
 	<div class="form-group">
 		<fieldset>
-			<legend ng-bind="currentInputLabel">Input Label</legend>
+			<label style="display: inline;">Results for:
+				<legend ng-bind="currentInputLabel">Input Label</legend>
+			</label>
 			
 			<div>
-				<label for="aliasLabel">Couldn't find any matches, so try entering an alias: </label>
-				<input class="form-control" type="text" name="aliasLabel" ng-model="aliasLabel" id="aliasLabel">
+				<label for="aliasLabel">If there are no correct matches try querying with an alias: </label>
+				<input class="/*form-control*/" type="text" name="aliasLabel" ng-model="aliasLabel" id="aliasLabel">
 			</div>
 		</fieldset>
 	</div>
 
 	@* @radio("urlRadio", "radioIn", "url", "URL") *@
-	<div class='form-group input-group-sm row'>
-		<label class='control-label col-sm-2'>Matched Locations:</label>
-		<div class="form-group col-sm-2">
+	<div class='form-group'>
+		<fieldset>
+			<label class='control-label'>Matched Locations:</label>
 			<select class="" ng-model='locationSelection' ng-options="suggestion.label for suggestion in suggestionList"></select>
-		</div>
+		</fieldset>
 	</div>
 </form>
 
@@ -40,10 +42,12 @@
 *@
 
 @footer() = {
-<button title="Edit previous location" class='btn-large btn-danger pull-left' ng-click='editPreviousEntry()'>
+<button id="edit-previous-location" title="Edit previous location" class='btn-large btn-danger pull-left' ng-click='editPreviousLocation()'>
 	<!-- ng-disabled='! dataFile || isWorking' ng-show="radioIn === 'file'"> -->
-	@bs_icon("arrow-left") Previous Entry</button>
-<button title="Edit next location" class='btn-large btn-danger pull-left' ng-click='editNextEntry()'
-	<!-- ng-disabled='form.url.$invalid || isWorking' ng-show="radioIn === 'url'"> -->
-	@bs_icon("arrow-right") Next Entry</button>
+	@bs_icon("arrow-left") Previous Location
+</button>
+
+<button id="edit-next-location" title="Edit next location" class='btn-large btn-danger' ng-click='editNextLocation()'>
+	@bs_icon("arrow-right") Next Location
+</button>
 }

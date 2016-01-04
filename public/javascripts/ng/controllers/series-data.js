@@ -5,29 +5,18 @@ app.controller('SeriesData', function($scope, $rootScope, api) {
 	populateScope();
 	bindEvents();
 	
-	$scope.radioIn= 'file';
-	$scope.url;
-	$scope.overWrite = false;
-	
-	$scope.urlContentTypes = [
-		"csv",
-		"tycho"
-		//,{type: "apollo"}
-	];
-	$scope.urlContentType = $scope.urlContentTypes[0];
-	
-	function cacheDom(){
+	function cacheDom() {
 		var dom = {$dialog: $('#dataModal')};
 		dom.$form = dom.$dialog.find('form');
 		dom.$alertParent = dom.$dialog.find('.modal-body');
 		return dom;
 	}
 	
-	function bindEvents(){
+	function bindEvents() {
 		$rootScope.$on('uploadNewSeriesData', showDialog);
 		dom.$dialog.on('shown.bs.modal', focusFirstFormInput);
 
-		function showDialog(event, series){
+		function showDialog(event, series) {
 			$scope.series = series;
 			$scope.seriesId = $scope.series.id;
 			if($scope.series.seriesDataUrl != null){
@@ -44,7 +33,18 @@ app.controller('SeriesData', function($scope, $rootScope, api) {
 		}
 	}
 	
-	function populateScope(){
+	function populateScope() {
+		$scope.radioIn= 'file';
+		$scope.url;
+		$scope.overWrite = false;
+		
+		$scope.urlContentTypes = [
+			"csv",
+			"tycho"
+			//,{type: "apollo"}
+		];
+		$scope.urlContentType = $scope.urlContentTypes[0];
+		
 		$scope.view = {};
 		$scope.closeDialog = function() { 
 			dom.$dialog.modal('hide'); 
@@ -53,25 +53,25 @@ app.controller('SeriesData', function($scope, $rootScope, api) {
 		$scope.uploadViaUrlThenClose = uploadViaUrlThenClose;
 	}
 
-	function uploadThenClose(){
+	function uploadThenClose() {
 		$scope.isWorking = true;
 		$rootScope.$emit('modalBusyDialog');
 		api.uploading(makePath(), $scope.dataFile).then(function(rsp) {
 			emitDone();
-	   		$scope.closeDialog();
-	   		loadCoordinates($scope.seriesId);
-		}, function (reason){
+			$scope.closeDialog();
+			loadCoordinates($scope.seriesId);
+		}, function (reason) {
 			emitDone();
 			api.alert(dom.$alertParent, reason.statusText + 
 					': ' + reason.data && reason.data.userMessage, 'alert-danger');
 		});
-					 
-		function emitDone(){
+		
+		function emitDone() {
 			$scope.isWorking = false;
 			$rootScope.$emit('hideBusyDialog');
 		}
 
-		function makePath(){
+		function makePath() {
 			return 'series/' + $scope.seriesId + '/data';
 		}
 		
@@ -80,9 +80,9 @@ app.controller('SeriesData', function($scope, $rootScope, api) {
 		}
 	}
 	
-	function uploadViaUrlThenClose(){
- 		$scope.isWorking = true;
- 		$rootScope.$emit('modalBusyDialog');
+	function uploadViaUrlThenClose() {
+		$scope.isWorking = true;
+		$rootScope.$emit('modalBusyDialog');
 		
 		api.uploadingViaUrl(makePath(), $scope.url).then(function(rsp) {
 			emitDone();
@@ -116,10 +116,10 @@ app.controller('SeriesData', function($scope, $rootScope, api) {
 			}
 		);
 		
-		 function emitDone() {
-		 	$scope.isWorking = false;
-		 	$scope.overWrite = false;
-		 	$rootScope.$emit('hideBusyDialog');
+		function emitDone() {
+			$scope.isWorking = false;
+			$scope.overWrite = false;
+			$rootScope.$emit('hideBusyDialog');
 		 }
 		
 		function makePath() {
@@ -130,7 +130,7 @@ app.controller('SeriesData', function($scope, $rootScope, api) {
 			return 'series/' + $scope.seriesId + '/data-url' + '?overWrite=' + $scope.overWrite;
 		}
 		 
-		 function loadCoordinates(seriesId) {
+		function loadCoordinates(seriesId) {
 		 	$rootScope.$emit('loadCoordinates', seriesId);
 	 	}
 	}

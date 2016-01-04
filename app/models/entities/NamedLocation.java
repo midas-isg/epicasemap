@@ -5,6 +5,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
+import lsparser.xmlparser.ALSIDQueryInput;
+
 public class NamedLocation extends Location {
 /*
 	private Long id;
@@ -14,14 +16,26 @@ public class NamedLocation extends Location {
 	private Double longitude;
 	private String geojson;
 */
+	private ALSIDQueryInput alsIDQueryInput;
+	private String locationTypeName;
 	
-	private String inputName;
-
-	public String getInputName() {
-		return inputName;
+	public ALSIDQueryInput getALSIDQueryInput() {
+		return alsIDQueryInput;
 	}
 
-	public void setInputName(String name) {
-		this.inputName = name;
+	public void setALSIDQueryInput(ALSIDQueryInput alsIDQueryInput) {
+		this.alsIDQueryInput = alsIDQueryInput;
+		
+		return;
+	}
+	
+	public String getLocationTypeName() {
+		return locationTypeName;
+	}
+	
+	public void setLocationTypeName(String locationTypeName) {
+		this.locationTypeName = locationTypeName;
+		
+		return;
 	}
 }
