@@ -1,27 +1,54 @@
-@bs_modal("ambiguity-resolver", "AmbiguityResolver", "Ambiguities Exist", "closeDialog()")(ambiguityResolver())(footer())
+@bs_modal("ambiguity-resolver", "AmbiguityResolver", "Possible Ambiguities Exist", "closeDialog()")(ambiguityResolver())(footer())
 
 @ambiguityResolver() = {
 <form id="form" class="form-horizontal" role="form" name="form" style="padding: 5px;">
 <!-- ng-init='radioIn="file"' enctype="{{ radioIn === 'file' ? 'multipart/form-data' : 'application/x-www-form-urlencoded' }}"> -->
 	
 	<div class="form-group">
-		<fieldset>
-			<label style="display: inline;">Results for:
-				<legend ng-bind="currentInputLabel">Input Label</legend>
-			</label>
+		<div id="requery-text" hidden>
+			<label style="color:#ff0000;">Flagged for re-query</label>
+		</div>
+		
+		<label style="display: inline;">Results for:
+			<legend ng-bind="currentInputLabel">Input Label</legend>
+		</label>
+		
+		<div style="margin-bottom: 25px;">
+			<label class='/*control-label*/'>Matched Locations:</label>
+			<select class="" ng-model='locationSelection' ng-options="suggestion.label for suggestion in suggestionList" style="display: block;"></select>
+		</div>
+		
+		<div>
+			<label>If there are no correct matches try editing query input</label>
+			<button id="edit-query" title="Toggle Query Editor" class='btn-large btn-warning' ng-click='editLocationQuery()'>
+				@bs_icon("edit") Toggle Query Editor
+			</button>
+		</div>
+		
+		<fieldset id="query-input" style="margin-left: 15px;" hidden>
+			<div>
+				<label for="aliasLabel">Location Name (try an alias): </label>
+				<input id="aliasLabel" class="/*form-control*/" type="text" name="aliasLabel" ng-model="aliasLabel">
+			</div>
 			
 			<div>
-				<label for="aliasLabel">If there are no correct matches try querying with an alias: </label>
-				<input class="/*form-control*/" type="text" name="aliasLabel" ng-model="aliasLabel" id="aliasLabel">
+				<label for="locationType">Location Type: </label>
+				<input id="locationType" class="" type="text" name="locationType" ng-model="locationType">
 			</div>
-		</fieldset>
-	</div>
-
-	@* @radio("urlRadio", "radioIn", "url", "URL") *@
-	<div class='form-group'>
-		<fieldset>
-			<label class='control-label'>Matched Locations:</label>
-			<select class="" ng-model='locationSelection' ng-options="suggestion.label for suggestion in suggestionList"></select>
+			
+			<div>
+				<label for="state">State Name: </label>
+				<input id="state" class="" type="text" name="state" ng-model="state">
+			</div>
+			
+			<div>
+				<label for="city">City Name: </label>
+				<input id="city" class="" type="text" name="city" ng-model="city">
+			</div>
+			
+			<button id="requery-flag" title="Flag for re-query" class='btn-large btn-danger' ng-click='flagForRequery()'>
+				@bs_icon("edit") Flag for re-query
+			</button>
 		</fieldset>
 	</div>
 </form>
@@ -42,12 +69,12 @@
 *@
 
 @footer() = {
-<button id="edit-previous-location" title="Edit previous location" class='btn-large btn-danger pull-left' ng-click='editPreviousLocation()'>
+<button id="edit-previous-location" title="Edit previous location" class='btn-large /*btn-danger*/ pull-left' ng-click='editPreviousLocation()'>
 	<!-- ng-disabled='! dataFile || isWorking' ng-show="radioIn === 'file'"> -->
 	@bs_icon("arrow-left") Previous Location
 </button>
 
-<button id="edit-next-location" title="Edit next location" class='btn-large btn-danger' ng-click='editNextLocation()'>
+<button id="edit-next-location" title="Edit next location" class='btn-large /*btn-danger*/' ng-click='editNextLocation()'>
 	@bs_icon("arrow-right") Next Location
 </button>
 }

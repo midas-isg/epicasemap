@@ -53,7 +53,8 @@ console.log(resultData);
 		function switchIndex() {
 console.log("currentLocationIndex: " + currentLocationIndex);
 			var keys = Object.keys(ambiguitiesList),
-				i;
+				i,
+				inputQuery;
 			
 			if(currentLocationIndex === 0) {
 				$("#edit-previous-location").hide();
@@ -69,8 +70,26 @@ console.log("currentLocationIndex: " + currentLocationIndex);
 				$("#edit-next-location").show();
 			}
 			
+			//if(!flaggedForRequery)
+			{
+				$("#requery-text").hide();
+				$("#query-input").hide();
+			}
+			/*
+			else {
+				$("#requery-text").show();
+				$("#query-input").show();
+			}
+			*/
+			
 			$scope.currentInputLabel = keys[currentLocationIndex];
 			$scope.suggestionList = [];
+			
+			inputQuery = ambiguitiesList[$scope.currentInputLabel][0].alsidqueryInput.details;
+			$scope.aliasLabel = $scope.currentInputLabel;
+			$scope.state = inputQuery.state;
+			$scope.city = inputQuery.city;
+			$scope.locationType = inputQuery.locationType;
 			
 			for(i = 0; i < ambiguitiesList[$scope.currentInputLabel].length; i++) {
 				$scope.suggestionList.push({});
@@ -80,6 +99,16 @@ console.log("currentLocationIndex: " + currentLocationIndex);
 			}
 			$scope.locationSelection = $scope.suggestionList[0];
 			
+			return;
+		}
+		
+		$scope.editLocationQuery = function() {
+			$("#query-input").toggle();
+			return;
+		}
+		
+		$scope.flagForRequery = function() {
+			$("#requery-text").toggle();
 			return;
 		}
 		
