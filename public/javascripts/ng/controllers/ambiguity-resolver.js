@@ -3,7 +3,8 @@
 app.controller('AmbiguityResolver', function($scope, $rootScope, api) {
 	var dom = cacheDom(),
 		ambiguitiesList,
-		currentLocationIndex;
+		currentLocationIndex,
+		keys;
 	
 	populateScope();
 	bindEvents();
@@ -19,11 +20,14 @@ app.controller('AmbiguityResolver', function($scope, $rootScope, api) {
 	function bindEvents() {
 		$rootScope.$on('ambiguityResolver', showDialog);
 		dom.$dialog.on('shown.bs.modal', focusFirstFormInput);
-
+		
 		function showDialog(event, resultData) {
 console.log(resultData);
 			ambiguitiesList = resultData;
+window.ambiguitiesList = ambiguitiesList;
+			keys = Object.keys(ambiguitiesList);
 			currentLocationIndex = -1;
+			
 			$scope.editNextLocation();
 			
 			/*
@@ -52,9 +56,8 @@ console.log(resultData);
 		
 		function switchIndex() {
 console.log("currentLocationIndex: " + currentLocationIndex);
-			var keys = Object.keys(ambiguitiesList),
-				i,
-				inputQuery;
+			var i,
+				requeryInput;
 			
 			if(currentLocationIndex === 0) {
 				$("#edit-previous-location").hide();
@@ -70,34 +73,39 @@ console.log("currentLocationIndex: " + currentLocationIndex);
 				$("#edit-next-location").show();
 			}
 			
-			//if(!flaggedForRequery)
-			{
+			if(!ambiguitiesList[keys[currentLocationIndex]].requery) {
 				$("#requery-text").hide();
 				$("#query-input").hide();
 			}
-			/*
 			else {
 				$("#requery-text").show();
 				$("#query-input").show();
 			}
-			*/
 			
 			$scope.currentInputLabel = keys[currentLocationIndex];
-			$scope.suggestionList = [];
 			
-			inputQuery = ambiguitiesList[$scope.currentInputLabel][0].alsidqueryInput.details;
-			$scope.aliasLabel = $scope.currentInputLabel;
-			$scope.state = inputQuery.state;
-			$scope.city = inputQuery.city;
-			$scope.locationType = inputQuery.locationType;
+			requeryInput = ambiguitiesList[$scope.currentInputLabel].requeryInput ||
+				{
+					label: ambiguitiesList[$scope.currentInputLabel][0].alsidqueryInput.details.currentInputLabel,
+					state: ambiguitiesList[$scope.currentInputLabel][0].alsidqueryInput.details.state,
+					city: ambiguitiesList[$scope.currentInputLabel][0].alsidqueryInput.details.city,
+					locationType: ambiguitiesList[$scope.currentInputLabel][0].alsidqueryInput.details.locationType
+				};
+			
+			$scope.requeryInput = requeryInput;
+			
+			$scope.suggestionList = {
+				locations: []
+			};
 			
 			for(i = 0; i < ambiguitiesList[$scope.currentInputLabel].length; i++) {
-				$scope.suggestionList.push({});
-				$scope.suggestionList[i].index = i;
-				$scope.suggestionList[i].label = ambiguitiesList[$scope.currentInputLabel][i].label;
-				$scope.suggestionList[i].alsID = ambiguitiesList[$scope.currentInputLabel][i].id;
+				$scope.suggestionList.locations.push({
+					label: ambiguitiesList[$scope.currentInputLabel][i].label,
+					alsID: ambiguitiesList[$scope.currentInputLabel][i].alsId
+				});
 			}
-			$scope.locationSelection = $scope.suggestionList[0];
+			
+			$scope.suggestionList.selectedLocationID = ambiguitiesList[$scope.currentInputLabel].selectedLocationID || ambiguitiesList[$scope.currentInputLabel][0].alsId;
 			
 			return;
 		}
@@ -108,7 +116,19 @@ console.log("currentLocationIndex: " + currentLocationIndex);
 		}
 		
 		$scope.flagForRequery = function() {
-			$("#requery-text").toggle();
+			ambiguitiesList[keys[currentLocationIndex]].requery = !ambiguitiesList[keys[currentLocationIndex]].requery;
+			
+			if(ambiguitiesList[keys[currentLocationIndex]].requery) {
+				$("#requery-text").show();
+				$("#query-input").show();
+				
+				ambiguitiesList[$scope.currentInputLabel].requeryInput = $scope.requeryInput;
+			}
+			else {
+				$("#requery-text").hide();
+				$("#query-input").hide();
+			}
+			
 			return;
 		}
 		
@@ -126,6 +146,12 @@ console.log("currentLocationIndex: " + currentLocationIndex);
 				currentLocationIndex++;
 				switchIndex();
 			}
+			
+			return;
+		}
+		
+		$scope.locationChange = function() {
+			ambiguitiesList[keys[currentLocationIndex]].selectedLocationID = $scope.suggestionList.selectedLocationID;
 			
 			return;
 		}

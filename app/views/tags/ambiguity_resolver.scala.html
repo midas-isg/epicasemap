@@ -6,7 +6,7 @@
 	
 	<div class="form-group">
 		<div id="requery-text" hidden>
-			<label style="color:#ff0000;">Flagged for re-query</label>
+			<label style="color:#ff0000;">Using new parameters</label>
 		</div>
 		
 		<label style="display: inline;">Results for:
@@ -15,7 +15,8 @@
 		
 		<div style="margin-bottom: 25px;">
 			<label class='/*control-label*/'>Matched Locations:</label>
-			<select class="" ng-model='locationSelection' ng-options="suggestion.label for suggestion in suggestionList" style="display: block;"></select>
+			<select id="selected-location" ng-model='suggestionList.selectedLocationID' ng-change="locationChange()" ng-options="suggestion.alsID as suggestion.label for suggestion in suggestionList.locations" style="display: block;">
+			</select>
 		</div>
 		
 		<div>
@@ -28,26 +29,26 @@
 		<fieldset id="query-input" style="margin-left: 15px;" hidden>
 			<div>
 				<label for="aliasLabel">Location Name (try an alias): </label>
-				<input id="aliasLabel" class="/*form-control*/" type="text" name="aliasLabel" ng-model="aliasLabel">
+				<input id="aliasLabel" class="/*form-control*/" type="text" name="requeryInput.label" ng-model="requeryInput.label">
 			</div>
 			
 			<div>
 				<label for="locationType">Location Type: </label>
-				<input id="locationType" class="" type="text" name="locationType" ng-model="locationType">
+				<input id="locationType" class="" type="text" name="locationType" ng-model="requeryInput.locationType">
 			</div>
 			
 			<div>
 				<label for="state">State Name: </label>
-				<input id="state" class="" type="text" name="state" ng-model="state">
+				<input id="state" class="" type="text" name="state" ng-model="requeryInput.state">
 			</div>
 			
 			<div>
 				<label for="city">City Name: </label>
-				<input id="city" class="" type="text" name="city" ng-model="city">
+				<input id="city" class="" type="text" name="city" ng-model="requeryInput.city">
 			</div>
 			
-			<button id="requery-flag" title="Flag for re-query" class='btn-large btn-danger' ng-click='flagForRequery()'>
-				@bs_icon("edit") Flag for re-query
+			<button id="requery-flag" title="Use updated parameters" class='btn-large btn-danger' ng-click='flagForRequery()'>
+				@bs_icon("edit") Use new parameters
 			</button>
 		</fieldset>
 	</div>
