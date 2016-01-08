@@ -39,9 +39,9 @@ app.controller('SeriesData', function($scope, $rootScope, api) {
 		$scope.overWrite = false;
 		
 		$scope.urlContentTypes = [
-			"csv",
-			"tycho"
-			//,{type: "apollo"}
+			"CSV",
+			"Tycho"
+			//,{type: "Apollo"}
 		];
 		$scope.urlContentType = $scope.urlContentTypes[0];
 		
@@ -123,7 +123,7 @@ app.controller('SeriesData', function($scope, $rootScope, api) {
 		 }
 		
 		function makePath() {
-			if($scope.urlContentType === "tycho") {
+			if($scope.urlContentType === "Tycho") {
 				return 'series/' + $scope.seriesId + '/data-tycho' + '?overWrite=' + $scope.overWrite;
 			}
 			 
