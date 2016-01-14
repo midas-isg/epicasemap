@@ -4,14 +4,15 @@ app.controller('AmbiguityResolver', function($scope, $rootScope, api) {
 	var dom = cacheDom(),
 		ambiguitiesList,
 		currentLocationIndex,
-		keys;
+		ambiguitiesListKeys,
+		reviewing;
 	
 	populateScope();
 	bindEvents();
 	
 	function cacheDom() {
 		var dom = {$dialog: $('#ambiguity-resolver')};
-		dom.$form = dom.$dialog.find('form');
+		dom.$form = dom.$dialog.find('resolver-form');
 		dom.$alertParent = dom.$dialog.find('.modal-body');
 		
 		return dom;
@@ -22,11 +23,29 @@ app.controller('AmbiguityResolver', function($scope, $rootScope, api) {
 		dom.$dialog.on('shown.bs.modal', focusFirstFormInput);
 		
 		function showDialog(event, resultData) {
+			var i,
+				locationEntry;
 console.log(resultData);
 			ambiguitiesList = resultData;
 window.ambiguitiesList = ambiguitiesList;
-			keys = Object.keys(ambiguitiesList);
+			ambiguitiesListKeys = Object.keys(ambiguitiesList);
 			currentLocationIndex = -1;
+			reviewing = false;
+			
+			$("#resolution-space").css("height", (window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight) >> 1);
+			
+			for(i = 0; i < ambiguitiesListKeys.length; i++) {
+				$scope.locationEntries[i] = {};
+				$scope.locationEntries[i].key = ambiguitiesListKeys[i];
+				
+				$scope.locationEntries[i].id = "location-" + i;
+				$scope.locationEntries[i].value = ambiguitiesList[ambiguitiesListKeys[i]].selectedLocationLabel || "[No mapping selected!]";
+				$scope.locationEntries[i].index = i;
+				$scope.locationEntries[i].class = "";
+				$scope.locationEntries[i].onClick = function() {
+					return $scope.review(this.index)
+				};
+			}
 			
 			$scope.editNextLocation();
 			
@@ -48,41 +67,90 @@ window.ambiguitiesList = ambiguitiesList;
 	}
 	
 	function populateScope() {
+		$scope.locationEntries = [];
+		$scope.showEditPreviousLocation = false;
+		$scope.showEditNextLocation = true;
+		$scope.showResolverForm = true;
+		$scope.showSummary = false;
+		$scope.showSubmitButton = false;
+		$scope.showRequeryText = false;
+		$scope.showQueryInput = false;
+		
 		$scope.closeDialog = function() { 
 			dom.$dialog.modal('hide');
 			
 			return;
 		};
 		
-		function switchIndex() {
-console.log("currentLocationIndex: " + currentLocationIndex);
+		function displayReview() {
+			var i,
+				locationEntry;
+			
+			$scope.showEditPreviousLocation = false;
+			$scope.showEditNextLocation = false;
+			$scope.showResolverForm = false;
+			$scope.showSummary = true;
+			$scope.showSubmitButton = true;
+			
+			for(i = 0; i < ambiguitiesListKeys.length; i++) {
+				$scope.locationEntries[i].value = ambiguitiesList[ambiguitiesListKeys[i]].selectedLocationLabel || "[No mapping selected!]";
+				
+				if(ambiguitiesList[ambiguitiesListKeys[i]].requery) {
+					$scope.locationEntries[i].class = "btn-warning";
+					$scope.locationEntries[i].value = ambiguitiesList[ambiguitiesListKeys[i]].requeryInput.label;
+				}
+				else if(ambiguitiesList[ambiguitiesListKeys[i]].selectedLocationLabel) {
+					$scope.locationEntries[i].class = "btn-primary";
+				}
+				else {
+					$scope.locationEntries[i].class = "";
+				}
+			}
+			
+			return;
+		}
+		
+		function switchIndex(inputIndex) {
 			var i,
 				requeryInput;
 			
+			if(inputIndex >= 0) {
+				currentLocationIndex = inputIndex;
+			}
+			
+			if(reviewing) {
+				return displayReview();
+			}
+			else {
+				$scope.showSummary = false;
+				$scope.showSubmitButton = false;
+				$scope.showResolverForm = true;
+			}
+			
 			if(currentLocationIndex === 0) {
-				$("#edit-previous-location").hide();
+				$scope.showEditPreviousLocation = false;
 			}
 			else {
-				$("#edit-previous-location").show();
+				$scope.showEditPreviousLocation = true;
 			}
 			
-			if(currentLocationIndex === (keys.length - 1)) {
-				$("#edit-next-location").hide();
+			if(currentLocationIndex === (ambiguitiesListKeys.length - 1)) {
+				$scope.showEditNextLocation = false;
 			}
 			else {
-				$("#edit-next-location").show();
+				$scope.showEditNextLocation = true;
 			}
 			
-			if(!ambiguitiesList[keys[currentLocationIndex]].requery) {
-				$("#requery-text").hide();
-				$("#query-input").hide();
+			if(!ambiguitiesList[ambiguitiesListKeys[currentLocationIndex]].requery) {
+				$scope.showRequeryText = false;
+				$scope.showQueryInput = false;
 			}
 			else {
-				$("#requery-text").show();
-				$("#query-input").show();
+				$scope.showRequeryText = true;
+				$scope.showQueryInput = true;
 			}
 			
-			$scope.currentInputLabel = keys[currentLocationIndex];
+			$scope.currentInputLabel = ambiguitiesListKeys[currentLocationIndex];
 			
 			requeryInput = ambiguitiesList[$scope.currentInputLabel].requeryInput ||
 				{
@@ -111,22 +179,22 @@ console.log("currentLocationIndex: " + currentLocationIndex);
 		}
 		
 		$scope.editLocationQuery = function() {
-			$("#query-input").toggle();
+			$scope.showQueryInput = !$scope.showQueryInput;
 			return;
 		}
 		
 		$scope.flagForRequery = function() {
-			ambiguitiesList[keys[currentLocationIndex]].requery = !ambiguitiesList[keys[currentLocationIndex]].requery;
+			ambiguitiesList[ambiguitiesListKeys[currentLocationIndex]].requery = !ambiguitiesList[ambiguitiesListKeys[currentLocationIndex]].requery;
 			
-			if(ambiguitiesList[keys[currentLocationIndex]].requery) {
-				$("#requery-text").show();
-				$("#query-input").show();
+			if(ambiguitiesList[ambiguitiesListKeys[currentLocationIndex]].requery) {
+				$scope.showRequeryText = true;
+				$scope.showQueryInput = true;
 				
 				ambiguitiesList[$scope.currentInputLabel].requeryInput = $scope.requeryInput;
 			}
 			else {
-				$("#requery-text").hide();
-				$("#query-input").hide();
+				$scope.showRequeryText = false;
+				$scope.showQueryInput = false;
 			}
 			
 			return;
@@ -134,8 +202,7 @@ console.log("currentLocationIndex: " + currentLocationIndex);
 		
 		$scope.editPreviousLocation = function() {
 			if(currentLocationIndex > 0) {
-				currentLocationIndex--;
-				switchIndex();
+				switchIndex(currentLocationIndex - 1);
 			}
 			
 			return;
@@ -143,15 +210,22 @@ console.log("currentLocationIndex: " + currentLocationIndex);
 		
 		$scope.editNextLocation = function() {
 			if(currentLocationIndex < (Object.keys(ambiguitiesList).length - 1)) {
-				currentLocationIndex++;
-				switchIndex();
+				switchIndex(currentLocationIndex + 1);
 			}
 			
 			return;
 		}
 		
 		$scope.locationChange = function() {
-			ambiguitiesList[keys[currentLocationIndex]].selectedLocationID = $scope.suggestionList.selectedLocationID;
+			ambiguitiesList[ambiguitiesListKeys[currentLocationIndex]].selectedLocationID = $scope.suggestionList.selectedLocationID;
+			ambiguitiesList[ambiguitiesListKeys[currentLocationIndex]].selectedLocationLabel = $("#selected-location :selected").first().text();
+			
+			return;
+		}
+		
+		$scope.review = function(locationIndex) {
+			reviewing = !reviewing;
+			switchIndex(locationIndex);
 			
 			return;
 		}

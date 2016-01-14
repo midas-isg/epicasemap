@@ -16,10 +16,10 @@ public class APITychoSeries extends ApiSeries {
 	@Transactional
 	@Restricted({Access.CHANGE})
 	public static Result updateDataViaUrl(
-		@ApiParam(value = "ID of the Series", required = true) 
+		@ApiParam(value = "ID of the Series", required = true)
 		@PathParam("id") 
 		long id,
-		@ApiParam(value = "Force overWrite the content", required = false) 
+		@ApiParam(value = "Force overWrite the content", required = false)
 		@PathParam("overWrite") 
 		boolean overWrite) {
 			checkSeriesPermission(id, "upload data to");
