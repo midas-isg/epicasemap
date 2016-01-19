@@ -18,7 +18,7 @@
 			</label>
 			
 			<div style="margin-bottom: 25px;">
-				<label class='/*control-label*/'>Matched Locations:</label>
+				<label class=''>Matched Locations:</label>
 				<select id="selected-location" ng-model='suggestionList.selectedLocationID' ng-change="locationChange()" ng-options="suggestion.alsID as suggestion.label for suggestion in suggestionList.locations" style="display: block;">
 				</select>
 			</div>
@@ -31,29 +31,42 @@
 			</div>
 			
 			<fieldset id="query-input" style="margin-left: 15px;" ng-show="showQueryInput">
-				<div>
-					<label for="aliasLabel">Location Name (try an alias): </label>
-					<input id="aliasLabel" class="/*form-control*/" type="text" name="requeryInput.label" ng-model="requeryInput.label">
+				<div style="display: inline-block">
+					<div>
+						<label for="aliasLabel">Location Name (try an alias): </label>
+						<input id="aliasLabel" class="" type="text" name="requeryInput.label" ng-model="requeryInput.label">
+					</div>
+					
+					<div>
+						<label for="date">Date: </label>
+						<input id="date" class="" type="text" name="requeryInput.date" ng-model="requeryInput.date">
+					</div>
+					
+					<div>
+						<label for="locationType">Location Type: </label>
+						<input id="locationType" class="" type="text" name="locationType" ng-model="requeryInput.locationType">
+					</div>
+					
+					<div>
+						<label for="state">State Name: </label>
+						<input id="state" class="" type="text" name="state" ng-model="requeryInput.state">
+					</div>
+					
+					<div>
+						<label for="city">City Name: </label>
+						<input id="city" class="" type="text" name="city" ng-model="requeryInput.city">
+					</div>
+					
+					<button id="requery-flag" title="Use updated parameters" class='btn-large btn-danger' ng-click='flagForRequery()'>
+						@bs_icon("edit") Use new parameters
+					</button>
 				</div>
 				
-				<div>
-					<label for="locationType">Location Type: </label>
-					<input id="locationType" class="" type="text" name="locationType" ng-model="requeryInput.locationType">
+				<div style="display: inline-block;">
+					<label class=''>Matched Locations:</label>
+					<select id="selected-requery" ng-model='suggestionList.selectedLocationID' ng-change="locationChange()" ng-options="suggestion.alsID as suggestion.label for suggestion in suggestionList.locations" style="display: block;">
+					</select>
 				</div>
-				
-				<div>
-					<label for="state">State Name: </label>
-					<input id="state" class="" type="text" name="state" ng-model="requeryInput.state">
-				</div>
-				
-				<div>
-					<label for="city">City Name: </label>
-					<input id="city" class="" type="text" name="city" ng-model="requeryInput.city">
-				</div>
-				
-				<button id="requery-flag" title="Use updated parameters" class='btn-large btn-danger' ng-click='flagForRequery()'>
-					@bs_icon("edit") Use new parameters
-				</button>
 			</fieldset>
 		</div>
 	</form>

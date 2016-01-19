@@ -71,7 +71,6 @@ class UploadSeries extends Controller {
 				overWrite = false;
 				
 				//convert to JSON
-				//Json.toJson(ambiguities);
 				return Results.status(MULTIPLE_CHOICES, Json.toJson(ambiguities));
 			}
 			//else if(){ return notFound(Json.toJson(ambiguities)); }
