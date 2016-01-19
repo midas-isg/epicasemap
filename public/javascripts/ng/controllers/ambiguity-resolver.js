@@ -155,6 +155,7 @@ window.ambiguitiesList = ambiguitiesList;
 			requeryInput = ambiguitiesList[$scope.currentInputLabel].requeryInput ||
 				{
 					label: ambiguitiesList[$scope.currentInputLabel][0].alsidqueryInput.details.currentInputLabel,
+					date: ambiguitiesList[$scope.currentInputLabel][0].alsidqueryInput.details.date,
 					state: ambiguitiesList[$scope.currentInputLabel][0].alsidqueryInput.details.state,
 					city: ambiguitiesList[$scope.currentInputLabel][0].alsidqueryInput.details.city,
 					locationType: ambiguitiesList[$scope.currentInputLabel][0].alsidqueryInput.details.locationType
@@ -190,7 +191,42 @@ window.ambiguitiesList = ambiguitiesList;
 				$scope.showRequeryText = true;
 				$scope.showQueryInput = true;
 				
+				function requeryInstance(input) {
+					$.ajax({
+						url: CONTEXT + "/api/locations/data-location",
+						type: "POST",
+						contentType: "application/json",
+						dataType: "json",
+						data: JSON.stringify(input),
+						success: function(result, status, xhr) {
+							console.log(result);
+							
+							return;
+						},
+						error: function(xhr, status, error) {
+							switch(xhr.status) {
+								case 300:
+									console.log(xhr.responseJSON);
+									//tie data to scope variable
+									
+								break;
+								
+								default:
+									console.log(xhr);
+									console.log(status);
+									console.log(error);
+								break;
+							}
+							
+							return;
+						}
+					});
+					
+					return;
+				}
+				
 				ambiguitiesList[$scope.currentInputLabel].requeryInput = $scope.requeryInput;
+				requeryInstance($scope.requeryInput);
 			}
 			else {
 				$scope.showRequeryText = false;

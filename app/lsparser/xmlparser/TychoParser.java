@@ -67,30 +67,30 @@ public class TychoParser {
 		return doc;
 	}
 	
-	public Map<String, List<NamedLocation>> synchronizedGetALSIDs() throws Exception {
-		class Request {
-			public ALSIDQueryInput alsIDQueryInput;
-			public Promise<List<NamedLocation>> promisedLocations;
-			public long timeStamp;
-			public int timeouts;
+	static public class Request {
+		public ALSIDQueryInput alsIDQueryInput;
+		public Promise<List<NamedLocation>> promisedLocations;
+		public long timeStamp;
+		public int timeouts;
+		
+		public Request(ALSIDQueryInput alsIDQueryInput) {
+			timeouts = 0;
+			this.alsIDQueryInput = alsIDQueryInput;
 			
-			Request(ALSIDQueryInput alsIDQueryInput) {
-				timeouts = 0;
-				this.alsIDQueryInput = alsIDQueryInput;
-				
-				return;
-			}
-			
-			List<NamedLocation> sendRequest(AlsDao alsDAO) throws UnsupportedEncodingException, URISyntaxException {
-				timeStamp = Calendar.getInstance().getTimeInMillis();
-				
-				String urlQuery = "?q=" + (URLEncoder.encode(alsIDQueryInput.locationName, "UTF-8").replaceAll("\\++", "%20"));
-				ClientRule clientRule = alsDAO.makeAlsClientRule();
-				
-				return alsDAO.toLocations(clientRule.getByQuery(urlQuery).asJson().get("geoJSON"), alsIDQueryInput);
-			}
+			return;
 		}
 		
+		public List<NamedLocation> sendRequest(AlsDao alsDAO) throws UnsupportedEncodingException, URISyntaxException {
+			timeStamp = Calendar.getInstance().getTimeInMillis();
+			
+			String urlQuery = "?q=" + (URLEncoder.encode(alsIDQueryInput.locationName, "UTF-8").replaceAll("\\++", "%20"));
+			ClientRule clientRule = alsDAO.makeAlsClientRule();
+			
+			return alsDAO.toLocations(clientRule.getByQuery(urlQuery).asJson().get("geoJSON"), alsIDQueryInput);
+		}
+	}
+	
+	public Map<String, List<NamedLocation>> synchronizedGetALSIDs() throws Exception {
 		final int totalEntries = timeSeries.entries.size();
 		HashMap<String, ALSIDQueryInput> uniqueEntries = new HashMap<String, ALSIDQueryInput>();
 		String entry;
