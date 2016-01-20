@@ -97,7 +97,7 @@ window.ambiguitiesList = ambiguitiesList;
 				
 				if(ambiguitiesList[ambiguitiesListKeys[i]].requery) {
 					$scope.locationEntries[i].class = "btn-warning";
-					$scope.locationEntries[i].value = ambiguitiesList[ambiguitiesListKeys[i]].requeryInput.label;
+					$scope.locationEntries[i].value = ambiguitiesList[ambiguitiesListKeys[i]].requeryInput.label + ": " + ambiguitiesList[ambiguitiesListKeys[i]].requeryResults.selectedLabel;
 				}
 				else if(ambiguitiesList[ambiguitiesListKeys[i]].selectedLocationLabel) {
 					$scope.locationEntries[i].class = "btn-primary";
@@ -175,6 +175,7 @@ window.ambiguitiesList = ambiguitiesList;
 			}
 			
 			$scope.suggestionList.selectedLocationID = ambiguitiesList[$scope.currentInputLabel].selectedLocationID || ambiguitiesList[$scope.currentInputLabel][0].alsId;
+			$scope.requeryResults = ambiguitiesList[$scope.currentInputLabel].requeryResults;
 			
 			return;
 		}
@@ -206,9 +207,13 @@ window.ambiguitiesList = ambiguitiesList;
 						error: function(xhr, status, error) {
 							switch(xhr.status) {
 								case 300:
-									console.log(xhr.responseJSON);
 									//tie data to scope variable
+									ambiguitiesList[$scope.currentInputLabel].requeryResults = {
+										matches: xhr.responseJSON[input.label],
+										selectedLocationID: xhr.responseJSON[input.label][0].alsId
+									};
 									
+									$scope.requeryResults = ambiguitiesList[$scope.currentInputLabel].requeryResults;
 								break;
 								
 								default:
@@ -253,6 +258,11 @@ window.ambiguitiesList = ambiguitiesList;
 		}
 		
 		$scope.locationChange = function() {
+			if(ambiguitiesList[ambiguitiesListKeys[currentLocationIndex]].requeryResults) {
+				ambiguitiesList[ambiguitiesListKeys[currentLocationIndex]].requeryResults.selectedLocationID = $scope.requeryResults.selectedLocationID;
+				ambiguitiesList[ambiguitiesListKeys[currentLocationIndex]].requeryResults.selectedLabel = $("#selected-requery :selected").first().text();
+			}
+			
 			ambiguitiesList[ambiguitiesListKeys[currentLocationIndex]].selectedLocationID = $scope.suggestionList.selectedLocationID;
 			ambiguitiesList[ambiguitiesListKeys[currentLocationIndex]].selectedLocationLabel = $("#selected-location :selected").first().text();
 			
