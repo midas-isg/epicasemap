@@ -31,9 +31,9 @@
 			</div>
 			
 			<fieldset id="query-input" style="margin-left: 15px;" ng-show="showQueryInput">
-				<div style="display: inline-block">
+				<div style="margin-bottom: 15px;">
 					<div>
-						<label for="aliasLabel">Location Name (try an alias): </label>
+						<label for="aliasLabel">Location Name: </label>
 						<input id="aliasLabel" class="" type="text" name="requeryInput.label" ng-model="requeryInput.label">
 					</div>
 					
@@ -62,9 +62,9 @@
 					</button>
 				</div>
 				
-				<div style="display: inline-block;">
+				<div style="">
 					<label class=''>Matched Locations:</label>
-					<select id="selected-requery" ng-model='suggestionList.selectedLocationID' ng-change="locationChange()" ng-options="suggestion.alsID as suggestion.label for suggestion in suggestionList.locations" style="display: block;">
+					<select id="selected-requery" ng-model='requeryResults.selectedLocationID' ng-change="locationChange()" ng-options="match.alsId as match.label for match in requeryResults.matches" style="display: block;">
 					</select>
 				</div>
 			</fieldset>
@@ -87,16 +87,18 @@
 }
 
 @footer() = {
-<button id="edit-previous-location" title="Edit previous location" class='btn-large pull-left' ng-click='editPreviousLocation()' ng-show="showEditPreviousLocation">
-	<!-- ng-disabled='! dataFile || isWorking' ng-show="radioIn === 'file'"> -->
-	@bs_icon("arrow-left") Previous Location
-</button>
+<div>
+	<button id="edit-previous-location" title="Edit previous location" class='btn-large pull-left' ng-click='editPreviousLocation()' ng-show="showEditPreviousLocation">
+		<!-- ng-disabled='! dataFile || isWorking' ng-show="radioIn === 'file'"> -->
+		@bs_icon("arrow-left") Previous Location
+	</button>
 
-<button id="edit-next-location" title="Edit next location" class='btn-large' ng-click='editNextLocation()' ng-show="showEditNextLocation">
-	@bs_icon("arrow-right") Next Location
-</button>
+	<button id="edit-next-location" title="Edit next location" class='btn-large' ng-click='editNextLocation()' ng-show="showEditNextLocation">
+		@bs_icon("arrow-right") Next Location
+	</button>
 
-<button id="submit-selections" title="Submit selections" class='btn-large btn-danger' ng-click='submitSelections()' ng-show="showSubmitButton">
-	@bs_icon("upload") Submit
-</button>
+	<button id="submit-selections" title="Submit selections" class='btn-large btn-danger' ng-click='submitSelections()' ng-show="showSubmitButton">
+		@bs_icon("upload") Submit
+	</button>
+</div>
 }
