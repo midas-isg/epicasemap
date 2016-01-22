@@ -35,10 +35,12 @@ public class AlsDao {
 	private static final String LATITUDE = "latitude";
 
 	private static String locationsUrl;
+	public static final String bulkLocationsUrl;
 
 	static {
 		final ConfRule confRule = Factory.makeConfRule();
 		locationsUrl = confRule.readString(AppKey.ALS_WS_URL.key()) + "/api/locations";
+		bulkLocationsUrl = confRule.readString(AppKey.ALS_WS_URL.key()) + "/api/find-bulk";
 	}
 	
 	public Promise<List<NamedLocation>> getLocations(ALSIDQueryInput alsIDQueryInput) throws URISyntaxException, UnsupportedEncodingException {
@@ -67,6 +69,10 @@ public class AlsDao {
 
 	public ClientRule makeAlsClientRule() {
 		return new ClientRule(locationsUrl);
+	}
+	
+	public ClientRule makeAlsClientRule(String inputUrl) {
+		return new ClientRule(inputUrl);
 	}
 
 	private Location toLocation(WSResponse wsResponse) {

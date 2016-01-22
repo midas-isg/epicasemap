@@ -2,7 +2,7 @@
 
 @ambiguityResolver() = {
 <div id="resolution-space" style="overflow: auto;">
-	<button id="review" title="Review selections" class='btn-large btn-info' ng-click='review();'>
+	<button id="review" title="Review selections" class='btn-large btn-primary' ng-click='review();'>
 		@bs_icon("check") Review
 	</button>
 
@@ -19,8 +19,11 @@
 			
 			<div style="margin-bottom: 25px;">
 				<label class=''>Matched Locations:</label>
-				<select id="selected-location" ng-model='suggestionList.selectedLocationID' ng-change="locationChange()" ng-options="suggestion.alsID as suggestion.label for suggestion in suggestionList.locations" style="display: block;">
-				</select>
+				<div style="display: flex;">
+					<select id="selected-location" ng-model='suggestionList.selectedLocationID' ng-change="locationChange()" ng-options="suggestion.alsID as suggestion.label for suggestion in suggestionList.locations" style="display: block; max-width: 75%;">
+					</select>
+					<button id="view-ls" class="btn-large btn-info">@bs_icon("globe") View Location Service Page</button>
+				</div>
 			</div>
 			
 			<div>
@@ -34,7 +37,7 @@
 				<div style="margin-bottom: 15px;">
 					<div>
 						<label for="aliasLabel">Location Name: </label>
-						<input id="aliasLabel" class="" type="text" name="requeryInput.label" ng-model="requeryInput.label">
+						<input id="aliasLabel" class="" type="text" name="requeryInput.label" ng-model="requeryInput.label" ng-change="flagForRequery()">
 					</div>
 					
 					<div>
@@ -62,10 +65,13 @@
 					</button>
 				</div>
 				
-				<div style="">
+				<div style="" ng-show="showRequeryResults">
 					<label class=''>Matched Locations:</label>
-					<select id="selected-requery" ng-model='requeryResults.selectedLocationID' ng-change="locationChange()" ng-options="match.alsId as match.label for match in requeryResults.matches" style="display: block;">
-					</select>
+					<div style="display: flex;">
+						<select id="selected-requery" ng-model='requeryResults.selectedLocationID' ng-change="locationChange()" ng-options="match.alsId as match.label for match in requeryResults.matches" style="display: block; max-width: 75%;">
+						</select>
+						<button id="view-requery-ls" class="btn-large btn-info">@bs_icon("globe") View Location Service Page</button>
+					</div>
 				</div>
 			</fieldset>
 		</div>
