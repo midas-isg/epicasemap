@@ -1,7 +1,8 @@
 "use strict";
 
 app.controller('AmbiguityResolver', function($scope, $rootScope, api) {
-	var dom = cacheDom(),
+	var LS_URL = "http://betaweb.rods.pitt.edu/ls/browser?id=",
+		dom = cacheDom(),
 		ambiguitiesList,
 		currentLocationIndex,
 		ambiguitiesListKeys,
@@ -47,6 +48,20 @@ window.ambiguitiesList = ambiguitiesList;
 				};
 			}
 			
+			$("#view-ls").click(function() {
+				var url = LS_URL + $scope.suggestionList.selectedLocationID;
+				window.open(url);
+				
+				return;
+			});
+			
+			$("#view-requery-ls").click(function() {
+				var url = LS_URL + $scope.requeryResults.selectedLocationID;
+				window.open(url);
+				
+				return;
+			});
+			
 			$scope.editNextLocation();
 			
 			/*
@@ -73,6 +88,7 @@ window.ambiguitiesList = ambiguitiesList;
 		$scope.showResolverForm = true;
 		$scope.showSummary = false;
 		$scope.showSubmitButton = false;
+		$scope.showRequeryResults = false;
 		$scope.showRequeryText = false;
 		$scope.showQueryInput = false;
 		
@@ -95,7 +111,7 @@ window.ambiguitiesList = ambiguitiesList;
 			for(i = 0; i < ambiguitiesListKeys.length; i++) {
 				$scope.locationEntries[i].value = ambiguitiesList[ambiguitiesListKeys[i]].selectedLocationLabel || "[No mapping selected!]";
 				
-				if(ambiguitiesList[ambiguitiesListKeys[i]].requery) {
+				if(ambiguitiesList[ambiguitiesListKeys[i]].requery && ambiguitiesList[ambiguitiesListKeys[i]].requeryInput) {
 					$scope.locationEntries[i].class = "btn-warning";
 					$scope.locationEntries[i].value = ambiguitiesList[ambiguitiesListKeys[i]].requeryInput.label + ": " + ambiguitiesList[ambiguitiesListKeys[i]].requeryResults.selectedLabel;
 				}
@@ -144,10 +160,12 @@ window.ambiguitiesList = ambiguitiesList;
 			if(!ambiguitiesList[ambiguitiesListKeys[currentLocationIndex]].requery) {
 				$scope.showRequeryText = false;
 				$scope.showQueryInput = false;
+				$scope.showRequeryResults = false;
 			}
 			else {
 				$scope.showRequeryText = true;
 				$scope.showQueryInput = true;
+				$scope.showRequeryResults = true;
 			}
 			
 			$scope.currentInputLabel = ambiguitiesListKeys[currentLocationIndex];
@@ -182,56 +200,65 @@ window.ambiguitiesList = ambiguitiesList;
 		
 		$scope.editLocationQuery = function() {
 			$scope.showQueryInput = !$scope.showQueryInput;
+			ambiguitiesList[ambiguitiesListKeys[currentLocationIndex]].requery = $scope.showQueryInput;
+			$scope.showRequeryText = $scope.showQueryInput;
+			
 			return;
 		}
 		
 		$scope.flagForRequery = function() {
-			ambiguitiesList[ambiguitiesListKeys[currentLocationIndex]].requery = !ambiguitiesList[ambiguitiesListKeys[currentLocationIndex]].requery;
-			
 			if(ambiguitiesList[ambiguitiesListKeys[currentLocationIndex]].requery) {
-				$scope.showRequeryText = true;
-				$scope.showQueryInput = true;
-				
-				function requeryInstance(input) {
-					$.ajax({
-						url: CONTEXT + "/api/locations/data-location",
-						type: "POST",
-						contentType: "application/json",
-						dataType: "json",
-						data: JSON.stringify(input),
-						success: function(result, status, xhr) {
-							console.log(result);
-							
-							return;
-						},
-						error: function(xhr, status, error) {
-							switch(xhr.status) {
-								case 300:
-									//tie data to scope variable
-									ambiguitiesList[$scope.currentInputLabel].requeryResults = {
-										matches: xhr.responseJSON[input.label],
-										selectedLocationID: xhr.responseJSON[input.label][0].alsId
-									};
-									
-									$scope.requeryResults = ambiguitiesList[$scope.currentInputLabel].requeryResults;
-								break;
+				function requeryInstance($scope) {
+					var input = $scope.requeryInput;
+					
+					if(input.label.length > 1) {
+						$.ajax({
+							url: CONTEXT + "/api/locations/data-location",
+							type: "POST",
+							contentType: "application/json",
+							dataType: "json",
+							data: JSON.stringify(input),
+							success: function(result, status, xhr) {
+								console.log(result);
 								
-								default:
-									console.log(xhr);
-									console.log(status);
-									console.log(error);
-								break;
+								return;
+							},
+							error: function(xhr, status, error) {
+								switch(xhr.status) {
+									case 300:
+										//tie data to scope variable
+										ambiguitiesList[$scope.currentInputLabel].requeryResults = {
+											matches: xhr.responseJSON[input.label],
+											selectedLocationID: xhr.responseJSON[input.label][0].alsId
+										};
+										
+										$scope.requeryResults = ambiguitiesList[$scope.currentInputLabel].requeryResults;
+										$scope.showRequeryResults = true;
+									break;
+									
+									default:
+										$scope.requeryResults = {};
+										console.log(xhr);
+										console.log(status);
+										console.log(error);
+									break;
+								}
+								
+								$scope.$apply();
+								
+								return;
 							}
-							
-							return;
-						}
-					});
+						});
+					}
+					else {
+						$scope.requeryResults = {};
+					}
 					
 					return;
 				}
 				
 				ambiguitiesList[$scope.currentInputLabel].requeryInput = $scope.requeryInput;
-				requeryInstance($scope.requeryInput);
+				requeryInstance($scope);
 			}
 			else {
 				$scope.showRequeryText = false;
