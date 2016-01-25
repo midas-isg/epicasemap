@@ -41,7 +41,7 @@ public class TychoSampleTest {
 					assert(tychoParser.result.getCount().intValue() == 6750);
 					
 					//tychoParser.timeSeries.printSeries();
-					tychoParser.getALSIDs();
+					tychoParser.asynchronizedGetALSIDs();
 					//tychoParser.synchronizedGetALSIDs();
 					
 					tychoParser.generateCSV();
