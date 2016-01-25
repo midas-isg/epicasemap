@@ -36,11 +36,13 @@ public class AlsDao {
 
 	private static String locationsUrl;
 	public static final String bulkLocationsUrl;
+	public static final String baseUrl;
 
 	static {
 		final ConfRule confRule = Factory.makeConfRule();
+		baseUrl = confRule.readString(AppKey.ALS_WS_URL.key());
 		locationsUrl = confRule.readString(AppKey.ALS_WS_URL.key()) + "/api/locations";
-		bulkLocationsUrl = confRule.readString(AppKey.ALS_WS_URL.key()) + "/api/find-bulk";
+		bulkLocationsUrl = baseUrl + "/api/find-bulk";
 	}
 	
 	public Promise<List<NamedLocation>> getLocations(ALSIDQueryInput alsIDQueryInput) throws URISyntaxException, UnsupportedEncodingException {

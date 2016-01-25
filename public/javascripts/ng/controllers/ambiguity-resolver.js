@@ -182,17 +182,31 @@ window.ambiguitiesList = ambiguitiesList;
 			$scope.requeryInput = requeryInput;
 			
 			$scope.suggestionList = {
-				locations: []
+				locations: [{label: "No results found"}]
 			};
 			
-			for(i = 0; i < ambiguitiesList[$scope.currentInputLabel].length; i++) {
+			if(ambiguitiesList[$scope.currentInputLabel].length > 0) {
+				$scope.suggestionList.locations.pop();
 				$scope.suggestionList.locations.push({
-					label: ambiguitiesList[$scope.currentInputLabel][i].label,
-					alsID: ambiguitiesList[$scope.currentInputLabel][i].alsId
+					label: ambiguitiesList[$scope.currentInputLabel][0].label,
+					alsID: ambiguitiesList[$scope.currentInputLabel][0].alsId
 				});
+				
+				for(i = 1; i < ambiguitiesList[$scope.currentInputLabel].length; i++) {
+					$scope.suggestionList.locations.push({
+						label: ambiguitiesList[$scope.currentInputLabel][i].label,
+						alsID: ambiguitiesList[$scope.currentInputLabel][i].alsId
+					});
+				}
 			}
 			
-			$scope.suggestionList.selectedLocationID = ambiguitiesList[$scope.currentInputLabel].selectedLocationID || ambiguitiesList[$scope.currentInputLabel][0].alsId;
+			if(ambiguitiesList[$scope.currentInputLabel].selectedLocationID) {
+				$scope.suggestionList.selectedLocationID = ambiguitiesList[$scope.currentInputLabel].selectedLocationID;
+			}
+			else{
+				$scope.suggestionList.selectedLocationID = ambiguitiesList[$scope.currentInputLabel][0].alsId;
+			}
+			
 			$scope.requeryResults = ambiguitiesList[$scope.currentInputLabel].requeryResults;
 			
 			return;

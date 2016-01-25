@@ -22,7 +22,7 @@
 				<div style="display: flex;">
 					<select id="selected-location" ng-model='suggestionList.selectedLocationID' ng-change="locationChange()" ng-options="suggestion.alsID as suggestion.label for suggestion in suggestionList.locations" style="display: block; max-width: 75%;">
 					</select>
-					<button id="view-ls" class="btn-large btn-info">@bs_icon("globe") View Location Service Page</button>
+					<button id="view-ls" class="btn-large btn-info">@bs_icon("globe") View Location Services Page</button>
 				</div>
 			</div>
 			
@@ -70,7 +70,7 @@
 					<div style="display: flex;">
 						<select id="selected-requery" ng-model='requeryResults.selectedLocationID' ng-change="locationChange()" ng-options="match.alsId as match.label for match in requeryResults.matches" style="display: block; max-width: 75%;">
 						</select>
-						<button id="view-requery-ls" class="btn-large btn-info">@bs_icon("globe") View Location Service Page</button>
+						<button id="view-requery-ls" class="btn-large btn-info">@bs_icon("globe") View Location Services Page</button>
 					</div>
 				</div>
 			</fieldset>

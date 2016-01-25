@@ -64,9 +64,8 @@ class UploadSeries extends Controller {
 		try {
 			tychoParser.unmarshal(lsparser.tycho.Result.class, new FileInputStream(dataFile.getFile()));
 			
-			//TODO: switch to synchronized after batch queries endpoint is incorporated
-			//ambiguities = tychoParser.getALSIDs();
-			ambiguities = tychoParser.synchronizedGetALSIDs();
+			//ambiguities = tychoParser.asynchronizedGetALSIDs();
+			ambiguities = tychoParser.bulkGetALSIDs();
 			
 			if(ambiguities.size() > 0) {
 				overWrite = false;

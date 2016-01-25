@@ -47,10 +47,30 @@ public class TychoParser {
 	public Result result;
 	public TimeSeries timeSeries;
 	
+	public Map<String, Integer> locationTypesMap;
+	
 	public TychoParser() {
 		REQUEST_LIMIT = 15;//15;
 		TIMEOUT = 10000;
 		TIMEOUT_LIMIT = 5;
+		
+		getKnownLocationTypes();
+		
+		return;
+	}
+	
+	private void getKnownLocationTypes() {
+		AlsDao alsDao = new AlsDao();
+		ClientRule clientRule = alsDao.makeAlsClientRule(alsDao.baseUrl + "/api/location-types");
+		JsonNode locationTypes = clientRule.get(alsDao.baseUrl + "/api/location-types").asJson();
+		locationTypesMap = new HashMap<String, Integer>();
+		Iterator<JsonNode> locationTypesIterator = locationTypes.elements();
+		JsonNode currentType;
+		
+		while(locationTypesIterator.hasNext()) {
+			currentType = locationTypesIterator.next();
+			locationTypesMap.put(currentType.get("name").asText().toUpperCase(), currentType.get("id").asInt());
+		}
 		
 		return;
 	}
@@ -145,11 +165,15 @@ while(iterator.hasNext()){
 		}
 		
 		public void consumeALSIDQueryInput(ALSIDQueryInput alsIDQueryInput) {
-			String locationType = alsIDQueryInput.details.get("locationTypeName");
+			String locationType = alsIDQueryInput.details.get("locationType").toUpperCase();
 			name = alsIDQueryInput.locationName;
+			if(locationTypesMap.get(locationType) != null) {
+				locationTypeIds.add(locationTypesMap.get(locationType));
+			}
+			
 			//start = Date(alsIDQueryInput.details.get("startDate"));
 			//end = alsIDQueryInput.details.get("");
-			
+			/*
 			if(locationType != null) {
 				switch(locationType) {
 					case "STATE":
@@ -170,12 +194,13 @@ while(iterator.hasNext()){
 					break;
 				}
 			}
+			*/
 			
 			return;
 		}
 	}
 	
-	public Map<String, List<NamedLocation>> synchronizedGetALSIDs() throws Exception {
+	public Map<String, List<NamedLocation>> bulkGetALSIDs() throws Exception {
 		final int totalEntries = timeSeries.entries.size();
 		HashMap<String, ALSIDQueryInput> uniqueEntries = new HashMap<String, ALSIDQueryInput>();
 		String entry;
@@ -218,7 +243,7 @@ while(iterator.hasNext()){
 		return request.sendBulkRequest(bulkLocations, alsIDQueryInputs);
 	}
 	
-	public Map<String, List<NamedLocation>> getALSIDs() throws Exception {
+	public Map<String, List<NamedLocation>> asynchronizedGetALSIDs() throws Exception {
 		class Request {
 			public ALSIDQueryInput alsIDQueryInput;
 			public Promise<List<NamedLocation>> promisedLocations;
