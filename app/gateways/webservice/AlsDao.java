@@ -57,7 +57,7 @@ public class AlsDao {
 //System.out.println(wsResponse.getAllHeaders());
 //System.out.println(alsIDQueryInput.locationName);
 			
-			return toLocations(jsonResponse, alsIDQueryInput);
+			return toLocations(jsonResponse);
 		});
 	}
 	
@@ -95,12 +95,11 @@ public class AlsDao {
 		return location;
 	}
 	
-	public List<NamedLocation> toLocations(JsonNode geoJSONResponse, ALSIDQueryInput alsIDQueryInput) {
+	public List<NamedLocation> toLocations(JsonNode geoJSONResponse) {
 		List<NamedLocation> locations = new ArrayList<NamedLocation>();
 		JsonNode features = geoJSONResponse.get("features");
 		JsonNode currentFeature;
 		int featureCount = features.size();
-		String inputName = alsIDQueryInput.locationName;
 		NamedLocation location;
 		
 		for(int i = 0; i < featureCount; i++) {
@@ -109,24 +108,24 @@ public class AlsDao {
 			//Map<String, Double> center = centroid(getBbox(geoJSONResponse));
 			//location.setLatitude(center.get(LATITUDE));
 			//location.setLongitude(center.get(LONGITUDE));
-			location.setALSIDQueryInput(alsIDQueryInput);
 			location.setLabel(getSpecificName(currentFeature));
 			location.setAlsId(getID(currentFeature));
 			location.setLocationTypeName(currentFeature.get("properties").get("locationTypeName").asText());
 			locations.add(location);
 			
+
 System.out.println("\n" + location.getLabel() + " " + location.getAlsId());
 JsonNode currentProperties = currentFeature.get("properties");
 Iterator<String> childrenNamesIterator = currentProperties.fieldNames();
 String field;
 while(childrenNamesIterator.hasNext()) {
 	field = childrenNamesIterator.next();
-	System.out.println(field + ": " + currentProperties.get(field).asText());
+System.out.println(field + ": " + currentProperties.get(field).asText());
 	
 	if(field.equals("lineage")) {
 		Iterator<JsonNode> lineageIterator = currentProperties.get(field).elements();
 		while(lineageIterator.hasNext()) {
-			System.out.println("\t" + lineageIterator.next().asText());
+System.out.println("\t" + lineageIterator.next().asText());
 		}
 	}
 }

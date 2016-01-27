@@ -60,7 +60,8 @@ class UploadSeries extends Controller {
 		SeriesDataFile dataFile = getSeriesDataFile(url);
 		//parse as tycho file
 		TychoParser tychoParser = new TychoParser();
-		Map<String, List<NamedLocation>> ambiguities;
+		Map<String, TychoParser.BulkLocationResult> ambiguities;
+		
 		try {
 			tychoParser.unmarshal(lsparser.tycho.Result.class, new FileInputStream(dataFile.getFile()));
 			

@@ -172,11 +172,11 @@ window.ambiguitiesList = ambiguitiesList;
 			
 			requeryInput = ambiguitiesList[$scope.currentInputLabel].requeryInput ||
 				{
-					label: ambiguitiesList[$scope.currentInputLabel][0].alsidqueryInput.details.currentInputLabel,
-					date: ambiguitiesList[$scope.currentInputLabel][0].alsidqueryInput.details.date,
-					state: ambiguitiesList[$scope.currentInputLabel][0].alsidqueryInput.details.state,
-					city: ambiguitiesList[$scope.currentInputLabel][0].alsidqueryInput.details.city,
-					locationType: ambiguitiesList[$scope.currentInputLabel][0].alsidqueryInput.details.locationType
+					label: ambiguitiesList[$scope.currentInputLabel].alsIDQueryInput.details.currentInputLabel,
+					date: ambiguitiesList[$scope.currentInputLabel].alsIDQueryInput.details.date,
+					state: ambiguitiesList[$scope.currentInputLabel].alsIDQueryInput.details.state,
+					city: ambiguitiesList[$scope.currentInputLabel].alsIDQueryInput.details.city,
+					locationType: ambiguitiesList[$scope.currentInputLabel].alsIDQueryInput.details.locationType
 				};
 			
 			$scope.requeryInput = requeryInput;
@@ -185,17 +185,17 @@ window.ambiguitiesList = ambiguitiesList;
 				locations: [{label: "No results found"}]
 			};
 			
-			if(ambiguitiesList[$scope.currentInputLabel].length > 0) {
+			if(ambiguitiesList[$scope.currentInputLabel].possibleMappings.length > 0) {
 				$scope.suggestionList.locations.pop();
 				$scope.suggestionList.locations.push({
-					label: ambiguitiesList[$scope.currentInputLabel][0].label,
-					alsID: ambiguitiesList[$scope.currentInputLabel][0].alsId
+					label: ambiguitiesList[$scope.currentInputLabel].possibleMappings[0].label,
+					alsID: ambiguitiesList[$scope.currentInputLabel].possibleMappings[0].alsId
 				});
 				
-				for(i = 1; i < ambiguitiesList[$scope.currentInputLabel].length; i++) {
+				for(i = 1; i < ambiguitiesList[$scope.currentInputLabel].possibleMappings.length; i++) {
 					$scope.suggestionList.locations.push({
-						label: ambiguitiesList[$scope.currentInputLabel][i].label,
-						alsID: ambiguitiesList[$scope.currentInputLabel][i].alsId
+						label: ambiguitiesList[$scope.currentInputLabel].possibleMappings[i].label,
+						alsID: ambiguitiesList[$scope.currentInputLabel].possibleMappings[i].alsId
 					});
 				}
 			}
@@ -203,8 +203,8 @@ window.ambiguitiesList = ambiguitiesList;
 			if(ambiguitiesList[$scope.currentInputLabel].selectedLocationID) {
 				$scope.suggestionList.selectedLocationID = ambiguitiesList[$scope.currentInputLabel].selectedLocationID;
 			}
-			else{
-				$scope.suggestionList.selectedLocationID = ambiguitiesList[$scope.currentInputLabel][0].alsId;
+			else if(ambiguitiesList[$scope.currentInputLabel].possibleMappings.length > 0) {
+				$scope.suggestionList.selectedLocationID = ambiguitiesList[$scope.currentInputLabel].possibleMappings[0].alsId;
 			}
 			
 			$scope.requeryResults = ambiguitiesList[$scope.currentInputLabel].requeryResults;
@@ -241,13 +241,18 @@ window.ambiguitiesList = ambiguitiesList;
 								switch(xhr.status) {
 									case 300:
 										//tie data to scope variable
-										ambiguitiesList[$scope.currentInputLabel].requeryResults = {
-											matches: xhr.responseJSON[input.label],
-											selectedLocationID: xhr.responseJSON[input.label][0].alsId
-										};
-										
-										$scope.requeryResults = ambiguitiesList[$scope.currentInputLabel].requeryResults;
-										$scope.showRequeryResults = true;
+										if(xhr.responseJSON[input.label] && xhr.responseJSON[input.label].length > 0) {
+											ambiguitiesList[$scope.currentInputLabel].requeryResults = {
+												matches: xhr.responseJSON[input.label],
+												selectedLocationID: xhr.responseJSON[input.label][0].alsId
+											};
+											
+											$scope.requeryResults = ambiguitiesList[$scope.currentInputLabel].requeryResults;
+											$scope.showRequeryResults = true;
+										}
+										else {
+											$scope.showRequeryResults = false;
+										}
 									break;
 									
 									default:
