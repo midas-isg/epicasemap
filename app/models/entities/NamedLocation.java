@@ -8,6 +8,7 @@ import javax.persistence.Id;
 import lsparser.xmlparser.ALSIDQueryInput;
 
 public class NamedLocation extends Location {
+	private String locationTypeName;
 /*
 	private Long id;
 	private String label;
@@ -16,8 +17,8 @@ public class NamedLocation extends Location {
 	private Double longitude;
 	private String geojson;
 */
+	
 	private ALSIDQueryInput alsIDQueryInput;
-	private String locationTypeName;
 	
 	public ALSIDQueryInput getALSIDQueryInput() {
 		return alsIDQueryInput;

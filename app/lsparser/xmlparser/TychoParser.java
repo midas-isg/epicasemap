@@ -90,6 +90,18 @@ public class TychoParser {
 		return doc;
 	}
 	
+	static public class BulkLocationResult {
+		public List<NamedLocation> possibleMappings;
+		public ALSIDQueryInput alsIDQueryInput;
+		
+		BulkLocationResult(ALSIDQueryInput alsIDQueryInput, List<NamedLocation> possibleMappings) {
+			this.alsIDQueryInput = alsIDQueryInput;
+			this.possibleMappings = possibleMappings;
+			
+			return;
+		}
+	}
+	
 	static public class Request {
 		public ALSIDQueryInput alsIDQueryInput;
 		public Promise<List<NamedLocation>> promisedLocations;
@@ -110,13 +122,13 @@ public class TychoParser {
 		public List<NamedLocation> sendRequest(AlsDao alsDAO) throws UnsupportedEncodingException, URISyntaxException {
 			timeStamp = Calendar.getInstance().getTimeInMillis();
 			
-			String urlQuery = "?q=" + (URLEncoder.encode(alsIDQueryInput.locationName, "UTF-8").replaceAll("\\++", "%20"));
+			String urlQuery = "?q=" + (URLEncoder.encode(alsIDQueryInput.locationName, "UTF-8").replaceAll("\\++", "%20") + "&limit=0");
 			ClientRule clientRule = alsDAO.makeAlsClientRule();
 			
-			return alsDAO.toLocations(clientRule.getByQuery(urlQuery).asJson().get("geoJSON"), alsIDQueryInput);
+			return alsDAO.toLocations(clientRule.getByQuery(urlQuery).asJson().get("geoJSON"));
 		}
 		
-		public Map<String, List<NamedLocation>> sendBulkRequest(List<TychoLocation> bulkRequest, List<ALSIDQueryInput> alsIDQueryInputs) throws UnsupportedEncodingException, URISyntaxException {
+		public Map<String, BulkLocationResult> sendBulkRequest(List<TychoLocation> bulkRequest, List<ALSIDQueryInput> alsIDQueryInputs) throws UnsupportedEncodingException, URISyntaxException {
 			AlsDao alsDAO = new AlsDao();
 			ClientRule clientRule = alsDAO.makeAlsClientRule(alsDAO.bulkLocationsUrl);
 			timeStamp = Calendar.getInstance().getTimeInMillis();
@@ -132,12 +144,12 @@ while(iterator.hasNext()){
 */
 			
 			JsonNode response = clientRule.post(bulkRequestJSON).asJson();
-			Map<String, List<NamedLocation>> locations = new HashMap<String, List<NamedLocation>>();
+			Map<String, BulkLocationResult> locations = new HashMap<String, BulkLocationResult>();
 			
 			int i = 0;
 			Iterator<JsonNode> responseIterator = response.iterator();
 			while(responseIterator.hasNext()) {
-				locations.put(bulkRequest.get(i).name, alsDAO.toLocations(responseIterator.next(), alsIDQueryInputs.get(i)));
+				locations.put(bulkRequest.get(i).name, new BulkLocationResult(alsIDQueryInputs.get(i), alsDAO.toLocations(responseIterator.next())));
 				i++;
 			}
 			
@@ -200,7 +212,7 @@ while(iterator.hasNext()){
 		}
 	}
 	
-	public Map<String, List<NamedLocation>> bulkGetALSIDs() throws Exception {
+	public Map<String, BulkLocationResult> bulkGetALSIDs() throws Exception {
 		final int totalEntries = timeSeries.entries.size();
 		HashMap<String, ALSIDQueryInput> uniqueEntries = new HashMap<String, ALSIDQueryInput>();
 		String entry;
@@ -211,11 +223,8 @@ while(iterator.hasNext()){
 					timeSeries.entries.get(c).alsIDQueryInput.locationName;
 			uniqueEntries.put(entry, timeSeries.entries.get(c).alsIDQueryInput);
 		}
-		//final int uniqueListSize = uniqueEntries.size();
 		
 		loadedAmbiguitiesLists = 0;
-		//List<NamedLocation> resolutionList;
-		//Map<String, List<NamedLocation>> possibleIdentities = new HashMap<String, List<NamedLocation>>();
 		Request request;
 		
 		List<TychoLocation> bulkLocations = new ArrayList<TychoLocation>();
@@ -229,13 +238,6 @@ while(iterator.hasNext()){
 				tychoLocation = new TychoLocation(alsIDQueryInputs.get(i));
 				bulkLocations.add(tychoLocation);
 				i++;
-				/*
-				request = new Request(uniqueEntries.get(uniqueEntriesIterator.next()));
-				resolutionList = request.sendRequest(alsDAO);
-				possibleIdentities.put(request.alsIDQueryInput.locationName, resolutionList);
-				loadedAmbiguitiesLists++;
-				System.out.println("Loaded (" + request.alsIDQueryInput.locationName + ") " + loadedAmbiguitiesLists + " of " + uniqueListSize + " ambiguities lists\n");
-				*/
 		}
 		
 		request = new Request();
