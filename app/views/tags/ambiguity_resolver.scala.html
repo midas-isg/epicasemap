@@ -40,32 +40,32 @@
 						<input id="aliasLabel" class="" type="text" name="requeryInput.label" ng-model="requeryInput.label" ng-change="flagForRequery()">
 					</div>
 					
-					<div>
+					<div hidden>
 						<label for="date">Date: </label>
 						<input id="date" class="" type="text" name="requeryInput.date" ng-model="requeryInput.date">
 					</div>
 					
-					<div>
+					<div hidden>
 						<label for="locationType">Location Type: </label>
 						<input id="locationType" class="" type="text" name="locationType" ng-model="requeryInput.locationType">
 					</div>
 					
-					<div>
+					<div hidden>
 						<label for="state">State Name: </label>
 						<input id="state" class="" type="text" name="state" ng-model="requeryInput.state">
 					</div>
 					
-					<div>
+					<div hidden>
 						<label for="city">City Name: </label>
 						<input id="city" class="" type="text" name="city" ng-model="requeryInput.city">
 					</div>
 					
-					<button id="requery-flag" title="Use updated parameters" class='btn-large btn-danger' ng-click='flagForRequery()'>
+					<button hidden id="requery-flag" title="Use updated parameters" class='btn-large btn-danger' ng-click='flagForRequery()'>
 						@bs_icon("edit") Use new parameters
 					</button>
 				</div>
 				
-				<div style="" ng-show="showRequeryResults">
+				<div style="">
 					<label class=''>Matched Locations:</label>
 					<div style="display: flex;">
 						<select id="selected-requery" ng-model='requeryResults.selectedLocationID' ng-change="locationChange()" ng-options="match.alsId as match.label for match in requeryResults.matches" style="display: block; max-width: 75%;">

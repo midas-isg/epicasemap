@@ -88,7 +88,7 @@ window.ambiguitiesList = ambiguitiesList;
 		$scope.showResolverForm = true;
 		$scope.showSummary = false;
 		$scope.showSubmitButton = false;
-		$scope.showRequeryResults = false;
+		//$scope.showRequeryResults = false;
 		$scope.showRequeryText = false;
 		$scope.showQueryInput = false;
 		
@@ -113,7 +113,7 @@ window.ambiguitiesList = ambiguitiesList;
 				
 				if(ambiguitiesList[ambiguitiesListKeys[i]].requery && ambiguitiesList[ambiguitiesListKeys[i]].requeryInput) {
 					$scope.locationEntries[i].class = "btn-warning";
-					$scope.locationEntries[i].value = ambiguitiesList[ambiguitiesListKeys[i]].requeryInput.label + ": " + ambiguitiesList[ambiguitiesListKeys[i]].requeryResults.selectedLabel;
+					$scope.locationEntries[i].value = ambiguitiesList[ambiguitiesListKeys[i]].requeryInput.label + ": " + ambiguitiesList[ambiguitiesListKeys[i]].requeryResults.selectedLocationLabel;
 				}
 				else if(ambiguitiesList[ambiguitiesListKeys[i]].selectedLocationLabel) {
 					$scope.locationEntries[i].class = "btn-primary";
@@ -160,12 +160,12 @@ window.ambiguitiesList = ambiguitiesList;
 			if(!ambiguitiesList[ambiguitiesListKeys[currentLocationIndex]].requery) {
 				$scope.showRequeryText = false;
 				$scope.showQueryInput = false;
-				$scope.showRequeryResults = false;
+				//$scope.showRequeryResults = false;
 			}
 			else {
 				$scope.showRequeryText = true;
 				$scope.showQueryInput = true;
-				$scope.showRequeryResults = true;
+				//$scope.showRequeryResults = true;
 			}
 			
 			$scope.currentInputLabel = ambiguitiesListKeys[currentLocationIndex];
@@ -198,13 +198,15 @@ window.ambiguitiesList = ambiguitiesList;
 						alsID: ambiguitiesList[$scope.currentInputLabel].possibleMappings[i].alsId
 					});
 				}
-			}
-			
-			if(ambiguitiesList[$scope.currentInputLabel].selectedLocationID) {
-				$scope.suggestionList.selectedLocationID = ambiguitiesList[$scope.currentInputLabel].selectedLocationID;
-			}
-			else if(ambiguitiesList[$scope.currentInputLabel].possibleMappings.length > 0) {
-				$scope.suggestionList.selectedLocationID = ambiguitiesList[$scope.currentInputLabel].possibleMappings[0].alsId;
+				
+				if(ambiguitiesList[$scope.currentInputLabel].selectedLocationID) {
+					$scope.suggestionList.selectedLocationID = ambiguitiesList[$scope.currentInputLabel].selectedLocationID;
+				}
+				else {
+					$scope.suggestionList.selectedLocationID = ambiguitiesList[$scope.currentInputLabel].possibleMappings[0].alsId;
+					ambiguitiesList[$scope.currentInputLabel].selectedLocationID = $scope.suggestionList.selectedLocationID;
+					ambiguitiesList[$scope.currentInputLabel].selectedLocationLabel = ambiguitiesList[$scope.currentInputLabel].possibleMappings[0].label;
+				}
 			}
 			
 			$scope.requeryResults = ambiguitiesList[$scope.currentInputLabel].requeryResults;
@@ -246,13 +248,13 @@ window.ambiguitiesList = ambiguitiesList;
 												matches: xhr.responseJSON[input.label],
 												selectedLocationID: xhr.responseJSON[input.label][0].alsId
 											};
-											
-											$scope.requeryResults = ambiguitiesList[$scope.currentInputLabel].requeryResults;
-											$scope.showRequeryResults = true;
 										}
 										else {
-											$scope.showRequeryResults = false;
+											ambiguitiesList[$scope.currentInputLabel].requeryResults = {matches: [{label: "No results found"}], selectedLocationID: null};
 										}
+										
+										$scope.requeryResults = ambiguitiesList[$scope.currentInputLabel].requeryResults;
+										ambiguitiesList[$scope.currentInputLabel].requeryResults.selectedLocationLabel = $scope.requeryResults.matches[0].label;
 									break;
 									
 									default:
@@ -306,7 +308,7 @@ window.ambiguitiesList = ambiguitiesList;
 		$scope.locationChange = function() {
 			if(ambiguitiesList[ambiguitiesListKeys[currentLocationIndex]].requeryResults) {
 				ambiguitiesList[ambiguitiesListKeys[currentLocationIndex]].requeryResults.selectedLocationID = $scope.requeryResults.selectedLocationID;
-				ambiguitiesList[ambiguitiesListKeys[currentLocationIndex]].requeryResults.selectedLabel = $("#selected-requery :selected").first().text();
+				ambiguitiesList[ambiguitiesListKeys[currentLocationIndex]].requeryResults.selectedLocationLabel = $("#selected-requery :selected").first().text();
 			}
 			
 			ambiguitiesList[ambiguitiesListKeys[currentLocationIndex]].selectedLocationID = $scope.suggestionList.selectedLocationID;
