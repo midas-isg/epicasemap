@@ -45,6 +45,21 @@ public class APITychoSeries extends ApiSeries {
 			return UploadSeries.uploadTychoViaUrl(id, url, overWrite);
 	}
 	
+	@Transactional
+	@Restricted({Access.CHANGE})
+	public static Result saveData(
+		@ApiParam(value = "ID of the Series", required = true)
+		@PathParam("id") 
+		long id,
+		@ApiParam(value = "Force overWrite the content", required = false)
+		@PathParam("overWrite") 
+		boolean overWrite) {
+			checkSeriesPermission(id, "upload data to");
+			JsonNode jsonMappings = request().body().asJson();
+			
+			return UploadSeries.uploadTychoJSON(id, jsonMappings, overWrite);
+	}
+	
 	public static Result findLocation() throws UnsupportedEncodingException, URISyntaxException {
 		AlsDao alsDAO = new AlsDao();
 		ALSIDQueryInput alsIDQueryInput = new ALSIDQueryInput();

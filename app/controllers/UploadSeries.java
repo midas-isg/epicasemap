@@ -11,6 +11,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.math.BigInteger;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
@@ -18,6 +19,8 @@ import java.util.StringJoiner;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.xml.bind.JAXBException;
+
+import com.fasterxml.jackson.databind.JsonNode;
 
 import lsparser.xmlparser.TychoParser;
 import models.entities.NamedLocation;
@@ -80,6 +83,46 @@ class UploadSeries extends Controller {
 				//convert to csv
 			}
 			*/
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+			throw new RuntimeException(e);
+		}
+
+		//if new or overwrite, return ambiguities list to user
+		
+		if (overWrite
+				|| !checksumMatches(seriesId, url, dataFile.getChecksum()))
+			return uploadSeriesData(seriesId, dataFile);
+		else
+			return status(CONFLICT,
+					"url content seems unchanged. Use overWrite parameter to re-write data.");
+	}
+	
+	static Result uploadTychoJSON(long seriesId, JsonNode jsonMappings, boolean overWrite) {
+		String url = null;
+		SeriesDataFile dataFile = null;
+Iterator<String> fieldNamesIterator = jsonMappings.fieldNames();
+Iterator<String> childFieldNamesIterator;
+String fieldName;
+JsonNode currentNode;
+while(fieldNamesIterator.hasNext()) {
+	fieldName = fieldNamesIterator.next();
+	currentNode = jsonMappings.get(fieldName);
+	System.out.println(fieldName);
+	
+	childFieldNamesIterator = currentNode.fieldNames();
+	while(childFieldNamesIterator.hasNext()) {
+		System.out.println("\t" + childFieldNamesIterator.next());
+	}
+}
+		
+		
+		
+		try {
+			//return Results.status(MULTIPLE_CHOICES, Json.toJson(ambiguities));
+			overWrite = true;
+			//convert to csv
 		}
 		catch(Exception e) {
 			e.printStackTrace();

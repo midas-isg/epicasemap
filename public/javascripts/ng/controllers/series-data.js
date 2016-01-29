@@ -90,7 +90,9 @@ app.controller('SeriesData', function($scope, $rootScope, api) {
 				loadCoordinates($scope.seriesId);
 			}, function (reason) {
 				emitDone();
-				var isOK = true;
+				var isOK = true,
+					ambiguityResolverData;
+				
 				if(reason.status === 409) {
 					isOK = confirm("It seems URL content already exists. \nOK = Overwrite existing series data");
 					if (isOK) {
@@ -101,7 +103,8 @@ app.controller('SeriesData', function($scope, $rootScope, api) {
 				else if(reason.status === 300) /*multiple choices*/ {
 					//for each index of reason.data, summon modal with filtering options for selection, then process when finished
 					console.log("Multiple Choices:");
-					$rootScope.$emit('ambiguityResolver', reason.data);
+					ambiguityResolverData = {data: reason.data, url: $scope.url, seriesID: $scope.seriesId};
+					$rootScope.$emit('ambiguityResolver', ambiguityResolverData);
 				}
 				else if(reason.status === 404) /*not found*/ {
 					//for each index of reason.data, summon modal to edit empty list entries

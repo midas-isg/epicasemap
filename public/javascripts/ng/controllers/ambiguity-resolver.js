@@ -27,7 +27,9 @@ app.controller('AmbiguityResolver', function($scope, $rootScope, api) {
 			var i,
 				locationEntry;
 console.log(resultData);
-			ambiguitiesList = resultData;
+			$scope.url = resultData.url;
+			$scope.seriesID = resultData.seriesID;
+			ambiguitiesList = resultData.data;
 window.ambiguitiesList = ambiguitiesList;
 			ambiguitiesListKeys = Object.keys(ambiguitiesList);
 			currentLocationIndex = -1;
@@ -313,6 +315,35 @@ window.ambiguitiesList = ambiguitiesList;
 			
 			ambiguitiesList[ambiguitiesListKeys[currentLocationIndex]].selectedLocationID = $scope.suggestionList.selectedLocationID;
 			ambiguitiesList[ambiguitiesListKeys[currentLocationIndex]].selectedLocationLabel = $("#selected-location :selected").first().text();
+			
+			return;
+		}
+		
+		$scope.submitSelections = function() {
+			function validatesSubmission() {
+				return true;
+			}
+			
+			if(validatesSubmission()) {
+				$.ajax({
+							url: CONTEXT + "/api/series/" + $scope.seriesID + "/save-tycho",
+							type: "PUT",
+							contentType: "application/json",
+							dataType: "json",
+							data: JSON.stringify({selectedMappings: ambiguitiesList, url: $scope.url, seriesID: $scope.seriesID}),
+							success: function(result, status, xhr) {
+								console.log(result);
+								
+								return;
+							},
+							error: function() {
+								return;
+							}
+				});
+			}
+			else {
+				alert("Please finish mapping location entries before submitting");
+			}
 			
 			return;
 		}
