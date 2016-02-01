@@ -50,6 +50,7 @@ public class TimeSeries {
 			builder.set(Calendar.YEAR, rowData.getYear().intValue());
 			builder.set(Calendar.WEEK_OF_YEAR, rowData.getWeek().intValue());
 			alsIDQueryInput.date = builder.build().getTime();
+			alsIDQueryInput.number = value;
 			
 			return;
 		}
