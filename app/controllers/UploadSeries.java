@@ -7,10 +7,17 @@ import interactors.series_data_file.Persister;
 import interactors.series_data_file.SeriesDataFile;
 import interactors.series_data_file.Validator;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.math.BigInteger;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -101,28 +108,48 @@ class UploadSeries extends Controller {
 	
 	static Result uploadTychoJSON(long seriesId, JsonNode jsonMappings, boolean overWrite) {
 		String url = null;
-		SeriesDataFile dataFile = null;
-Iterator<String> fieldNamesIterator = jsonMappings.fieldNames();
-Iterator<String> childFieldNamesIterator;
-String fieldName;
-JsonNode currentNode;
-while(fieldNamesIterator.hasNext()) {
-	fieldName = fieldNamesIterator.next();
-	currentNode = jsonMappings.get(fieldName);
-	System.out.println(fieldName);
-	
-	childFieldNamesIterator = currentNode.fieldNames();
-	while(childFieldNamesIterator.hasNext()) {
-		System.out.println("\t" + childFieldNamesIterator.next());
-	}
-}
-		
-		
-		
+		Path tempDataFile;
+		BufferedWriter bufferedWriter;
+		SeriesDataFile seriesDataFile = null;
+
 		try {
-			//return Results.status(MULTIPLE_CHOICES, Json.toJson(ambiguities));
-			overWrite = true;
 			//convert to csv
+System.out.println("\n=== Json Mapping Data ===");
+			tempDataFile = Files.createTempFile(jsonMappings.get("seriesID").asText(), ".txt");
+			bufferedWriter = Files.newBufferedWriter(tempDataFile);
+			
+			bufferedWriter.write("time,als_id,VALUE\n");
+			
+			JsonNode selectedMappings = jsonMappings.get("selectedMappings");
+			JsonNode currentNode;
+			Iterator<String> fieldNamesIterator = selectedMappings.fieldNames();
+			Iterator<String> childFieldNamesIterator;
+			String fieldName;
+			String currentLine;
+			DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+			
+			while(fieldNamesIterator.hasNext()) {
+				fieldName = fieldNamesIterator.next();
+				currentNode = selectedMappings.get(fieldName);
+				currentLine = formatter.format(new Date(currentNode.get("alsIDQueryInput").get("date").asLong()));
+				
+				if(currentNode.get("requeryResults") != null) {
+					currentLine += "," + currentNode.get("requeryResults").get("selectedLocationID").asText();
+				}
+				else {
+					currentLine += "," + currentNode.get("selectedLocationID").asText();
+				}
+				
+				currentLine += "," + currentNode.get("alsIDQueryInput").get("number") + "\n";
+				bufferedWriter.write(currentLine);
+System.out.println(fieldName + ": " + currentLine);
+			}
+			
+			bufferedWriter.close();
+			seriesDataFile = new SeriesDataFile(tempDataFile.toFile());
+			
+			//return Results.status(MULTIPLE_CHOICES, Json.toJson(ambiguities));
+			overWrite = false;
 		}
 		catch(Exception e) {
 			e.printStackTrace();
@@ -132,8 +159,8 @@ while(fieldNamesIterator.hasNext()) {
 		//if new or overwrite, return ambiguities list to user
 		
 		if (overWrite
-				|| !checksumMatches(seriesId, url, dataFile.getChecksum()))
-			return uploadSeriesData(seriesId, dataFile);
+				|| !checksumMatches(seriesId, url, seriesDataFile.getChecksum()))
+			return uploadSeriesData(seriesId, seriesDataFile);
 		else
 			return status(CONFLICT,
 					"url content seems unchanged. Use overWrite parameter to re-write data.");

@@ -7,6 +7,7 @@ import java.util.Map;
 public class ALSIDQueryInput {
 	public String locationName;
 	public Date date;
+	public long number;
 	public Map<String, String> details;
 	
 	public ALSIDQueryInput() {
@@ -20,6 +21,7 @@ public class ALSIDQueryInput {
 		
 		summary = "{location: " + locationName;
 		summary += (", date: " + date);
+		summary += (", number: " + number);
 		summary += (", details: " + details + "}");
 		
 		return summary;
