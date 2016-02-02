@@ -45,7 +45,7 @@ public class TychoParser {
 	private CSVGenerator csvGenerator;
 	
 	public Result result;
-	public TimeSeries timeSeries;
+	static public TimeSeries timeSeries;
 	
 	public Map<String, Integer> locationTypesMap;
 	
@@ -93,12 +93,30 @@ public class TychoParser {
 	static public class BulkLocationResult {
 		public List<NamedLocation> possibleMappings;
 		public ALSIDQueryInput alsIDQueryInput;
+		public List<Occurrence> occurrences;
+		
+		public class Occurrence {
+			public Date date;
+			public long number;
+			
+			public Occurrence(Date date, long number) {
+				this.date = date;
+				this.number = number;
+				
+				return;
+			}
+		}
 		
 		BulkLocationResult(ALSIDQueryInput alsIDQueryInput, List<NamedLocation> possibleMappings) {
 			this.alsIDQueryInput = alsIDQueryInput;
 			this.possibleMappings = possibleMappings;
+			occurrences = new ArrayList<Occurrence>();
 			
 			return;
+		}
+		
+		boolean addOccurrence(ALSIDQueryInput alsIDQueryInput) {
+			return occurrences.add(new Occurrence(alsIDQueryInput.date, alsIDQueryInput.number));
 		}
 	}
 	
@@ -145,12 +163,17 @@ while(iterator.hasNext()){
 			
 			JsonNode response = clientRule.post(bulkRequestJSON).asJson();
 			Map<String, BulkLocationResult> locations = new HashMap<String, BulkLocationResult>();
+			String locationName;
 			
 			int i = 0;
 			Iterator<JsonNode> responseIterator = response.iterator();
 			while(responseIterator.hasNext()) {
 				locations.put(bulkRequest.get(i).name, new BulkLocationResult(alsIDQueryInputs.get(i), alsDAO.toLocations(responseIterator.next())));
 				i++;
+			}
+			
+			for(int c = 0; c < timeSeries.entries.size(); c++) {
+				locations.get(timeSeries.entries.get(c).alsIDQueryInput.locationName).addOccurrence(timeSeries.entries.get(c).alsIDQueryInput);
 			}
 			
 			return locations;
@@ -314,7 +337,7 @@ while(iterator.hasNext()){
 					synchronized(this) {
 						requestQueue.remove(this);
 						loadedAmbiguitiesLists++;
-System.out.println("Loaded (" + inputName + ") " + loadedAmbiguitiesLists + " of " + uniqueListSize + " ambiguities lists\n");
+//System.out.println("Loaded (" + inputName + ") " + loadedAmbiguitiesLists + " of " + uniqueListSize + " ambiguities lists\n");
 						return loadedAmbiguitiesLists;
 					}
 				});
