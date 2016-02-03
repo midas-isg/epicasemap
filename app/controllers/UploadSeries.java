@@ -34,6 +34,7 @@ import models.entities.NamedLocation;
 import models.entities.Series;
 import models.entities.SeriesDataUrl;
 import models.exceptions.NoConnectionAvailable;
+import play.Logger;
 import play.db.jpa.JPA;
 import play.libs.Json;
 import play.mvc.Controller;
@@ -98,7 +99,7 @@ class UploadSeries extends Controller {
 
 		//if new or overwrite, return ambiguities list to user
 		
-		if (overWrite
+		if(overWrite
 				|| !checksumMatches(seriesId, url, dataFile.getChecksum()))
 			return uploadSeriesData(seriesId, dataFile);
 		else
@@ -114,9 +115,9 @@ class UploadSeries extends Controller {
 
 		try {
 			//convert to csv
-System.out.println("\n=== Json Mapping Data ===");
-System.out.println(jsonMappings.get("url").asText());
-System.out.println(jsonMappings.get("seriesID").asText());
+Logger.debug("\n=== Json Mapping Data ===");
+Logger.debug(jsonMappings.get("url").asText());
+Logger.debug(String.valueOf(seriesId));
 			tempDataFile = Files.createTempFile(jsonMappings.get("seriesID").asText(), ".txt");
 			bufferedWriter = Files.newBufferedWriter(tempDataFile);
 			
@@ -150,35 +151,35 @@ System.out.println(jsonMappings.get("seriesID").asText());
 					
 					currentLine += "," + occurrenceNode.get("number") + "\n";
 					bufferedWriter.write(currentLine);
-//System.out.println(fieldName + ": " + currentLine);
+//Logger.debug(fieldName + ": " + currentLine);
 				}
 			}
 			
 			bufferedWriter.close();
 			seriesDataFile = new SeriesDataFile(tempDataFile.toFile());
-			
-			overWrite = false;
+//overWrite = false;
 		}
 		catch(Exception e) {
 			e.printStackTrace();
 			throw new RuntimeException(e);
 		}
-
-		//if new or overwrite, return ambiguities list to user
 		
-		if (overWrite
-				|| !checksumMatches(seriesId, url, seriesDataFile.getChecksum()))
+		if(overWrite || !checksumMatches(seriesId, url, seriesDataFile.getChecksum())) {
+Logger.debug("File created: time to save");
 			return uploadSeriesData(seriesId, seriesDataFile);
-		else
-			return status(CONFLICT,
-					"url content seems unchanged. Use overWrite parameter to re-write data.");
+		}
+		
+		return status(CONFLICT,
+			"url content seems unchanged. Use overWrite parameter to re-write data.");
 	}
 	
-	private static Result uploadSeriesData(long seriesId,
-			SeriesDataFile dataFile) {
+	private static Result uploadSeriesData(long seriesId, SeriesDataFile dataFile) {
 		Result result = null;
 		EntityManager emFromTransactionalAnnoation = JPA.em();
+Logger.debug("checking for connection...");
 		checkConnectionAvailability(emFromTransactionalAnnoation);
+Logger.debug("connection available");
+		
 		try {
 			lockSeries(seriesId, true);
 			result = save(seriesId, dataFile);
@@ -188,6 +189,7 @@ System.out.println(jsonMappings.get("seriesID").asText());
 			deleteTempFile(dataFile);
 		}
 		
+Logger.debug(result.toString());
 		return result;
 	}
 
