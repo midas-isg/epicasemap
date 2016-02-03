@@ -115,6 +115,8 @@ class UploadSeries extends Controller {
 		try {
 			//convert to csv
 System.out.println("\n=== Json Mapping Data ===");
+System.out.println(jsonMappings.get("url").asText());
+System.out.println(jsonMappings.get("seriesID").asText());
 			tempDataFile = Files.createTempFile(jsonMappings.get("seriesID").asText(), ".txt");
 			bufferedWriter = Files.newBufferedWriter(tempDataFile);
 			
@@ -123,7 +125,8 @@ System.out.println("\n=== Json Mapping Data ===");
 			JsonNode selectedMappings = jsonMappings.get("selectedMappings");
 			JsonNode currentNode;
 			Iterator<String> fieldNamesIterator = selectedMappings.fieldNames();
-			Iterator<String> childFieldNamesIterator;
+			Iterator<JsonNode> occurrencesIterator;
+			JsonNode occurrenceNode;
 			String fieldName;
 			String currentLine;
 			DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
@@ -131,24 +134,29 @@ System.out.println("\n=== Json Mapping Data ===");
 			while(fieldNamesIterator.hasNext()) {
 				fieldName = fieldNamesIterator.next();
 				currentNode = selectedMappings.get(fieldName);
-				currentLine = formatter.format(new Date(currentNode.get("alsIDQueryInput").get("date").asLong()));
 				
-				if(currentNode.get("requeryResults") != null) {
-					currentLine += "," + currentNode.get("requeryResults").get("selectedLocationID").asText();
-				}
-				else {
-					currentLine += "," + currentNode.get("selectedLocationID").asText();
-				}
+				occurrencesIterator = currentNode.get("occurrences").elements();
 				
-				currentLine += "," + currentNode.get("alsIDQueryInput").get("number") + "\n";
-				bufferedWriter.write(currentLine);
-System.out.println(fieldName + ": " + currentLine);
+				while(occurrencesIterator.hasNext()) {
+					occurrenceNode = occurrencesIterator.next();
+					currentLine = formatter.format(new Date(occurrenceNode.get("date").asLong()));
+					
+					if(currentNode.get("requeryResults") != null) {
+						currentLine += "," + currentNode.get("requeryResults").get("selectedLocationID").asText();
+					}
+					else {
+						currentLine += "," + currentNode.get("selectedLocationID").asText();
+					}
+					
+					currentLine += "," + occurrenceNode.get("number") + "\n";
+					bufferedWriter.write(currentLine);
+//System.out.println(fieldName + ": " + currentLine);
+				}
 			}
 			
 			bufferedWriter.close();
 			seriesDataFile = new SeriesDataFile(tempDataFile.toFile());
 			
-			//return Results.status(MULTIPLE_CHOICES, Json.toJson(ambiguities));
 			overWrite = false;
 		}
 		catch(Exception e) {

@@ -18,11 +18,12 @@ import models.entities.NamedLocation;
 import models.exceptions.Unauthorized;
 import play.db.jpa.Transactional;
 import play.libs.Json;
-import play.mvc.Result;
-import play.mvc.Results;
+import play.mvc.*;
+import play.mvc.Http.*;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.sun.media.jfxmedia.logging.Logger;
 import com.wordnik.swagger.annotations.ApiParam;
 
 import controllers.security.AuthorizationKit;
@@ -47,12 +48,13 @@ public class APITychoSeries extends ApiSeries {
 	
 	@Transactional
 	@Restricted({Access.CHANGE})
+	@BodyParser.Of(value = BodyParser.Json.class, maxLength = 10485760)
 	public static Result saveData(
 		@ApiParam(value = "ID of the Series", required = true)
 		@PathParam("id") 
 		long id,
 		@ApiParam(value = "Force overWrite the content", required = false)
-		@PathParam("overWrite") 
+		@PathParam("overWrite")
 		boolean overWrite) {
 			checkSeriesPermission(id, "upload data to");
 			JsonNode jsonMappings = request().body().asJson();
