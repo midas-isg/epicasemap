@@ -20,10 +20,10 @@ import play.db.jpa.Transactional;
 import play.libs.Json;
 import play.mvc.*;
 import play.mvc.Http.*;
+import play.Logger;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.sun.media.jfxmedia.logging.Logger;
 import com.wordnik.swagger.annotations.ApiParam;
 
 import controllers.security.AuthorizationKit;
@@ -81,7 +81,7 @@ public class APITychoSeries extends ApiSeries {
 			if((field != "label") && (field != "date")) {
 				alsIDQueryInput.details.put(field, input.get(field).asText());
 			}
-System.out.println(field + ": " + input.get(field));
+//Logger.debug(field + ": " + input.get(field));
 		}
 		
 		//fetch single location search results
