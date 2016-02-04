@@ -188,8 +188,8 @@ Logger.debug("connection available");
 			JPA.bindForCurrentThread(emFromTransactionalAnnoation);
 			deleteTempFile(dataFile);
 		}
-		
 Logger.debug(result.toString());
+		
 		return result;
 	}
 
