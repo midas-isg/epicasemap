@@ -6,7 +6,8 @@ app.controller('AmbiguityResolver', function($scope, $rootScope, api) {
 		ambiguitiesList,
 		currentLocationIndex,
 		ambiguitiesListKeys,
-		reviewing;
+		reviewing,
+		requeryCallbackID;
 	
 	populateScope();
 	bindEvents();
@@ -33,13 +34,18 @@ console.log(resultData);
 window.ambiguitiesList = ambiguitiesList;
 			ambiguitiesListKeys = Object.keys(ambiguitiesList);
 			currentLocationIndex = -1;
-			reviewing = false;
+			reviewing = true;
 			
 			$("#resolution-space").css("height", (window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight) >> 1);
 			
 			for(i = 0; i < ambiguitiesListKeys.length; i++) {
 				$scope.locationEntries[i] = {};
 				$scope.locationEntries[i].key = ambiguitiesListKeys[i];
+				
+				if(ambiguitiesList[ambiguitiesListKeys[i]].possibleMappings.length === 1) {
+					ambiguitiesList[ambiguitiesListKeys[i]].selectedLocationID = ambiguitiesList[ambiguitiesListKeys[i]].possibleMappings[0].alsId;
+					ambiguitiesList[ambiguitiesListKeys[i]].selectedLocationLabel = ambiguitiesList[ambiguitiesListKeys[i]].possibleMappings[0].label;
+				}
 				
 				$scope.locationEntries[i].id = "location-" + i;
 				$scope.locationEntries[i].value = ambiguitiesList[ambiguitiesListKeys[i]].selectedLocationLabel || "[No mapping selected!]";
@@ -224,6 +230,13 @@ window.ambiguitiesList = ambiguitiesList;
 			return;
 		}
 		
+		$scope.requeryInputEvent = function() {
+			clearTimeout(requeryCallbackID);
+			requeryCallbackID = setTimeout(function(){ return $scope.flagForRequery(); }, 750);
+			
+			return;
+		}
+		
 		$scope.flagForRequery = function() {
 			if(ambiguitiesList[ambiguitiesListKeys[currentLocationIndex]].requery) {
 				function requeryInstance($scope) {
@@ -321,6 +334,15 @@ window.ambiguitiesList = ambiguitiesList;
 		
 		$scope.submitSelections = function() {
 			function validatesSubmission() {
+				var i;
+				
+				for(i = 0; i < ambiguitiesListKeys.length; i++) {
+					if(!ambiguitiesList[ambiguitiesListKeys[i]].selectedLocationID &&
+						(!(ambiguitiesList[ambiguitiesListKeys[i]].requeryResults && ambiguitiesList[ambiguitiesListKeys[i]].requeryResults.selectedLocationID))) {
+						return false;
+					}
+				}
+				
 				return true;
 			}
 			
@@ -333,10 +355,13 @@ window.ambiguitiesList = ambiguitiesList;
 							data: JSON.stringify({selectedMappings: ambiguitiesList, url: $scope.url, seriesID: $scope.seriesID}),
 							success: function(result, status, xhr) {
 								console.log(result);
+								alert("Saved data series");
 								
 								return;
 							},
 							error: function() {
+								alert("Failed to save data series");
+								
 								return;
 							}
 				});
