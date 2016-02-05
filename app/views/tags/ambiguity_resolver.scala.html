@@ -1,4 +1,4 @@
-@bs_modal("ambiguity-resolver", "AmbiguityResolver", "Possible Ambiguities Exist", "closeDialog()")(ambiguityResolver())(footer())
+@bs_modal("ambiguity-resolver", "AmbiguityResolver", "Review Location Mappings", "closeDialog()")(ambiguityResolver())(footer())
 
 @ambiguityResolver() = {
 <div id="resolution-space" style="overflow: auto;">
@@ -37,7 +37,7 @@
 				<div style="margin-bottom: 15px;">
 					<div>
 						<label for="aliasLabel">Location Name: </label>
-						<input id="aliasLabel" class="" type="text" name="requeryInput.label" ng-model="requeryInput.label" ng-change="flagForRequery()">
+						<input id="aliasLabel" class="" type="text" name="requeryInput.label" ng-model="requeryInput.label" ng-change="requeryInputEvent()">
 					</div>
 					
 					<div hidden>

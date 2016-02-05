@@ -1245,6 +1245,10 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 	MagicMap.prototype.doSelection = function(event) {
 		if(DEBUG) { console.log("[DEBUG] called doSelection()"); }
 		
+		if(!event) {
+			return;
+		}
+		
 		var extremesObject = event.xAxis[0],
 			min = extremesObject.min,
 			max = extremesObject.max,
