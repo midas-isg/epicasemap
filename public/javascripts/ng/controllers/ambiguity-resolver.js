@@ -333,13 +333,25 @@ window.ambiguitiesList = ambiguitiesList;
 		}
 		
 		$scope.submitSelections = function() {
+			var selectedMappings = {};
+			
 			function validatesSubmission() {
-				var i;
+				var i,
+					submitUnmapped = false;
 				
 				for(i = 0; i < ambiguitiesListKeys.length; i++) {
 					if(!ambiguitiesList[ambiguitiesListKeys[i]].selectedLocationID &&
 						(!(ambiguitiesList[ambiguitiesListKeys[i]].requeryResults && ambiguitiesList[ambiguitiesListKeys[i]].requeryResults.selectedLocationID))) {
-						return false;
+						if(!submitUnmapped) {
+							if(!confirm("There are unmapped entries. Press OK to ignore those entries and submit.\nOtherwise press Cancel and finish selecting mappings.")) {
+								return false;
+							}
+							
+							submitUnmapped = true;
+						}
+					}
+					else {
+						selectedMappings[ambiguitiesListKeys[i]] = ambiguitiesList[ambiguitiesListKeys[i]];
 					}
 				}
 				
@@ -352,7 +364,7 @@ window.ambiguitiesList = ambiguitiesList;
 							type: "PUT",
 							contentType: "application/json",
 							dataType: "json",
-							data: JSON.stringify({selectedMappings: ambiguitiesList, url: $scope.url, seriesID: $scope.seriesID}),
+							data: JSON.stringify({selectedMappings: selectedMappings, url: $scope.url, seriesID: $scope.seriesID}),
 							success: function(result, status, xhr) {
 								console.log(result);
 								alert("Saved data series");
