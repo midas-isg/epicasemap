@@ -99,6 +99,10 @@ public class Persister {
 	private Long getAlsId(DataPoint dataPoint) {
 		String header;
 		header = dataFile.stdHeaderToFileHeader(SeriesDataFile.ALS_ID_HEADER);
+		if(dataPoint.get(header).isEmpty()) {
+			return null;
+		}
+		
 		Long alsId = stringToLong(dataPoint.get(header));
 		return alsId;
 	}

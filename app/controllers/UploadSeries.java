@@ -146,7 +146,15 @@ Logger.debug(String.valueOf(seriesId));
 						currentLine += "," + currentNode.get("requeryResults").get("selectedLocationID").asText();
 					}
 					else {
-						currentLine += "," + currentNode.get("selectedLocationID").asText();
+						currentLine += ",";
+						if(currentNode.has("selectedLocationID")) {
+							currentLine += currentNode.get("selectedLocationID").asText();
+						}
+						/*
+						else { //if(!currentNode.has("selectedLocationID"))
+							currentLine += "";
+						}
+						*/
 					}
 					
 					currentLine += "," + occurrenceNode.get("number") + "\n";

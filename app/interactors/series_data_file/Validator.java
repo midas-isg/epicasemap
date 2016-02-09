@@ -118,13 +118,16 @@ public class Validator {
 			header = dataFile
 					.stdHeaderToFileHeader(SeriesDataFile.ALS_ID_HEADER);
 
-			if (!isNumber(dataPoint.get(header))) {
-				errorMsg = header + ": " + dataPoint.get(header)
-						+ " is not valid.";
-			} else if (!existInAls(dataPoint.get(header))) {
-				errorMsg = header + ": " + dataPoint.get(header)
-						+ " does not exist in ALS.";
+			if(!dataPoint.get(header).isEmpty()) {
+				if (!isNumber(dataPoint.get(header))) {
+					errorMsg = header + ": " + dataPoint.get(header)
+							+ " is not valid.";
+				} else if (!existInAls(dataPoint.get(header))) {
+					errorMsg = header + ": " + dataPoint.get(header)
+							+ " does not exist in ALS.";
+				}
 			}
+			
 			break;
 
 		case SeriesDataFile.COORDINATE_FORMAT:

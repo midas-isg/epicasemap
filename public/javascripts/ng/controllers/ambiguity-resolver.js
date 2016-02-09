@@ -350,9 +350,8 @@ window.ambiguitiesList = ambiguitiesList;
 							submitUnmapped = true;
 						}
 					}
-					else {
-						selectedMappings[ambiguitiesListKeys[i]] = ambiguitiesList[ambiguitiesListKeys[i]];
-					}
+					
+					selectedMappings[ambiguitiesListKeys[i]] = ambiguitiesList[ambiguitiesListKeys[i]];
 				}
 				
 				return true;
