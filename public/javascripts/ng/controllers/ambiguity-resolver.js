@@ -370,7 +370,10 @@ window.ambiguitiesList = ambiguitiesList;
 								
 								return;
 							},
-							error: function() {
+							error: function(xhr, status, error) {
+								console.log(xhr);
+								console.log(status);
+								console.log(error);
 								alert("Failed to save data series");
 								
 								return;
