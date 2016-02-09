@@ -56,6 +56,12 @@ public class SeriesDataFileHelper {
 				"public/input/series-data/test/test_with_header_error.txt");
 		return new SeriesDataFile(file);
 	}
+	
+	public static SeriesDataFile createTestSeriesDataFileWithNullAlsId() {
+		File file = new File(
+				"public/input/series-data/test/test_alsId_format_with_null_als_id.txt");
+		return new SeriesDataFile(file);
+	}
 
 	public static Persister makePersister(SeriesDataFile dataFile) {
 		return Factory.makePersister(dataFile);
