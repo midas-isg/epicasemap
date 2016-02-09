@@ -68,6 +68,10 @@ public class Persister {
 
 		if (fileFormat.equals(SeriesDataFile.ALS_ID_FORMAT)) {
 			Long alsId = getAlsId(dataPoint);
+			if(alsId == null){
+				location = createLocationWithNullAlsId(dataPoint);
+				return location;
+			}
 			location = locationRule.getLocation(alsId);
 
 		} else if (fileFormat.equals(SeriesDataFile.COORDINATE_FORMAT)) {
@@ -75,6 +79,14 @@ public class Persister {
 			Double lon = getLongitude(dataPoint);
 			location = locationRule.getLocation(lat, lon);
 		}
+		return location;
+	}
+
+	private Location createLocationWithNullAlsId(DataPoint dataPoint) {
+		//TODO: set location label from dataPoint
+		Location location = new Location();
+		final long id = locationRule.create(location);
+		location.setId(id);
 		return location;
 	}
 

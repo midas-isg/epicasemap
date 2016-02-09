@@ -47,6 +47,11 @@ public class TestPersister {
 		persister = SeriesDataFileHelper.makePersister(dataFile);
 		created = persister.persistSeriesDataFile(seriesId);
 		assertThat(created).isEqualTo(expected);
+		
+		dataFile = SeriesDataFileHelper.createTestSeriesDataFileWithNullAlsId();
+		persister = SeriesDataFileHelper.makePersister(dataFile);
+		created = persister.persistSeriesDataFile(seriesId);
+		assertThat(created).isEqualTo(expected);
 
 	}
 	
