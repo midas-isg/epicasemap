@@ -371,10 +371,16 @@ window.ambiguitiesList = ambiguitiesList;
 								return;
 							},
 							error: function(xhr, status, error) {
-								console.log(xhr);
-								console.log(status);
-								console.log(error);
-								alert("Failed to save data series");
+								if(status === 201) { //this happens because 201 is only a success when datatype = text; since we are PUT-ing json, however...
+									console.log(result);
+									alert("Saved data series");
+								}
+								else {
+									console.log(xhr);
+									console.log(status);
+									console.log(error);
+									alert("Failed to save data series");
+								}
 								
 								return;
 							}
