@@ -1381,7 +1381,8 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 			
 			if(this.dataset[setID].timeGroup[setFrame]) {
 				for(i = 0; i < this.dataset[setID].timeGroup[setFrame].point.length; i++) {
-					if(this.dataset[setID].timeGroup[setFrame].point[i].value > 0) {
+					if((this.dataset[setID].timeGroup[setFrame].point[i].value > 0) &&
+					(this.dataset[setID].timeGroup[setFrame].point[i].latitude && this.dataset[setID].timeGroup[setFrame].point[i].longitude)) {
 						this.displaySet[setID].visiblePoints.push([this.dataset[setID].timeGroup[setFrame].point[i].latitude,
 							this.dataset[setID].timeGroup[setFrame].point[i].longitude,
 							0.7,

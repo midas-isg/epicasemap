@@ -45,6 +45,7 @@ public class ApiLocation extends Controller {
 		LocationFilter filter = makeLocationFilter(ids);
 		List<Location> locations = makeLocationRule().query(filter);
 		Map<Long, String> result = toId2Label(locations);
+		
 		return ResponseHelper.okAsWrappedJsonObject(result, filter);
 	}
 
@@ -58,7 +59,8 @@ public class ApiLocation extends Controller {
 
 	private static Map<Long, String> toId2Label(List<Location> locations) {
 		Map<Long, String> result = locations.stream()
-                .collect(Collectors.toMap(Location::getId, Location::getLabel));
+				.collect(Collectors.toMap(Location::getId, Location::getLabelOrEmpty));
+		
 		return result;
 	}
 
