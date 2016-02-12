@@ -128,23 +128,25 @@ app.controller('Series', function($scope, $rootScope, api) {
 		var toUpload = isNoData();
 		var body = buildBody($scope.model);
 		api.saving('series', body).then(function(location) {
-			emitDone();
-			success('The series was saved.');
-			if (callback){
-				callback();
-			} else {
-				api.gettingFromUrl(location).then(function(rsp) {
-					$scope.model = rsp.data.result;
-					$scope.form.$setPristine();
-					if(toUpload)
-						$scope.uploadNewData($scope.model.id);
-				}, function(err){
-					error('Failed to read the series!', err);
-				});
-			}
-		}, function(err){
-			emitDone();
-			error('Failed to save the series.', err);
+				emitDone();
+				success('The series was saved.');
+				if (callback){
+					callback();
+				} else {
+					api.gettingFromUrl(location).then(function(rsp) {
+						$scope.model = rsp.data.result;
+						$scope.form.$setPristine();
+						if(toUpload)
+							//$scope.uploadNewData($scope.model.id);
+							$scope.uploadNewData($scope.model);
+					}, function(err){
+						error('Failed to read the series!', err);
+					});
+				}
+			},
+			function(err) {
+				emitDone();
+				error('Failed to save the series.', err);
 		});
 	}
 	
