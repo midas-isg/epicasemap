@@ -18,7 +18,8 @@ app.controller('SeriesData', function($scope, $rootScope, api) {
 
 		function showDialog(event, series) {
 			$scope.series = series;
-			$scope.seriesId = series.id || series;
+			$scope.seriesId = series.id;
+			
 			if($scope.series.seriesDataUrl != null){
 				$scope.url = $scope.series.seriesDataUrl.url;
 				$scope.radioIn = "url";
@@ -88,6 +89,8 @@ app.controller('SeriesData', function($scope, $rootScope, api) {
 				emitDone();
 				$scope.closeDialog();
 				loadCoordinates($scope.seriesId);
+				
+				return;
 			}, function (reason) {
 				emitDone();
 				var isOK = true,
@@ -103,7 +106,7 @@ app.controller('SeriesData', function($scope, $rootScope, api) {
 				else if(reason.status === 300) /*multiple choices*/ {
 					//for each index of reason.data, summon modal with filtering options for selection, then process when finished
 					console.log("Multiple Choices:");
-					ambiguityResolverData = {data: reason.data, url: $scope.url, seriesID: $scope.seriesId};
+					ambiguityResolverData = {data: reason.data, url: $scope.url, seriesMeta: $scope.series, seriesID: $scope.seriesId};
 					$rootScope.$emit('ambiguityResolver', ambiguityResolverData);
 				}
 				else if(reason.status === 404) /*not found*/ {

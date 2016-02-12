@@ -7,7 +7,8 @@ app.controller('AmbiguityResolver', function($scope, $rootScope, api) {
 		currentLocationIndex,
 		ambiguitiesListKeys,
 		reviewing,
-		requeryCallbackID;
+		requeryCallbackID,
+		seriesMeta;
 	
 	populateScope();
 	bindEvents();
@@ -27,12 +28,12 @@ app.controller('AmbiguityResolver', function($scope, $rootScope, api) {
 		function showDialog(event, resultData) {
 			var i,
 				locationEntry;
-console.log(resultData);
+			
 			$scope.url = resultData.url;
 			$scope.seriesID = resultData.seriesID;
 			ambiguitiesList = resultData.data;
-window.ambiguitiesList = ambiguitiesList;
 			ambiguitiesListKeys = Object.keys(ambiguitiesList);
+			seriesMeta = resultData.seriesMeta;
 			currentLocationIndex = -1;
 			reviewing = true;
 			
@@ -330,7 +331,20 @@ window.ambiguitiesList = ambiguitiesList;
 		}
 		
 		$scope.submitSelections = function() {
-			var selectedMappings = {};
+			var selectedMappings = {},
+				submissionMeta = {
+					creator: seriesMeta.creator,
+					description: seriesMeta.description,
+					id: seriesMeta.id,
+					isVersionOf: seriesMeta.isVersionOf,
+					license: seriesMeta.license,
+					lock: seriesMeta.lock,
+					ownerId: seriesMeta.owner.id,
+					publisher: seriesMeta.publisher,
+					seriesDataUrl: seriesMeta.seriesDataUrl,
+					title: seriesMeta.title,
+					version: seriesMeta.version
+				};
 			
 			function validatesSubmission() {
 				var i,
@@ -345,7 +359,10 @@ window.ambiguitiesList = ambiguitiesList;
 							}
 							
 							submitUnmapped = true;
+							submissionMeta.description += " \nUnmapped location(s): "
 						}
+						
+						submissionMeta.description += (ambiguitiesList[ambiguitiesListKeys[i]].alsIDQueryInput.locationName + "; ");
 					}
 					
 					selectedMappings[ambiguitiesListKeys[i]] = ambiguitiesList[ambiguitiesListKeys[i]];
@@ -384,6 +401,47 @@ window.ambiguitiesList = ambiguitiesList;
 									console.log(status);
 									console.log(error);
 									alert("Failed to save data series");
+								}
+								
+								return;
+							},
+							complete: function(xhr, status) {
+								$scope.isWorking = false;
+								$rootScope.$emit('hideBusyDialog');
+								
+								return;
+							}
+				});
+				
+				$.ajax({
+							url: CONTEXT + "/api/series/" + $scope.seriesID,
+							type: "PUT",
+							contentType: "application/json",
+							dataType: "json",
+							data: JSON.stringify(submissionMeta),
+							beforeSend: function(xhr) {
+								$scope.isWorking = true;
+								$rootScope.$emit('modalBusyDialog');
+								
+								return;
+							},
+							success: function(result, status, xhr) {
+								console.log(result);
+								alert("Saved series description");
+								$scope.closeDialog();
+								
+								return;
+							},
+							error: function(xhr, status, error) {
+								if(xhr.status === 204) { //this happens because 201 is only a success when datatype = text; since we are PUT-ing json, however...
+									console.log(xhr.statusText);
+									alert("Saved series description");
+								}
+								else {
+									console.log(xhr);
+									console.log(status);
+									console.log(error);
+									alert("Failed to save series description");
 								}
 								
 								return;
