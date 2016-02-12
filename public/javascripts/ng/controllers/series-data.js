@@ -18,7 +18,7 @@ app.controller('SeriesData', function($scope, $rootScope, api) {
 
 		function showDialog(event, series) {
 			$scope.series = series;
-			$scope.seriesId = $scope.series.id;
+			$scope.seriesId = series.id || series;
 			if($scope.series.seriesDataUrl != null){
 				$scope.url = $scope.series.seriesDataUrl.url;
 				$scope.radioIn = "url";
@@ -85,7 +85,7 @@ app.controller('SeriesData', function($scope, $rootScope, api) {
 		$rootScope.$emit('modalBusyDialog');
 		
 		api.uploadingViaUrl(makePath(), $scope.url).then(function(rsp) {
-			emitDone();
+				emitDone();
 				$scope.closeDialog();
 				loadCoordinates($scope.seriesId);
 			}, function (reason) {
@@ -103,7 +103,6 @@ app.controller('SeriesData', function($scope, $rootScope, api) {
 				else if(reason.status === 300) /*multiple choices*/ {
 					//for each index of reason.data, summon modal with filtering options for selection, then process when finished
 					console.log("Multiple Choices:");
-console.log($scope.series);
 					ambiguityResolverData = {data: reason.data, url: $scope.url, seriesID: $scope.seriesId};
 					$rootScope.$emit('ambiguityResolver', ambiguityResolverData);
 				}
