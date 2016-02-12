@@ -96,7 +96,6 @@ window.ambiguitiesList = ambiguitiesList;
 		$scope.showResolverForm = true;
 		$scope.showSummary = false;
 		$scope.showSubmitButton = false;
-		//$scope.showRequeryResults = false;
 		$scope.showRequeryText = false;
 		$scope.showQueryInput = false;
 		
@@ -168,12 +167,10 @@ window.ambiguitiesList = ambiguitiesList;
 			if(!ambiguitiesList[ambiguitiesListKeys[currentLocationIndex]].requery) {
 				$scope.showRequeryText = false;
 				$scope.showQueryInput = false;
-				//$scope.showRequeryResults = false;
 			}
 			else {
 				$scope.showRequeryText = true;
 				$scope.showQueryInput = true;
-				//$scope.showRequeryResults = true;
 			}
 			
 			$scope.currentInputLabel = ambiguitiesListKeys[currentLocationIndex];
@@ -364,15 +361,22 @@ window.ambiguitiesList = ambiguitiesList;
 							contentType: "application/json",
 							dataType: "json",
 							data: JSON.stringify({selectedMappings: selectedMappings, url: $scope.url, seriesID: $scope.seriesID}),
+							beforeSend: function(xhr) {
+								$scope.isWorking = true;
+								$rootScope.$emit('modalBusyDialog');
+								
+								return;
+							},
 							success: function(result, status, xhr) {
 								console.log(result);
 								alert("Saved data series");
+								$scope.closeDialog();
 								
 								return;
 							},
 							error: function(xhr, status, error) {
-								if(status === 201) { //this happens because 201 is only a success when datatype = text; since we are PUT-ing json, however...
-									console.log(result);
+								if(xhr.status === 201) { //this happens because 201 is only a success when datatype = text; since we are PUT-ing json, however...
+									console.log(xhr.statusText);
 									alert("Saved data series");
 								}
 								else {
@@ -381,6 +385,12 @@ window.ambiguitiesList = ambiguitiesList;
 									console.log(error);
 									alert("Failed to save data series");
 								}
+								
+								return;
+							},
+							complete: function(xhr, status) {
+								$scope.isWorking = false;
+								$rootScope.$emit('hideBusyDialog');
 								
 								return;
 							}
