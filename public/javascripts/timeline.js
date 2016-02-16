@@ -27,11 +27,9 @@ timeline.js
 		temp = this.mapTypes[mapID];
 		
 		L.mapbox.accessToken = 'pk.eyJ1IjoidHBzMjMiLCJhIjoiVHEzc0tVWSJ9.0oYZqcggp29zNZlCcb2esA';
-		this.map = L.mapbox.map( 'map',
-				temp,
-				{ worldCopyJump: true, bounceAtZoomLimits: false, zoom: 2, minZoom: 2})
-			.setView([30, 0], 2);
-
+		this.map = L.mapbox.map( 'map', temp,
+				{ worldCopyJump: true, bounceAtZoomLimits: false, zoom: 2, minZoom: 2 }).setView([30, 0], 2);
+		
 		this.heat = []; //null;
 		this.paused = false;
 		this.frame;
@@ -60,7 +58,7 @@ timeline.js
 			daysPerFrame: 1,
 			renderDelay: null,
 			pointDecay: 0.0231,
-			dataGapMethod: "show"
+			dataGapMethod: "bridge" //zero, show, bridge
 		};
 		
 		this.allContainedBox = [[], []];
@@ -178,7 +176,6 @@ timeline.js
 				
 				$("#title").text(result.result.title);
 				
-				//console.log(thisMap.seriesDescriptions);
 				thisMap.seriesList = result.result.allSeries;
 				
 				for(h = 0; h < thisMap.seriesList.length; h++) {
@@ -1181,6 +1178,24 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 					y: 25,
 					itemStyle: {
 						fontSize: "12px"
+					},
+					labelFormatter: function() {
+						var thisLegendElement = this.legendGroup.element,
+							thisLegendIndex = this.index;
+						
+						$(thisLegendElement).mouseenter(function() {
+							$("#information-container #series-description").text(MAGIC_MAP.seriesDescriptions[MAGIC_MAP.dataset[thisLegendIndex].seriesID].description);
+							
+							return;
+						});
+						
+						$(thisLegendElement).mouseout(function() {
+							$("#information-container #series-description").text("");
+							
+							return;
+						});
+						
+						return this.name;
 					}
 				},
 				credits: {
