@@ -240,7 +240,7 @@ app.controller('AmbiguityResolver', function($scope, $rootScope, api) {
 				function requeryInstance($scope) {
 					var input = $scope.requeryInput;
 					
-					if(input.label.length > 1) {
+					if(input.label.length > 0) {
 						$.ajax({
 							url: CONTEXT + "/api/locations/data-location",
 							type: "POST",
@@ -261,17 +261,21 @@ app.controller('AmbiguityResolver', function($scope, $rootScope, api) {
 												matches: xhr.responseJSON[input.label],
 												selectedLocationID: xhr.responseJSON[input.label][0].alsId
 											};
+											
+											$scope.requeryResults = ambiguitiesList[$scope.currentInputLabel].requeryResults;
+											ambiguitiesList[$scope.currentInputLabel].requeryResults.selectedLocationLabel = $scope.requeryResults.matches[0].label;
+											ambiguitiesList[$scope.currentInputLabel].requeryInput = $scope.requeryInput;
 										}
 										else {
-											ambiguitiesList[$scope.currentInputLabel].requeryResults = {matches: [{label: "No results found"}], selectedLocationID: null};
+											$scope.requeryResults = {matches: [{label: "No results found"}], selectedLocationID: null};
+											ambiguitiesList[$scope.currentInputLabel].requeryResults = {matches: null, selectedLocationID: null};
+											ambiguitiesList[$scope.currentInputLabel].requeryInput = null;
 										}
 										
-										$scope.requeryResults = ambiguitiesList[$scope.currentInputLabel].requeryResults;
-										ambiguitiesList[$scope.currentInputLabel].requeryResults.selectedLocationLabel = $scope.requeryResults.matches[0].label;
 									break;
 									
 									default:
-										$scope.requeryResults = {};
+										$scope.requeryResults = {matches: [{label: "Error"}], selectedLocationID: null};
 										console.log(xhr);
 										console.log(status);
 										console.log(error);
@@ -285,13 +289,14 @@ app.controller('AmbiguityResolver', function($scope, $rootScope, api) {
 						});
 					}
 					else {
-						$scope.requeryResults = {};
+						$scope.requeryResults = {matches: [{label: "No results found"}], selectedLocationID: null};
+						ambiguitiesList[$scope.currentInputLabel].requeryResults = {matches: null, selectedLocationID: null};
+						ambiguitiesList[$scope.currentInputLabel].requeryInput = null;
 					}
 					
 					return;
 				}
 				
-				ambiguitiesList[$scope.currentInputLabel].requeryInput = $scope.requeryInput;
 				requeryInstance($scope);
 			}
 			else {
@@ -319,7 +324,7 @@ app.controller('AmbiguityResolver', function($scope, $rootScope, api) {
 		}
 		
 		$scope.locationChange = function() {
-			if(ambiguitiesList[ambiguitiesListKeys[currentLocationIndex]].requeryResults) {
+			if(ambiguitiesList[ambiguitiesListKeys[currentLocationIndex]].requeryResults && $scope.requeryResults.selectedLocationID) {
 				ambiguitiesList[ambiguitiesListKeys[currentLocationIndex]].requeryResults.selectedLocationID = $scope.requeryResults.selectedLocationID;
 				ambiguitiesList[ambiguitiesListKeys[currentLocationIndex]].requeryResults.selectedLocationLabel = $("#selected-requery :selected").first().text();
 			}
