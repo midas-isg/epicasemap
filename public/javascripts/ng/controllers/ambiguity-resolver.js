@@ -117,16 +117,17 @@ app.controller('AmbiguityResolver', function($scope, $rootScope, api) {
 			$scope.showSubmitButton = true;
 			
 			for(i = 0; i < ambiguitiesListKeys.length; i++) {
-				$scope.locationEntries[i].value = ambiguitiesList[ambiguitiesListKeys[i]].selectedLocationLabel || "[No mapping selected!]";
-				
 				if(ambiguitiesList[ambiguitiesListKeys[i]].requery && ambiguitiesList[ambiguitiesListKeys[i]].requeryInput) {
 					$scope.locationEntries[i].class = "btn-warning";
-					$scope.locationEntries[i].value = ambiguitiesList[ambiguitiesListKeys[i]].requeryInput.label + ": " + ambiguitiesList[ambiguitiesListKeys[i]].requeryResults.selectedLocationLabel;
+					$scope.locationEntries[i].value = ambiguitiesList[ambiguitiesListKeys[i]].requeryInput.label + ": " +
+						ambiguitiesList[ambiguitiesListKeys[i]].requeryResults.selectedLocationLabel;
 				}
 				else if(ambiguitiesList[ambiguitiesListKeys[i]].selectedLocationLabel) {
+					$scope.locationEntries[i].value = ambiguitiesList[ambiguitiesListKeys[i]].selectedLocationLabel;
 					$scope.locationEntries[i].class = "btn-primary";
 				}
 				else {
+					$scope.locationEntries[i].value = "[No mapping selected!]";
 					$scope.locationEntries[i].class = "";
 				}
 			}
@@ -302,6 +303,7 @@ app.controller('AmbiguityResolver', function($scope, $rootScope, api) {
 			else {
 				$scope.showRequeryText = false;
 				$scope.showQueryInput = false;
+				$scope.requeryResults = {matches: [{label: "Please enter a location name to query"}], selectedLocationID: null};
 			}
 			
 			return;
@@ -324,13 +326,16 @@ app.controller('AmbiguityResolver', function($scope, $rootScope, api) {
 		}
 		
 		$scope.locationChange = function() {
-			if(ambiguitiesList[ambiguitiesListKeys[currentLocationIndex]].requeryResults && $scope.requeryResults.selectedLocationID) {
-				ambiguitiesList[ambiguitiesListKeys[currentLocationIndex]].requeryResults.selectedLocationID = $scope.requeryResults.selectedLocationID;
-				ambiguitiesList[ambiguitiesListKeys[currentLocationIndex]].requeryResults.selectedLocationLabel = $("#selected-requery :selected").first().text();
+			if(ambiguitiesList[ambiguitiesListKeys[currentLocationIndex]].requeryResults) {
+				if($scope.requeryResults.selectedLocationID) {
+					ambiguitiesList[ambiguitiesListKeys[currentLocationIndex]].requeryResults.selectedLocationID = $scope.requeryResults.selectedLocationID;
+					ambiguitiesList[ambiguitiesListKeys[currentLocationIndex]].requeryResults.selectedLocationLabel = $("#selected-requery :selected").first().text();
+				}
 			}
-			
-			ambiguitiesList[ambiguitiesListKeys[currentLocationIndex]].selectedLocationID = $scope.suggestionList.selectedLocationID;
-			ambiguitiesList[ambiguitiesListKeys[currentLocationIndex]].selectedLocationLabel = $("#selected-location :selected").first().text();
+			else {
+				ambiguitiesList[ambiguitiesListKeys[currentLocationIndex]].selectedLocationID = $scope.suggestionList.selectedLocationID;
+				ambiguitiesList[ambiguitiesListKeys[currentLocationIndex]].selectedLocationLabel = $("#selected-location :selected").first().text();
+			}
 			
 			return;
 		}
