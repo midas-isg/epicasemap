@@ -2,15 +2,17 @@ package interactors.series_data_file;
 
 import interactors.LocationRule;
 import interactors.SeriesDataRule;
+import interactors.SeriesDataUrlRule;
 import interactors.SeriesRule;
 import interactors.series_data_file.Parser.DataPoint;
 
 import java.util.Date;
+import java.util.List;
 
-import models.SeriesDataFile;
 import models.entities.Location;
 import models.entities.Series;
 import models.entities.SeriesData;
+import models.entities.SeriesDataUrl;
 
 import org.joda.time.DateTime;
 
@@ -19,6 +21,7 @@ public class Persister {
 	private LocationRule locationRule;
 	private SeriesRule seriesRule;
 	private SeriesDataRule seriesDataRule;
+	private SeriesDataUrlRule seriesDataUrlRule;
 	private Parser parser;
 	private SeriesDataFile dataFile;
 	private Series series;
@@ -26,7 +29,9 @@ public class Persister {
 	public int persistSeriesDataFile(Long seriesId) {
 
 		this.series = seriesRule.read(seriesId);
-		return persistSeriesData();
+		int numCreated = persistSeriesData();
+		updateSeriesDataUrl(series,dataFile.getUrl(),dataFile.getChecksum());
+		return numCreated;
 	}
 
 	private int persistSeriesData() {
@@ -63,6 +68,10 @@ public class Persister {
 
 		if (fileFormat.equals(SeriesDataFile.ALS_ID_FORMAT)) {
 			Long alsId = getAlsId(dataPoint);
+			if(alsId == null){
+				location = createLocationWithNullAlsId(dataPoint);
+				return location;
+			}
 			location = locationRule.getLocation(alsId);
 
 		} else if (fileFormat.equals(SeriesDataFile.COORDINATE_FORMAT)) {
@@ -70,6 +79,14 @@ public class Persister {
 			Double lon = getLongitude(dataPoint);
 			location = locationRule.getLocation(lat, lon);
 		}
+		return location;
+	}
+
+	private Location createLocationWithNullAlsId(DataPoint dataPoint) {
+		//TODO: set location label from dataPoint
+		Location location = new Location();
+		final long id = locationRule.create(location);
+		location.setId(id);
 		return location;
 	}
 
@@ -94,6 +111,10 @@ public class Persister {
 	private Long getAlsId(DataPoint dataPoint) {
 		String header;
 		header = dataFile.stdHeaderToFileHeader(SeriesDataFile.ALS_ID_HEADER);
+		if(dataPoint.get(header).isEmpty()) {
+			return null;
+		}
+		
 		Long alsId = stringToLong(dataPoint.get(header));
 		return alsId;
 	}
@@ -125,4 +146,15 @@ public class Persister {
 
 	}
 
+	public void setSeriesDataUrlRule(SeriesDataUrlRule seriesDataUrlRule) {
+		this.seriesDataUrlRule = seriesDataUrlRule;
+	}
+	
+	private void updateSeriesDataUrl(Series series, String seriesDataUrl, String checksum) {
+		List<SeriesDataUrl> result = seriesDataUrlRule.query(series.getId());
+		if(! result.isEmpty())
+			seriesDataUrlRule.delete(series.getId());
+		if (seriesDataUrl != null)
+			seriesDataUrlRule.createNew(series, seriesDataUrl, checksum);
+	}
 }

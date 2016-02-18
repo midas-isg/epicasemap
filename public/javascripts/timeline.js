@@ -27,11 +27,9 @@ timeline.js
 		temp = this.mapTypes[mapID];
 		
 		L.mapbox.accessToken = 'pk.eyJ1IjoidHBzMjMiLCJhIjoiVHEzc0tVWSJ9.0oYZqcggp29zNZlCcb2esA';
-		this.map = L.mapbox.map( 'map',
-				temp,
-				{ worldCopyJump: true, bounceAtZoomLimits: false, zoom: 2, minZoom: 2})
-			.setView([30, 0], 2);
-
+		this.map = L.mapbox.map( 'map', temp,
+			{ worldCopyJump: true, bounceAtZoomLimits: false, zoom: 2, minZoom: 2, center: [0, 0] });
+		
 		this.heat = []; //null;
 		this.paused = false;
 		this.frame;
@@ -60,7 +58,7 @@ timeline.js
 			daysPerFrame: 1,
 			renderDelay: null,
 			pointDecay: 0.0231,
-			dataGapMethod: "show"
+			dataGapMethod: "bridge" //zero, show, bridge
 		};
 		
 		this.allContainedBox = [[], []];
@@ -178,7 +176,6 @@ timeline.js
 				
 				$("#title").text(result.result.title);
 				
-				//console.log(thisMap.seriesDescriptions);
 				thisMap.seriesList = result.result.allSeries;
 				
 				for(h = 0; h < thisMap.seriesList.length; h++) {
@@ -792,27 +789,29 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 							thisMap.latestDate = thisMap.dataset[i].timeGroup[thisMap.dataset[i].timeGroup.length - 1].date;
 						}
 						
-						thisMap.allContainedBox[0][0] = thisMap.dataset[0].timeGroup[0].point[0].latitude;
-						thisMap.allContainedBox[1][0] = thisMap.dataset[0].timeGroup[0].point[0].latitude;
-						thisMap.allContainedBox[0][1] = thisMap.dataset[0].timeGroup[0].point[0].longitude;
-						thisMap.allContainedBox[1][1] = thisMap.dataset[0].timeGroup[0].point[0].longitude;
+						thisMap.allContainedBox[0][0] = 90.0;
+						thisMap.allContainedBox[1][0] = -90.0;
+						thisMap.allContainedBox[0][1] = 180.0;
+						thisMap.allContainedBox[1][1] = -180.0;
 						
 						for(j = 0; j < thisMap.dataset[i].timeGroup.length; j++) {
 							for(k = 0; k < thisMap.dataset[i].timeGroup[j].point.length; k++) {
-								if(thisMap.allContainedBox[0][0] > thisMap.dataset[i].timeGroup[j].point[k].latitude) {
-									thisMap.allContainedBox[0][0] = thisMap.dataset[i].timeGroup[j].point[k].latitude;
-								}
-								
-								if(thisMap.allContainedBox[1][0] < thisMap.dataset[i].timeGroup[j].point[k].latitude) {
-									thisMap.allContainedBox[1][0] = thisMap.dataset[i].timeGroup[j].point[k].latitude;
-								}
-								
-								if(thisMap.allContainedBox[0][1] > thisMap.dataset[i].timeGroup[j].point[k].longitude) {
-									thisMap.allContainedBox[0][1] = thisMap.dataset[i].timeGroup[j].point[k].longitude;
-								}
-								
-								if(thisMap.allContainedBox[1][1] < thisMap.dataset[i].timeGroup[j].point[k].longitude) {
-									thisMap.allContainedBox[1][1] = thisMap.dataset[i].timeGroup[j].point[k].longitude;
+								if(thisMap.dataset[i].timeGroup[j].point[k].latitude && thisMap.dataset[i].timeGroup[j].point[k].longitude) {
+									if(thisMap.allContainedBox[0][0] > thisMap.dataset[i].timeGroup[j].point[k].latitude) {
+										thisMap.allContainedBox[0][0] = thisMap.dataset[i].timeGroup[j].point[k].latitude;
+									}
+									
+									if(thisMap.allContainedBox[1][0] < thisMap.dataset[i].timeGroup[j].point[k].latitude) {
+										thisMap.allContainedBox[1][0] = thisMap.dataset[i].timeGroup[j].point[k].latitude;
+									}
+									
+									if(thisMap.allContainedBox[0][1] > thisMap.dataset[i].timeGroup[j].point[k].longitude) {
+										thisMap.allContainedBox[0][1] = thisMap.dataset[i].timeGroup[j].point[k].longitude;
+									}
+									
+									if(thisMap.allContainedBox[1][1] < thisMap.dataset[i].timeGroup[j].point[k].longitude) {
+										thisMap.allContainedBox[1][1] = thisMap.dataset[i].timeGroup[j].point[k].longitude;
+									}
 								}
 							}
 						}
@@ -1181,6 +1180,26 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 					y: 25,
 					itemStyle: {
 						fontSize: "12px"
+					},
+					labelFormatter: function() {
+						var thisLegendElement = this.legendGroup.element,
+							thisLegendIndex = this.index;
+						
+						$(thisLegendElement).mouseenter(function() {
+							$("#information-container #series-description").text(MAGIC_MAP.seriesDescriptions[MAGIC_MAP.dataset[thisLegendIndex].seriesID].description);
+							$("#information-container").show();
+							
+							return;
+						});
+						
+						$(thisLegendElement).mouseout(function() {
+							$("#information-container #series-description").text("");
+							$("#information-container").hide();
+							
+							return;
+						});
+						
+						return this.name;
 					}
 				},
 				credits: {
@@ -1244,6 +1263,10 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 	
 	MagicMap.prototype.doSelection = function(event) {
 		if(DEBUG) { console.log("[DEBUG] called doSelection()"); }
+		
+		if(!event) {
+			return;
+		}
 		
 		var extremesObject = event.xAxis[0],
 			min = extremesObject.min,
@@ -1377,7 +1400,8 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 			
 			if(this.dataset[setID].timeGroup[setFrame]) {
 				for(i = 0; i < this.dataset[setID].timeGroup[setFrame].point.length; i++) {
-					if(this.dataset[setID].timeGroup[setFrame].point[i].value > 0) {
+					if((this.dataset[setID].timeGroup[setFrame].point[i].value > 0) &&
+					(this.dataset[setID].timeGroup[setFrame].point[i].latitude && this.dataset[setID].timeGroup[setFrame].point[i].longitude)) {
 						this.displaySet[setID].visiblePoints.push([this.dataset[setID].timeGroup[setFrame].point[i].latitude,
 							this.dataset[setID].timeGroup[setFrame].point[i].longitude,
 							0.7,

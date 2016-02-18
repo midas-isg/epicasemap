@@ -112,3 +112,5 @@ a.menu-item.navbar-link:hover {background:black;}
 .navbar-nav>li>a.menu-item {color:#ffff00;}
 
 ul.dropdown-menu>li>a.menu-item {color:#ffff00;}
+
+.radio-offset{margin-left: 2em;}

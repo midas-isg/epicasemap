@@ -1,5 +1,7 @@
 package controllers;
 
+import java.io.File;
+
 import gateways.configuration.ConfReader;
 import gateways.database.AccountDao;
 import gateways.database.CoordinateDao;
@@ -7,6 +9,7 @@ import gateways.database.LocationDao;
 import gateways.database.PermissionDao;
 import gateways.database.SeriesDao;
 import gateways.database.SeriesDataDao;
+import gateways.database.SeriesDataUrlDao;
 import gateways.database.VizDao;
 import gateways.webservice.AlsDao;
 import interactors.AccountRule;
@@ -15,6 +18,7 @@ import interactors.CoordinateRule;
 import interactors.LocationRule;
 import interactors.SeriesAuthorizer;
 import interactors.SeriesDataRule;
+import interactors.SeriesDataUrlRule;
 import interactors.SeriesRule;
 import interactors.VizAuthorizer;
 import interactors.VizRule;
@@ -22,14 +26,16 @@ import interactors.security.password.Authenticator;
 import interactors.security.password.PasswordFactory;
 import interactors.series_data_file.Parser;
 import interactors.series_data_file.Persister;
+import interactors.series_data_file.SeriesDataFile;
 import interactors.series_data_file.Validator;
 
 import javax.persistence.EntityManager;
 
-import models.SeriesDataFile;
 import models.entities.SeriesPermission;
 import models.entities.VizPermission;
+
 import play.db.jpa.JPA;
+import play.mvc.Http.Request;
 
 public class Factory {
 	private Factory() {
@@ -61,6 +67,7 @@ public class Factory {
 		final SeriesRule seriesRule = new SeriesRule(dao);
 		seriesRule.setCoordinateRule(makeCoordinateRule(em));
 		seriesRule.setSeriesDataRule(makeSeriesDataRule(em));
+		seriesRule.setSeriesDataUrlRule(makeSeriesDataUrlRule(em));
 		if (vizRule == null)
 			vizRule = makeVizRule(em, seriesRule);
 		seriesRule.setVizRule(vizRule);
@@ -111,6 +118,7 @@ public class Factory {
 		persister.setLocationRule(makeLocationRule(JPA.em()));
 		persister.setSeriesRule(makeSeriesRule(JPA.em()));
 		persister.setSeriesDataRule(makeSeriesDataRule(JPA.em()));
+		persister.setSeriesDataUrlRule(makeSeriesDataUrlRule(JPA.em()));
 		persister.setParser(new Parser(dataFile));
 		persister.setSeriesDataFile(dataFile);
 		return persister;
@@ -158,5 +166,23 @@ public class Factory {
 		authorizer.setVizRule(vizRule);
 		authorizer.setAccountRule(makeAccountRule(em));
 		return authorizer;
+	}
+
+	public static SeriesDataFile makeSeriesDataFile(String url) {
+		return new SeriesDataFile(url);
+	}
+	
+	public static SeriesDataFile makeSeriesDataFile(File file) {
+		return new SeriesDataFile(file);
+	}
+
+	public static SeriesDataFile makeSeriesDataFile(Request request) {
+		return new SeriesDataFile(request.body()
+				.asMultipartFormData().getFiles().get(0).getFile());
+	}
+	
+	public static SeriesDataUrlRule makeSeriesDataUrlRule(EntityManager em) {
+		SeriesDataUrlDao seriesDataUrlDao = new SeriesDataUrlDao(em);
+		return new SeriesDataUrlRule(seriesDataUrlDao);
 	}
 }

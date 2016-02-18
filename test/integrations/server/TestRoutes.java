@@ -19,7 +19,7 @@ public class TestRoutes {
     		
     		LandingPageTester.containsConextForJavaScript(),
     		
-    		UploadSeriesEndpointTester.test()
+    		//UploadSeriesEndpointTester.test()
     	};
 		Server.run(tests);
     }
