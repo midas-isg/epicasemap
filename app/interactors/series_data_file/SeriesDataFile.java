@@ -1,11 +1,17 @@
-package models;
+package interactors.series_data_file;
 
 import static java.util.regex.Pattern.compile;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -14,6 +20,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import models.exceptions.NotFound;
+
+import org.apache.commons.codec.digest.DigestUtils;
 
 public class SeriesDataFile {
 	public static final String ALS_ID_FORMAT = "alsIdFormat";
@@ -38,6 +48,8 @@ public class SeriesDataFile {
 	}
 
 	private File file;
+	private String url;
+	private String checksum;
 	private Character delimiter;
 	private String fileFormat;
 
@@ -45,8 +57,44 @@ public class SeriesDataFile {
 
 	public SeriesDataFile(File file) {
 		this.file = file;
-		setDelimiter();
-		setFileFormat();
+		setFileAttribs(this.file);
+	}
+
+	public SeriesDataFile(String url) {
+		this.setUrl(url);
+		this.file = readFilefromUrl(url);
+		this.checksum = md5sum(this.file);
+		setFileAttribs(this.file);
+	}
+
+	private void setFileAttribs(File file) {
+		String headerLine = readFirstLine(file);
+		setDelimiter(headerLine);
+		setFileFormat(headerLine);
+		if(! fileFormat.isEmpty()){
+			mapFileHeadersToStdHeaders(headerLine,getDelimiter());	
+		}
+	}
+
+	private File readFilefromUrl(String StrUrl) {
+		String line = "";
+		File tempFile;
+		try {
+			tempFile = File.createTempFile("tempUserFile", ".tmp");
+			URL url = new URL(StrUrl);
+			URLConnection conn = url.openConnection();
+			BufferedReader br = new BufferedReader(new InputStreamReader(
+					conn.getInputStream()));
+			BufferedWriter bw = new BufferedWriter(new FileWriter(tempFile));
+			while ((line = br.readLine()) != null) {
+				bw.write(line + "\n");
+			}
+			bw.close();
+			br.close();
+		} catch (IOException e) {
+			throw new NotFound("The requested resource could not be found");
+		}
+		return tempFile;
 	}
 
 	public File getFile() {
@@ -70,7 +118,9 @@ public class SeriesDataFile {
 		Set<String> result = new HashSet<String>();
 		result.add(TIME_HEADER);
 		result.add(VALUE_HEADER);
-		result.addAll(format2UncommonColumns.get(getFileFormat()));
+		String format = getFileFormat();
+		List<String> formatHeader = format2UncommonColumns.get(format);
+		result.addAll(formatHeader);
 		return result;
 	}
 
@@ -82,16 +132,15 @@ public class SeriesDataFile {
 	public String stdHeaderToFileHeader(String header) {
 		return stdHeaderToFileHeaderMap.get(header);
 	}
-	
-	private void setFileFormat() {
-		String headerLine = readFirstLine(file);
-		this.fileFormat = findFormat(delimiter, headerLine);		
+
+	private void setFileFormat(String headerLine) {
+		this.fileFormat = findFormat(delimiter, headerLine);
 	}
 
-	private void setDelimiter() {
-		String headerLine = readFirstLine(file);
+	private void setDelimiter(String headerLine) {
+
 		Character delimChar = findDelimiter(headerLine);
-		this.setDelimiter(delimChar);		
+		this.setDelimiter(delimChar);
 	}
 
 	private void setDelimiter(Character delimChar) {
@@ -102,10 +151,10 @@ public class SeriesDataFile {
 		String regEx = "\\s*\\w+[\\s&&[^\\t]]*(\\W)\\s*\\w*";
 		Pattern pattern = compile(regEx);
 		Matcher matcher = pattern.matcher(line);
-		String delim = "";	
+		String delim = "";
 		if (matcher.find())
 			delim = matcher.group(1);
-			
+
 		return toChar(delim);
 
 	}
@@ -115,14 +164,29 @@ public class SeriesDataFile {
 	}
 
 	private String findFormat(Character delimChar, String line) {
-		String[] headers = line.split(delimChar+"");
-		for(int i=0 ; i < headers.length ; i++){
-			if(areEqual(headers[i], ALS_ID_HEADER))
+		String[] headers = line.split(delimChar + "");
+		for (int i = 0; i < headers.length; i++) {
+			if (areEqual(headers[i], ALS_ID_HEADER))
 				return ALS_ID_FORMAT;
-			if(areEqual(headers[i],LATITUDE_HEADER) || areEqual(headers[i],LONGITUDE_HEADER))
+			if (areEqual(headers[i], LATITUDE_HEADER)
+					|| areEqual(headers[i], LONGITUDE_HEADER))
 				return COORDINATE_FORMAT;
 		}
 		return "";
+	}
+	
+	private void mapFileHeadersToStdHeaders(String headerLine, Character delimChar) {
+		Map<String, String> result = new HashMap<String, String>();
+		String[] fileHeaders = headerLine.split(delimChar + "");
+		Set<String> stdHeaderSet = this.getHeaders();
+		for (String fileHeader : fileHeaders) {
+			for (String stdHeader : stdHeaderSet) {
+				if (areEqual(fileHeader,stdHeader)) {
+					result.put(stdHeader, fileHeader);
+				}
+			}
+		}
+		setStdHeaderToFileHeaderMap(result);
 	}
 
 	private boolean areEqual(String header, String string) {
@@ -142,9 +206,37 @@ public class SeriesDataFile {
 			line = bf.readLine();
 			bf.close();
 		} catch (IOException e) {
-			throw new RuntimeException(e.getMessage());
+			throw new RuntimeException(e);
 		}
 		return line;
+	}
+
+	public void deleteFile() {
+		this.file.delete();	
+	}
+	
+	private String md5sum(File file) {
+		String md5;
+		try {
+		FileInputStream fis = new FileInputStream(file);
+		md5 = DigestUtils.md5Hex(fis);
+		fis.close();
+		} catch (IOException e){
+			throw new RuntimeException(e);
+		}
+		return md5;
+	}
+
+	public String getChecksum() {
+		return checksum;
+	}
+
+	public String getUrl() {
+		return url;
+	}
+
+	public void setUrl(String url) {
+		this.url = url;
 	}
 
 }

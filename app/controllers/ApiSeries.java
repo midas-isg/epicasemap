@@ -10,6 +10,7 @@ import javax.ws.rs.PathParam;
 
 import models.entities.Mode;
 import models.entities.Series;
+import models.entities.SeriesDataUrl;
 import models.entities.SeriesPermission;
 import models.exceptions.Unauthorized;
 import models.filters.Filter;
@@ -46,6 +47,7 @@ public class ApiSeries extends Controller {
 	
 	public static Form<SeriesInput> seriesForm = Form.form(SeriesInput.class);
 	public static Form<ModeWithAccountId> modeForm = Form.form(ModeWithAccountId.class);
+	public static Form<SeriesDataUrl> seriesDataUrlForm = Form.form(SeriesDataUrl.class);
 
 	@ApiOperation(httpMethod = "POST", nickname = "create", value = "Creates a new Series", 
 			notes = "This endpoint creates a Series using submitted JSON object in body "
@@ -164,6 +166,20 @@ public class ApiSeries extends Controller {
 				long id) {
 		checkSeriesPermission(id, "upload data to");
 		return UploadSeries.upload(id);
+	}
+	
+	@Transactional
+	@Restricted({Access.CHANGE})
+	public static Result updateDataViaUrl(
+			@ApiParam(value = "ID of the Series", required = true) 
+			@PathParam("id") 
+				long id,
+			@ApiParam(value = "Force overWrite the content", required = false) 
+			@PathParam("overWrite") 
+				boolean overWrite) {
+		checkSeriesPermission(id, "upload data to");
+		String url = seriesDataUrlForm.bindFromRequest().get().getUrl();
+		return UploadSeries.uploadViaUrl(id, url, overWrite);
 	}
 
 	private static SeriesRule makeRule() {

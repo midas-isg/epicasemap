@@ -9,8 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import models.SeriesDataFile;
-
 import org.joda.time.DateTime;
 
 public class Validator {
@@ -29,7 +27,6 @@ public class Validator {
 			return this.errors;
 		}
 		if ((errorList = getFileConsistencyError()).isEmpty()) {
-			mapFileHeadersToStdHeaders();
 			while (parser.hasNext()) {
 				if (!(errorList = getRecordErrors(parser.next())).isEmpty()) {
 					errors.put(parser.getCurrentLineNumber(), errorList);
@@ -39,20 +36,6 @@ public class Validator {
 			errors.put(parser.getCurrentLineNumber(), errorList);
 		}
 		return errors;
-	}
-
-	private void mapFileHeadersToStdHeaders() {
-		Map<String, String> result = new HashMap<String, String>();
-		Set<String> fileHeaderSet = parser.getFileHeaders();
-		Set<String> stdHeaderSet = dataFile.getHeaders();
-		for (String fileHeader : fileHeaderSet) {
-			for (String stdHeader : stdHeaderSet) {
-				if (fileHeader.equalsIgnoreCase(stdHeader)) {
-					result.put(stdHeader, fileHeader);
-				}
-			}
-		}
-		dataFile.setStdHeaderToFileHeaderMap(result);
 	}
 
 	List<String> getFileConsistencyError() {
@@ -135,13 +118,16 @@ public class Validator {
 			header = dataFile
 					.stdHeaderToFileHeader(SeriesDataFile.ALS_ID_HEADER);
 
-			if (!isNumber(dataPoint.get(header))) {
-				errorMsg = header + ": " + dataPoint.get(header)
-						+ " is not valid.";
-			} else if (!existInAls(dataPoint.get(header))) {
-				errorMsg = header + ": " + dataPoint.get(header)
-						+ " does not exist in ALS.";
+			if(!dataPoint.get(header).isEmpty()) {
+				if (!isNumber(dataPoint.get(header))) {
+					errorMsg = header + ": " + dataPoint.get(header)
+							+ " is not valid.";
+				} else if (!existInAls(dataPoint.get(header))) {
+					errorMsg = header + ": " + dataPoint.get(header)
+							+ " does not exist in ALS.";
+				}
 			}
+			
 			break;
 
 		case SeriesDataFile.COORDINATE_FORMAT:

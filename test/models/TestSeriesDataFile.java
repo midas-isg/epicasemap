@@ -1,31 +1,28 @@
 package models;
 
 import static org.fest.assertions.Assertions.assertThat;
-
-import java.io.File;
+import interactors.series_data_file.SeriesDataFile;
 
 import org.junit.Test;
+
+import suites.SeriesDataFileHelper;
 
 public class TestSeriesDataFile {
 	
 	@Test
 	public void testAutoReadDelimAndFormat(){
-		File file = new File("test\\resources\\input-files\\test_alsId_format_tab.txt");
-		SeriesDataFile dataFile = new SeriesDataFile(file);
+		
+		SeriesDataFile dataFile = SeriesDataFileHelper.createTestSeriesDataFileWithTab();
 		assertThat(dataFile.getDelimiter()).isEqualTo('\t');
 		assertThat(dataFile.getFileFormat()).isEqualTo(SeriesDataFile.ALS_ID_FORMAT);
 		
-		file = new File("test\\resources\\input-files\\test_coordinate_format.txt");
-		dataFile = new SeriesDataFile(file);
+		dataFile = SeriesDataFileHelper.createTestSeriesDataFileWithCoordianteFormat();
 		assertThat(dataFile.getDelimiter()).isEqualTo(',');
 		assertThat(dataFile.getFileFormat()).isEqualTo(SeriesDataFile.COORDINATE_FORMAT);
 		
-		file = new File("test\\resources\\input-files\\test_alsId_format_unix_line_ending.txt");
-		dataFile = new SeriesDataFile(file);
+		dataFile = SeriesDataFileHelper.createTestSeriesDataFileWithUnixLineEnding();
 		assertThat(dataFile.getDelimiter()).isEqualTo('\t');
 		assertThat(dataFile.getFileFormat()).isEqualTo(SeriesDataFile.ALS_ID_FORMAT);
-		
-		
 	}
 
 }

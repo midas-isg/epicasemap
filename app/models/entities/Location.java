@@ -32,6 +32,12 @@ public class Location implements models.entities.Entity {
 	public String getLabel() {
 		return label;
 	}
+	
+	public String getLabelOrEmpty() {
+		String label = getLabel();
+		
+		return (label != null) ? label : "";
+	}
 
 	public void setLabel(String label) {
 		this.label = label;

@@ -9,6 +9,7 @@ import java.util.Set;
 import models.entities.Account;
 import models.entities.Coordinate;
 import models.entities.Series;
+import models.entities.SeriesDataUrl;
 import models.entities.SeriesPermission;
 import models.entities.Visualization;
 import models.exceptions.ConstraintViolation;
@@ -18,9 +19,12 @@ import models.filters.Restriction;
 import models.view.SeriesInput;
 
 public class SeriesRule extends CrudRule<Series> {
-	private SeriesDao dao; 
+	private SeriesDao dao;
 	private CoordinateRule coordinateRule;
 	private SeriesDataRule seriesDataRule;
+
+	private SeriesDataUrlRule seriesDataUrlRule;
+
 	private SeriesAuthorizer seriesAuthorizer;
 	private VizRule vizRule; 
 	private AccountRule accountRule;
@@ -50,8 +54,17 @@ public class SeriesRule extends CrudRule<Series> {
 	public void delete(long id) {
 		validateConstrains(id);
 		deleteAllSeriesData(id);
+		deleteSeriesDataUrl(id);
 		deleteAllSeriesPermissions(id);
 		super.delete(id);
+	}
+
+	private int deleteSeriesDataUrl(long id) {
+		List<SeriesDataUrl> result = seriesDataUrlRule.query(id);
+		for (SeriesDataUrl seriesDataUrl : result) {
+			seriesDataUrlRule.delete(seriesDataUrl.getId());
+		}
+		return result.size();
 	}
 
 	private void validateConstrains(long id) {
@@ -107,6 +120,10 @@ public class SeriesRule extends CrudRule<Series> {
 		filter.setSeriesId(seriesId);
 		filter.setOffset(0);
 		return filter;
+	}
+
+	public void setSeriesDataUrlRule(SeriesDataUrlRule seriesDataUrlRule) {
+		this.seriesDataUrlRule = seriesDataUrlRule;
 	}
 
 	public long createFromInput(SeriesInput input) {

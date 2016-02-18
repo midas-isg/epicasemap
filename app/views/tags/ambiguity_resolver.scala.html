@@ -1,0 +1,110 @@
+@bs_modal("ambiguity-resolver", "AmbiguityResolver", "Review Location Mappings", "closeDialog()")(ambiguityResolver())(footer())
+
+@ambiguityResolver() = {
+<div id="resolution-space" style="overflow: auto;">
+	<button id="review" title="Review selections" class='btn-large btn-primary' ng-click='review();'>
+		@bs_icon("check") Review
+	</button>
+
+	<form id="resolver-form" class="/*form-horizontal*/" role="form" name="form" style="padding: 5px;" ng-show="showResolverForm">
+	<!-- ng-init='radioIn="file"' enctype="{{ radioIn === 'file' ? 'multipart/form-data' : 'application/x-www-form-urlencoded' }}"> -->
+		<div class="form-group">
+			<div id="requery-text" ng-show="showRequeryText">
+				<label style="color:#ff0000;">Using new parameters</label>
+			</div>
+			
+			<label style="display: inline;">Results for:
+				<legend ng-bind="currentInputLabel">Input Label</legend>
+			</label>
+			
+			<div style="margin-bottom: 25px;">
+				<label class=''>Matched Locations:</label>
+				<div style="display: flex;">
+					<select id="selected-location" ng-model='suggestionList.selectedLocationID' ng-change="locationChange()" ng-options="suggestion.alsID as suggestion.label for suggestion in suggestionList.locations" style="display: block; max-width: 75%;">
+					</select>
+					<button id="view-ls" class="btn-large btn-info">@bs_icon("globe") View Location Services Page</button>
+				</div>
+			</div>
+			
+			<div>
+				<label>If there are no correct matches try editing query input</label>
+				<button id="edit-query" title="Toggle Query Editor" class='btn-large btn-warning' ng-click='editLocationQuery()'>
+					@bs_icon("edit") Toggle Query Editor
+				</button>
+			</div>
+			
+			<fieldset id="query-input" style="margin-left: 15px;" ng-show="showQueryInput">
+				<div style="margin-bottom: 15px;">
+					<div>
+						<label for="aliasLabel">Location Name: </label>
+						<input id="aliasLabel" class="" type="text" name="requeryInput.label" ng-model="requeryInput.label" ng-change="requeryInputEvent()">
+					</div>
+					
+					<div hidden>
+						<label for="date">Date: </label>
+						<input id="date" class="" type="text" name="requeryInput.date" ng-model="requeryInput.date">
+					</div>
+					
+					<div hidden>
+						<label for="locationType">Location Type: </label>
+						<input id="locationType" class="" type="text" name="locationType" ng-model="requeryInput.locationType">
+					</div>
+					
+					<div hidden>
+						<label for="state">State Name: </label>
+						<input id="state" class="" type="text" name="state" ng-model="requeryInput.state">
+					</div>
+					
+					<div hidden>
+						<label for="city">City Name: </label>
+						<input id="city" class="" type="text" name="city" ng-model="requeryInput.city">
+					</div>
+					
+					<button hidden id="requery-flag" title="Use updated parameters" class='btn-large btn-danger' ng-click='flagForRequery()'>
+						@bs_icon("edit") Use new parameters
+					</button>
+				</div>
+				
+				<div style="">
+					<label class=''>Matched Locations:</label>
+					<div style="display: flex;">
+						<select id="selected-requery" ng-model='requeryResults.selectedLocationID' ng-change="locationChange()" ng-options="match.alsId as match.label for match in requeryResults.matches" style="display: block; max-width: 75%;">
+						</select>
+						<button id="view-requery-ls" class="btn-large btn-info">@bs_icon("globe") View Location Services Page</button>
+					</div>
+				</div>
+			</fieldset>
+		</div>
+	</form>
+
+	<table id="summary" class="row" style="padding: 5px; margin: 0px;" ng-show="showSummary">
+		<caption>Resolution Summary</caption>
+		<thead>
+			<tr>
+				<th>Location</th>
+				<th>Selected Mapping</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr ng-repeat="locationEntry in locationEntries"><td>{{locationEntry.key}}</td><td><button id={{locationEntry.id}} class={{locationEntry.class}} ng-click="locationEntry.onClick()">{{locationEntry.value}}</button></td></tr>
+		</tbody>
+	</table>
+</div>
+}
+
+@footer() = {
+<div>
+	<button id="edit-previous-location" title="Edit previous location" class='btn-large pull-left' ng-click='editPreviousLocation()' ng-show="showEditPreviousLocation">
+		<!-- ng-disabled='! dataFile || isWorking' ng-show="radioIn === 'file'"> -->
+		@bs_icon("arrow-left") Previous Location
+	</button>
+
+	<button id="edit-next-location" title="Edit next location" class='btn-large' ng-click='editNextLocation()' ng-show="showEditNextLocation">
+		@bs_icon("arrow-right") Next Location
+	</button>
+
+	<button id="submit-selections" title="Submit selections" class='btn-large btn-danger' ng-click='submitSelections()' ng-show="showSubmitButton">
+		@bs_icon("upload") Submit
+	</button>
+</div>
+}

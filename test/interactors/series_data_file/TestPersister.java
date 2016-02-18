@@ -4,7 +4,6 @@ import static org.fest.assertions.Assertions.assertThat;
 import integrations.app.App;
 import interactors.SeriesRule;
 import interactors.series_data_file.Parser.DataPoint;
-import models.SeriesDataFile;
 import models.entities.Location;
 import models.entities.Series;
 import models.entities.SeriesData;
@@ -38,7 +37,6 @@ public class TestPersister {
 
 	private void testPersistSeriesData() throws Exception {
 		SeriesDataFile dataFile = SeriesDataFileHelper.createTestSeriesDataFileWithAlsIdFormat();
-		SeriesDataFileHelper.setStdToFileHeaderMap(dataFile);
 		int expected = 5;
 
 		Persister persister = SeriesDataFileHelper.makePersister(dataFile);
@@ -46,7 +44,11 @@ public class TestPersister {
 		assertThat(created).isEqualTo(expected);
 
 		dataFile = SeriesDataFileHelper.createTestSeriesDataFileWithCoordianteFormat();
-		SeriesDataFileHelper.setStdToFileHeaderMap(dataFile);
+		persister = SeriesDataFileHelper.makePersister(dataFile);
+		created = persister.persistSeriesDataFile(seriesId);
+		assertThat(created).isEqualTo(expected);
+		
+		dataFile = SeriesDataFileHelper.createTestSeriesDataFileWithNullAlsId();
 		persister = SeriesDataFileHelper.makePersister(dataFile);
 		created = persister.persistSeriesDataFile(seriesId);
 		assertThat(created).isEqualTo(expected);

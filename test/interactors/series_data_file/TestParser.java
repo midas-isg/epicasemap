@@ -1,7 +1,6 @@
 package interactors.series_data_file;
 
 import interactors.series_data_file.Parser;
-import models.SeriesDataFile;
 
 import org.junit.Test;
 

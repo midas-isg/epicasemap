@@ -1,8 +1,10 @@
 package integrations.server;
 
 import static play.mvc.Http.Status.BAD_REQUEST;
+import static play.mvc.Http.Status.CONFLICT;
 import static play.mvc.Http.Status.CREATED;
 import static suites.Helper.assertAreEqual;
+import interactors.SeriesRule;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -13,6 +15,8 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import models.entities.Series;
+import play.db.jpa.JPA;
 import play.libs.ws.WS;
 import play.libs.ws.WSRequestHolder;
 import play.libs.ws.WSResponse;
@@ -22,18 +26,67 @@ import com.ning.http.multipart.FilePart;
 import com.ning.http.multipart.MultipartRequestEntity;
 import com.ning.http.multipart.Part;
 
+
 public class UploadSeriesEndpointTester {
 
 	private static final int timeout = 100_000;
 	private final String basePath = "/api/series/";
 	private final long seriesId = 1000_000L;
+	//private String alsIdFormatURL = "http://localhost:3333/epidemap/assets/input/series-data/examples/test_alsId_format.txt";
+	private String alsIdFormatURL = "https://pitt.box.com/shared/static/y6e8o6gg2a9s1q5bpd2dnznfa83qk5bm.txt";
+	
+	//TODO: move all new File() to seriesDataFileHleper 
 
 	public static Runnable test() {
 		return () -> newInstance().testUpload();
 	}
 
+	// fails due to running out of available db connections. Upload Queue will solve the problem 
 	public void testUpload() {
 
+		testUploadViaUrl();
+
+		testUploadViaMultiPartForm();
+		
+		testSeriesLockOnUpload();
+
+	}
+
+	private void testSeriesLockOnUpload() {
+		setSeriesLock(seriesId,true);
+		uploadDataWithAlsIdFormat(seriesId);
+		Series series = readSeries(seriesId);
+		assertAreEqual(series.getLock(), false);
+		
+		setSeriesLock(seriesId,true);
+		uploadAlsIdFormatWithURL(seriesId, true);
+		series = readSeries(seriesId);
+		assertAreEqual(series.getLock(), false);	
+	}
+
+	private Series readSeries(long id) {
+		Series series = null;
+		try {
+			series = JPA.withTransaction(() -> {
+				SeriesRule rule = suites.SeriesDataFileHelper.makeSeriesRule();
+				return rule.read(id);
+			});
+		} catch (Throwable e) {
+			throw new RuntimeException(e);
+		}
+		return series;
+	}
+
+	private void setSeriesLock(long id, boolean lock) {
+		JPA.withTransaction(() -> {
+			SeriesRule rule = suites.SeriesDataFileHelper.makeSeriesRule();
+			Series series = rule.read(id);
+			series.setLock(lock);
+			rule.update(id, series);
+		});
+	}
+
+	private void testUploadViaMultiPartForm() throws RuntimeException {
 		WSResponse resp = uploadMultiPartFormData();
 		assertStatus(resp, CREATED);
 
@@ -56,14 +109,45 @@ public class UploadSeriesEndpointTester {
 
 		response = uploadDataWithErrorWithAlsIdFormat(seriesId);
 		assertStatus(response, BAD_REQUEST);
-		assertBody(response, "Line 1: number of columns is 4. should be 3.\n"
-				+ "Line 1: \"lat\" column name is not allowed in alsIdFormat format.\n");
-		
+		assertBody(
+				response,
+				"Line 1: number of columns is 4. should be 3.\n"
+						+ "Line 1: \"lat\" column name is not allowed in alsIdFormat format.\n");
+
 		response = uploadDataWithErrorWithCoordinateFormat(seriesId);
 		assertStatus(response, BAD_REQUEST);
-		assertBody(response, "Line 1: number of columns is 5. should be 4.\n"
-				+ "Line 1: \"error\" column name is not allowed in coordinateFormat format.\n");
+		assertBody(
+				response,
+				"Line 1: number of columns is 5. should be 4.\n"
+						+ "Line 1: \"error\" column name is not allowed in coordinateFormat format.\n");
+	}
 
+	private void testUploadViaUrl() {
+		WSResponse resp = uploadAlsIdFormatWithURL(seriesId, true);
+		assertStatus(resp, CREATED);
+
+		resp = uploadAlsIdFormatWithURL(seriesId, false);
+		assertStatus(resp, CONFLICT);
+		
+		resp = uploadAlsIdFormatWithURL(seriesId, true);
+		assertBody(resp, "5 existing item(s) deleted.\n"
+				+ "5 new item(s) created.");
+	}
+
+	private WSResponse uploadAlsIdFormatWithURL(long seriesId, boolean overWrite) {
+
+		String body = "url=" + alsIdFormatURL ;
+		String url = buildUrl(seriesId, overWrite);
+		WSRequestHolder req = WS.url(url).setContentType(
+				"application/x-www-form-urlencoded");
+		WSResponse response = req.put(body).get(timeout);
+		return response;
+	}
+
+	private String buildUrl(long seriesId, boolean overWrite) {
+		String url = Server.makeTestUrl(basePath) + seriesId
+				+ "/data-url?overWrite=" + overWrite;
+		return url;
 	}
 
 	private WSResponse uploadMultiPartFormData() {
@@ -89,7 +173,7 @@ public class UploadSeriesEndpointTester {
 
 	private WSResponse uploadDataWithAlsIdFormatWithTab(long seriesId) {
 		File file = new File(
-				"test/resources/input-files/test_alsId_format_tab.txt");
+				"public/input/series-data/test/test_alsId_format_tab.txt");
 		String url = buildUrl(seriesId);
 		WSResponse response = sendMultiPartRequest(file, url);
 		return response;
@@ -100,7 +184,7 @@ public class UploadSeriesEndpointTester {
 		WSResponse response;
 
 		File file = new File(
-				"test/resources/input-files/test_coordinate_format_with_errors.txt");
+				"public/input/series-data/test/test_coordinate_format_with_errors.txt");
 		String url = buildUrl(seriesId);
 		response = sendMultiPartRequest(file, url);
 		return response;
@@ -110,7 +194,7 @@ public class UploadSeriesEndpointTester {
 			throws RuntimeException {
 		WSResponse response;
 		File file = new File(
-				"test/resources/input-files/test_alsId_format_with_errors.txt");
+				"public/input/series-data/test/test_alsId_format_with_errors.txt");
 		String url = buildUrl(seriesId);
 		response = sendMultiPartRequest(file, url);
 		return response;
@@ -121,7 +205,7 @@ public class UploadSeriesEndpointTester {
 		WSResponse response;
 
 		File file = new File(
-				"test/resources/input-files/test_coordinate_format.txt");
+				"public/input/series-data/examples/test_coordinate_format.txt");
 		String url = buildUrl(seriesId);
 		response = sendMultiPartRequest(file, url);
 		return response;
@@ -129,7 +213,9 @@ public class UploadSeriesEndpointTester {
 
 	private WSResponse uploadDataWithAlsIdFormat(Long seriesId)
 			throws RuntimeException {
-		File file = new File("test/resources/input-files/test_alsId_format.txt");
+		
+		File file = new File("public/input/series-data/examples/test_alsId_format.txt");
+		//File file = new File("public/input/series-data/examples/PERTUSSIS_Cases_1938-2011.ssv");
 		String url = buildUrl(seriesId);
 		WSResponse response = sendMultiPartRequest(file, url);
 		return response;
