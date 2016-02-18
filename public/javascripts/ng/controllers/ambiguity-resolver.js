@@ -293,6 +293,8 @@ app.controller('AmbiguityResolver', function($scope, $rootScope, api) {
 						$scope.requeryResults = {matches: [{label: "No results found"}], selectedLocationID: null};
 						ambiguitiesList[$scope.currentInputLabel].requeryResults = {matches: null, selectedLocationID: null};
 						ambiguitiesList[$scope.currentInputLabel].requeryInput = null;
+						
+						$scope.$apply();
 					}
 					
 					return;
@@ -356,6 +358,7 @@ app.controller('AmbiguityResolver', function($scope, $rootScope, api) {
 					version: seriesMeta.version
 				};
 			
+			//move this so that it isn't recreated each time submitSelections is invoked!
 			function validatesSubmission() {
 				var i,
 					submitUnmapped = false;
@@ -369,13 +372,17 @@ app.controller('AmbiguityResolver', function($scope, $rootScope, api) {
 							}
 							
 							submitUnmapped = true;
-							submissionMeta.description += " \nUnmapped location(s): "
+							submissionMeta.description += " \n[Unmapped location(s): "
 						}
 						
 						submissionMeta.description += (ambiguitiesList[ambiguitiesListKeys[i]].alsIDQueryInput.locationName + "; ");
 					}
 					
 					selectedMappings[ambiguitiesListKeys[i]] = ambiguitiesList[ambiguitiesListKeys[i]];
+				}
+				
+				if(submitUnmapped) {
+					submissionMeta.description += "]";
 				}
 				
 				return true;
