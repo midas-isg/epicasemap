@@ -108,6 +108,7 @@ app.controller('SeriesData', function($scope, $rootScope, api) {
 					console.log("Multiple Choices:");
 					ambiguityResolverData = {data: reason.data, url: $scope.url, seriesMeta: $scope.series, seriesID: $scope.seriesId};
 					$rootScope.$emit('ambiguityResolver', ambiguityResolverData);
+					$scope.closeDialog();
 				}
 				else if(reason.status === 404) /*not found*/ {
 					//for each index of reason.data, summon modal to edit empty list entries
