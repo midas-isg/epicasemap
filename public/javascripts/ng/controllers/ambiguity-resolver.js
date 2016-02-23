@@ -358,7 +358,7 @@ app.controller('AmbiguityResolver', function($scope, $rootScope, api) {
 					version: seriesMeta.version
 				};
 			
-			//move this so that it isn't recreated each time submitSelections is invoked!
+			//TODO: move this so that it isn't recreated each time submitSelections is invoked!
 			function validatesSubmission() {
 				var i,
 					submitUnmapped = false;
