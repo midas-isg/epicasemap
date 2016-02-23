@@ -141,25 +141,20 @@ Logger.debug(String.valueOf(seriesId));
 				while(occurrencesIterator.hasNext()) {
 					occurrenceNode = occurrencesIterator.next();
 					currentLine = formatter.format(new Date(occurrenceNode.get("date").asLong()));
+					currentLine += ",";
 					
-					if(currentNode.get("requeryResults") != null) {
-						currentLine += "," + currentNode.get("requeryResults").get("selectedLocationID").asText();
+					if((currentNode.get("requeryResults") != null) &&
+						(!currentNode.get("requeryResults").get("selectedLocationID").isNull())) {
+						currentLine += currentNode.get("requeryResults").get("selectedLocationID").asText();
 					}
 					else {
-						currentLine += ",";
 						if(currentNode.has("selectedLocationID")) {
 							currentLine += currentNode.get("selectedLocationID").asText();
 						}
-						/*
-						else { //if(!currentNode.has("selectedLocationID"))
-							currentLine += "";
-						}
-						*/
 					}
 					
 					currentLine += "," + occurrenceNode.get("number") + "\n";
 					bufferedWriter.write(currentLine);
-//Logger.debug(fieldName + ": " + currentLine);
 				}
 			}
 			
