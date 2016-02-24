@@ -30,9 +30,6 @@ app.controller('Series', function($scope, $rootScope, api) {
 	$rootScope.$on('refreshSeriesEditor', function(event, seriesId) {
     	refreshSeriesEditor(seriesId);
 	});
-	$rootScope.$on('saveSeriesAs', function(event, series, callback) {
-    	saveAs(series, callback);
-	});
 
 	$scope.submit = function(callback) {
 		if ($scope.form.$dirty) {
@@ -145,33 +142,6 @@ app.controller('Series', function($scope, $rootScope, api) {
 		emitBusy();
 		var toUpload = isNoData();
 		var body = buildBody($scope.model);
-		api.saving('series', body).then(function(location) {
-				emitDone();
-				success('The series was saved.');
-				if (callback){
-					callback();
-				} else {
-					api.gettingFromUrl(location).then(function(rsp) {
-						$scope.model = rsp.data.result;
-						$scope.form.$setPristine();
-						if(toUpload)
-							//$scope.uploadNewData($scope.model.id);
-							$scope.uploadNewData($scope.model);
-					}, function(err){
-						error('Failed to read the series!', err);
-					});
-				}
-			},
-			function(err) {
-				emitDone();
-				error('Failed to save the series.', err);
-		});
-	}
-	function saveAs(series, callback) {
-		emitBusy();
-		var toUpload = isNoData();
-		//var body = buildBody($scope.model);
-		var body = series;
 		api.saving('series', body).then(function(location) {
 				emitDone();
 				success('The series was saved.');
