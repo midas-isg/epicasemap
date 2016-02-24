@@ -104,17 +104,10 @@ app.controller('SeriesData', function($scope, $rootScope, api) {
 					}
 				}
 				else if(reason.status === 300) /*multiple choices*/ {
-					//for each index of reason.data, summon modal with filtering options for selection, then process when finished
 					console.log("Multiple Choices:");
 					ambiguityResolverData = {data: reason.data, url: $scope.url, seriesMeta: $scope.series, seriesID: $scope.seriesId};
 					$rootScope.$emit('ambiguityResolver', ambiguityResolverData);
 					$scope.closeDialog();
-				}
-				else if(reason.status === 404) /*not found*/ {
-					//for each index of reason.data, summon modal to edit empty list entries
-					console.log("Not Found:");
-					console.log(reason.data);
-					//$rootScope.$emit('');
 				}
 				else {
 					api.alert(dom.$alertParent, reason.statusText + 

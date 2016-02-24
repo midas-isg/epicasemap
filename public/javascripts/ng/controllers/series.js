@@ -27,6 +27,9 @@ app.controller('Series', function($scope, $rootScope, api) {
     $rootScope.$on('loadCoordinates', function(event, seriesId) {
     	loadCoordinates(seriesId);
 	});
+	$rootScope.$on('refreshSeriesEditor', function(event, seriesId) {
+    	refreshSeriesEditor(seriesId);
+	});
 
 	$scope.submit = function(callback) {
 		if ($scope.form.$dirty) {
@@ -112,6 +115,18 @@ app.controller('Series', function($scope, $rootScope, api) {
 
 	function loadSeries(){
 		$rootScope.$emit('loadSeries');
+	}
+	
+	function refreshSeriesEditor(seriesId) {
+		api.reading('series', seriesId).then(function(rsp) {
+				$scope.model = rsp.data.result;
+				$scope.form.$setPristine();
+			}, function(err){
+				error('Failed to read the series!', err);
+			}
+		);
+		
+		return;
 	}
 	
 	function buildBody(model) {
