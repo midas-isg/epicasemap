@@ -342,6 +342,36 @@ app.controller('AmbiguityResolver', function($scope, $rootScope, api) {
 			return;
 		}
 		
+		//TODO: move this so that it isn't recreated each time submitSelections is invoked!
+		function validatesSubmission(selectedMappings, submissionMeta) {
+			var i,
+				submitUnmapped = false;
+			
+			for(i = 0; i < ambiguitiesListKeys.length; i++) {
+				if(!ambiguitiesList[ambiguitiesListKeys[i]].selectedLocationID &&
+					(!(ambiguitiesList[ambiguitiesListKeys[i]].requeryResults && ambiguitiesList[ambiguitiesListKeys[i]].requeryResults.selectedLocationID))) {
+					if(!submitUnmapped) {
+						if(!confirm("There are unmapped entries. Press OK to ignore those entries and submit.\nOtherwise press Cancel and finish selecting mappings.")) {
+							return false;
+						}
+						
+						submitUnmapped = true;
+						submissionMeta.description += " \n[Unmapped location(s): "
+					}
+					
+					submissionMeta.description += (ambiguitiesList[ambiguitiesListKeys[i]].alsIDQueryInput.locationName + "; ");
+				}
+				
+				selectedMappings[ambiguitiesListKeys[i]] = ambiguitiesList[ambiguitiesListKeys[i]];
+			}
+			
+			if(submitUnmapped) {
+				submissionMeta.description += "]";
+			}
+			
+			return true;
+		}
+		
 		$scope.submitSelections = function() {
 			var selectedMappings = {},
 				submissionMeta = {
@@ -358,37 +388,7 @@ app.controller('AmbiguityResolver', function($scope, $rootScope, api) {
 					version: seriesMeta.version
 				};
 			
-			//move this so that it isn't recreated each time submitSelections is invoked!
-			function validatesSubmission() {
-				var i,
-					submitUnmapped = false;
-				
-				for(i = 0; i < ambiguitiesListKeys.length; i++) {
-					if(!ambiguitiesList[ambiguitiesListKeys[i]].selectedLocationID &&
-						(!(ambiguitiesList[ambiguitiesListKeys[i]].requeryResults && ambiguitiesList[ambiguitiesListKeys[i]].requeryResults.selectedLocationID))) {
-						if(!submitUnmapped) {
-							if(!confirm("There are unmapped entries. Press OK to ignore those entries and submit.\nOtherwise press Cancel and finish selecting mappings.")) {
-								return false;
-							}
-							
-							submitUnmapped = true;
-							submissionMeta.description += " \n[Unmapped location(s): "
-						}
-						
-						submissionMeta.description += (ambiguitiesList[ambiguitiesListKeys[i]].alsIDQueryInput.locationName + "; ");
-					}
-					
-					selectedMappings[ambiguitiesListKeys[i]] = ambiguitiesList[ambiguitiesListKeys[i]];
-				}
-				
-				if(submitUnmapped) {
-					submissionMeta.description += "]";
-				}
-				
-				return true;
-			}
-			
-			if(validatesSubmission()) {
+			if(validatesSubmission(selectedMappings, submissionMeta)) {
 				$.ajax({
 							url: CONTEXT + "/api/series/" + $scope.seriesID + "/save-tycho",
 							type: "PUT",
@@ -397,14 +397,16 @@ app.controller('AmbiguityResolver', function($scope, $rootScope, api) {
 							data: JSON.stringify({selectedMappings: selectedMappings, url: $scope.url, seriesID: $scope.seriesID}),
 							beforeSend: function(xhr) {
 								$scope.isWorking = true;
-								$rootScope.$emit('modalBusyDialog');
+								$scope.$emit('modalBusyDialog');
+								$scope.closeDialog();
 								
 								return;
 							},
 							success: function(result, status, xhr) {
 								console.log(result);
 								alert("Saved data series");
-								$scope.closeDialog();
+								//refresh Series Editor data
+								location.reload();
 								
 								return;
 							},
@@ -412,19 +414,30 @@ app.controller('AmbiguityResolver', function($scope, $rootScope, api) {
 								if(xhr.status === 201) { //this happens because 201 is only a success when datatype = text; since we are PUT-ing json, however...
 									console.log(xhr.statusText);
 									alert("Saved data series");
+									//refresh Series Editor data
+									location.reload();
 								}
 								else {
 									console.log(xhr);
 									console.log(status);
 									console.log(error);
 									alert("Failed to save data series");
+									
+									$rootScope.$emit('ambiguityResolver',
+										{
+											url: $scope.url,
+											seriesID: $scope.seriesID,
+											data: ambiguitiesList,
+											seriesMeta: seriesMeta
+										}
+									);
 								}
 								
 								return;
 							},
 							complete: function(xhr, status) {
 								$scope.isWorking = false;
-								$rootScope.$emit('hideBusyDialog');
+								$scope.$emit('hideBusyDialog');
 								
 								return;
 							}
@@ -437,22 +450,20 @@ app.controller('AmbiguityResolver', function($scope, $rootScope, api) {
 							dataType: "json",
 							data: JSON.stringify(submissionMeta),
 							beforeSend: function(xhr) {
-								$scope.isWorking = true;
-								$rootScope.$emit('modalBusyDialog');
+								//$scope.isWorking = true;
+								//$scope.$emit('modalBusyDialog');
 								
 								return;
 							},
 							success: function(result, status, xhr) {
 								console.log(result);
-								alert("Saved series description");
-								$scope.closeDialog();
+								//alert("Saved series description");
 								
 								return;
 							},
 							error: function(xhr, status, error) {
 								if(xhr.status === 204) { //this happens because 201 is only a success when datatype = text; since we are PUT-ing json, however...
 									console.log(xhr.statusText);
-									alert("Saved series description");
 								}
 								else {
 									console.log(xhr);
@@ -464,8 +475,8 @@ app.controller('AmbiguityResolver', function($scope, $rootScope, api) {
 								return;
 							},
 							complete: function(xhr, status) {
-								$scope.isWorking = false;
-								$rootScope.$emit('hideBusyDialog');
+								//$scope.isWorking = false;
+								//$scope.$emit('hideBusyDialog');
 								
 								return;
 							}
