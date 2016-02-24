@@ -400,6 +400,7 @@ app.controller('AmbiguityResolver', function($scope, $rootScope, api) {
 				};
 			
 			if(validatesSubmission(selectedMappings, submissionMeta)) {
+				//TODO: emit-call save event from series-data.js similar to how description is modified
 				$.ajax({
 							url: CONTEXT + "/api/series/" + $scope.seriesID + "/save-tycho",
 							type: "PUT",
@@ -432,15 +433,6 @@ app.controller('AmbiguityResolver', function($scope, $rootScope, api) {
 									console.log(status);
 									console.log(error);
 									api.alert(dom.$alertParent, "Failed to save data series", 'alert-danger');
-									
-									$rootScope.$emit('ambiguityResolver',
-										{
-											url: $scope.url,
-											seriesID: $scope.seriesID,
-											data: ambiguitiesList,
-											seriesMeta: seriesMeta
-										}
-									);
 								}
 								
 								return;
@@ -453,42 +445,7 @@ app.controller('AmbiguityResolver', function($scope, $rootScope, api) {
 							}
 				});
 				
-				$.ajax({
-							url: CONTEXT + "/api/series/" + $scope.seriesID,
-							type: "PUT",
-							contentType: "application/json",
-							dataType: "json",
-							data: JSON.stringify(submissionMeta),
-							beforeSend: function(xhr) {
-								//$scope.isWorking = true;
-								//$scope.$emit('modalBusyDialog');
-								
-								return;
-							},
-							success: function(result, status, xhr) {
-								console.log(result);
-								//alert("Saved series description");
-								
-								return;
-							},
-							error: function(xhr, status, error) {
-								if(xhr.status === 204) { //this happens because 201 is only a success when datatype = text; since we are PUT-ing json, however...
-									console.log(xhr.statusText);
-								}
-								else {
-									console.log(xhr);
-									console.log(status);
-									console.log(error);
-									alert("Failed to save series description");
-								}
-								
-								return;
-							},
-							complete: function(xhr, status) {
-								
-								return;
-							}
-				});
+				$scope.$emit("saveSeriesAs", submissionMeta);
 			}
 			else {
 				alert("Please finish mapping location entries before submitting");
