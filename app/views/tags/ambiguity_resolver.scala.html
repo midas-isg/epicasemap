@@ -66,6 +66,14 @@
 				</div>
 				
 				<div style="">
+					<label class=''>Location Type:</label>
+					<div style="display: flex;">
+						<!--<select id="requery-type" ng-model='selectedRequeryType' ng-change="" ng-options="type in requeryResultTypes" style="display: block; max-width: 75%;">
+						</select>-->
+					</div>
+				</div>
+				
+				<div style="">
 					<label class=''>Matched Locations:</label>
 					<div style="display: flex;">
 						<select id="selected-requery" ng-model='requeryResults.selectedLocationID' ng-change="locationChange()" ng-options="match.alsId as match.label for match in requeryResults.matches" style="display: block; max-width: 75%;">
