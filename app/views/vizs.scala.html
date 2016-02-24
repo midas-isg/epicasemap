@@ -10,6 +10,7 @@
 	@script_asset("javascripts/ng/controllers/permission.js")
 	@script_asset("javascripts/ng/controllers/viz-permissions.js")
 	@script_asset("javascripts/ng/controllers/series-permissions.js")
+	@script_asset("javascripts/ng/controllers/ambiguity-resolver.js")
 }
 
 @main("Visualization Management", imports) {
@@ -26,6 +27,8 @@
 		@viz_permission_dialog()
 		@series_permissions_dialog()
 		@series_permission_dialog()
+		@ambiguity_resolver()
+		
 		@busy_dialog()
 	</article>
 }
