@@ -384,8 +384,15 @@ app.controller('AmbiguityResolver', function($scope, $rootScope, api) {
 		}
 		
 		$scope.submitSelections = function() {
+			function buildBody(model) {
+				var body = _.omit(model, 'owner');
+				body.ownerId = model.owner && model.owner.id 
+				return body;
+			}
+			
 			var selectedMappings = {},
-				submissionMeta = {
+				submissionMeta = buildBody(seriesMeta);
+				/*{
 					creator: seriesMeta.creator,
 					description: seriesMeta.description,
 					id: seriesMeta.id,
@@ -398,60 +405,79 @@ app.controller('AmbiguityResolver', function($scope, $rootScope, api) {
 					title: seriesMeta.title,
 					version: seriesMeta.version
 				};
+				*/
 			
 			if(validatesSubmission(selectedMappings, submissionMeta)) {
-				//TODO: emit-call save event from series-data.js similar to how description is modified
-				$.ajax({
-							url: CONTEXT + "/api/series/" + $scope.seriesID + "/save-tycho",
-							type: "PUT",
-							contentType: "application/json",
-							dataType: "json",
-							data: JSON.stringify({selectedMappings: selectedMappings, url: $scope.url, seriesID: $scope.seriesID}),
-							beforeSend: function(xhr) {
-								$scope.isWorking = true;
-								$scope.$emit('modalBusyDialog');
-								
-								return;
-							},
-							success: function(result, status, xhr) {
-								console.log(result);
-								$rootScope.$emit('refreshSeriesEditor', $scope.seriesID);
-								$rootScope.$emit('loadCoordinates', $scope.seriesID);
-								$scope.closeDialog();
-								
-								return;
-							},
-							error: function(xhr, status, error) {
-								if(xhr.status === 201) { //this happens because 201 is only a success when datatype = text; since we are PUT-ing json, however...
-									console.log(xhr.statusText);
-									$rootScope.$emit('refreshSeriesEditor', $scope.seriesID);
-									$rootScope.$emit('loadCoordinates', $scope.seriesID);
-									$scope.closeDialog();
-								}
-								else {
-									console.log(xhr);
-									console.log(status);
-									console.log(error);
-									api.alert(dom.$alertParent, "Failed to save data series", 'alert-danger');
-								}
-								
-								return;
-							},
-							complete: function(xhr, status) {
-								$scope.isWorking = false;
-								$scope.$emit('hideBusyDialog');
-								
-								return;
-							}
-				});
-				
-				$scope.$emit("saveSeriesAs", submissionMeta);
+				$scope.saveAs(submissionMeta, selectedMappings);
 			}
 			else {
 				alert("Please finish mapping location entries before submitting");
 			}
 			
 			return;
+		}
+		
+		$scope.saveAs = function(series, selectedMappings) {
+			api.saving('series', series).then(function(location) {
+					//save series data here
+					$scope.saveSeriesData(selectedMappings);
+				},
+				function(err) {
+					console.log(err);
+					//api.alert($scope.alertParent, 'Failed to save the series.', 'alert-danger');
+					alert('Failed to save the series.');
+					
+					return;
+				}
+			);
+			
+			return;
+		}
+		
+		$scope.saveSeriesData = function(selectedMappings) {
+			$.ajax({
+				url: CONTEXT + "/api/series/" + $scope.seriesID + "/save-tycho",
+				type: "PUT",
+				contentType: "application/json",
+				dataType: "json",
+				data: JSON.stringify({selectedMappings: selectedMappings, url: $scope.url, seriesID: $scope.seriesID}),
+				beforeSend: function(xhr) {
+					$scope.isWorking = true;
+					$scope.$emit('modalBusyDialog');
+					
+					return;
+				},
+				success: function(result, status, xhr) {
+					console.log(result);
+					$rootScope.$emit('refreshSeriesEditor', $scope.seriesID);
+					$rootScope.$emit('loadCoordinates', $scope.seriesID);
+					$scope.closeDialog();
+					
+					return;
+				},
+				error: function(xhr, status, error) {
+					if(xhr.status === 201) { //this happens because 201 is only a success when datatype = text; since we are PUT-ing json, however...
+						console.log(xhr.statusText);
+						$scope.$emit('refreshSeriesEditor', $scope.seriesID);
+						$scope.$emit('loadCoordinates', $scope.seriesID);
+						$scope.closeDialog();
+					}
+					else {
+						console.log(xhr);
+						console.log(status);
+						console.log(error);
+						api.alert(dom.$alertParent, "Failed to save data series", 'alert-danger');
+					}
+					
+					return;
+				},
+				complete: function(xhr, status) {
+					$scope.isWorking = false;
+					$scope.$emit('hideBusyDialog');
+					
+					return;
+				}
+			});
 		}
 		
 		$scope.review = function(locationIndex) {
