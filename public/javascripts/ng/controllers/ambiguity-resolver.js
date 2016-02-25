@@ -390,6 +390,7 @@ app.controller('AmbiguityResolver', function($scope, $rootScope, api) {
 		
 		function validatesSubmission(selectedMappings, submissionMeta) {
 			var i,
+				replaceIndex,
 				submitUnmapped = false;
 			
 			for(i = 0; i < ambiguitiesListKeys.length; i++) {
@@ -401,7 +402,11 @@ app.controller('AmbiguityResolver', function($scope, $rootScope, api) {
 						}
 						
 						submitUnmapped = true;
-						submissionMeta.description += " \n[Unmapped location(s): "
+						replaceIndex = submissionMeta.description.search(/ \x5BUnmapped location/);
+							if(replaceIndex >= 0) {
+								submissionMeta.description = submissionMeta.description.slice(0, replaceIndex);
+							}
+						submissionMeta.description += " \n[Unmapped location(s): ";
 					}
 					
 					submissionMeta.description += (ambiguitiesList[ambiguitiesListKeys[i]].alsIDQueryInput.locationName + "; ");
