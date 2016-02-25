@@ -68,8 +68,8 @@
 				<div style="">
 					<label class=''>Location Type:</label>
 					<div style="display: flex;">
-						<!--<select id="requery-type" ng-model='selectedRequeryType' ng-change="" ng-options="type in requeryResultTypes" style="display: block; max-width: 75%;">
-						</select>-->
+						<select id="requery-type" ng-model='selectedRequeryType' ng-change="changeRequeryType()" ng-options="type as type for type in requeryResultTypes" style="display: block; max-width: 75%;">
+						</select>
 					</div>
 				</div>
 				
