@@ -146,11 +146,10 @@ app.controller('AmbiguityResolver', function($scope, $rootScope, api) {
 			if(reviewing) {
 				return displayReview();
 			}
-			else {
-				$scope.showSummary = false;
-				$scope.showSubmitButton = false;
-				$scope.showResolverForm = true;
-			}
+
+			$scope.showSummary = false;
+			$scope.showSubmitButton = false;
+			$scope.showResolverForm = true;
 			
 			if(currentLocationIndex === 0) {
 				$scope.showEditPreviousLocation = false;
@@ -166,7 +165,9 @@ app.controller('AmbiguityResolver', function($scope, $rootScope, api) {
 				$scope.showEditNextLocation = true;
 			}
 			
-			if(!ambiguitiesList[ambiguitiesListKeys[currentLocationIndex]].requery) {
+			$scope.currentInputLabel = ambiguitiesListKeys[currentLocationIndex];
+			
+			if(!ambiguitiesList[$scope.currentInputLabel].requery) {
 				$scope.showRequeryText = false;
 				$scope.showQueryInput = false;
 			}
@@ -175,7 +176,7 @@ app.controller('AmbiguityResolver', function($scope, $rootScope, api) {
 				$scope.showQueryInput = true;
 			}
 			
-			$scope.currentInputLabel = ambiguitiesListKeys[currentLocationIndex];
+			$scope.reloadResultTypes();
 			
 			requeryInput = ambiguitiesList[$scope.currentInputLabel].requeryInput ||
 				{
@@ -239,8 +240,7 @@ app.controller('AmbiguityResolver', function($scope, $rootScope, api) {
 		$scope.flagForRequery = function() {
 			if(ambiguitiesList[ambiguitiesListKeys[currentLocationIndex]].requery) {
 				function requeryInstance($scope) {
-					var input = $scope.requeryInput,
-						requeryResultList;
+					var input = $scope.requeryInput;
 					
 					if(input.label.length > 0) {
 						$.ajax({
@@ -255,21 +255,10 @@ app.controller('AmbiguityResolver', function($scope, $rootScope, api) {
 								return;
 							},
 							error: function(xhr, status, error) {
-								var i;
-								
 								switch(xhr.status) {
 									case 300:
 										//tie data to scope variable
 										if(xhr.responseJSON[input.label] && xhr.responseJSON[input.label].length > 0) {
-											requeryResultList = xhr.responseJSON[input.label];
-											$scope.requeryResultTypes = ["[ALL]"];
-											$scope.selectedRequeryType = $scope.requeryResultTypes[0];
-											/*
-											for(i = 0; i < xhr.responseJSON[input.label].length; i++) {
-												$scope.requeryResultTypes.push(xhr.responseJSON[input.label][i].label);
-											}
-											*/
-											
 											ambiguitiesList[$scope.currentInputLabel].requeryResults = {
 												matches: xhr.responseJSON[input.label],
 												selectedLocationID: xhr.responseJSON[input.label][0].alsId
@@ -278,6 +267,8 @@ app.controller('AmbiguityResolver', function($scope, $rootScope, api) {
 											$scope.requeryResults = ambiguitiesList[$scope.currentInputLabel].requeryResults;
 											ambiguitiesList[$scope.currentInputLabel].requeryResults.selectedLocationLabel = $scope.requeryResults.matches[0].label;
 											ambiguitiesList[$scope.currentInputLabel].requeryInput = $scope.requeryInput;
+											
+											$scope.reloadResultTypes();
 										}
 										else {
 											$scope.requeryResults = {matches: [{label: "No results found"}], selectedLocationID: null};
@@ -319,6 +310,49 @@ app.controller('AmbiguityResolver', function($scope, $rootScope, api) {
 				$scope.showQueryInput = false;
 				$scope.requeryResults = {matches: [{label: "Please enter a location name to query"}], selectedLocationID: null};
 			}
+			
+			return;
+		}
+		
+		$scope.reloadResultTypes = function() {
+			var i;
+			
+			$scope.requeryResultTypes = {};
+			$scope.requeryResultTypes["[ALL]"] = "[ALL]";
+			$scope.selectedRequeryType = $scope.requeryResultTypes["[ALL]"];
+			
+			if(ambiguitiesList[$scope.currentInputLabel].requeryResults) {
+				$scope.requeryResultList = ambiguitiesList[$scope.currentInputLabel].requeryResults.matches;
+				
+				for(i = 0; i < $scope.requeryResultList.length; i++) {
+					$scope.requeryResultTypes[$scope.requeryResultList[i].locationTypeName] = $scope.requeryResultList[i].locationTypeName;
+				}
+			}
+			
+			return;
+		}
+		
+		$scope.changeRequeryType = function() {
+			var i,
+				requeryDisplayList = [];
+			
+			if(!$scope.selectedRequeryType) {
+				return;
+			}
+			else if($scope.selectedRequeryType !== "[ALL]") {
+				for(i = 0; i < $scope.requeryResultList.length; i++) {
+					if($scope.requeryResultList[i].locationTypeName === $scope.selectedRequeryType) {
+						requeryDisplayList.push($scope.requeryResultList[i]);
+					}
+				}
+			}
+			else {
+				requeryDisplayList = $scope.requeryResultList;
+			}
+			
+			$scope.requeryResults = {matches: requeryDisplayList, selectedLocationID: requeryDisplayList[0].alsId};
+			ambiguitiesList[$scope.currentInputLabel].requeryResults.selectedLocationID = requeryDisplayList[0].alsId;
+			ambiguitiesList[$scope.currentInputLabel].requeryResults.selectedLocationLabel = $scope.requeryResults.matches[0].label;
 			
 			return;
 		}
@@ -392,20 +426,6 @@ app.controller('AmbiguityResolver', function($scope, $rootScope, api) {
 			
 			var selectedMappings = {},
 				submissionMeta = buildBody(seriesMeta);
-				/*{
-					creator: seriesMeta.creator,
-					description: seriesMeta.description,
-					id: seriesMeta.id,
-					isVersionOf: seriesMeta.isVersionOf,
-					license: seriesMeta.license,
-					lock: seriesMeta.lock,
-					ownerId: seriesMeta.owner.id,
-					publisher: seriesMeta.publisher,
-					seriesDataUrl: seriesMeta.seriesDataUrl,
-					title: seriesMeta.title,
-					version: seriesMeta.version
-				};
-				*/
 			
 			if(validatesSubmission(selectedMappings, submissionMeta)) {
 				$scope.saveAs(submissionMeta, selectedMappings);
