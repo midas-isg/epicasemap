@@ -12,7 +12,7 @@
 	</div>
 
 	@radio("urlRadio", "radioIn", "url", "URL")
-	<div class='form-group input-group-sm row' ng-click="radioIn='url'">
+	<div id="tycho-url" class='form-group input-group-sm row' ng-click="radioIn='url'">
 		<label class='control-label col-sm-2' for='url'>URL:</label>
 		<div class="col-sm-8">
 			<input class="form-control" type="url" name="url" ng-model = "url" id="url" required>
@@ -22,10 +22,37 @@
 			<select class="form-control" ng-model='urlContentType' ng-options="contentType for contentType in urlContentTypes"></select>
 		</div>
 		
-		<span style="color:red" ng-show="form.url.$dirty && form.url.$invalid && radioIn === 'url'">
-		<span ng-show="form.url.$error.required">URL is required</span>
-		<span ng-show="form.url.$error.url">Invalid URL</span>
-		</span>
+		<div>
+			<span style="color: red;" ng-show="form.url.$dirty && form.url.$invalid && radioIn === 'url'">
+				<span ng-show="form.url.$error.required">URL is required</span>
+				<span ng-show="form.url.$error.url">Invalid URL</span>
+			</span>
+		</div>
+	</div>
+	
+	<div>
+		<button class="btn btn-info" onclick='$("#tycho-query-wizard").toggle(); $("#tycho-url").toggle(); $(this).toggleClass("active")'>Use Tycho Query Wizard</button>
+		<div id="tycho-query-wizard" hidden>
+			<div>
+				<span>Disease</span>
+				<input id="disease-name" class="form-control" type="text">
+			</div>
+			
+			<div>
+				<span>Event</span>
+				<input id="event-type" class="form-control" type="text">
+			</div>
+			
+			<div>
+				<span>Start Year</span>
+				<input id="start-date" class="form-control" type="number" min="0" maxlength="5">
+			</div>
+			
+			<div>
+				<span>End Year</span>
+				<input id="end-date" class="form-control" type="number" min="0" maxlength="5">
+			</div>
+		</div>
 	</div>
 </form>
 
