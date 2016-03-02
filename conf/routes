@@ -44,6 +44,8 @@ PUT		/api/series/:id/data-url		controllers.ApiSeries.updateDataViaUrl(id:Long, o
 PUT		/api/series/:id/data-tycho		controllers.APITychoSeries.updateDataViaUrl(id:Long, overWrite: Boolean ?= false)
 PUT		/api/series/:id/save-tycho		controllers.APITychoSeries.saveData(id:Long, overWrite: Boolean ?= false)
 
+GET		/api/series/tycho/json			controllers.APITychoSeries.getTychoJSON(type)
+
 POST    /api/locations/bulk-lables  controllers.ApiLocation.getBulkLables()
 GET     /api/locations/:id          controllers.ApiLocation.read(id:Long)
 POST	/api/locations/data-location	controllers.APITychoSeries.findLocation()

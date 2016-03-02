@@ -85,6 +85,8 @@ class UploadSeries extends Controller {
 				//convert to JSON
 				return Results.status(MULTIPLE_CHOICES, Json.toJson(ambiguities));
 			}
+			
+			return Results.noContent();
 			//else if(){ return notFound(Json.toJson(ambiguities)); }
 			/*else {
 				overWrite = true;
@@ -98,13 +100,14 @@ class UploadSeries extends Controller {
 		}
 
 		//if new or overwrite, return ambiguities list to user
-		
+		/*
 		if(overWrite
 				|| !checksumMatches(seriesId, url, dataFile.getChecksum()))
 			return uploadSeriesData(seriesId, dataFile);
 		else
 			return status(CONFLICT,
 					"url content seems unchanged. Use overWrite parameter to re-write data.");
+		*/
 	}
 	
 	static Result uploadTychoJSON(long seriesId, JsonNode jsonMappings, boolean overWrite) {

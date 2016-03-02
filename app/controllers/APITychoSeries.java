@@ -1,7 +1,10 @@
 package controllers;
 
+import interactors.ClientRule;
+
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -11,6 +14,9 @@ import java.util.Map;
 import gateways.webservice.AlsDao;
 
 import javax.ws.rs.PathParam;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
 
 import lsparser.xmlparser.ALSIDQueryInput;
 import lsparser.xmlparser.TychoParser;
@@ -23,7 +29,6 @@ import play.mvc.Http.*;
 import play.Logger;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.wordnik.swagger.annotations.ApiParam;
 
 import controllers.security.AuthorizationKit;
@@ -97,5 +102,56 @@ public class APITychoSeries extends ApiSeries {
 					" the Series with ID = " + id);
 		
 		return;
+	}
+	
+	public static Result getTychoJSON(String type) {
+		String url = "http://www.tycho.pitt.edu/api/states?apikey=9a4c75183895f07e7776";
+		List<String> resultArray;
+		ClientRule clientRule;
+		Document document;
+		NodeList elements;
+		
+		switch(type) {
+			case "cities":
+				url = "http://www.tycho.pitt.edu/api/cities?apikey=9a4c75183895f07e7776";
+				clientRule = new ClientRule(url);
+				document = clientRule.get(url).asXml();
+				elements = document.getElementsByTagName("loc");
+				
+				resultArray = new ArrayList<String>();
+				for(int i = 0, length = elements.getLength(); i < length; i++) {
+					resultArray.add(elements.item(i).getTextContent());
+				}
+			break;
+			
+			case "diseases":
+				url = "http://www.tycho.pitt.edu/api/diseases?apikey=9a4c75183895f07e7776";
+				clientRule = new ClientRule(url);
+				document = clientRule.get(url).asXml();
+				elements = document.getElementsByTagName("disease");
+				
+				resultArray = new ArrayList<String>();
+				for(int i = 0, length = elements.getLength(); i < length; i++) {
+					resultArray.add(elements.item(i).getTextContent());
+				}
+			break;
+			
+			case "states":
+				url = "http://www.tycho.pitt.edu/api/states?apikey=9a4c75183895f07e7776";
+				clientRule = new ClientRule(url);
+				document = clientRule.get(url).asXml();
+				elements = document.getElementsByTagName("state");
+				
+				resultArray = new ArrayList<String>();
+				for(int i = 0, length = elements.getLength(); i < length; i++) {
+					resultArray.add(elements.item(i).getTextContent());
+				}
+			break;
+			
+			default:
+				return Results.badRequest();
+		}
+		
+		return Results.ok(Json.toJson(resultArray));
 	}
 }

@@ -15,7 +15,7 @@
 	<div id="tycho-url" class='form-group input-group-sm row' ng-click="radioIn='url'">
 		<label class='control-label col-sm-2' for='url'>URL:</label>
 		<div class="col-sm-8">
-			<input class="form-control" type="url" name="url" ng-model = "url" id="url" required>
+			<input id="tycho-url-input" class="form-control" type="url" name="url" ng-model = "url" id="url" ng-change="overrideValidation = false;" required>
 		</div>
 		
 		<div class="form-group col-sm-2">
@@ -31,26 +31,58 @@
 	</div>
 	
 	<div>
-		<button class="btn btn-info" onclick='$("#tycho-query-wizard").toggle(); $("#tycho-url").toggle(); $(this).toggleClass("active")'>Use Tycho Query Wizard</button>
-		<div id="tycho-query-wizard" hidden>
-			<div>
-				<span>Disease</span>
-				<input id="disease-name" class="form-control" type="text">
+		<button id="tycho-query-wizard-button" class="btn-sm btn-info" ng-click='toggleTychoQueryWizard()'>Use Tycho Query Wizard</button>
+		<div id="tycho-query-wizard" class="vertical-spaced" style="margin-left: 5%; border-style: ridge; padding: 1%;" ng-show="showTychoQueryWizard">
+			<div class="vertical-spaced" hidden>
+				<span>Location type</span>
+				<select id="loc-type" class="form-control" ng-model='tychoQueryLocType' ng-init="tychoQueryLocType = 'state'">
+					<option value="city">City</option>
+					<option value="state" selected>State</option>
+				</select>
 			</div>
 			
-			<div>
+			<div class="vertical-spaced">
 				<span>Event</span>
-				<input id="event-type" class="form-control" type="text">
+				<select id="event-type" class="form-control" ng-model='tychoQueryEvent' ng-init="tychoQueryEvent = '[All]'">
+					<option value="[All]" selected>[All]</option>
+					<option value="cases">Cases</option>
+					<option value="deaths">Deaths</option>
+				</select>
 			</div>
 			
-			<div>
-				<span>Start Year</span>
-				<input id="start-date" class="form-control" type="number" min="0" maxlength="5">
+			<div class="vertical-spaced">
+				<span>State abbreviation</span>
+				<select id="state-abbr" class="form-control" ng-model='tychoQueryState' ng-options="abbr as abbr for abbr in tychoStates.abbreviations">
+					<option value="[All]" selected>[All]</option>
+				</select>
 			</div>
 			
-			<div>
-				<span>End Year</span>
-				<input id="end-date" class="form-control" type="number" min="0" maxlength="5">
+			<div class="vertical-spaced" hidden>
+				<span>Location (city name)</span>
+				<select id="location" class="form-control" ng-model='tychoQueryLoc' ng-options="loc as loc for loc in tychoLocations.locations">
+					<option value="[All]" selected>[All]</option>
+				</select>
+			</div>
+			
+			<div class="vertical-spaced">
+				<span>Disease</span>
+				<select id="disease-name" class="form-control" ng-model='tychoQueryDisease' ng-options="name as name for name in tychoDiseases.names">
+					<option value="[All]" selected>[All]</option>
+				</select>
+			</div>
+			
+			<div class="vertical-spaced">
+				<span>Start year</span>
+				<input id="start-date" class="form-control" ng-model='tychoQueryStart' type="number" min="0" maxlength="5">
+			</div>
+			
+			<div class="vertical-spaced">
+				<span>End year</span>
+				<input id="end-date" class="form-control" ng-model='tychoQueryEnd' type="number" min="0" maxlength="5">
+			</div>
+			
+			<div class="vertical-spaced">
+				<button class="btn-sm btn-success vertical-spaced" ng-click="buildTychoQuery()">Build query</button>
 			</div>
 		</div>
 	</div>
@@ -70,6 +102,7 @@
 }
 
 @footer() = {
+<!-- TODO: remove this old, hideous design
 <button
 	title="Replace the existing data with the data in the uploaded file & Close the dialog"
 	class='btn-large btn-danger pull-left' ng-click='uploadThenClose()'
@@ -80,4 +113,10 @@
 	class='btn-large btn-danger pull-left' ng-click='uploadViaUrlThenClose()'
 	ng-disabled='form.url.$invalid || isWorking' ng-show="radioIn === 'url'">
 	@bs_icon("upload") Upload & Close</button>
+-->
+
+<button	title="Replace the existing data & close the dialog"
+	class='btn-large btn-danger pull-left' ng-click='decideUpload()'>
+	@bs_icon("upload") Upload & Close
+</button>
 }
