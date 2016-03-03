@@ -87,12 +87,6 @@ class UploadSeries extends Controller {
 			}
 			
 			return Results.noContent();
-			//else if(){ return notFound(Json.toJson(ambiguities)); }
-			/*else {
-				overWrite = true;
-				//convert to csv
-			}
-			*/
 		}
 		catch(Exception e) {
 			e.printStackTrace();

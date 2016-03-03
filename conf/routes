@@ -4,6 +4,7 @@
 
 # Home page
 GET     /                           controllers.Application.index()
+GET     /visualizer                 controllers.Application.visualizer()
 GET     /manage/vizs                controllers.Application.manageVizs()
 GET     /manage/series              controllers.Application.manageSeries()
 

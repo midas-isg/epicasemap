@@ -1,5 +1,5 @@
 /*
-timeline.js
+visualizer.js
 */
 
 (function() {
