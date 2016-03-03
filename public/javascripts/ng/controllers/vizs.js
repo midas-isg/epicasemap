@@ -3,7 +3,7 @@ app.controller('Vizs', function($scope, $rootScope, api) {
 	// init controller /////////////////////////////////////////////////////////
 	var my = app.initCommonControllerFeatures($scope, $rootScope, api);
 	my.dom = cacheDom();
-	my.playVizUrl = CONTEXT;
+	my.playVizUrl = CONTEXT + "/visualizer";
 	populateScope();
 	loadModels();
 	bindEvents();

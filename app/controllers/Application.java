@@ -22,6 +22,10 @@ public class Application extends Controller {
         return ok(views.html.index.render(""));
     }
     
+    public static Result visualizer() {
+        return ok(views.html.visualizer.render(""));
+    }
+    
     public static Result manageVizs() {
         return ok(views.html.vizs.render());
     }
