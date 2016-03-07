@@ -33,10 +33,13 @@ app.initCommonControllerFeatures = function($scope, $rootScope, api){
 		callback(id);
 	};
 
-	my.loadPermissions = function(){
+	my.loadPermissions = function() {
 		api.finding('accounts/my-permissions').then(function(rsp) {
 			$scope.permissions = rsp.data.results;
-		}, function(err){
+			
+			return;
+		},
+		function(err){
 			alertWarning(err, textFailToLoad('your permissions'));
 		});
 	};
@@ -72,10 +75,13 @@ app.initCommonControllerFeatures = function($scope, $rootScope, api){
 		$rootScope.$emit('hideBusyDialog');
 	}
 
-	function loadAsModels(path, plural){
+	function loadAsModels(path, plural) {
 		api.finding(path).then(function(rsp) {
 			$scope.models = rsp.data.results;
-		}, function(err){
+			
+			return;
+		},
+		function(err){
 			alertError(err, textFailToLoad('your ' + plural));
 		});
 	}
