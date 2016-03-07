@@ -4,9 +4,11 @@ app.controller('Vizs', function($scope, $rootScope, api) {
 	var my = app.initCommonControllerFeatures($scope, $rootScope, api);
 	my.dom = cacheDom();
 	my.playVizUrl = CONTEXT + "/visualizer";
+	
 	populateScope();
 	loadModels();
 	bindEvents();
+	
 	// init functions //////////////////////////////////////////////////////////
 	function cacheDom(){
 		return {$alertParent: $('#vizs-body')};
@@ -24,6 +26,10 @@ app.controller('Vizs', function($scope, $rootScope, api) {
 		$scope.addNew = function() {
 	    	$scope.edit({allSeries:[]});
 		};
+		$scope.requestPermission = function(viz) {
+			//email owner (OR admin?)
+			console.log("Add functionality for emailer");
+		};
 		$scope.go = function(viz) {
 			window.open(my.playVizUrl + '?id=' + viz.id, '_top');
 		};
@@ -34,6 +40,15 @@ app.controller('Vizs', function($scope, $rootScope, api) {
 			loadModels: loadModels,
 			dom: my.dom
 		};
+		app.$scope = $scope;
+		$scope.isHidden = function(it) {
+			if($scope.vizShowAllVisualizations) {
+				return false;
+			}
+			return !($scope.can('use', it));
+		};
+		
+		return;
 	}
 	
 	function bindEvents(){
