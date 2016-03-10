@@ -15,7 +15,7 @@ libraryDependencies ++= Seq(
   // javaEbean,
   // cache,
   // javaWs
-
+  "com.typesafe.play" %% "play-mailer" % "2.4.1",
   "com.wordnik" %% "swagger-play2" % "1.3.12",
   "com.typesafe.play" %% "play-java-ws" % "2.3.9",
   "postgresql" % "postgresql" % "9.1-901.jdbc4",
