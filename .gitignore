@@ -18,3 +18,4 @@ bin
 /.sbtserver
 project/.*
 project/*-*
+public/.idea
