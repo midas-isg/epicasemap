@@ -23,6 +23,7 @@ import models.filters.MetaFilter;
 import models.filters.Restriction;
 import models.view.ModeWithAccountId;
 import models.view.VizInput;
+import play.Logger;
 import play.data.Form;
 import play.db.jpa.JPA;
 import play.db.jpa.Transactional;
@@ -30,6 +31,8 @@ import play.mvc.Controller;
 import play.mvc.Http.RequestBody;
 import play.mvc.Result;
 import play.mvc.Security;
+import play.libs.mailer.Email;
+import play.libs.mailer.MailerPlugin;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.wordnik.swagger.annotations.Api;
@@ -228,6 +231,22 @@ public class ApiViz extends Controller {
 
 	public static VizInput from(Visualization data) {
 		return makeRule().fromViz(data);
+	}
+	
+	public static Result requestPermission(long vizID) {
+		JsonNode requestJSON = request().body().asJson();
+		long senderID = requestJSON.get("senderID").asLong();
+		String sender = requestJSON.get("sender").asText();
+		String recipient = requestJSON.get("recipient").asText();
+		String subject = requestJSON.get("subject").asText();
+		String body = requestJSON.get("body").asText();
+		
+Logger.debug("TO: " + recipient);
+Logger.debug("FROM: " + sender);
+Logger.debug("SUBJECT: " + subject);
+Logger.debug("MESSAGE:\n" + body);
+		
+		return ok();
 	}
 
 	@Transactional

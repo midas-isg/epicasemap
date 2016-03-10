@@ -26,21 +26,26 @@ app.controller('Vizs', function($scope, $rootScope, api) {
 		$scope.addNew = function() {
 	    	$scope.edit({allSeries:[]});
 		};
+		
 		$scope.requestPermission = function(viz) {
-			//email owner (OR admin?)
-			console.log("Add functionality for emailer");
+			$scope.$emit('emailer', viz, my);
 		};
+		
 		$scope.go = function(viz) {
 			window.open(my.playVizUrl + '?id=' + viz.id, '_top');
 		};
+		
 		$scope.editPermissions = function(viz) {
 			$scope.$emit('editVizPermissions', viz);
 		};
+		
 		$scope.test = {
 			loadModels: loadModels,
 			dom: my.dom
 		};
+		
 		app.$scope = $scope;
+		
 		$scope.isHidden = function(it) {
 			if($scope.vizShowAllVisualizations) {
 				return false;
