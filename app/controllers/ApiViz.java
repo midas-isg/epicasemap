@@ -242,14 +242,16 @@ public class ApiViz extends Controller {
 		return makeRule().fromViz(data);
 	}
 	
+	@play.db.jpa.Transactional
 	public static Result requestPermission(long vizID) {
 		JsonNode requestJSON = request().body().asJson();
 		String adminEmail = "admin@epicasemap.org";
 		
 		long senderID = AuthorizationKit.readAccountId();
+		Account account = new AccountDao(JPA.em()).read(senderID);
+		String senderName = account.getName();
+		String senderEmail = account.getEmail();
 		
-		String sender = requestJSON.get("sender").asText();
-		String senderEmail = requestJSON.get("senderEmail").asText();
 		String subject = requestJSON.get("subject").asText();
 		String body = requestJSON.get("body").asText();
 		String permissionsLink = Http.Context.current().request().host() + controllers.routes.Application.manageVizs() + "?vizualizationID=" + vizID;
@@ -260,14 +262,15 @@ public class ApiViz extends Controller {
 			permissionsLink + "'>" + permissionsLink + "</a></p></body></html>";
 		ArrayList<String> recipients = new ArrayList<String>();
 		recipients.add(requestJSON.get("recipient").asText());
-recipients.add("tps23@pitt.edu");
-		APIHelper.email(sender, senderEmail, recipients, subject, bodyText, bodyHTML);
+		
+		APIHelper.email(senderName, senderEmail, recipients, subject, bodyText, bodyHTML);
 		
 		bodyText = "The following permission request has been sent:\n\n" + body;
 		bodyHTML = "<html><body><p>" + "The following permission request has been sent:</p><p>" +
 			body + "</p></body></html>";
 		recipients.remove(0);
 		recipients.add(senderEmail);
+		
 		APIHelper.email("Do not reply", adminEmail, recipients, subject, bodyText, bodyHTML);
 		
 		return ok();
