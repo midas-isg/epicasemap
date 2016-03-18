@@ -42,7 +42,7 @@ public class TychoParser {
 	private final int TIMEOUT_LIMIT;
 	
 	private int loadedAmbiguitiesLists;
-	private CSVGenerator csvGenerator;
+	//private CSVGenerator csvGenerator;
 	
 	public Result result;
 	static public TimeSeries timeSeries;
@@ -396,11 +396,6 @@ System.out.println("Finished Loading.");
 //printAmbiguities(possibleIdentities);
 		
 		return possibleIdentities;
-	}
-	
-	public void generateCSV() {
-		csvGenerator = new CSVGenerator(timeSeries);
-		return;
 	}
 	
 	private void printAmibiguities(Map<String, List<NamedLocation>> possibleIdentities) {

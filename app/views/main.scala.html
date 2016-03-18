@@ -12,8 +12,18 @@
 		<base href="/">
 		<title>@title</title>
 		<script type="application/javascript">
-			var CONTEXT = '@Play.configuration.getString("application.context")';
-			var MY_ID = @AuthorizationKit.readAccountId();
+			var CONTEXT = '@Play.configuration.getString("application.context")',
+				MY_ID = @AuthorizationKit.readAccountId(),
+				USER = {
+					id : @AuthorizationKit.readAccountId(),
+					@if(hasLoggedIn) {
+						name : "@Authentication.readAccountName(ctx())",
+						email : window.sessionStorage.getItem("USER_EMAIL")
+					} else {
+						name : null,
+						email : null
+					}
+				};
 		</script>
 		
 		<script src='@routes.Assets.at("javascripts/common.js")'></script>
