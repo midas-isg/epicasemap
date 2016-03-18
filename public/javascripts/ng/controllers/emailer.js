@@ -62,8 +62,6 @@ app.controller('Emailer', function($scope, $rootScope, api) {
 
 		$scope.emailRequest = function() {
 			var input = {
-				sender: sender,
-				senderEmail: senderEmail,
 				recipient: recipient,
 				subject: $scope.emailSubject,
 				body: $scope.emailBody
