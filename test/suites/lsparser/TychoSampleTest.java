@@ -44,7 +44,7 @@ public class TychoSampleTest {
 					tychoParser.asynchronizedGetALSIDs();
 					//tychoParser.synchronizedGetALSIDs();
 					
-					tychoParser.generateCSV();
+					//tychoParser.generateCSV();
 				}
 				catch(Exception exception) {
 					System.err.println(exception);

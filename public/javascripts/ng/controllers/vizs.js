@@ -28,7 +28,12 @@ app.controller('Vizs', function($scope, $rootScope, api) {
 		};
 		
 		$scope.requestPermission = function(viz) {
-			$scope.$emit('emailer', viz, my);
+			if(USER.name && USER.email) {
+				$scope.$emit('emailer', viz, my);
+			}
+			else {
+				window.location.assign(CONTEXT + "/login");
+			}
 		};
 		
 		$scope.go = function(viz) {
@@ -65,5 +70,13 @@ app.controller('Vizs', function($scope, $rootScope, api) {
 	function loadVizs(){
 		my.loadVizsAsModels();
 		my.loadPermissions();
+
+		/*
+		var visualizationID = getURLParameterByName("visualizationID");
+		if(visualizationID) {
+			console.log("Load permission settings for #" + visualizationID);
+			$scope.editPermissions(<Model containing vizualizationID>);
+		}
+		*/
 	}
 });

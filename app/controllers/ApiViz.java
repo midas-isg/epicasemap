@@ -3,21 +3,29 @@ package controllers;
 import static controllers.ResponseHelper.okAsWrappedJsonObject;
 import static controllers.ResponseHelper.setResponseLocationFromRequest;
 import static controllers.security.AuthorizationKit.findPermittedSeriesIds;
+import gateways.database.AccountDao;
+import gateways.database.PermissionDao;
+import interactors.Authorizer;
 import interactors.VizAuthorizer;
 import interactors.VizRule;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import javax.persistence.EntityManager;
 import javax.ws.rs.PathParam;
 
+import lsparser.xmlparser.TychoParser.Request;
+import models.entities.Account;
 import models.entities.Mode;
 import models.entities.Series;
 import models.entities.Visualization;
 import models.entities.VizPermission;
 import models.exceptions.NotFound;
 import models.exceptions.Unauthorized;
+import models.filters.AccountFilter;
 import models.filters.Filter;
 import models.filters.MetaFilter;
 import models.filters.Restriction;
@@ -28,6 +36,7 @@ import play.data.Form;
 import play.db.jpa.JPA;
 import play.db.jpa.Transactional;
 import play.mvc.Controller;
+import play.mvc.Http;
 import play.mvc.Http.RequestBody;
 import play.mvc.Result;
 import play.mvc.Security;
@@ -235,16 +244,31 @@ public class ApiViz extends Controller {
 	
 	public static Result requestPermission(long vizID) {
 		JsonNode requestJSON = request().body().asJson();
-		long senderID = requestJSON.get("senderID").asLong();
+		String adminEmail = "admin@epicasemap.org";
+		
+		long senderID = AuthorizationKit.readAccountId();
+		
 		String sender = requestJSON.get("sender").asText();
-		String recipient = requestJSON.get("recipient").asText();
+		String senderEmail = requestJSON.get("senderEmail").asText();
 		String subject = requestJSON.get("subject").asText();
 		String body = requestJSON.get("body").asText();
+		String permissionsLink = Http.Context.current().request().host() + controllers.routes.Application.manageVizs() + "?vizualizationID=" + vizID;
+		String bodyText = body +
+			"\nPlease login and visit the following link to set permissions:\n" + permissionsLink;
+		String bodyHTML = "<html><body><p>" + body + "</p><p>" +
+			"Please login and visit the following link to set permissions: <br><a href='" +
+			permissionsLink + "'>" + permissionsLink + "</a></p></body></html>";
+		ArrayList<String> recipients = new ArrayList<String>();
+		recipients.add(requestJSON.get("recipient").asText());
+recipients.add("tps23@pitt.edu");
+		APIHelper.email(sender, senderEmail, recipients, subject, bodyText, bodyHTML);
 		
-Logger.debug("TO: " + recipient);
-Logger.debug("FROM: " + sender);
-Logger.debug("SUBJECT: " + subject);
-Logger.debug("MESSAGE:\n" + body);
+		bodyText = "The following permission request has been sent:\n\n" + body;
+		bodyHTML = "<html><body><p>" + "The following permission request has been sent:</p><p>" +
+			body + "</p></body></html>";
+		recipients.remove(0);
+		recipients.add(senderEmail);
+		APIHelper.email("Do not reply", adminEmail, recipients, subject, bodyText, bodyHTML);
 		
 		return ok();
 	}
@@ -297,6 +321,36 @@ Logger.debug("MESSAGE:\n" + body);
 		Mode data = modeForm.bindFromRequest().get();
 		authorizationRule.updateMode(id, data);
 		setResponseLocationFromRequest();
+		
+		
+		long userID = AuthorizationKit.readAccountId();
+		Account account = new AccountDao(JPA.em()).read(userID);
+		String senderName = account.getName();
+		String senderEmail = account.getEmail();
+		ArrayList<String> recipients = new ArrayList<String>();
+		//recipients.add(/*TODO: get recipient's ID by permission ID*/);
+recipients.add("tps23@pitt.edu");
+		String subject = "Updated Permissions";
+		String bodyText = "Your permissions have been updated for vizualization " + sId + ":";
+			if(data.getUse() != null)
+				bodyText += "\n\tYou can use visualization " + sId;
+			if(data.getRead_data() != null)
+				bodyText += "\n\tYou can read visualization " + sId;
+			if(data.getChange() != null)
+				bodyText += "\n\tYou can edit visualization " + sId;
+			if(data.getPermit() != null)
+				bodyText += "\n\tYou can manage visualization " + sId;
+		String bodyHTML = "<html><head></head><body><p>" + bodyText + "</p></body></html>";
+		
+Logger.debug(String.valueOf(userID));
+Logger.debug(senderName);
+Logger.debug(senderEmail);
+Logger.debug(recipients.get(0));
+Logger.debug(subject);
+Logger.debug(bodyText);
+Logger.debug(bodyHTML);
+		//APIHelper.email(senderName, senderEmail, recipients, subject, bodyText, bodyHTML);
+		
 		return noContent();
 	}
 	

@@ -18,7 +18,7 @@
 		}
 		
 		<p>
-			<input type="email" name="email" placeholder="Email" value="@form("email").value">
+			<input type="email" name="email" placeholder="Email" value="@form("email").value" onchange="window.sessionStorage.setItem('USER_EMAIL', this.value);">
 		</p>
 		<p>
 			<input type="password" name="password" placeholder="Password">
