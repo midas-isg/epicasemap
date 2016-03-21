@@ -5,6 +5,8 @@ import static controllers.ResponseHelper.setResponseLocationFromRequest;
 import static controllers.security.AuthorizationKit.findPermittedSeriesIds;
 import gateways.database.AccountDao;
 import gateways.database.PermissionDao;
+import gateways.database.jpa.DataAccessObject;
+import gateways.database.jpa.JpaAdaptor;
 import interactors.Authorizer;
 import interactors.VizAuthorizer;
 import interactors.VizRule;
@@ -325,34 +327,44 @@ public class ApiViz extends Controller {
 		authorizationRule.updateMode(id, data);
 		setResponseLocationFromRequest();
 		
-		
+		//TODO: Only mail after permission request (pass a flag)
 		long userID = AuthorizationKit.readAccountId();
 		Account account = new AccountDao(JPA.em()).read(userID);
 		String senderName = account.getName();
 		String senderEmail = account.getEmail();
 		ArrayList<String> recipients = new ArrayList<String>();
-		//recipients.add(/*TODO: get recipient's ID by permission ID*/);
-recipients.add("tps23@pitt.edu");
+		
+		VizPermission permission = new PermissionDao<>(JPA.em(), VizPermission.class).read(id);
+		String requesterEmail = permission.getAccount().getEmail();
+		recipients.add(requesterEmail);
 		String subject = "Updated Permissions";
 		String bodyText = "Your permissions have been updated for vizualization " + sId + ":";
-			if(data.getUse() != null)
-				bodyText += "\n\tYou can use visualization " + sId;
-			if(data.getRead_data() != null)
-				bodyText += "\n\tYou can read visualization " + sId;
-			if(data.getChange() != null)
-				bodyText += "\n\tYou can edit visualization " + sId;
-			if(data.getPermit() != null)
-				bodyText += "\n\tYou can manage visualization " + sId;
-		String bodyHTML = "<html><head></head><body><p>" + bodyText + "</p></body></html>";
+		String bodyHTML = "<html><head></head><body><div><p>" +
+			"Your permissions have been updated for vizualization " + sId + ":</p><ul>";
 		
-Logger.debug(String.valueOf(userID));
-Logger.debug(senderName);
-Logger.debug(senderEmail);
-Logger.debug(recipients.get(0));
-Logger.debug(subject);
-Logger.debug(bodyText);
-Logger.debug(bodyHTML);
-		//APIHelper.email(senderName, senderEmail, recipients, subject, bodyText, bodyHTML);
+		if(data.getUse() != null) {
+			bodyText += "\n\tYou can use visualization " + sId;
+			bodyHTML += "<li>You can use visualization " + sId + "</li>";
+		}
+		
+		if(data.getRead_data() != null) {
+			bodyText += "\n\tYou can read visualization " + sId;
+			bodyHTML += "<li>You can read visualization " + sId + "</li>";
+		}
+		
+		if(data.getChange() != null) {
+			bodyText += "\n\tYou can edit visualization " + sId;
+			bodyHTML += "<li>You can edit visualization " + sId + "</li>";
+		}
+		
+		if(data.getPermit() != null) {
+			bodyText += "\n\tYou can manage visualization " + sId;
+			bodyHTML += "<li>You can manage visualization " + sId + "</li>";
+		}
+		
+		bodyHTML += "</ul></div></body></html>";
+		
+		APIHelper.email(senderName, senderEmail, recipients, subject, bodyText, bodyHTML);
 		
 		return noContent();
 	}
