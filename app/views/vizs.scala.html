@@ -19,7 +19,7 @@
 		@showAllCheckbox("viz")
 		@metadata_manager("Visualization", "Visualizations", "viz", 
 			Seq(
-				Seq(Html("action-3"), Html("Actions"), buttons())
+				Seq(Html("action-4"), Html("Actions"), buttons())
 			)
 		)
 		@viz_dialog()
@@ -44,10 +44,10 @@
 }
 
 @buttons() = {
-	@button_action("envelope", "requestPermission(it)", " ! can('use', it)", "request permission")
 	@button_action("play", "go(it)", "can('use', it)")
 	@button_action("edit", "edit(it)", "can('read_data', it)")
 	@button_action("eye-close", "editPermissions(it)", "can('permit', it)", "edit permissions")
+	@button_action("envelope", "requestPermission(it)", "true", "request permission")
 }
 
 @text(a:String, b:String) = {

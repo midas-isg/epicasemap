@@ -67,7 +67,14 @@ app.makePermissionController = function($scope, $rootScope, api,
 	function saveThen(callback){
 		var body = buildBody();
 		var id = $scope.model.id;
-		var doing = api.putting(my.apiPath + '/' + id + '/mode', body);
+		var path = my.apiPath + '/' + id + '/mode';
+		var email = parseInt(getURLParameterByName("email"));
+		var visualizationID = parseInt(getURLParameterByName("visualizationID"));
+		if((email) && ($scope.model.visualization.id === visualizationID)) {
+			path += '?email=1';
+		}
+
+		var doing = api.putting(path, body);
 		doThen(doing, callback, 'save');
 	}
 
