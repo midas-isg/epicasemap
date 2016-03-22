@@ -146,6 +146,12 @@ app.makePermissionsController = function($scope, $rootScope, api, modelName, mod
 		var idKey = prefix + 'Id';
 		var p = _.extend(mode, {accountIds: accountIds, idKey: modelId});
 		var path = modelRoot + '/' + modelId + '/permissions';
+		var email = parseInt(getURLParameterByName("email"));
+		var visualizationID = parseInt(getURLParameterByName("visualizationID"));
+		if((email === accountIds[0]) && (modelId === visualizationID)) {
+			path += "?email=1";
+		}
+
 		var doing = api.posting(path, p);
 		doThen(doing, success, 'load the permissions');
 		

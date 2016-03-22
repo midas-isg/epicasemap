@@ -256,7 +256,7 @@ public class ApiViz extends Controller {
 		
 		String subject = requestJSON.get("subject").asText();
 		String body = requestJSON.get("body").asText();
-		String permissionsLink = Http.Context.current().request().host() + controllers.routes.Application.manageVizs() + "?vizualizationID=" + vizID;
+		String permissionsLink = Http.Context.current().request().host() + controllers.routes.Application.manageVizs() + "?vizualizationID=" + vizID + "&email=" + senderID;
 		String bodyText = body +
 			"\nPlease login and visit the following link to set permissions:\n" + permissionsLink;
 		String bodyHTML = "<html><body><p>" + body + "</p><p>" +
@@ -319,7 +319,7 @@ public class ApiViz extends Controller {
 	
 	@Transactional
 	@Restricted({Access.PERMIT})
-	public static Result putMode(long id) {
+	public static Result putMode(long id, int email) {
 		final VizAuthorizer authorizationRule = makeVizAuthorizer();
 		final Long sId = findVizIdByPermissionId(authorizationRule, id);
 		checkVizPermission(sId, "update the permission of");
@@ -327,44 +327,45 @@ public class ApiViz extends Controller {
 		authorizationRule.updateMode(id, data);
 		setResponseLocationFromRequest();
 		
-		//TODO: Only mail after permission request (pass a flag)
-		long userID = AuthorizationKit.readAccountId();
-		Account account = new AccountDao(JPA.em()).read(userID);
-		String senderName = account.getName();
-		String senderEmail = account.getEmail();
-		ArrayList<String> recipients = new ArrayList<String>();
-		
-		VizPermission permission = new PermissionDao<>(JPA.em(), VizPermission.class).read(id);
-		String requesterEmail = permission.getAccount().getEmail();
-		recipients.add(requesterEmail);
-		String subject = "Updated Permissions";
-		String bodyText = "Your permissions have been updated for vizualization " + sId + ":";
-		String bodyHTML = "<html><head></head><body><div><p>" +
-			"Your permissions have been updated for vizualization " + sId + ":</p><ul>";
-		
-		if(data.getUse() != null) {
-			bodyText += "\n\tYou can use visualization " + sId;
-			bodyHTML += "<li>You can use visualization " + sId + "</li>";
+		if(email != 0) {
+			long userID = AuthorizationKit.readAccountId();
+			Account account = new AccountDao(JPA.em()).read(userID);
+			String senderName = account.getName();
+			String senderEmail = account.getEmail();
+			ArrayList<String> recipients = new ArrayList<String>();
+			
+			VizPermission permission = new PermissionDao<>(JPA.em(), VizPermission.class).read(id);
+			String requesterEmail = permission.getAccount().getEmail();
+			recipients.add(requesterEmail);
+			String subject = "Updated Permissions";
+			String bodyText = "Your permissions have been updated for vizualization " + sId + ":";
+			String bodyHTML = "<html><head></head><body><div><p>" +
+				"Your permissions have been updated for vizualization " + sId + ":</p><ul>";
+			
+			if(data.getUse() != null) {
+				bodyText += "\n\tYou can use visualization " + sId;
+				bodyHTML += "<li>You can use visualization " + sId + "</li>";
+			}
+			
+			if(data.getRead_data() != null) {
+				bodyText += "\n\tYou can read visualization " + sId;
+				bodyHTML += "<li>You can read visualization " + sId + "</li>";
+			}
+			
+			if(data.getChange() != null) {
+				bodyText += "\n\tYou can edit visualization " + sId;
+				bodyHTML += "<li>You can edit visualization " + sId + "</li>";
+			}
+			
+			if(data.getPermit() != null) {
+				bodyText += "\n\tYou can manage visualization " + sId;
+				bodyHTML += "<li>You can manage visualization " + sId + "</li>";
+			}
+			
+			bodyHTML += "</ul></div></body></html>";
+			
+			APIHelper.email(senderName, senderEmail, recipients, subject, bodyText, bodyHTML);
 		}
-		
-		if(data.getRead_data() != null) {
-			bodyText += "\n\tYou can read visualization " + sId;
-			bodyHTML += "<li>You can read visualization " + sId + "</li>";
-		}
-		
-		if(data.getChange() != null) {
-			bodyText += "\n\tYou can edit visualization " + sId;
-			bodyHTML += "<li>You can edit visualization " + sId + "</li>";
-		}
-		
-		if(data.getPermit() != null) {
-			bodyText += "\n\tYou can manage visualization " + sId;
-			bodyHTML += "<li>You can manage visualization " + sId + "</li>";
-		}
-		
-		bodyHTML += "</ul></div></body></html>";
-		
-		APIHelper.email(senderName, senderEmail, recipients, subject, bodyText, bodyHTML);
 		
 		return noContent();
 	}

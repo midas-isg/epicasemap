@@ -15,7 +15,7 @@ app.controller('SeriesCollection', function($scope, $rootScope, api) {
 		$scope.can = my.canAccessSeries;
 		$scope.count = my.length;
 		$scope.addNew = function() { 
-			$scope.edit({}); 
+			$scope.edit({});
 		};
 		$scope.edit = function(series) {
 			$rootScope.$emit('editSeries', series);
