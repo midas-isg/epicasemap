@@ -23,6 +23,12 @@ app.makePermissionsController = function($scope, $rootScope, api, modelName, mod
 		$scope.view = {};
 
 		$scope.edit = function(permission) {
+			var i;
+			for(i = 0; i < $scope.permissions.length; i++) {
+				if(permission.id === $scope.permissions[i].id){
+					permission.account.id = $scope.permissions[i].account.id;
+				}
+			}
 			$scope.$emit('edit' + modelName + 'Permission', makeModel(permission));
 		};
 		$scope.addPermissions = grantPermissions;
