@@ -70,7 +70,7 @@ app.makePermissionController = function($scope, $rootScope, api,
 		var path = my.apiPath + '/' + id + '/mode';
 		var email = parseInt(getURLParameterByName("email"));
 		var visualizationID = parseInt(getURLParameterByName("visualizationID"));
-		if((email) && ($scope.model.visualization.id === visualizationID)) {
+		if((email === $scope.model.account.id) && ($scope.model.visualization.id === visualizationID)) {
 			path += '?email=1';
 		}
 

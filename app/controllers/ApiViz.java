@@ -247,7 +247,7 @@ public class ApiViz extends Controller {
 	@play.db.jpa.Transactional
 	public static Result requestPermission(long vizID) {
 		JsonNode requestJSON = request().body().asJson();
-		String adminEmail = "admin@epicasemap.org";
+		String adminEmail = "bot_admin@epicasemap.org";
 		
 		long senderID = AuthorizationKit.readAccountId();
 		Account account = new AccountDao(JPA.em()).read(senderID);
@@ -289,13 +289,57 @@ public class ApiViz extends Controller {
 
 	@Transactional
 	@Restricted({Access.PERMIT})
-	public static Result postPermissions(long vizId) {
+	public static Result postPermissions(long vizId, int email) {
 		checkVizPermission(vizId, "create the permission of");
 		ModeWithAccountId data = modeForm.bindFromRequest().get();
 		final List<Long> accountIds = data.getAccountIds();
 		final VizAuthorizer authorizer = makeVizAuthorizer();
+		
+		long permissionID = -1;
 		for (Long accountId : accountIds) 
-			authorizer.permit(accountId, data, vizId);
+			permissionID = authorizer.permit(accountId, data, vizId);
+		
+		if(email != 0) {
+			long userID = accountIds.get(0);//AuthorizationKit.readAccountId();
+			Account account = new AccountDao(JPA.em()).read(userID);
+			String senderName = "Do not reply";
+			String senderEmail = "bot_admin@epicasemap.org";
+			ArrayList<String> recipients = new ArrayList<String>();
+			
+			VizPermission permission = new PermissionDao<>(JPA.em(), VizPermission.class).read(permissionID);
+			String requesterName = permission.getAccount().getName();
+			String requesterEmail = permission.getAccount().getEmail();
+			recipients.add(requesterEmail);
+			String subject = "Visualization Access";
+			String bodyText = "Greetings, " + requesterName +
+				"!\n\nYou have been granted the following permission(s) for vizualization " + vizId + ":";
+			String bodyHTML = "<html><head></head><body><div><p>Greetings, " + requesterName +
+				"!<br><br>You have been granted the following permission(s) for vizualization " + vizId + ":</p><ul>";
+			
+			if(data.getUse() != null) {
+				bodyText += "\n\tYou can use visualization " + vizId;
+				bodyHTML += "<li>You can use visualization " + vizId + "</li>";
+			}
+			
+			if(data.getRead_data() != null) {
+				bodyText += "\n\tYou can read visualization " + vizId;
+				bodyHTML += "<li>You can read visualization " + vizId + "</li>";
+			}
+			
+			if(data.getChange() != null) {
+				bodyText += "\n\tYou can edit visualization " + vizId;
+				bodyHTML += "<li>You can edit visualization " + vizId + "</li>";
+			}
+			
+			if(data.getPermit() != null) {
+				bodyText += "\n\tYou can manage visualization " + vizId;
+				bodyHTML += "<li>You can manage visualization " + vizId + "</li>";
+			}
+			
+			bodyHTML += "</ul></div></body></html>";
+			
+			APIHelper.email(senderName, senderEmail, recipients, subject, bodyText, bodyHTML);
+		}
 		
 		return created();
 	}
@@ -330,17 +374,19 @@ public class ApiViz extends Controller {
 		if(email != 0) {
 			long userID = AuthorizationKit.readAccountId();
 			Account account = new AccountDao(JPA.em()).read(userID);
-			String senderName = account.getName();
-			String senderEmail = account.getEmail();
+			String senderName = "Do not reply";
+			String senderEmail = "bot_admin@epicasemap.org";
 			ArrayList<String> recipients = new ArrayList<String>();
 			
 			VizPermission permission = new PermissionDao<>(JPA.em(), VizPermission.class).read(id);
+			String requesterName = permission.getAccount().getName();
 			String requesterEmail = permission.getAccount().getEmail();
 			recipients.add(requesterEmail);
 			String subject = "Updated Permissions";
-			String bodyText = "Your permissions have been updated for vizualization " + sId + ":";
-			String bodyHTML = "<html><head></head><body><div><p>" +
-				"Your permissions have been updated for vizualization " + sId + ":</p><ul>";
+			String bodyText = "Greetings, " + requesterName +
+				"!\n\nYour permissions have been updated for vizualization " + sId + ":";
+			String bodyHTML = "<html><head></head><body><div><p>Greetings, " + requesterName +
+				"!<br><br>Your permissions have been updated for vizualization " + sId + ":</p><ul>";
 			
 			if(data.getUse() != null) {
 				bodyText += "\n\tYou can use visualization " + sId;
