@@ -24,7 +24,7 @@ app.controller('Vizs', function($scope, $rootScope, api) {
 		$scope.edit = my.editViz;
 		$scope.count = my.length;
 		$scope.addNew = function() {
-	    	$scope.edit({allSeries:[]});
+			$scope.edit({allSeries:[]});
 		};
 		
 		$scope.requestPermission = function(viz) {
@@ -34,6 +34,8 @@ app.controller('Vizs', function($scope, $rootScope, api) {
 			else {
 				window.location.assign(CONTEXT + "/login");
 			}
+			
+			return;
 		};
 		
 		$scope.go = function(viz) {
@@ -70,13 +72,5 @@ app.controller('Vizs', function($scope, $rootScope, api) {
 	function loadVizs(){
 		my.loadVizsAsModels();
 		my.loadPermissions();
-
-		/*
-		var visualizationID = getURLParameterByName("visualizationID");
-		if(visualizationID) {
-			console.log("Load permission settings for #" + visualizationID);
-			$scope.editPermissions(<Model containing vizualizationID>);
-		}
-		*/
 	}
 });

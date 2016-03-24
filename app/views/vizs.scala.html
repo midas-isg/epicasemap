@@ -47,7 +47,7 @@
 	@button_action("play", "go(it)", "can('use', it)")
 	@button_action("edit", "edit(it)", "can('read_data', it)")
 	@button_action("eye-close", "editPermissions(it)", "can('permit', it)", "edit permissions")
-	@button_action("envelope", "requestPermission(it)", "true", "request permission")
+	@button_action("envelope", "requestPermission(it)", "!can('permit', it)", "request permission")
 }
 
 @text(a:String, b:String) = {

@@ -1,8 +1,7 @@
 "use strict";
 
 app.controller('Emailer', function($scope, $rootScope, api) {
-	var LS_URL = "http://betaweb.rods.pitt.edu/ls/browser?id=",
-		dom = cacheDom(),
+	var dom = cacheDom(),
 		sender = "Anonymous",
 		senderID,
 		senderEmail,
