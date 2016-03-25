@@ -8,33 +8,33 @@ app.controller('Series', function($scope, $rootScope, api) {
 	$scope.dataLimit = 100;
 
 	(function initializeShowAllCheckbox() {
-		return $("#seriesFilter").append($("#showAllCheckbox").detach());
+		return $("#seriesFilter").append($("#showAllSeriesCheckbox").detach());
 	})();
 
 	$scope.dialog = $('#seriesModal');
 	$scope.alertParent = $scope.dialog.find('.modal-body');
-    $scope.dialog.on('hide.bs.modal', function (e) {
-    	var isOK = true;
+	$scope.dialog.on('hide.bs.modal', function (e) {
+		var isOK = true;
 		if ($scope.form.$dirty)
 			isOK = confirm("Changes are not saved. \nOK = Close without save");
 		if (isOK) {
 			loadSeries();
 		} else {
 			e.preventDefault();
-        	e.stopImmediatePropagation();
-        }
-    });
-    $scope.dialog.on('shown.bs.modal', function (e) {
-    	$scope.dialog.find('form').find(':input:enabled:visible:first').focus();
-    });
-    $rootScope.$on('editSeries', function(event, series) {
-    	edit(series);
+			e.stopImmediatePropagation();
+		}
 	});
-    $rootScope.$on('loadCoordinates', function(event, seriesId) {
-    	loadCoordinates(seriesId);
+	$scope.dialog.on('shown.bs.modal', function (e) {
+		$scope.dialog.find('form').find(':input:enabled:visible:first').focus();
+	});
+	$rootScope.$on('editSeries', function(event, series) {
+		edit(series);
+	});
+	$rootScope.$on('loadCoordinates', function(event, seriesId) {
+		loadCoordinates(seriesId);
 	});
 	$rootScope.$on('refreshSeriesEditor', function(event, seriesId) {
-    	refreshSeriesEditor(seriesId);
+		refreshSeriesEditor(seriesId);
 	});
 
 	$scope.submit = function(callback) {
@@ -68,7 +68,7 @@ app.controller('Series', function($scope, $rootScope, api) {
 
 	$rootScope.requestSeriesPermission = function(series) {
 		if(USER.name && USER.email) {
-			$rootScope.$emit('emailer', series, my);
+			$rootScope.$emit('emailer', series, my, "series");
 		}
 		else {
 			window.location.assign(CONTEXT + "/login");

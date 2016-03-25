@@ -256,7 +256,9 @@ public class ApiViz extends Controller {
 		
 		String subject = requestJSON.get("subject").asText();
 		String body = requestJSON.get("body").asText();
-		String permissionsLink = Http.Context.current().request().host() + controllers.routes.Application.manageVizs() + "?vizualizationID=" + vizID + "&email=" + senderID;
+		String permissionsLink = Http.Context.current().request().host() +
+			controllers.routes.Application.manageVizs() + "?visualizationID=" +
+			vizID + "&email=" + senderID;
 		String bodyText = body +
 			"\nPlease login and visit the following link to set permissions:\n" + permissionsLink;
 		String bodyHTML = "<html><body><p>" + body + "</p><p>" +
