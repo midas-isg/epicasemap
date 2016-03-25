@@ -7,7 +7,8 @@ app.controller('Emailer', function($scope, $rootScope, api) {
 		senderEmail,
 		recipient,
 		requestID,
-		requestTitle;
+		requestTitle,
+		requestType;
 	
 	populateScope();
 	bindEvents();
@@ -24,7 +25,7 @@ app.controller('Emailer', function($scope, $rootScope, api) {
 		$rootScope.$on('emailer', showDialog);
 		dom.$dialog.on('shown.bs.modal', focusFirstFormInput);
 		
-		function showDialog(event, resultData, my) {
+		function showDialog(event, resultData, my, type) {
 			console.log(resultData);
 			console.log(my);
 			sender = USER.name;
@@ -33,10 +34,11 @@ app.controller('Emailer', function($scope, $rootScope, api) {
 			recipient = resultData.owner.email;
 			requestID = resultData.id;
 			requestTitle = resultData.title;
-
-			$scope.emailSubject = sender + " is requesting permission to use '" + requestTitle + "'";
+			requestType = type;
+			
+			$scope.emailSubject = sender + " is requesting permission to use the " + requestType + ", '" + requestTitle + "'";
 			$scope.emailBody = $scope.emailSubject;
-
+			
 			//api.removeAllAlerts(dom.$alertParent);
 			dom.$dialog.modal();
 			
@@ -61,24 +63,38 @@ app.controller('Emailer', function($scope, $rootScope, api) {
 
 		$scope.emailRequest = function() {
 			var input = {
-				recipient: recipient,
-				subject: $scope.emailSubject,
-				body: $scope.emailBody
-			};
+					recipient: recipient,
+					subject: $scope.emailSubject,
+					body: $scope.emailBody
+				},
+				url = CONTEXT + "/api/vizs/" + requestID + "/permissions/request";
 
+			if(requestType === "series") {
+				url = CONTEXT + "/api/series/" + requestID + "/permissions/request";
+			}
+
+			invokeSender(url, input);
+
+			return;
+		};
+
+		function invokeSender(url, input) {
 			$.ajax({
-				url: CONTEXT + "/api/vizs/" + requestID + "/permissions/request",
+				url: url,
 				type: "POST",
 				contentType: "application/json",
 				data: JSON.stringify(input),
-				success: function(result, status, xhr) {
+				success: function (result, status, xhr) {
 					console.log(result);
 					console.log(status);
 					console.log(xhr);
 
+					//TODO: open & close working dialog
+					//TODO: close dialog
+
 					return;
 				},
-				error: function(xhr, status, error) {
+				error: function (xhr, status, error) {
 					console.error(xhr);
 					console.error(status);
 					console.error(error);
@@ -86,8 +102,6 @@ app.controller('Emailer', function($scope, $rootScope, api) {
 					return;
 				}
 			});
-
-			return;
 		}
 
 		return;

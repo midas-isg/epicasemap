@@ -1,13 +1,16 @@
 package controllers;
 
 import static controllers.ResponseHelper.setResponseLocationFromRequest;
+import gateways.database.AccountDao;
 import interactors.SeriesAuthorizer;
 import interactors.SeriesRule;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.ws.rs.PathParam;
 
+import models.entities.Account;
 import models.entities.Mode;
 import models.entities.Series;
 import models.entities.SeriesDataUrl;
@@ -22,9 +25,11 @@ import play.data.Form;
 import play.db.jpa.JPA;
 import play.db.jpa.Transactional;
 import play.mvc.Controller;
+import play.mvc.Http;
 import play.mvc.Result;
 import play.mvc.Security;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiImplicitParam;
 import com.wordnik.swagger.annotations.ApiImplicitParams;
@@ -201,7 +206,43 @@ public class ApiSeries extends Controller {
 				limit,
 				offset);
 	}
-
+	
+	@play.db.jpa.Transactional
+	public static Result requestPermission(long seriesID) {
+		JsonNode requestJSON = request().body().asJson();
+		String adminEmail = "bot_admin@epicasemap.org";
+		
+		long senderID = AuthorizationKit.readAccountId();
+		Account account = new AccountDao(JPA.em()).read(senderID);
+		String senderName = account.getName();
+		String senderEmail = account.getEmail();
+		
+		String subject = requestJSON.get("subject").asText();
+		String body = requestJSON.get("body").asText();
+		String permissionsLink = Http.Context.current().request().host() +
+			controllers.routes.Application.manageSeries() + "?seriesID=" +
+			seriesID + "&email=" + senderID;
+		String bodyText = body +
+			"\nPlease login and visit the following link to set permissions:\n" + permissionsLink;
+		String bodyHTML = "<html><body><p>" + body + "</p><p>" +
+			"Please login and visit the following link to set permissions: <br><a href='" +
+			permissionsLink + "'>" + permissionsLink + "</a></p></body></html>";
+		ArrayList<String> recipients = new ArrayList<String>();
+		recipients.add(requestJSON.get("recipient").asText());
+		
+		APIHelper.email(senderName, senderEmail, recipients, subject, bodyText, bodyHTML);
+		
+		bodyText = "The following permission request has been sent:\n\n" + body;
+		bodyHTML = "<html><body><p>" + "The following permission request has been sent:</p><p>" +
+			body + "</p></body></html>";
+		recipients.remove(0);
+		recipients.add(senderEmail);
+		
+		APIHelper.email("Do not reply", adminEmail, recipients, subject, bodyText, bodyHTML);
+		
+		return ok();
+	}
+	
 	@Transactional
 	@Restricted({Access.PERMIT})
 	public static Result getPermissions(long seriesId) {

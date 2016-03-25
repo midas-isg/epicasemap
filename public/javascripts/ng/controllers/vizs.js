@@ -4,7 +4,6 @@ app.controller('Vizs', function($scope, $rootScope, api) {
 	var my = app.initCommonControllerFeatures($scope, $rootScope, api);
 	my.dom = cacheDom();
 	my.playVizUrl = CONTEXT + "/visualizer";
-	
 	populateScope();
 	loadModels();
 	bindEvents();
@@ -29,7 +28,7 @@ app.controller('Vizs', function($scope, $rootScope, api) {
 		
 		$scope.requestPermission = function(viz) {
 			if(USER.name && USER.email) {
-				$scope.$emit('emailer', viz, my);
+				$scope.$emit('emailer', viz, my, "visual");
 			}
 			else {
 				window.location.assign(CONTEXT + "/login");

@@ -64,7 +64,8 @@ DELETE  /api/vizs/permissions/:id   controllers.ApiViz.deletePermission(id:Long)
 PUT     /api/vizs/permissions/:id/mode controllers.ApiViz.putMode(id:Long, email:Int ?= 0)
 GET     /api/vizs/:vId/series/:sId/time-coordinate   controllers.ApiViz.getSeriesData(vId:Long, sId:Long, startInclusive?=null, endExclusive?=null, limit:java.lang.Integer?=null, offset:Int?=0)
 
-POST    /api/vizs/:id/permissions/request	controllers.ApiViz.requestPermission(id:Long)
+POST    /api/vizs/:id/permissions/request		controllers.ApiViz.requestPermission(id:Long)
+POST    /api/series/:id/permissions/request		controllers.ApiSeries.requestPermission(id:Long)
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.at(path="/public", file)

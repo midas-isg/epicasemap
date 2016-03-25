@@ -21,13 +21,14 @@
 		@series_permission_dialog()
 		@ambiguity_resolver()
 		@showAllCheckbox("series")
+		@emailer()
 		
 		@busy_dialog()
 	</article>
 }
 
 @showAllCheckbox(prefix:String) = {
-<div id="showAllCheckbox" style="display: inline-block;">
+<div id="showAllSeriesCheckbox" style="display: inline-block;">
 	<input title="display all series" id="@{prefix}ShowAllSeries" type="checkbox" ng-model="@{prefix}ShowAllSeries">
 	<label title="display all series" for="@{prefix}ShowAllSeries"><span class="glyphicon glyphicon-list"></span></label>
 </div>
