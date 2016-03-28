@@ -291,7 +291,7 @@ public class ApiViz extends Controller {
 
 	@Transactional
 	@Restricted({Access.PERMIT})
-	public static Result postPermissions(long vizId, int email) {
+	public static Result postPermissions(long vizId, long email) {
 		checkVizPermission(vizId, "create the permission of");
 		ModeWithAccountId data = modeForm.bindFromRequest().get();
 		final List<Long> accountIds = data.getAccountIds();
@@ -302,7 +302,7 @@ public class ApiViz extends Controller {
 			permissionID = authorizer.permit(accountId, data, vizId);
 		
 		if(email != 0) {
-			long userID = accountIds.get(0);//AuthorizationKit.readAccountId();
+			long userID = accountIds.get(0);
 			Account account = new AccountDao(JPA.em()).read(userID);
 			String senderName = "Do not reply";
 			String senderEmail = "bot_admin@epicasemap.org";
@@ -365,7 +365,7 @@ public class ApiViz extends Controller {
 	
 	@Transactional
 	@Restricted({Access.PERMIT})
-	public static Result putMode(long id, int email) {
+	public static Result putMode(long id, long email) {
 		final VizAuthorizer authorizationRule = makeVizAuthorizer();
 		final Long sId = findVizIdByPermissionId(authorizationRule, id);
 		checkVizPermission(sId, "update the permission of");
