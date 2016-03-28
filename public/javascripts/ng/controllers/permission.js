@@ -71,13 +71,14 @@ app.makePermissionController = function($scope, $rootScope, api,
 		var email = parseInt(getURLParameterByName("email"));
 		var visualizationID = parseInt(getURLParameterByName("visualizationID"));
 		var seriesID = parseInt(getURLParameterByName("seriesID"));
-		//TODO: find and move seriesID check to wherever series permission granting occurs
+
 		if(email === $scope.model.account.id) {
-			if (($scope.model.visualization.id === visualizationID) || ($scope.model.series.id === seriesID)) {
+			if (($scope.model.visualization && ($scope.model.visualization.id === visualizationID)) ||
+				($scope.model.series && ($scope.model.series.id === seriesID))) {
 				path += '?email=1';
 			}
 		}
-
+		
 		var doing = api.putting(path, body);
 		doThen(doing, callback, 'save');
 	}

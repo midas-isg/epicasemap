@@ -2,6 +2,7 @@ package controllers;
 
 import static controllers.ResponseHelper.setResponseLocationFromRequest;
 import gateways.database.AccountDao;
+import gateways.database.PermissionDao;
 import interactors.SeriesAuthorizer;
 import interactors.SeriesRule;
 
@@ -15,6 +16,7 @@ import models.entities.Mode;
 import models.entities.Series;
 import models.entities.SeriesDataUrl;
 import models.entities.SeriesPermission;
+import models.entities.VizPermission;
 import models.exceptions.Unauthorized;
 import models.filters.Filter;
 import models.filters.MetaFilter;
@@ -258,13 +260,56 @@ public class ApiSeries extends Controller {
 	
 	@Transactional
 	@Restricted({Access.PERMIT})
-	public static Result postPermissions(long seriesId) {
+	public static Result postPermissions(long seriesId, long email) {
 		checkSeriesPermission(seriesId, "create the permission of");
 		ModeWithAccountId data = modeForm.bindFromRequest().get();
 		final List<Long> accountIds = data.getAccountIds();
 		final SeriesAuthorizer authorizer = makeSeriesAuthorizer();
+		long permissionID = -1;
 		for (Long accountId : accountIds) 
-			authorizer.permit(accountId, data, seriesId);
+			permissionID = authorizer.permit(accountId, data, seriesId);
+		
+		if(email != 0) {
+			long userID = accountIds.get(0);
+			Account account = new AccountDao(JPA.em()).read(userID);
+			String senderName = "Do not reply";
+			String senderEmail = "bot_admin@epicasemap.org";
+			ArrayList<String> recipients = new ArrayList<String>();
+			
+			SeriesPermission permission = new PermissionDao<>(JPA.em(), SeriesPermission.class).read(permissionID);
+			String requesterName = permission.getAccount().getName();
+			String requesterEmail = permission.getAccount().getEmail();
+			recipients.add(requesterEmail);
+			String subject = "Series Access";
+			String bodyText = "Greetings, " + requesterName +
+				"!\n\nYou have been granted the following permission(s) for series " + seriesId + ":";
+			String bodyHTML = "<html><head></head><body><div><p>Greetings, " + requesterName +
+				"!<br><br>You have been granted the following permission(s) for series " + seriesId + ":</p><ul>";
+			
+			if(data.getUse() != null) {
+				bodyText += "\n\tYou can use series " + seriesId;
+				bodyHTML += "<li>You can use series " + seriesId + "</li>";
+			}
+			
+			if(data.getRead_data() != null) {
+				bodyText += "\n\tYou can read series " + seriesId;
+				bodyHTML += "<li>You can read series " + seriesId + "</li>";
+			}
+			
+			if(data.getChange() != null) {
+				bodyText += "\n\tYou can edit series " + seriesId;
+				bodyHTML += "<li>You can edit series " + seriesId + "</li>";
+			}
+			
+			if(data.getPermit() != null) {
+				bodyText += "\n\tYou can manage series " + seriesId;
+				bodyHTML += "<li>You can manage series " + seriesId + "</li>";
+			}
+			
+			bodyHTML += "</ul></div></body></html>";
+			
+			APIHelper.email(senderName, senderEmail, recipients, subject, bodyText, bodyHTML);
+		}
 
 		return created();
 	}
@@ -288,13 +333,56 @@ public class ApiSeries extends Controller {
 	
 	@Transactional
 	@Restricted({Access.PERMIT})
-	public static Result putMode(long id) {
+	public static Result putMode(long id, long email) {
 		final SeriesAuthorizer authorizationRule = makeSeriesAuthorizer();
 		final Long sId = findSeriesIdByPermissionId(authorizationRule, id);
 		checkSeriesPermission(sId, "update the permission of");
 		Mode data = modeForm.bindFromRequest().get();
 		authorizationRule.updateMode(id, data);
 		setResponseLocationFromRequest();
+		
+		if(email != 0) {
+			long userID = AuthorizationKit.readAccountId();
+			Account account = new AccountDao(JPA.em()).read(userID);
+			String senderName = "Do not reply";
+			String senderEmail = "bot_admin@epicasemap.org";
+			ArrayList<String> recipients = new ArrayList<String>();
+			
+			SeriesPermission permission = new PermissionDao<>(JPA.em(), SeriesPermission.class).read(id);
+			String requesterName = permission.getAccount().getName();
+			String requesterEmail = permission.getAccount().getEmail();
+			recipients.add(requesterEmail);
+			String subject = "Updated Permissions";
+			String bodyText = "Greetings, " + requesterName +
+				"!\n\nYour permissions have been updated for series " + sId + ":";
+			String bodyHTML = "<html><head></head><body><div><p>Greetings, " + requesterName +
+				"!<br><br>Your permissions have been updated for series " + sId + ":</p><ul>";
+			
+			if(data.getUse() != null) {
+				bodyText += "\n\tYou can use series " + sId;
+				bodyHTML += "<li>You can use series " + sId + "</li>";
+			}
+			
+			if(data.getRead_data() != null) {
+				bodyText += "\n\tYou can read series " + sId;
+				bodyHTML += "<li>You can read series " + sId + "</li>";
+			}
+			
+			if(data.getChange() != null) {
+				bodyText += "\n\tYou can edit series " + sId;
+				bodyHTML += "<li>You can edit series " + sId + "</li>";
+			}
+			
+			if(data.getPermit() != null) {
+				bodyText += "\n\tYou can manage series " + sId;
+				bodyHTML += "<li>You can manage series " + sId + "</li>";
+			}
+			
+			bodyHTML += "</ul></div></body></html>";
+			
+			APIHelper.email(senderName, senderEmail, recipients, subject, bodyText, bodyHTML);
+		}
+		
 		return noContent();
 	}
 }
