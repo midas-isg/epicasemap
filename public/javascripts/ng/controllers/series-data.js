@@ -9,6 +9,7 @@ app.controller('SeriesData', function($scope, $rootScope, api) {
 		var dom = {$dialog: $('#dataModal')};
 		dom.$form = dom.$dialog.find('form');
 		dom.$alertParent = dom.$dialog.find('.modal-body');
+		
 		return dom;
 	}
 	
@@ -32,6 +33,115 @@ app.controller('SeriesData', function($scope, $rootScope, api) {
 		function focusFirstFormInput(event) {
 			dom.$form.find(':input:enabled:visible:first').focus();
 		}
+		
+		(function initialize() {
+			var currentYear = new Date().getFullYear(),
+				fetchServiceBaseURL = CONTEXT + "/api/series/tycho/json?type=";
+			
+			$("#start-date").attr("max", currentYear);
+			$("#end-date").attr("max", currentYear);
+			
+			$.ajax({
+				url: fetchServiceBaseURL + "cities",
+				success(result, status, xhr) {
+					$scope.tychoLocations = {locations: result};
+					$scope.tychoLocations.locations.push("[All]");
+					$scope.tychoQueryLoc = "[All]";
+					
+					return;
+				},
+				error(xhr, status, error) {
+					alert("Failed to connect to Tycho Server");
+					
+					return;
+				}
+			});
+			
+			$.ajax({
+				url: fetchServiceBaseURL + "states",
+				success(result, status, xhr) {
+					$scope.tychoStates = {abbreviations: result};
+					$scope.tychoStates.abbreviations.push("[All]");
+					$scope.tychoQueryState = "[All]";
+					
+					return;
+				},
+				error(xhr, status, error) {
+					alert("Failed to connect to Tycho Server");
+					
+					return;
+				}
+			});
+			
+			$.ajax({
+				url: fetchServiceBaseURL + "diseases",
+				success(result, status, xhr) {
+					$scope.tychoDiseases = {names: result};
+					$scope.tychoDiseases.names.push("[All]");
+					$scope.tychoQueryDisease = "[All]";
+					
+					return;
+				},
+				error(xhr, status, error) {
+					alert("Failed to connect to Tycho Server");
+					
+					return;
+				}
+			});
+			
+			return;
+		})();
+		
+		$scope.toggleTychoQueryWizard = function() {
+			$scope.showTychoQueryWizard = !$scope.showTychoQueryWizard;
+			$("#tycho-query-wizard-button").toggleClass("active");
+			
+			return;
+		}
+		
+		$scope.buildTychoQuery = function() {
+			var optionString;
+			$scope.url = "http://www.tycho.pitt.edu/api/query?";
+			
+			optionString = "loc_type=" + $scope.tychoQueryLocType;
+			$scope.url += optionString;
+			
+			if($scope.tychoQueryEvent !== "[All]") {
+				optionString = "&event=" + $scope.tychoQueryEvent;
+				$scope.url += optionString;
+			}
+			
+			if($scope.tychoQueryState !== "[All]") {
+				optionString = "&state=" + encodeURIComponent($scope.tychoQueryState);
+				$scope.url += optionString;
+			}
+			
+			if($scope.tychoQueryLoc !== "[All]") {
+				optionString = "&loc=" + encodeURIComponent($scope.tychoQueryLoc);
+				$scope.url += optionString;
+			}
+			
+			if($scope.tychoQueryDisease !== "[All]") {
+				optionString = "&disease=" + encodeURIComponent($scope.tychoQueryDisease);
+				$scope.url += optionString;
+			}
+			
+			if($scope.tychoQueryStart != null) {
+				optionString = "&start=" + $scope.tychoQueryStart;
+				$scope.url += optionString;
+			}
+			
+			if($scope.tychoQueryEnd != null) {
+				optionString = "&end=" + $scope.tychoQueryEnd;
+				$scope.url += optionString;
+			}
+			
+			$scope.urlContentType = "Tycho";
+			$scope.radioIn = 'url';
+			$scope.overrideValidation = true;
+			
+			return;
+		}
 	}
 	
 	function populateScope() {
@@ -52,6 +162,19 @@ app.controller('SeriesData', function($scope, $rootScope, api) {
 		};
 		$scope.uploadThenClose = uploadThenClose;
 		$scope.uploadViaUrlThenClose = uploadViaUrlThenClose;
+		
+		$scope.decideUpload = function() {
+			if(!$scope.isWorking) {
+				if($scope.radioIn === "file" && $scope.dataFile) {
+					$scope.uploadThenClose();
+				}
+				else if(!$scope.form.url.$invalid || $scope.overrideValidation) {
+					$scope.uploadViaUrlThenClose();
+				}
+			}
+			
+			return;
+		}
 	}
 
 	function uploadThenClose() {
@@ -85,13 +208,26 @@ app.controller('SeriesData', function($scope, $rootScope, api) {
 		$scope.isWorking = true;
 		$rootScope.$emit('modalBusyDialog');
 		
+		if(!findParameterByName("apikey", $scope.url)) {
+			$scope.url += "&apikey=9a4c75183895f07e7776";
+		}
+		
 		api.uploadingViaUrl(makePath(), $scope.url).then(function(rsp) {
 				emitDone();
+				
+				if(rsp.status === 204) /* no content */ {
+					console.log(rsp);
+					api.alert(dom.$alertParent, rsp.statusText + ': 0 results found for this query', 'alert-warning');
+					
+					return;
+				}
+				
 				$scope.closeDialog();
 				loadCoordinates($scope.seriesId);
 				
 				return;
-			}, function (reason) {
+			},
+			function (reason) {
 				emitDone();
 				var isOK = true,
 					ambiguityResolverData;
@@ -103,8 +239,7 @@ app.controller('SeriesData', function($scope, $rootScope, api) {
 						uploadViaUrlThenClose();
 					}
 				}
-				else if(reason.status === 300) /*multiple choices*/ {
-					console.log("Multiple Choices:");
+				else if(reason.status === 300) /* multiple choices */ {
 					ambiguityResolverData = {data: reason.data, url: $scope.url, seriesMeta: $scope.series, seriesID: $scope.seriesId};
 					$rootScope.$emit('ambiguityResolver', ambiguityResolverData);
 					$scope.closeDialog();

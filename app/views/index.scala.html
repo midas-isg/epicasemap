@@ -2,23 +2,31 @@
 @(title: String)
 
 @imports = {
+	@*
 	<script src='https://api.tiles.mapbox.com/mapbox.js/v2.1.9/mapbox.js'></script>
 	<link href='https://api.tiles.mapbox.com/mapbox.js/v2.1.9/mapbox.css' rel='stylesheet' />
-
+	
 	<script src='@routes.Assets.at("external_packages/Highcharts-4.1.5/js/highcharts.js")'></script>
 	<script src='@routes.Assets.at("external_packages/Highcharts-4.1.5/js/modules/exporting.js")'></script>
 
 	<script src='@routes.Assets.at("javascripts/leaflet-heat2.js")'></script>
-
-	<script type='text/javascript' src='https://code.angularjs.org/1.4.2/angular.js'></script>
-
-	<link href='@routes.Assets.at("stylesheets/index.css")' rel='stylesheet' />
+	<script src='@routes.Assets.at("javascripts/visualizer.js")'></script>
+	*@
 	
-	<script src='@routes.Assets.at("javascripts/timeline.js")'></script>
+	<script type='text/javascript' src='https://code.angularjs.org/1.4.2/angular.js'></script>
+	
+	<link href='@routes.Assets.at("stylesheets/index.css")' rel='stylesheet' />
 }
 
 @main(title, imports) {
 	<div id='body' style="">
+		<h1>Welcome to <img src='@routes.Assets.at("images/ECM_logo.png")' alt="EpiCaseMap" ></h1>
+		
+		<div>
+			<p><strong>EpiCaseMap</strong> (Epidemic Case Mapper) is a visualizer that can compare and contrast time-series data.</p>
+		</div>
+		
+		<!--
 		<div style="position: relative; z-index: 1;">
 			<div style="">
 				<div style="">
@@ -116,5 +124,6 @@
 		</div>
 		
 		<div class="clearfix"></div>
+		-->
 	</div>
 }

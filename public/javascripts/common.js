@@ -11,6 +11,14 @@ function getURLParameterByName(name) {
 	return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
 }
 
+function findParameterByName(searchName, inputString) {
+	searchName = searchName.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+	var regex = new RegExp("[\\?&]" + searchName + "=([^&#]*)"),
+		results = regex.exec(inputString);
+	
+	return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+}
+
 function setTextValue(selector, input) {
 	$(selector).text(input);
 	$(selector).val(input);

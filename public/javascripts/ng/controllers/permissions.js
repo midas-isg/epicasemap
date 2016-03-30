@@ -23,6 +23,12 @@ app.makePermissionsController = function($scope, $rootScope, api, modelName, mod
 		$scope.view = {};
 
 		$scope.edit = function(permission) {
+			var i;
+			for(i = 0; i < $scope.permissions.length; i++) {
+				if(permission.id === $scope.permissions[i].id){
+					permission.account.id = $scope.permissions[i].account.id;
+				}
+			}
 			$scope.$emit('edit' + modelName + 'Permission', makeModel(permission));
 		};
 		$scope.addPermissions = grantPermissions;
@@ -146,6 +152,18 @@ app.makePermissionsController = function($scope, $rootScope, api, modelName, mod
 		var idKey = prefix + 'Id';
 		var p = _.extend(mode, {accountIds: accountIds, idKey: modelId});
 		var path = modelRoot + '/' + modelId + '/permissions';
+
+
+		var email = parseInt(getURLParameterByName("email"));
+		var visualizationID = parseInt(getURLParameterByName("visualizationID"));
+		var seriesID = parseInt(getURLParameterByName("seriesID"));
+
+		if(email === accountIds[0]) {
+			if ((modelId === visualizationID) || (modelId === seriesID)) {
+				path += '?email=1';
+			}
+		}
+		
 		var doing = api.posting(path, p);
 		doThen(doing, success, 'load the permissions');
 		

@@ -7,7 +7,8 @@
 			@bs_icon("plus")
 		</button></small>
 	</h3>
-	@table_filterable("models", prefix, plural, 
+
+	@table_filterable("models", prefix, plural,
 			Seq(Seq("id", "ID"), Seq("title", "Title"), Seq("version", "Version")),
 			if(more == null){
 				Seq(
@@ -22,11 +23,16 @@
 </section>
 
 @buttons() = {
+	<!--
 	<button title='edit' class='btn btn-xs' ng-click='edit(it)' ng-show='can("read_data", it)'>
 		@bs_icon("edit")
 	</button>
 	<button title='edit permissions' class='btn btn-xs' ng-click='permit(it)' ng-show='can("permit", it)'>
 		@bs_icon("eye-close")
 	</button>
-}
+	-->
 
+	@button_action("edit", "edit(it)", "can('read_data', it)")
+	@button_action("eye-close", "permit(it)", "can('permit', it)", "edit permissions")
+	@button_action("envelope", "requestSeriesPermission(it)", "!can('permit', it)", "request permission")
+}

@@ -11,13 +11,15 @@
 	@script_asset("javascripts/ng/controllers/viz-permissions.js")
 	@script_asset("javascripts/ng/controllers/series-permissions.js")
 	@script_asset("javascripts/ng/controllers/ambiguity-resolver.js")
+	@script_asset("javascripts/ng/controllers/emailer.js")
 }
 
 @main("Visualization Management", imports) {
 	<article id='vizs-body'  ng-app='app' ng-controller='Vizs'>
+		@showAllCheckbox("viz")
 		@metadata_manager("Visualization", "Visualizations", "viz", 
 			Seq(
-				Seq(Html("action-3"), Html("Actions"), buttons())
+				Seq(Html("action-4"), Html("Actions"), buttons())
 			)
 		)
 		@viz_dialog()
@@ -28,15 +30,24 @@
 		@series_permissions_dialog()
 		@series_permission_dialog()
 		@ambiguity_resolver()
+		@emailer()
 		
 		@busy_dialog()
 	</article>
+}
+
+@showAllCheckbox(prefix:String) = {
+<div id="showAllVisualsCheckbox" style="display: inline-block;">
+	<input title="display all visualizations" id="@{prefix}ShowAllVisualizations" type="checkbox" ng-model="@{prefix}ShowAllVisualizations">
+	<label title="display all visualizations" for="@{prefix}ShowAllVisualizations"><span class="glyphicon glyphicon-list"></span></label>
+</div>
 }
 
 @buttons() = {
 	@button_action("play", "go(it)", "can('use', it)")
 	@button_action("edit", "edit(it)", "can('read_data', it)")
 	@button_action("eye-close", "editPermissions(it)", "can('permit', it)", "edit permissions")
+	@button_action("envelope", "requestPermission(it)", "!can('permit', it)", "request permission")
 }
 
 @text(a:String, b:String) = {
