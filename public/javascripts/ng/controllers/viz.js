@@ -2,6 +2,11 @@ app.controller('Viz', function($scope, $rootScope, api) {
 	'use strict';
 	// init controller /////////////////////////////////////////////////////////
 	var my = app.initCommonControllerFeatures($scope, $rootScope, api);
+
+	(function initializeShowAllCheckbox() {
+		return $("#vizFilter").append($("#showAllVisualsCheckbox").detach());
+	})();
+	
 	my.dom = cacheDom();
 	my.apiPath = 'vizs';
 	populateScope();

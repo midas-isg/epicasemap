@@ -3,33 +3,47 @@ package controllers;
 import static controllers.ResponseHelper.okAsWrappedJsonObject;
 import static controllers.ResponseHelper.setResponseLocationFromRequest;
 import static controllers.security.AuthorizationKit.findPermittedSeriesIds;
+import gateways.database.AccountDao;
+import gateways.database.PermissionDao;
+import gateways.database.jpa.DataAccessObject;
+import gateways.database.jpa.JpaAdaptor;
+import interactors.Authorizer;
 import interactors.VizAuthorizer;
 import interactors.VizRule;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import javax.persistence.EntityManager;
 import javax.ws.rs.PathParam;
 
+import lsparser.xmlparser.TychoParser.Request;
+import models.entities.Account;
 import models.entities.Mode;
 import models.entities.Series;
 import models.entities.Visualization;
 import models.entities.VizPermission;
 import models.exceptions.NotFound;
 import models.exceptions.Unauthorized;
+import models.filters.AccountFilter;
 import models.filters.Filter;
 import models.filters.MetaFilter;
 import models.filters.Restriction;
 import models.view.ModeWithAccountId;
 import models.view.VizInput;
+import play.Logger;
 import play.data.Form;
 import play.db.jpa.JPA;
 import play.db.jpa.Transactional;
 import play.mvc.Controller;
+import play.mvc.Http;
 import play.mvc.Http.RequestBody;
 import play.mvc.Result;
 import play.mvc.Security;
+import play.libs.mailer.Email;
+import play.libs.mailer.MailerPlugin;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.wordnik.swagger.annotations.Api;
@@ -229,6 +243,42 @@ public class ApiViz extends Controller {
 	public static VizInput from(Visualization data) {
 		return makeRule().fromViz(data);
 	}
+	
+	@play.db.jpa.Transactional
+	public static Result requestPermission(long vizID) {
+		JsonNode requestJSON = request().body().asJson();
+		String adminEmail = "bot_admin@epicasemap.org";
+		
+		long senderID = AuthorizationKit.readAccountId();
+		Account account = new AccountDao(JPA.em()).read(senderID);
+		String senderName = account.getName();
+		String senderEmail = account.getEmail();
+		
+		String subject = requestJSON.get("subject").asText();
+		String body = requestJSON.get("body").asText();
+		String permissionsLink = Http.Context.current().request().host() +
+			controllers.routes.Application.manageVizs() + "?visualizationID=" +
+			vizID + "&email=" + senderID;
+		String bodyText = body +
+			"\nPlease login and visit the following link to set permissions:\n" + permissionsLink;
+		String bodyHTML = "<html><body><p>" + body + "</p><p>" +
+			"Please login and visit the following link to set permissions: <br><a href='" +
+			permissionsLink + "'>" + permissionsLink + "</a></p></body></html>";
+		ArrayList<String> recipients = new ArrayList<String>();
+		recipients.add(requestJSON.get("recipient").asText());
+		
+		APIHelper.email(senderName, senderEmail, recipients, subject, bodyText, bodyHTML);
+		
+		bodyText = "The following permission request has been sent:\n\n" + body;
+		bodyHTML = "<html><body><p>" + "The following permission request has been sent:</p><p>" +
+			body + "</p></body></html>";
+		recipients.remove(0);
+		recipients.add(senderEmail);
+		
+		APIHelper.email("Do not reply", adminEmail, recipients, subject, bodyText, bodyHTML);
+		
+		return ok();
+	}
 
 	@Transactional
 	@Restricted({Access.PERMIT})
@@ -241,13 +291,57 @@ public class ApiViz extends Controller {
 
 	@Transactional
 	@Restricted({Access.PERMIT})
-	public static Result postPermissions(long vizId) {
+	public static Result postPermissions(long vizId, long email) {
 		checkVizPermission(vizId, "create the permission of");
 		ModeWithAccountId data = modeForm.bindFromRequest().get();
 		final List<Long> accountIds = data.getAccountIds();
 		final VizAuthorizer authorizer = makeVizAuthorizer();
+		
+		long permissionID = -1;
 		for (Long accountId : accountIds) 
-			authorizer.permit(accountId, data, vizId);
+			permissionID = authorizer.permit(accountId, data, vizId);
+		
+		if(email != 0) {
+			long userID = accountIds.get(0);
+			Account account = new AccountDao(JPA.em()).read(userID);
+			String senderName = "Do not reply";
+			String senderEmail = "bot_admin@epicasemap.org";
+			ArrayList<String> recipients = new ArrayList<String>();
+			
+			VizPermission permission = new PermissionDao<>(JPA.em(), VizPermission.class).read(permissionID);
+			String requesterName = permission.getAccount().getName();
+			String requesterEmail = permission.getAccount().getEmail();
+			recipients.add(requesterEmail);
+			String subject = "Visualization Access";
+			String bodyText = "Greetings, " + requesterName +
+				"!\n\nYou have been granted the following permission(s) for vizualization " + vizId + ":";
+			String bodyHTML = "<html><head></head><body><div><p>Greetings, " + requesterName +
+				"!<br><br>You have been granted the following permission(s) for vizualization " + vizId + ":</p><ul>";
+			
+			if(data.getUse() != null) {
+				bodyText += "\n\tYou can use visualization " + vizId;
+				bodyHTML += "<li>You can use visualization " + vizId + "</li>";
+			}
+			
+			if(data.getRead_data() != null) {
+				bodyText += "\n\tYou can read visualization " + vizId;
+				bodyHTML += "<li>You can read visualization " + vizId + "</li>";
+			}
+			
+			if(data.getChange() != null) {
+				bodyText += "\n\tYou can edit visualization " + vizId;
+				bodyHTML += "<li>You can edit visualization " + vizId + "</li>";
+			}
+			
+			if(data.getPermit() != null) {
+				bodyText += "\n\tYou can manage visualization " + vizId;
+				bodyHTML += "<li>You can manage visualization " + vizId + "</li>";
+			}
+			
+			bodyHTML += "</ul></div></body></html>";
+			
+			APIHelper.email(senderName, senderEmail, recipients, subject, bodyText, bodyHTML);
+		}
 		
 		return created();
 	}
@@ -271,13 +365,56 @@ public class ApiViz extends Controller {
 	
 	@Transactional
 	@Restricted({Access.PERMIT})
-	public static Result putMode(long id) {
+	public static Result putMode(long id, long email) {
 		final VizAuthorizer authorizationRule = makeVizAuthorizer();
 		final Long sId = findVizIdByPermissionId(authorizationRule, id);
 		checkVizPermission(sId, "update the permission of");
 		Mode data = modeForm.bindFromRequest().get();
 		authorizationRule.updateMode(id, data);
 		setResponseLocationFromRequest();
+		
+		if(email != 0) {
+			long userID = AuthorizationKit.readAccountId();
+			Account account = new AccountDao(JPA.em()).read(userID);
+			String senderName = "Do not reply";
+			String senderEmail = "bot_admin@epicasemap.org";
+			ArrayList<String> recipients = new ArrayList<String>();
+			
+			VizPermission permission = new PermissionDao<>(JPA.em(), VizPermission.class).read(id);
+			String requesterName = permission.getAccount().getName();
+			String requesterEmail = permission.getAccount().getEmail();
+			recipients.add(requesterEmail);
+			String subject = "Updated Permissions";
+			String bodyText = "Greetings, " + requesterName +
+				"!\n\nYour permissions have been updated for vizualization " + sId + ":";
+			String bodyHTML = "<html><head></head><body><div><p>Greetings, " + requesterName +
+				"!<br><br>Your permissions have been updated for vizualization " + sId + ":</p><ul>";
+			
+			if(data.getUse() != null) {
+				bodyText += "\n\tYou can use visualization " + sId;
+				bodyHTML += "<li>You can use visualization " + sId + "</li>";
+			}
+			
+			if(data.getRead_data() != null) {
+				bodyText += "\n\tYou can read visualization " + sId;
+				bodyHTML += "<li>You can read visualization " + sId + "</li>";
+			}
+			
+			if(data.getChange() != null) {
+				bodyText += "\n\tYou can edit visualization " + sId;
+				bodyHTML += "<li>You can edit visualization " + sId + "</li>";
+			}
+			
+			if(data.getPermit() != null) {
+				bodyText += "\n\tYou can manage visualization " + sId;
+				bodyHTML += "<li>You can manage visualization " + sId + "</li>";
+			}
+			
+			bodyHTML += "</ul></div></body></html>";
+			
+			APIHelper.email(senderName, senderEmail, recipients, subject, bodyText, bodyHTML);
+		}
+		
 		return noContent();
 	}
 	

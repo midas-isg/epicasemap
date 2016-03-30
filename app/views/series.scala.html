@@ -9,6 +9,7 @@
 	@script_asset("javascripts/ng/controllers/permission.js")
 	@script_asset("javascripts/ng/controllers/series-permissions.js")
 	@script_asset("javascripts/ng/controllers/ambiguity-resolver.js")
+	@script_asset("javascripts/ng/controllers/emailer.js")
 }
 
 @main("Series Management", imports) {
@@ -19,8 +20,16 @@
 		@series_permissions_dialog()
 		@series_permission_dialog()
 		@ambiguity_resolver()
+		@showAllCheckbox("series")
+		@emailer()
 		
 		@busy_dialog()
 	</article>
 }
 
+@showAllCheckbox(prefix:String) = {
+<div id="showAllSeriesCheckbox" style="display: inline-block;">
+	<input title="display all series" id="@{prefix}ShowAllSeries" type="checkbox" ng-model="@{prefix}ShowAllSeries">
+	<label title="display all series" for="@{prefix}ShowAllSeries"><span class="glyphicon glyphicon-list"></span></label>
+</div>
+}
