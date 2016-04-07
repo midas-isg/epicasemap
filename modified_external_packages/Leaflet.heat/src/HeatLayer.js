@@ -5,7 +5,6 @@
 */
 
 L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
-
     // options: {
     //     minOpacity: 0.05,
     //     maxZoom: 18,
@@ -59,7 +58,7 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
 
         map.on('moveend', this._reset, this);
 
-        if (map.options.zoomAnimation && L.Browser.any3d) {
+        if(map.options.zoomAnimation && L.Browser.any3d) {
             map.on('zoomanim', this._animateZoom, this);
         }
 

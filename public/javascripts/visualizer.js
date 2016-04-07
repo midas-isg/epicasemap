@@ -13,23 +13,23 @@ visualizer.js
 			svg,
 			thisMap = this,
 			mapID;
-		
+
 		this.mapTypes = [
 			"financialtimes.map-w7l4lfi8",
 			"mapbox.streets",
 			"mapbox.dark"
 		];
-		
+
 		mapID = getURLParameterByName("map");
-		if(!mapID) {
+		if (!mapID) {
 			mapID = 0;
 		}
 		temp = this.mapTypes[mapID];
-		
+
 		L.mapbox.accessToken = 'pk.eyJ1IjoidHBzMjMiLCJhIjoiVHEzc0tVWSJ9.0oYZqcggp29zNZlCcb2esA';
-		this.map = L.mapbox.map( 'map', temp,
-			{ worldCopyJump: true, bounceAtZoomLimits: false, zoom: 2, minZoom: 2, center: [0, 0] });
-		
+		this.map = L.mapbox.map('map', temp,
+			{worldCopyJump: true, bounceAtZoomLimits: false, zoom: 2, minZoom: 2, center: [0, 0]});
+
 		this.heat = []; //null;
 		this.paused = false;
 		this.frame;
@@ -125,6 +125,127 @@ visualizer.js
 			}
 		}
 		$("#palette-0").addClass("selected");
+
+		(function addChoroplethLayers() {
+			var lsStatesURL = "http://betaweb.rods.pitt.edu/ls/api/locations/1216?maxExteriorRings=0",
+				encodedStatesURL = encodeURIComponent(lsStatesURL),
+				jsonRoute = CONTEXT + "/api/get-json/" + encodedStatesURL,
+				popup = new L.Popup({autoPan: false});
+				usLayer = null,
+				choroplethValues = {};
+
+			thisMap.choroplethValues = choroplethValues;
+			thisMap.usLayer = usLayer;
+
+			$.ajax({
+				url: jsonRoute,
+				success: function(result, status, xhr) {
+					var i;
+
+					console.log(result);
+					console.log(status);
+					console.log(xhr);
+
+					for(i = 0; i < result.features[0].properties.children.length; i++) {
+						choroplethValues[result.features[0].properties.children[i].name] = {currentValue: 0, cumulativeValue: 0};
+					}
+
+					usLayer = L.geoJson(US_STATES, {
+						style: getStyle,
+						onEachFeature: onEachFeature
+					}).addTo(thisMap.map)
+
+					return;
+				},
+				error: function(xhr, status, error) {
+					console.log(xhr);
+					console.log(status);
+					console.log(error);
+					alert(xhr + "\n" + status + "\n" + error);
+
+					return;
+				}
+
+			});
+
+
+			function getStyle(feature) {
+				return {
+					weight: 2,
+					opacity: 0.1,
+					color: 'black',
+					fillOpacity: 0.3,
+					//fillColor: getColor(feature.properties.CENSUSAREA)
+					fillColor: getColor(thisMap.choroplethValues[feature.properties.NAME].cumulativeValue)
+				};
+			}
+
+			// get color depending on d value
+			function getColor(d) {
+				return d > 1000 ? '#8c2d04' :
+					d > 500 ? '#cc4c02' :
+					d > 200 ? '#ec7014' :
+					d > 100 ? '#fe9929' :
+					d > 50 ? '#fec44f' :
+					d > 20 ? '#fee391' :
+					d > 10 ? '#fff7bc' :
+					'#ffffe5';
+			}
+
+
+			//TODO: stop click interference of heat layers somehow
+			/*
+			thisMap.map.on('click', function(e) {
+				thisMap.usLayer.fireEvent('click');
+			});
+			*/
+
+
+			function onEachFeature(feature, layer) {
+				layer.on({
+					//mousemove: mousemove,
+					//mouseout: mouseout,
+					click: mousemove//zoomToFeature
+				});
+			}
+
+			function zoomToFeature(e) {
+				thisMap.map.fitBounds(e.target.getBounds());
+			}
+
+			function mousemove(e) {
+				var layer = e.target;
+
+				thisMap.choroplethValues[layer.feature.properties.NAME].cumulativeValue += 1000;
+
+				popup.setLatLng(e.latlng);
+				popup.setContent('<div class="marker-title">' + layer.feature.properties.NAME + '</div>' +
+					thisMap.choroplethValues[layer.feature.properties.NAME].cumulativeValue + ' cases');
+
+				if (!popup._map) {
+					popup.openOn(thisMap.map);
+				}
+				//window.clearTimeout(closeTooltip);
+
+				// highlight feature
+				layer.setStyle({
+					weight: 3,
+					opacity: 0.3,
+					fillOpacity: 0.9
+				});
+
+				if(!L.Browser.ie && !L.Browser.opera) {
+					layer.bringToFront();
+				}
+			}
+
+			function mouseout(e) {
+				thisMap.usLayer.resetStyle(e.target);
+				closeTooltip = window.setTimeout(function () {
+					thisMap.map.closePopup();
+				}, 100);
+			}
+		})();
 		
 		return this;
 	}
@@ -259,7 +380,7 @@ visualizer.js
 		if(DEBUG) { console.log("[DEBUG] called initialize()"); }
 		
 		var thisMap = this,
-		i;
+			i;
 		
 		document.getElementById('body').onkeyup = this.handleInput;
 		this.loopIntervalID = setInterval(this.loop, 0);
@@ -619,14 +740,14 @@ console.log("series " + k + ": " + id);
 						minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.01, radius: 20,
 						gradient: this.setGradient[selectorID]
 					}
-				).addTo(this.map));
+				).addTo(this.map, true));
 				
 				this.heat.push(L.heatLayer(this.displaySet[selectorID].secondValues,
 					{
 						minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.01, radius: 30,
 						gradient: this.setGradient[selectorID] //this.debugColor
 					}
-				).addTo(this.map));
+				).addTo(this.map, true));
 			}
 			
 			this.setGradient[selectorID] = {0.0: this.colors[colorID]};
@@ -1525,14 +1646,14 @@ console.log((endFrame - startFrame) + " frames");
 							minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.01, radius: 20,
 							gradient: this.setGradient[setID]
 						}
-					).addTo(this.map));
+					).addTo(this.map, true));
 					
 					this.heat.push(L.heatLayer([],
 						{
 							minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.01, radius: 30,
 							gradient: this.setGradient[setID] //this.debugColor
 						}
-					).addTo(this.map));
+					).addTo(this.map, true));
 				}
 				else {
 					this.heat.push(L.heatLayer(this.displaySet[setID].visiblePoints,
@@ -1540,7 +1661,7 @@ console.log((endFrame - startFrame) + " frames");
 							minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.01, radius: 20,
 							gradient: this.setGradient[setID]
 						}
-					).addTo(this.map));
+					).addTo(this.map, true));
 					
 					if(this.showSecondary) {
 						this.heat.push(L.heatLayer(this.displaySet[setID].secondValues,
@@ -1548,7 +1669,7 @@ console.log((endFrame - startFrame) + " frames");
 								minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.01, radius: 30,
 								gradient: this.setGradient[setID] //this.debugColor
 							}
-						).addTo(this.map));
+						).addTo(this.map, true));
 					}
 					else {
 							this.heat.push(L.heatLayer([],
@@ -1556,7 +1677,7 @@ console.log((endFrame - startFrame) + " frames");
 								minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.01, radius: 30,
 								gradient: this.setGradient[setID] //this.debugColor
 							}
-						).addTo(this.map));
+						).addTo(this.map, true));
 					}
 				}
 			}

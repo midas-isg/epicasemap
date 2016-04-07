@@ -266,7 +266,7 @@ public class ApiSeries extends Controller {
 		final List<Long> accountIds = data.getAccountIds();
 		final SeriesAuthorizer authorizer = makeSeriesAuthorizer();
 		long permissionID = -1;
-		for (Long accountId : accountIds) 
+		for (Long accountId : accountIds)
 			permissionID = authorizer.permit(accountId, data, seriesId);
 		
 		if(email != 0) {
