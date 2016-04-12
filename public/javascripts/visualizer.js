@@ -131,11 +131,8 @@ visualizer.js
 				encodedStatesURL = encodeURIComponent(lsStatesURL),
 				jsonRoute = CONTEXT + "/api/get-json/" + encodedStatesURL,
 				popup = new L.Popup({autoPan: false});
-				usLayer = null,
-				choroplethValues = {};
 
-			thisMap.choroplethValues = choroplethValues;
-			thisMap.usLayer = usLayer;
+			thisMap.choroplethValues = {};
 
 			$.ajax({
 				url: jsonRoute,
@@ -146,14 +143,31 @@ visualizer.js
 					console.log(status);
 					console.log(xhr);
 
-					for(i = 0; i < result.features[0].properties.children.length; i++) {
-						choroplethValues[result.features[0].properties.children[i].name] = {currentValue: 0, cumulativeValue: 0};
+					if(!US_STATES.features[0].properties.ALS_ID) {
+						for(i = 0; i < US_STATES.features.length; i++) {
+							US_STATES.features[i].properties.ALS_ID =
+								thisMap.choroplethValues[US_STATES.features[i].properties.NAME].gid;
+						}
+
+						function saveFile(input) {
+							var win = window.open("", "File_Output");
+							win.document.write(JSON.stringify(US_STATES));
+							return;
+						}
 					}
 
-					usLayer = L.geoJson(US_STATES, {
+					for(i = 0; i < US_STATES.features.length; i++) {
+						thisMap.choroplethValues[US_STATES.features[i].properties.NAME] = {
+							gid: US_STATES.features[i].properties.ALS_ID,
+							currentValue: 0,
+							cumulativeValue: 0
+						};
+					}
+
+					thisMap.usLayer = L.geoJson(US_STATES, {
 						style: getStyle,
 						onEachFeature: onEachFeature
-					}).addTo(thisMap.map)
+					}).addTo(thisMap.map);
 
 					return;
 				},
@@ -165,9 +179,7 @@ visualizer.js
 
 					return;
 				}
-
 			});
-
 
 			function getStyle(feature) {
 				return {
@@ -175,7 +187,6 @@ visualizer.js
 					opacity: 0.1,
 					color: 'black',
 					fillOpacity: 0.3,
-					//fillColor: getColor(feature.properties.CENSUSAREA)
 					fillColor: getColor(thisMap.choroplethValues[feature.properties.NAME].cumulativeValue)
 				};
 			}
