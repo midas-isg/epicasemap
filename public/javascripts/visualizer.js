@@ -157,17 +157,29 @@ visualizer.js
 					}
 
 					for(i = 0; i < US_STATES.features.length; i++) {
-						thisMap.choroplethValues[US_STATES.features[i].properties.NAME] = {
+						thisMap.choroplethValues[US_STATES.features[i].properties.ALS_ID] = {
 							gid: US_STATES.features[i].properties.ALS_ID,
 							currentValue: 0,
-							cumulativeValue: 0
+							cumulativeValue: 0,
+							name: US_STATES.features[i].properties.NAME
 						};
 					}
 
 					thisMap.usLayer = L.geoJson(US_STATES, {
 						style: getStyle,
 						onEachFeature: onEachFeature
-					}).addTo(thisMap.map);
+					});
+					thisMap.usLayer.addTo(thisMap.map);
+
+					thisMap.updateChoroplethLayer = function() {
+						thisMap.usLayer.eachLayer(function(layer) {
+							layer.setStyle(getStyle(layer.feature));
+
+							return;
+						});
+
+						return;
+					};
 
 					return;
 				},
@@ -187,7 +199,7 @@ visualizer.js
 					opacity: 0.1,
 					color: 'black',
 					fillOpacity: 0.3,
-					fillColor: getColor(thisMap.choroplethValues[feature.properties.NAME].cumulativeValue)
+					fillColor: getColor(thisMap.choroplethValues[feature.properties.ALS_ID].currentValue)
 				};
 			}
 
@@ -227,11 +239,11 @@ visualizer.js
 			function mousemove(e) {
 				var layer = e.target;
 
-				thisMap.choroplethValues[layer.feature.properties.NAME].cumulativeValue += 1000;
+				thisMap.choroplethValues[layer.feature.properties.ALS_ID].cumulativeValue += 1000;
 
 				popup.setLatLng(e.latlng);
 				popup.setContent('<div class="marker-title">' + layer.feature.properties.NAME + '</div>' +
-					thisMap.choroplethValues[layer.feature.properties.NAME].cumulativeValue + ' cases');
+					thisMap.choroplethValues[layer.feature.properties.ALS_ID].cumulativeValue + ' cases');
 
 				if (!popup._map) {
 					popup.openOn(thisMap.map);
