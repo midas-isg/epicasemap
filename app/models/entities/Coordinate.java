@@ -25,6 +25,16 @@ public class Coordinate implements models.entities.Entity {
 	private Double longitude;
 	@Column(name = "location_id")
 	private Long locationId;
+	@Column(name = "als_id")
+	private Long alsId;
+
+	public Long getAlsId() {
+		return alsId;
+	}
+
+	public void setAlsId(Long alsId) {
+		this.alsId = alsId;
+	}
 
 	public Date getTimestamp() {
 		return timestamp;
