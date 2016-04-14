@@ -156,6 +156,15 @@ visualizer.js
 						}
 					}
 
+					thisMap.paTest = function() {
+						MAGIC_MAP.choroplethValues[1213].currentValue = Math.random() * MAGIC_MAP.absoluteMaxValue;
+						MAGIC_MAP.choroplethValues[1213].cumulativeValue += MAGIC_MAP.choroplethValues[1213].currentValue;
+						MAGIC_MAP.updateChoroplethLayer();
+						console.log(MAGIC_MAP.choroplethValues[1213]);
+
+						return;
+					}
+
 					for(i = 0; i < US_STATES.features.length; i++) {
 						thisMap.choroplethValues[US_STATES.features[i].properties.ALS_ID] = {
 							gid: US_STATES.features[i].properties.ALS_ID,
@@ -165,14 +174,14 @@ visualizer.js
 						};
 					}
 
-					thisMap.usLayer = L.geoJson(US_STATES, {
+					thisMap.choroplethLayer = L.geoJson(US_STATES, {
 						style: getStyle,
 						onEachFeature: onEachFeature
 					});
-					thisMap.usLayer.addTo(thisMap.map);
+					thisMap.choroplethLayer.addTo(thisMap.map);
 
 					thisMap.updateChoroplethLayer = function() {
-						thisMap.usLayer.eachLayer(function(layer) {
+						thisMap.choroplethLayer.eachLayer(function(layer) {
 							layer.setStyle(getStyle(layer.feature));
 
 							return;
@@ -196,50 +205,77 @@ visualizer.js
 			function getStyle(feature) {
 				return {
 					weight: 2,
-					opacity: 0.1,
-					color: 'black',
+					opacity: 0.4,
+					color: getBorderColor(thisMap.choroplethValues[feature.properties.ALS_ID].currentValue),
 					fillOpacity: 0.3,
-					fillColor: getColor(thisMap.choroplethValues[feature.properties.ALS_ID].currentValue)
+					fillColor: getFillColor(thisMap.choroplethValues[feature.properties.ALS_ID].cumulativeValue)
 				};
 			}
 
 			// get color depending on d value
-			function getColor(d) {
-				return d > 1000 ? '#8c2d04' :
-					d > 500 ? '#cc4c02' :
-					d > 200 ? '#ec7014' :
-					d > 100 ? '#fe9929' :
-					d > 50 ? '#fec44f' :
-					d > 20 ? '#fee391' :
-					d > 10 ? '#fff7bc' :
-					'#ffffe5';
+			function getBorderColor(d) {
+				return d > (thisMap.absoluteMaxValue * 0.9) ? '#ff0000' : //'#8c2d04' :
+					d > (thisMap.absoluteMaxValue * 0.75) ? '#d80000' : //'#cc4c02' :
+					d > (thisMap.absoluteMaxValue * 0.6) ? '#b40000' : //'#ec7014' :
+					d > (thisMap.absoluteMaxValue * 0.45) ? '#900000' : //'#fe9929' :
+					d > (thisMap.absoluteMaxValue * 0.3) ? '#6c0000' : //'#fec44f' :
+					d > (thisMap.absoluteMaxValue * 0.15) ? '#480000' : //'#fee391' :
+					d > 0 ? '#240000' : //'#fff7bc' :
+					'#000000'; //'#ffffe5';
 			}
 
-
-			//TODO: stop click interference of heat layers somehow
-			/*
-			thisMap.map.on('click', function(e) {
-				thisMap.usLayer.fireEvent('click');
-			});
-			*/
-
+			// get color depending on d value
+			function getFillColor(d) {
+				return d > 1000 ? '#ff0000' : //'#8c2d04' :
+					d > 500 ? '#d80000' : //'#cc4c02' :
+					d > 200 ? '#b40000' : //'#ec7014' :
+					d > 100 ? '#900000' : //'#fe9929' :
+					d > 50 ? '#6c0000' : //'#fec44f' :
+					d > 20 ? '#480000' : //'#fee391' :
+					d > 10 ? '#240000' : //'#fff7bc' :
+					'#000000'; //'#ffffe5';
+			}
 
 			function onEachFeature(feature, layer) {
 				layer.on({
 					//mousemove: mousemove,
 					//mouseout: mouseout,
-					click: mousemove//zoomToFeature
+					click: click
 				});
 			}
 
-			function zoomToFeature(e) {
-				thisMap.map.fitBounds(e.target.getBounds());
+			function click(e) {
+				var layer = e.target;
+
+				//thisMap.map.fitBounds(e.target.getBounds());
+
+				popup.setLatLng(e.latlng);
+				popup.setContent('<div class="marker-title">' + layer.feature.properties.NAME + '</div>' +
+					thisMap.choroplethValues[layer.feature.properties.ALS_ID].cumulativeValue + ' cases');
+
+				if (!popup._map) {
+					popup.openOn(thisMap.map);
+				}
+				//window.clearTimeout(closeTooltip);
+
+				// highlight feature
+				/*
+				layer.setStyle({
+					weight: 3,
+					opacity: 0.9,
+					fillOpacity: 0.3
+				});
+				*/
+
+				if(!L.Browser.ie && !L.Browser.opera) {
+					layer.bringToFront();
+				}
+
+				return;
 			}
 
 			function mousemove(e) {
 				var layer = e.target;
-
-				thisMap.choroplethValues[layer.feature.properties.ALS_ID].cumulativeValue += 1000;
 
 				popup.setLatLng(e.latlng);
 				popup.setContent('<div class="marker-title">' + layer.feature.properties.NAME + '</div>' +
@@ -263,7 +299,7 @@ visualizer.js
 			}
 
 			function mouseout(e) {
-				thisMap.usLayer.resetStyle(e.target);
+				thisMap.choroplethLayer.resetStyle(e.target);
 				closeTooltip = window.setTimeout(function () {
 					thisMap.map.closePopup();
 				}, 100);
@@ -875,7 +911,7 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 						
 						datasetAverage += result.results[i].value;
 						
-						currentDataset.timeGroup[frame].point.push({latitude: result.results[i].latitude, longitude: result.results[i].longitude, value: result.results[i].value, secondValue: result.results[i].secondValue});
+						currentDataset.timeGroup[frame].point.push({latitude: result.results[i].latitude, longitude: result.results[i].longitude, value: result.results[i].value, secondValue: result.results[i].secondValue, alsId: result.results[i].alsId});
 						currentDataset.timeGroup[frame].date = inputDate;
 						
 						currentDataset.frameAggregate[frame] += result.results[i].value;
@@ -1552,6 +1588,8 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 							//(this.dataset[setID].timeGroup[setFrame].point[i].value / this.dataset[setID].maxValue),
 							(this.dataset[setID].timeGroup[setFrame].point[i].value / this.absoluteMaxValue),
 							this.dataset[setID].timeGroup[setFrame].point[i].value]);
+							//TODO: append alsId without breaking system
+							//this.dataset[setID].timeGroup[setFrame].point[i].alsId);
 						
 						this.displaySet[setID].secondValues.push([this.dataset[setID].timeGroup[setFrame].point[i].latitude,
 							this.dataset[setID].timeGroup[setFrame].point[i].longitude,
@@ -1662,6 +1700,7 @@ console.log((endFrame - startFrame) + " frames");
 		var setID;
 		
 		for(setID = 0; setID < this.displaySet.length; setID++) {
+			//TODO: re-evaluate/refactor if logic here
 			if(!this.heat[setID << 1]) {
 				if(this.displaySet[setID].hide) {
 					this.heat.push(L.heatLayer([],

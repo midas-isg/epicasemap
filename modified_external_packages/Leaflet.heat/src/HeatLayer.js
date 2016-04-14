@@ -54,7 +54,17 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
             this._initCanvas();
         }
 
-        map._panes.overlayPane.appendChild(this._canvas);
+        /*BEGIN MOD*/
+        var heatLayerGroup = document.getElementById("heat-layer-group");
+        if(!heatLayerGroup) {
+            heatLayerGroup = document.createElement("div");
+            heatLayerGroup.setAttribute("id", "heat-layer-group");
+            map._panes.overlayPane.insertBefore(heatLayerGroup, map._panes.overlayPane.firstElementChild);
+        }
+
+        heatLayerGroup.appendChild(this._canvas);
+        //map._panes.overlayPane.appendChild(this._canvas);
+        /*END MOD*/
 
         map.on('moveend', this._reset, this);
 
@@ -87,8 +97,8 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
 			radiusFactor = this.options.radius || this.defaultRadius;
 			optionsBlur = this.options.blur || 0,
 			thisHeat = this;
-		
-        canvas = this._canvas = L.DomUtil.create('canvas', 'leaflet-heatmap-layer leaflet-layer');
+
+		canvas = this._canvas = L.DomUtil.create('canvas', 'leaflet-heatmap-layer leaflet-layer');
 
         size = this._map.getSize();
         canvas.width  = size.x;
