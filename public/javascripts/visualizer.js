@@ -1546,6 +1546,11 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 			this.displaySet[i].visiblePoints.length = 0; //hopefully the old data is garbage collected!
 			this.displaySet[i].secondValues.length = 0;
 		}
+
+		for(i in this.choroplethValues) {
+			this.choroplethValues[i].currentValue = 0;
+			this.choroplethValues[i].cumulativeValue = 0;
+		}
 		
 		$("#playback-button").removeClass("disabled");
 		
@@ -1581,21 +1586,28 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 			if(this.dataset[setID].timeGroup[setFrame]) {
 				for(i = 0; i < this.dataset[setID].timeGroup[setFrame].point.length; i++) {
 					if((this.dataset[setID].timeGroup[setFrame].point[i].value > 0) &&
-					(this.dataset[setID].timeGroup[setFrame].point[i].latitude && this.dataset[setID].timeGroup[setFrame].point[i].longitude)) {
+						(this.dataset[setID].timeGroup[setFrame].point[i].latitude &&
+						this.dataset[setID].timeGroup[setFrame].point[i].longitude)) {
 						this.displaySet[setID].visiblePoints.push([this.dataset[setID].timeGroup[setFrame].point[i].latitude,
 							this.dataset[setID].timeGroup[setFrame].point[i].longitude,
 							0.7,
 							//(this.dataset[setID].timeGroup[setFrame].point[i].value / this.dataset[setID].maxValue),
 							(this.dataset[setID].timeGroup[setFrame].point[i].value / this.absoluteMaxValue),
 							this.dataset[setID].timeGroup[setFrame].point[i].value]);
-							//TODO: append alsId without breaking system
-							//this.dataset[setID].timeGroup[setFrame].point[i].alsId);
 						
 						this.displaySet[setID].secondValues.push([this.dataset[setID].timeGroup[setFrame].point[i].latitude,
 							this.dataset[setID].timeGroup[setFrame].point[i].longitude,
 							0.7,
 							-this.dataset[setID].timeGroup[setFrame].point[i].secondValue,
 							0]);
+
+						if(this.choroplethValues[this.dataset[setID].timeGroup[setFrame].point[i].alsId]){
+							this.choroplethValues[this.dataset[setID].timeGroup[setFrame].point[i].alsId].currentValue =
+								this.dataset[setID].timeGroup[setFrame].point[i].value;
+
+							this.choroplethValues[this.dataset[setID].timeGroup[setFrame].point[i].alsId].cumulativeValue +=
+								this.choroplethValues[this.dataset[setID].timeGroup[setFrame].point[i].alsId].currentValue;
+						}
 					}
 				}
 				
@@ -1678,6 +1690,11 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 			this.displaySet[i].visiblePoints.length = 0; //hopefully the old data is garbage collected!
 			this.displaySet[i].secondValues.length = 0;
 		}
+
+		for(i in this.choroplethValues) {
+			this.choroplethValues[i].currentValue = 0;
+			this.choroplethValues[i].cumulativeValue = 0;
+		}
 		
 console.log((endFrame - startFrame) + " frames");
 		
@@ -1749,7 +1766,7 @@ console.log((endFrame - startFrame) + " frames");
 					this.heat[(setID << 1) + 1].setLatLngs([], this.showNumbers);
 				}
 				else {
-					this.heat[(setID << 1)].setLatLngs(this.displaySet[setID].visiblePoints, this.showNumbers);
+					this.heat[setID << 1].setLatLngs(this.displaySet[setID].visiblePoints, this.showNumbers);
 					
 					if(this.showSecondary) {
 						this.heat[(setID << 1) + 1].setLatLngs(this.displaySet[setID].secondValues, this.showNumbers);
@@ -1761,6 +1778,8 @@ console.log((endFrame - startFrame) + " frames");
 			}
 //console.log(this.heat[setID]._latlngs);
 		}
+
+		this.updateChoroplethLayer();
 		
 		return;
 	}
