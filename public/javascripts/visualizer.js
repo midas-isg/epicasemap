@@ -104,6 +104,7 @@ visualizer.js
 		
 		this.uiSettings.colorPalette = 0;
 		this.colors = this.colorSet[this.uiSettings.colorPalette];
+		this.choroplethSeriesIndex = 0;
 		
 		for(i = 0; i < this.colorSet.length; i++) {
 			svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -207,33 +208,33 @@ visualizer.js
 					weight: 2,
 					opacity: 0.4,
 					color: getBorderColor(thisMap.choroplethValues[feature.properties.ALS_ID].currentValue),
-					fillOpacity: 0.3,
-					fillColor: getFillColor(thisMap.choroplethValues[feature.properties.ALS_ID].cumulativeValue)
+					fillOpacity: getOpacity(thisMap.choroplethValues[feature.properties.ALS_ID].currentValue),
+					fillColor: getFillColor(thisMap.choroplethValues[feature.properties.ALS_ID].currentValue)
 				};
+			}
+
+			function getOpacity(d) {
+				return d > (thisMap.dataset[thisMap.choroplethSeriesIndex].maxValue * 0.9) ? 0.5 :
+					d > (thisMap.dataset[thisMap.choroplethSeriesIndex].maxValue * 0.8) ? 0.45 :
+					d > (thisMap.dataset[thisMap.choroplethSeriesIndex].maxValue * 0.7) ? 0.4 :
+					d > (thisMap.dataset[thisMap.choroplethSeriesIndex].maxValue * 0.6) ? 0.35 :
+					d > (thisMap.dataset[thisMap.choroplethSeriesIndex].maxValue * 0.5) ? 0.3 :
+					d > (thisMap.dataset[thisMap.choroplethSeriesIndex].maxValue * 0.4) ? 0.25 :
+					d > (thisMap.dataset[thisMap.choroplethSeriesIndex].maxValue * 0.3) ? 0.2 :
+					d > (thisMap.dataset[thisMap.choroplethSeriesIndex].maxValue * 0.2) ? 0.15 :
+					d > (thisMap.dataset[thisMap.choroplethSeriesIndex].maxValue * 0.1) ? 0.1 :
+					d > 0 ? 0.05 :
+					0;
 			}
 
 			// get color depending on d value
 			function getBorderColor(d) {
-				return d > (thisMap.absoluteMaxValue * 0.9) ? '#ff0000' : //'#8c2d04' :
-					d > (thisMap.absoluteMaxValue * 0.75) ? '#d80000' : //'#cc4c02' :
-					d > (thisMap.absoluteMaxValue * 0.6) ? '#b40000' : //'#ec7014' :
-					d > (thisMap.absoluteMaxValue * 0.45) ? '#900000' : //'#fe9929' :
-					d > (thisMap.absoluteMaxValue * 0.3) ? '#6c0000' : //'#fec44f' :
-					d > (thisMap.absoluteMaxValue * 0.15) ? '#480000' : //'#fee391' :
-					d > 0 ? '#240000' : //'#fff7bc' :
-					'#000000'; //'#ffffe5';
+				return thisMap.colors[thisMap.uiSettings.series[thisMap.choroplethSeriesIndex].color];
 			}
 
 			// get color depending on d value
 			function getFillColor(d) {
-				return d > 1000 ? '#ff0000' : //'#8c2d04' :
-					d > 500 ? '#d80000' : //'#cc4c02' :
-					d > 200 ? '#b40000' : //'#ec7014' :
-					d > 100 ? '#900000' : //'#fe9929' :
-					d > 50 ? '#6c0000' : //'#fec44f' :
-					d > 20 ? '#480000' : //'#fee391' :
-					d > 10 ? '#240000' : //'#fff7bc' :
-					'#000000'; //'#ffffe5';
+				return thisMap.colors[thisMap.uiSettings.series[thisMap.choroplethSeriesIndex].color];
 			}
 
 			function onEachFeature(feature, layer) {
@@ -1285,12 +1286,12 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 									MAGIC_MAP.dataset[i].timeGroup[0].date.getUTCMonth(),
 									MAGIC_MAP.dataset[i].timeGroup[0].date.getUTCDate()),
 						connectNulls: true,
-						data: MAGIC_MAP.dataset[i].frameAggregate //y-value array
+						data: MAGIC_MAP.dataset[i].frameAggregate, //y-value array
+						selected: (i === 0)
 					}
 				);
 			}
 			
-			//TODO: hide/show displaySets that are toggled off/on via legend
 			MAGIC_MAP.masterChart = $('#master-container').highcharts({
 				chart: {
 					reflow: false,
@@ -1414,8 +1415,28 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 								MAGIC_MAP.packHeat();
 								
 								return;
+							},
+							checkboxClick: function(event) {
+								var parentElement = event.currentTarget.checkbox.parentElement,
+									i;
+
+								for(i = 1; i < parentElement.children.length; i++) {
+									if(parentElement.children[i] !== event.currentTarget.checkbox) {
+										parentElement.children[i].checked = false;
+									}
+									else {
+										//somehow this is overwritten after callback...
+										//parentElement.children[i].checked = true;
+									}
+								}
+
+								MAGIC_MAP.choroplethSeriesIndex = event.currentTarget.index;
+								console.log(event.currentTarget.checkbox.checked);
+
+								return;
 							}
-						}
+						},
+						showCheckbox: true
 					}
 				},
 				series: dataSeries,
@@ -1601,12 +1622,10 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 							-this.dataset[setID].timeGroup[setFrame].point[i].secondValue,
 							0]);
 
-						if(this.choroplethValues[this.dataset[setID].timeGroup[setFrame].point[i].alsId]){
+						if((this.choroplethSeriesIndex === setID) &&
+							this.choroplethValues[this.dataset[setID].timeGroup[setFrame].point[i].alsId]) {
 							this.choroplethValues[this.dataset[setID].timeGroup[setFrame].point[i].alsId].currentValue =
 								this.dataset[setID].timeGroup[setFrame].point[i].value;
-
-							this.choroplethValues[this.dataset[setID].timeGroup[setFrame].point[i].alsId].cumulativeValue +=
-								this.choroplethValues[this.dataset[setID].timeGroup[setFrame].point[i].alsId].currentValue;
 						}
 					}
 				}
