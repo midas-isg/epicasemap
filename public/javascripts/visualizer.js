@@ -105,6 +105,7 @@ visualizer.js
 		this.uiSettings.colorPalette = 0;
 		this.colors = this.colorSet[this.uiSettings.colorPalette];
 		this.choroplethSeriesIndex = 0;
+		this.displayCumulativeValues = false;
 		
 		for(i = 0; i < this.colorSet.length; i++) {
 			svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -204,12 +205,18 @@ visualizer.js
 			});
 
 			function getStyle(feature) {
+				var choroplethValue = thisMap.choroplethValues[feature.properties.ALS_ID].currentValue;
+
+				if(thisMap.displayCumulativeValues) {
+					choroplethValue = thisMap.choroplethValues[feature.properties.ALS_ID].cumulativeValue;
+				}
+
 				return {
 					weight: 2,
 					opacity: 0.4,
-					color: getBorderColor(thisMap.choroplethValues[feature.properties.ALS_ID].currentValue),
-					fillOpacity: getOpacity(thisMap.choroplethValues[feature.properties.ALS_ID].currentValue),
-					fillColor: getFillColor(thisMap.choroplethValues[feature.properties.ALS_ID].currentValue)
+					color: getBorderColor(choroplethValue),
+					fillOpacity: getOpacity(choroplethValue),
+					fillColor: getFillColor(choroplethValue)
 				};
 			}
 
@@ -252,7 +259,9 @@ visualizer.js
 
 				popup.setLatLng(e.latlng);
 				popup.setContent('<div class="marker-title">' + layer.feature.properties.NAME + '</div>' +
-					thisMap.choroplethValues[layer.feature.properties.ALS_ID].cumulativeValue + ' cases');
+					'<div>' + thisMap.choroplethValues[layer.feature.properties.ALS_ID].cumulativeValue + ' total cases' + '</div>' +
+					'<div><var>(+' + thisMap.choroplethValues[layer.feature.properties.ALS_ID].currentValue + ' new cases)' + '</var></div>' +
+					'<div><em>' + thisMap.seriesDescriptions[thisMap.dataset[thisMap.choroplethSeriesIndex].seriesID].description + '</em></div>');
 
 				if (!popup._map) {
 					popup.openOn(thisMap.map);
@@ -509,7 +518,20 @@ visualizer.js
 			
 			return;
 		});
-		
+
+		$("#toggle-cumulative-button").click(function() {
+			thisMap.displayCumulativeValues = !thisMap.displayCumulativeValues;
+
+			if(thisMap.displayCumulativeValues) {
+				$(this).addClass("active");
+			}
+			else {
+				$(this).removeClass("active");
+			}
+
+			return;
+		});
+
 		$("#toggle-secondary-button").click(function() {
 			thisMap.showSecondary = !thisMap.showSecondary;
 			thisMap.packHeat();
@@ -575,11 +597,11 @@ visualizer.js
 		}
 		
 		$("#render-delay").change(function() {
-			if($(this).val() < 0) {
-				$(this).val(0);
+			if(parseInt(this.value) < parseInt(this.min)) {
+				this.value = this.min;
 			}
 			
-			thisMap.uiSettings.renderDelay = $(this).val();
+			thisMap.uiSettings.renderDelay = this.value;
 			
 			return;
 		});
@@ -848,7 +870,7 @@ console.log("series " + k + ": " + id);
 			currentDataset = {
 				seriesID: seriesID,
 				title: "title",
-				timeGroup: [{point: [], date: null}],
+				timeGroup: [{point: [], date: null, cumulativeValues: {}}],
 				maxValue: 0,
 				standardDeviation: 0,
 				frameAggregate: [0],
@@ -882,7 +904,8 @@ console.log("series " + k + ": " + id);
 					sumArray,
 					pointLifeSpan = Math.ceil(1 / thisMap.uiSettings.pointDecay),
 					datasetAverage = 0,
-					datasetVariance = 0;
+					datasetVariance = 0,
+					lastChoroplethValueFrame = {};
 				
 				thisMap.zeroTime(lastDate);
 				
@@ -900,13 +923,13 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 						deltaTime = inputDate.valueOf() - lastDate.valueOf();
 						
 						while(deltaTime >= threshold) {
-							currentDataset.timeGroup.push({point: [], date: null});
+							currentDataset.timeGroup.push({point: [], date: null, cumulativeValues: {}});
 							frame++;
 							filler++;
 							emptyDate = new Date(emptyDate.valueOf() + threshold);
 							currentDataset.timeGroup[frame].date = emptyDate;
 							currentDataset.frameAggregate[frame] = null;
-							
+
 							deltaTime -= threshold;
 						}
 						
@@ -914,7 +937,16 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 						
 						currentDataset.timeGroup[frame].point.push({latitude: result.results[i].latitude, longitude: result.results[i].longitude, value: result.results[i].value, secondValue: result.results[i].secondValue, alsId: result.results[i].alsId});
 						currentDataset.timeGroup[frame].date = inputDate;
-						
+
+						if((frame > 0) && (lastChoroplethValueFrame[result.results[i].alsId] != null)) {
+							currentDataset.timeGroup[frame].cumulativeValues[result.results[i].alsId] = currentDataset.timeGroup[lastChoroplethValueFrame[result.results[i].alsId]].cumulativeValues[result.results[i].alsId];
+						}
+						else {
+							currentDataset.timeGroup[frame].cumulativeValues[result.results[i].alsId] = 0;
+						}
+						currentDataset.timeGroup[frame].cumulativeValues[result.results[i].alsId] += result.results[i].value;
+						lastChoroplethValueFrame[result.results[i].alsId] = frame;
+
 						currentDataset.frameAggregate[frame] += result.results[i].value;
 						
 						if(currentDataset.maxValue < result.results[i].value) {
@@ -1433,6 +1465,8 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 								MAGIC_MAP.choroplethSeriesIndex = event.currentTarget.index;
 								console.log(event.currentTarget.checkbox.checked);
 
+								MAGIC_MAP.packHeat();
+
 								return;
 							}
 						},
@@ -1626,6 +1660,8 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 							this.choroplethValues[this.dataset[setID].timeGroup[setFrame].point[i].alsId]) {
 							this.choroplethValues[this.dataset[setID].timeGroup[setFrame].point[i].alsId].currentValue =
 								this.dataset[setID].timeGroup[setFrame].point[i].value;
+							this.choroplethValues[this.dataset[setID].timeGroup[setFrame].point[i].alsId].cumulativeValue =
+								this.dataset[setID].timeGroup[setFrame].cumulativeValues[this.dataset[setID].timeGroup[setFrame].point[i].alsId];
 						}
 					}
 				}
