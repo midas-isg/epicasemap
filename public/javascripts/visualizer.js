@@ -106,6 +106,7 @@ visualizer.js
 		this.colors = this.colorSet[this.uiSettings.colorPalette];
 		this.choroplethSeriesIndex = 0;
 		this.displayCumulativeValues = false;
+		this.maxCumulativeChoroplethValue = {};
 		
 		for(i = 0; i < this.colorSet.length; i++) {
 			svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -205,42 +206,44 @@ visualizer.js
 			});
 
 			function getStyle(feature) {
-				var choroplethValue = thisMap.choroplethValues[feature.properties.ALS_ID].currentValue;
+				var seriesIndex = thisMap.choroplethSeriesIndex,
+					alsId = feature.properties.ALS_ID,
+					choroplethValue = thisMap.choroplethValues[alsId].currentValue,
+					maxValue = thisMap.dataset[seriesIndex].maxValue;
 
 				if(thisMap.displayCumulativeValues) {
-					choroplethValue = thisMap.choroplethValues[feature.properties.ALS_ID].cumulativeValue;
+					choroplethValue = thisMap.choroplethValues[alsId].cumulativeValue;
+					maxValue = thisMap.dataset[seriesIndex].timeGroup[thisMap.dataset[seriesIndex].timeGroup.length - 1].cumulativeValues[alsId];
 				}
 
 				return {
 					weight: 2,
 					opacity: 0.4,
-					color: getBorderColor(choroplethValue),
-					fillOpacity: getOpacity(choroplethValue),
-					fillColor: getFillColor(choroplethValue)
+					color: getBorderColor(),
+					fillOpacity: getOpacity(choroplethValue, maxValue),
+					fillColor: getFillColor()
 				};
 			}
 
-			function getOpacity(d) {
-				return d > (thisMap.dataset[thisMap.choroplethSeriesIndex].maxValue * 0.9) ? 0.5 :
-					d > (thisMap.dataset[thisMap.choroplethSeriesIndex].maxValue * 0.8) ? 0.45 :
-					d > (thisMap.dataset[thisMap.choroplethSeriesIndex].maxValue * 0.7) ? 0.4 :
-					d > (thisMap.dataset[thisMap.choroplethSeriesIndex].maxValue * 0.6) ? 0.35 :
-					d > (thisMap.dataset[thisMap.choroplethSeriesIndex].maxValue * 0.5) ? 0.3 :
-					d > (thisMap.dataset[thisMap.choroplethSeriesIndex].maxValue * 0.4) ? 0.25 :
-					d > (thisMap.dataset[thisMap.choroplethSeriesIndex].maxValue * 0.3) ? 0.2 :
-					d > (thisMap.dataset[thisMap.choroplethSeriesIndex].maxValue * 0.2) ? 0.15 :
-					d > (thisMap.dataset[thisMap.choroplethSeriesIndex].maxValue * 0.1) ? 0.1 :
-					d > 0 ? 0.05 :
+			function getOpacity(value, maxValue) {
+				return value > (maxValue * 0.9) ? 0.5 :
+					value > (maxValue * 0.8) ? 0.45 :
+					value > (maxValue * 0.7) ? 0.4 :
+					value > (maxValue * 0.6) ? 0.35 :
+					value > (maxValue * 0.5) ? 0.3 :
+					value > (maxValue * 0.4) ? 0.25 :
+					value > (maxValue * 0.3) ? 0.2 :
+					value > (maxValue * 0.2) ? 0.15 :
+					value > (maxValue * 0.1) ? 0.1 :
+					value > 0 ? 0.05 :
 					0;
 			}
 
-			// get color depending on d value
-			function getBorderColor(d) {
+			function getBorderColor() {
 				return thisMap.colors[thisMap.uiSettings.series[thisMap.choroplethSeriesIndex].color];
 			}
 
-			// get color depending on d value
-			function getFillColor(d) {
+			function getFillColor() {
 				return thisMap.colors[thisMap.uiSettings.series[thisMap.choroplethSeriesIndex].color];
 			}
 
@@ -266,16 +269,6 @@ visualizer.js
 				if (!popup._map) {
 					popup.openOn(thisMap.map);
 				}
-				//window.clearTimeout(closeTooltip);
-
-				// highlight feature
-				/*
-				layer.setStyle({
-					weight: 3,
-					opacity: 0.9,
-					fillOpacity: 0.3
-				});
-				*/
 
 				if(!L.Browser.ie && !L.Browser.opera) {
 					layer.bringToFront();
@@ -523,10 +516,10 @@ visualizer.js
 			thisMap.displayCumulativeValues = !thisMap.displayCumulativeValues;
 
 			if(thisMap.displayCumulativeValues) {
-				$(this).addClass("active");
+				$(this).addClass("btn-danger");
 			}
 			else {
-				$(this).removeClass("active");
+				$(this).removeClass("btn-danger");
 			}
 
 			return;
@@ -943,9 +936,13 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 						}
 						else {
 							currentDataset.timeGroup[frame].cumulativeValues[result.results[i].alsId] = 0;
+							thisMap.maxCumulativeChoroplethValue[result.results[i].alsId] = 0;
 						}
 						currentDataset.timeGroup[frame].cumulativeValues[result.results[i].alsId] += result.results[i].value;
 						lastChoroplethValueFrame[result.results[i].alsId] = frame;
+						if(thisMap.maxCumulativeChoroplethValue[result.results[i].alsId] < currentDataset.timeGroup[frame].cumulativeValues[result.results[i].alsId]) {
+							thisMap.maxCumulativeChoroplethValue[result.results[i].alsId] = currentDataset.timeGroup[frame].cumulativeValues[result.results[i].alsId];
+						}
 
 						currentDataset.frameAggregate[frame] += result.results[i].value;
 						
