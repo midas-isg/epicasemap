@@ -106,7 +106,7 @@ visualizer.js
 		this.colors = this.colorSet[this.uiSettings.colorPalette];
 		this.choroplethSeriesIndex = 0;
 		this.displayCumulativeValues = false;
-		this.maxCumulativeChoroplethValue = {};
+		this.maxCumulativeChoroplethValue = [];
 		
 		for(i = 0; i < this.colorSet.length; i++) {
 			svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -213,7 +213,7 @@ visualizer.js
 
 				if(thisMap.displayCumulativeValues) {
 					choroplethValue = thisMap.choroplethValues[alsId].cumulativeValue;
-					maxValue = thisMap.dataset[seriesIndex].timeGroup[thisMap.dataset[seriesIndex].timeGroup.length - 1].cumulativeValues[alsId];
+					maxValue = thisMap.maxCumulativeChoroplethValue[seriesIndex];
 				}
 
 				return {
@@ -936,13 +936,9 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 						}
 						else {
 							currentDataset.timeGroup[frame].cumulativeValues[result.results[i].alsId] = 0;
-							thisMap.maxCumulativeChoroplethValue[result.results[i].alsId] = 0;
 						}
 						currentDataset.timeGroup[frame].cumulativeValues[result.results[i].alsId] += result.results[i].value;
 						lastChoroplethValueFrame[result.results[i].alsId] = frame;
-						if(thisMap.maxCumulativeChoroplethValue[result.results[i].alsId] < currentDataset.timeGroup[frame].cumulativeValues[result.results[i].alsId]) {
-							thisMap.maxCumulativeChoroplethValue[result.results[i].alsId] = currentDataset.timeGroup[frame].cumulativeValues[result.results[i].alsId];
-						}
 
 						currentDataset.frameAggregate[frame] += result.results[i].value;
 						
@@ -984,13 +980,19 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 				}
 				datasetVariance /= result.results.length;
 				currentDataset.standardDeviation = Math.sqrt(datasetVariance);
-				
+
 				thisMap.seriesToLoad.shift();
 				if(thisMap.seriesToLoad.length === 0) {
 					thisMap.earliestDate = thisMap.dataset[0].timeGroup[0].date;
 					thisMap.latestDate = thisMap.dataset[0].timeGroup[thisMap.dataset[0].timeGroup.length - 1].date;
 					
 					for(i = 0; i < thisMap.dataset.length; i++) {
+						for(j in thisMap.dataset[i].timeGroup[thisMap.dataset[i].timeGroup.length - 1].cumulativeValues) {
+							if(!thisMap.maxCumulativeChoroplethValue[i] || (thisMap.maxCumulativeChoroplethValue[i] < thisMap.dataset[i].timeGroup[thisMap.dataset[i].timeGroup.length - 1].cumulativeValues[j])) {
+								thisMap.maxCumulativeChoroplethValue[i] = thisMap.dataset[i].timeGroup[thisMap.dataset[i].timeGroup.length - 1].cumulativeValues[j];
+							}
+						}
+
 						if(thisMap.earliestDate > thisMap.dataset[i].timeGroup[0].date) {
 							thisMap.earliestDate = thisMap.dataset[i].timeGroup[0].date;
 						}
