@@ -1613,6 +1613,7 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 		if(DEBUG) { console.log("[DEBUG] called playBuffer()"); }
 		
 		var i,
+			j,
 			setID,
 			setFrame,
 			currentDate,
@@ -1655,10 +1656,26 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 
 						if((this.choroplethSeriesIndex === setID) &&
 							this.choroplethValues[this.dataset[setID].timeGroup[setFrame].point[i].alsId]) {
-							this.choroplethValues[this.dataset[setID].timeGroup[setFrame].point[i].alsId].currentValue =
-								this.dataset[setID].timeGroup[setFrame].point[i].value;
-							this.choroplethValues[this.dataset[setID].timeGroup[setFrame].point[i].alsId].cumulativeValue =
-								this.dataset[setID].timeGroup[setFrame].cumulativeValues[this.dataset[setID].timeGroup[setFrame].point[i].alsId];
+
+							if(!this.displayCumulativeValues) {
+								this.choroplethValues[this.dataset[setID].timeGroup[setFrame].point[i].alsId].currentValue =
+									this.dataset[setID].timeGroup[setFrame].point[i].value;
+							}
+						}
+					}
+				}
+
+				if(this.displayCumulativeValues) {
+					for(j in this.choroplethValues) {
+						this.choroplethValues[j].cumulativeValue = 0;
+					}
+
+					for(j in this.dataset[setID].timeGroup[setFrame].cumulativeValues) {
+						if(!this.choroplethValues[j]) {
+							this.choroplethValues[j] = {cumulativeValue: this.dataset[setID].timeGroup[setFrame].cumulativeValues[j]};
+						}
+						else {
+							this.choroplethValues[j].cumulativeValue = this.dataset[setID].timeGroup[setFrame].cumulativeValues[j];
 						}
 					}
 				}
