@@ -136,7 +136,7 @@ visualizer.js
 
 			thisMap.choroplethValues = {};
 
-			$.ajax({
+				$.ajax({
 				url: jsonRoute,
 				success: function(result, status, xhr) {
 					var i;
@@ -145,6 +145,7 @@ visualizer.js
 					console.log(status);
 					console.log(xhr);
 
+					/*
 					if(!US_STATES.features[0].properties.ALS_ID) {
 						for(i = 0; i < US_STATES.features.length; i++) {
 							US_STATES.features[i].properties.ALS_ID =
@@ -160,18 +161,18 @@ visualizer.js
 
 					thisMap.paTest = function() {
 						MAGIC_MAP.choroplethValues[1213].currentValue = Math.random() * MAGIC_MAP.absoluteMaxValue;
-						MAGIC_MAP.choroplethValues[1213].cumulativeValue += MAGIC_MAP.choroplethValues[1213].currentValue;
+						MAGIC_MAP.choroplethValues.cumulative[1213] += MAGIC_MAP.choroplethValues[1213].currentValue;
 						MAGIC_MAP.updateChoroplethLayer();
 						console.log(MAGIC_MAP.choroplethValues[1213]);
 
 						return;
 					}
+					*/
 
 					for(i = 0; i < US_STATES.features.length; i++) {
 						thisMap.choroplethValues[US_STATES.features[i].properties.ALS_ID] = {
 							gid: US_STATES.features[i].properties.ALS_ID,
 							currentValue: 0,
-							cumulativeValue: 0,
 							name: US_STATES.features[i].properties.NAME
 						};
 					}
@@ -211,7 +212,7 @@ visualizer.js
 					maxValue = thisMap.dataset[seriesIndex].maxOccurrenceValue;
 
 				if(thisMap.displayCumulativeValues) {
-					choroplethValue = thisMap.choroplethValues[alsId].cumulativeValue;
+					choroplethValue = thisMap.choroplethValues.cumulative[alsId];
 					maxValue = thisMap.dataset[seriesIndex].maxCumulativeChoroplethValue;
 				}
 
@@ -261,7 +262,7 @@ visualizer.js
 
 				popup.setLatLng(e.latlng);
 				popup.setContent('<div class="marker-title">' + layer.feature.properties.NAME + '</div>' +
-					'<div>' + thisMap.choroplethValues[layer.feature.properties.ALS_ID].cumulativeValue + ' total cases' + '</div>' +
+					'<div>' + thisMap.choroplethValues.cumulative[layer.feature.properties.ALS_ID] + ' total cases' + '</div>' +
 					'<div><var>(+' + thisMap.choroplethValues[layer.feature.properties.ALS_ID].currentValue + ' new cases)' + '</var></div>' +
 					'<div><em>' + thisMap.seriesDescriptions[thisMap.dataset[thisMap.choroplethSeriesIndex].seriesID].description + '</em></div>');
 
@@ -281,7 +282,7 @@ visualizer.js
 
 				popup.setLatLng(e.latlng);
 				popup.setContent('<div class="marker-title">' + layer.feature.properties.NAME + '</div>' +
-					thisMap.choroplethValues[layer.feature.properties.ALS_ID].cumulativeValue + ' cases');
+					thisMap.choroplethValues.cumulative[layer.feature.properties.ALS_ID] + ' cases');
 
 				if (!popup._map) {
 					popup.openOn(thisMap.map);
@@ -1601,7 +1602,6 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 
 		for(i in this.choroplethValues) {
 			this.choroplethValues[i].currentValue = 0;
-			this.choroplethValues[i].cumulativeValue = 0;
 		}
 		
 		$("#playback-button").removeClass("disabled");
@@ -1654,10 +1654,13 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 							-this.dataset[setID].timeGroup[setFrame].point[i].secondValue,
 							0]);
 
-						if((this.choroplethSeriesIndex === setID) &&
-							this.choroplethValues[this.dataset[setID].timeGroup[setFrame].point[i].alsId]) {
-
-							if(!this.displayCumulativeValues) {
+						if(this.choroplethSeriesIndex === setID) {
+							if(!this.choroplethValues[this.dataset[setID].timeGroup[setFrame].point[i].alsId]) {
+								this.choroplethValues[this.dataset[setID].timeGroup[setFrame].point[i].alsId] = {
+									currentValue: this.dataset[setID].timeGroup[setFrame].point[i].value
+								};
+							}
+							else {
 								this.choroplethValues[this.dataset[setID].timeGroup[setFrame].point[i].alsId].currentValue =
 									this.dataset[setID].timeGroup[setFrame].point[i].value;
 							}
@@ -1665,21 +1668,10 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 					}
 				}
 
-				if(this.displayCumulativeValues) {
-					for(j in this.choroplethValues) {
-						this.choroplethValues[j].cumulativeValue = 0;
-					}
-
-					for(j in this.dataset[setID].timeGroup[setFrame].cumulativeValues) {
-						if(!this.choroplethValues[j]) {
-							this.choroplethValues[j] = {cumulativeValue: this.dataset[setID].timeGroup[setFrame].cumulativeValues[j]};
-						}
-						else {
-							this.choroplethValues[j].cumulativeValue = this.dataset[setID].timeGroup[setFrame].cumulativeValues[j];
-						}
-					}
+				if(this.choroplethSeriesIndex === setID) {
+					this.choroplethValues.cumulative = this.dataset[setID].timeGroup[setFrame].cumulativeValues;
 				}
-				
+
 				if(!dateString && ((this.frame % this.uiSettings.daysPerFrame) === 0)) {
 					this.masterChart.xAxis[0].removePlotLine('date-line');
 					
@@ -1762,7 +1754,6 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 
 		for(i in this.choroplethValues) {
 			this.choroplethValues[i].currentValue = 0;
-			this.choroplethValues[i].cumulativeValue = 0;
 		}
 		
 console.log((endFrame - startFrame) + " frames");
