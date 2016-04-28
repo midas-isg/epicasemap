@@ -134,7 +134,7 @@ visualizer.js
 				jsonRoute = CONTEXT + "/api/get-json/" + encodedStatesURL,
 				popup = new L.Popup({autoPan: false});
 
-			thisMap.choroplethValues = {};
+			thisMap.choroplethValues = {current: {}, cumulative: {}};
 
 				$.ajax({
 				url: jsonRoute,
@@ -145,36 +145,9 @@ visualizer.js
 					console.log(status);
 					console.log(xhr);
 
-					/*
-					if(!US_STATES.features[0].properties.ALS_ID) {
-						for(i = 0; i < US_STATES.features.length; i++) {
-							US_STATES.features[i].properties.ALS_ID =
-								thisMap.choroplethValues[US_STATES.features[i].properties.NAME].gid;
-						}
-
-						function saveFile(input) {
-							var win = window.open("", "File_Output");
-							win.document.write(JSON.stringify(US_STATES));
-							return;
-						}
-					}
-
-					thisMap.paTest = function() {
-						MAGIC_MAP.choroplethValues[1213].currentValue = Math.random() * MAGIC_MAP.absoluteMaxValue;
-						MAGIC_MAP.choroplethValues.cumulative[1213] += MAGIC_MAP.choroplethValues[1213].currentValue;
-						MAGIC_MAP.updateChoroplethLayer();
-						console.log(MAGIC_MAP.choroplethValues[1213]);
-
-						return;
-					}
-					*/
-
 					for(i = 0; i < US_STATES.features.length; i++) {
-						thisMap.choroplethValues[US_STATES.features[i].properties.ALS_ID] = {
-							gid: US_STATES.features[i].properties.ALS_ID,
-							currentValue: 0,
-							name: US_STATES.features[i].properties.NAME
-						};
+						thisMap.choroplethValues.current[US_STATES.features[i].properties.ALS_ID] = 0;
+						thisMap.choroplethValues.cumulative[US_STATES.features[i].properties.ALS_ID] = 0;
 					}
 
 					thisMap.choroplethLayer = L.geoJson(US_STATES, {
@@ -208,7 +181,7 @@ visualizer.js
 			function getStyle(feature) {
 				var seriesIndex = thisMap.choroplethSeriesIndex,
 					alsId = feature.properties.ALS_ID,
-					choroplethValue = thisMap.choroplethValues[alsId].currentValue,
+					choroplethValue = thisMap.choroplethValues.current[alsId],
 					maxValue = thisMap.dataset[seriesIndex].maxOccurrenceValue;
 
 				if(thisMap.displayCumulativeValues) {
@@ -256,15 +229,23 @@ visualizer.js
 			}
 
 			function click(e) {
-				var layer = e.target;
+				var layer = e.target,
+					popupText = '<div class="marker-title">' + layer.feature.properties.NAME + '</div>';
+
+				if(thisMap.choroplethValues.cumulative[layer.feature.properties.ALS_ID] == null) {
+					popupText += '<div>total cases beyond scope of data</div>';
+				}
+				else {
+					popupText += '<div>' + thisMap.choroplethValues.cumulative[layer.feature.properties.ALS_ID] + ' total cases' + '</div>';
+				}
+
+				popupText += '<div><var>(+' + thisMap.choroplethValues.current[layer.feature.properties.ALS_ID] + ' new cases)' + '</var></div>' +
+					'<div><em>' + thisMap.seriesDescriptions[thisMap.dataset[thisMap.choroplethSeriesIndex].seriesID].description + '</em></div>';
 
 				//thisMap.map.fitBounds(e.target.getBounds());
 
 				popup.setLatLng(e.latlng);
-				popup.setContent('<div class="marker-title">' + layer.feature.properties.NAME + '</div>' +
-					'<div>' + thisMap.choroplethValues.cumulative[layer.feature.properties.ALS_ID] + ' total cases' + '</div>' +
-					'<div><var>(+' + thisMap.choroplethValues[layer.feature.properties.ALS_ID].currentValue + ' new cases)' + '</var></div>' +
-					'<div><em>' + thisMap.seriesDescriptions[thisMap.dataset[thisMap.choroplethSeriesIndex].seriesID].description + '</em></div>');
+				popup.setContent(popupText);
 
 				if (!popup._map) {
 					popup.openOn(thisMap.map);
@@ -1600,9 +1581,14 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 			this.displaySet[i].secondValues.length = 0;
 		}
 
-		for(i in this.choroplethValues) {
-			this.choroplethValues[i].currentValue = 0;
+		/*
+		for(i in this.choroplethValues.current) {
+			this.choroplethValues.current[i] = 0;
 		}
+		for(i in this.choroplethValues.cumulative) {
+			this.choroplethValues.cumulative[i] = 0;
+		}
+		*/
 		
 		$("#playback-button").removeClass("disabled");
 		
@@ -1620,7 +1606,15 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 			dateString = null,
 			adjustedStart,
 			adjustedEnd;
-		
+
+		for(i in this.choroplethValues.current) {
+			this.choroplethValues.current[i] = 0;
+		}
+
+		for(i in this.choroplethValues.cumulative) {
+			this.choroplethValues.cumulative[i] = undefined;
+		}
+
 		if(this.reset) {
 			this.reset = false;
 			
@@ -1630,7 +1624,7 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 				this.displaySet[i].secondValues.length = 0;
 			}
 		}
-		
+
 		for(setID = 0; setID < this.displaySet.length; setID++) {
 			setFrame = this.frame - this.dataset[setID].frameOffset;
 			adjustedStart = startFrame - this.dataset[setID].frameOffset;
@@ -1655,13 +1649,13 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 							0]);
 
 						if(this.choroplethSeriesIndex === setID) {
-							if(!this.choroplethValues[this.dataset[setID].timeGroup[setFrame].point[i].alsId]) {
-								this.choroplethValues[this.dataset[setID].timeGroup[setFrame].point[i].alsId] = {
+							if(!this.choroplethValues.current[this.dataset[setID].timeGroup[setFrame].point[i].alsId]) {
+								this.choroplethValues.current[this.dataset[setID].timeGroup[setFrame].point[i].alsId] = {
 									currentValue: this.dataset[setID].timeGroup[setFrame].point[i].value
 								};
 							}
 							else {
-								this.choroplethValues[this.dataset[setID].timeGroup[setFrame].point[i].alsId].currentValue =
+								this.choroplethValues.current[this.dataset[setID].timeGroup[setFrame].point[i].alsId] =
 									this.dataset[setID].timeGroup[setFrame].point[i].value;
 							}
 						}
@@ -1669,7 +1663,14 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 				}
 
 				if(this.choroplethSeriesIndex === setID) {
-					this.choroplethValues.cumulative = this.dataset[setID].timeGroup[setFrame].cumulativeValues;
+					for(i in this.choroplethValues.cumulative) {
+						if(!this.choroplethValues.cumulative[i]) {
+							this.choroplethValues.cumulative[i] = 0;
+						}
+					}
+					for(i in this.dataset[setID].timeGroup[setFrame].cumulativeValues) {
+						this.choroplethValues.cumulative[i] = this.dataset[setID].timeGroup[setFrame].cumulativeValues[i];
+					}
 				}
 
 				if(!dateString && ((this.frame % this.uiSettings.daysPerFrame) === 0)) {
@@ -1752,9 +1753,14 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 			this.displaySet[i].secondValues.length = 0;
 		}
 
-		for(i in this.choroplethValues) {
-			this.choroplethValues[i].currentValue = 0;
+		/*
+		for(i in this.choroplethValues.current) {
+			this.choroplethValues.current[i] = 0;
 		}
+		for(i in this.choroplethValues.cumulative) {
+			this.choroplethValues.cumulative[i] = 0;
+		}
+		*/
 		
 console.log((endFrame - startFrame) + " frames");
 		
