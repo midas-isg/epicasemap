@@ -163,6 +163,8 @@ visualizer.js
 							return;
 						});
 
+						//TODO: set popup text content here
+
 						return;
 					};
 
@@ -502,6 +504,10 @@ visualizer.js
 			else {
 				$(this).removeClass("btn-danger");
 			}
+
+			thisMap.playBuffer(thisMap.frame, thisMap.endFrame);
+			thisMap.frame--;
+			thisMap.packHeat();
 
 			return;
 		});
@@ -1444,6 +1450,8 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 								MAGIC_MAP.choroplethSeriesIndex = event.currentTarget.index;
 								console.log(event.currentTarget.checkbox.checked);
 
+								MAGIC_MAP.playBuffer(MAGIC_MAP.frame, MAGIC_MAP.endFrame);
+								MAGIC_MAP.frame--;
 								MAGIC_MAP.packHeat();
 
 								return;
@@ -1610,7 +1618,6 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 		for(i in this.choroplethValues.current) {
 			this.choroplethValues.current[i] = 0;
 		}
-
 		for(i in this.choroplethValues.cumulative) {
 			this.choroplethValues.cumulative[i] = undefined;
 		}
@@ -1649,15 +1656,8 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 							0]);
 
 						if(this.choroplethSeriesIndex === setID) {
-							if(!this.choroplethValues.current[this.dataset[setID].timeGroup[setFrame].point[i].alsId]) {
-								this.choroplethValues.current[this.dataset[setID].timeGroup[setFrame].point[i].alsId] = {
-									currentValue: this.dataset[setID].timeGroup[setFrame].point[i].value
-								};
-							}
-							else {
-								this.choroplethValues.current[this.dataset[setID].timeGroup[setFrame].point[i].alsId] =
-									this.dataset[setID].timeGroup[setFrame].point[i].value;
-							}
+							this.choroplethValues.current[this.dataset[setID].timeGroup[setFrame].point[i].alsId] =
+								this.dataset[setID].timeGroup[setFrame].point[i].value;
 						}
 					}
 				}
