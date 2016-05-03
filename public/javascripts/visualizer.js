@@ -134,7 +134,7 @@ visualizer.js
 				jsonRoute = CONTEXT + "/api/get-json/" + encodedStatesURL,
 				popup = new L.Popup({autoPan: false});
 
-			thisMap.choroplethValues = {current: {}, cumulative: {}};
+			thisMap.choroplethValues = {current: {}, visible: {}, cumulative: {}};
 
 				$.ajax({
 				url: jsonRoute,
@@ -147,6 +147,7 @@ visualizer.js
 
 					for(i = 0; i < US_STATES.features.length; i++) {
 						thisMap.choroplethValues.current[US_STATES.features[i].properties.ALS_ID] = 0;
+						thisMap.choroplethValues.visible[US_STATES.features[i].properties.ALS_ID] = 0;
 						thisMap.choroplethValues.cumulative[US_STATES.features[i].properties.ALS_ID] = 0;
 					}
 
@@ -183,7 +184,8 @@ visualizer.js
 			function getStyle(feature) {
 				var seriesIndex = thisMap.choroplethSeriesIndex,
 					alsId = feature.properties.ALS_ID,
-					choroplethValue = thisMap.choroplethValues.current[alsId],
+					//choroplethValue = thisMap.choroplethValues.current[alsId],
+					choroplethValue = thisMap.choroplethValues.visible[alsId],
 					maxValue = thisMap.dataset[seriesIndex].maxOccurrenceValue;
 
 				if(thisMap.displayCumulativeValues) {
@@ -201,17 +203,7 @@ visualizer.js
 			}
 
 			function getOpacity(value, maxValue) {
-				return value > (maxValue * 0.9) ? 0.6:
-					value > (maxValue * 0.8) ? 0.56:
-					value > (maxValue * 0.7) ? 0.48:
-					value > (maxValue * 0.6) ? 0.42:
-					value > (maxValue * 0.5) ? 0.36:
-					value > (maxValue * 0.4) ? 0.30:
-					value > (maxValue * 0.3) ? 0.24:
-					value > (maxValue * 0.2) ? 0.18:
-					value > (maxValue * 0.1) ? 0.12:
-					value > 0 ? 0.06:
-					0;
+				return ((value === undefined ? 0: value) / maxValue * 0.6);
 			}
 
 			function getBorderColor() {
@@ -241,7 +233,8 @@ visualizer.js
 					popupText += '<div>' + thisMap.choroplethValues.cumulative[layer.feature.properties.ALS_ID] + ' total cases' + '</div>';
 				}
 
-				popupText += '<div><var>(+' + thisMap.choroplethValues.current[layer.feature.properties.ALS_ID] + ' new cases)' + '</var></div>' +
+				//popupText += '<div><var>(+' + thisMap.choroplethValues.current[layer.feature.properties.ALS_ID] + ' new cases)' + '</var></div>' +
+				popupText += '<div><var>(+' + thisMap.choroplethValues.visible[layer.feature.properties.ALS_ID] + ' latest cases)' + '</var></div>' +
 					'<div><em>' + thisMap.seriesDescriptions[thisMap.dataset[thisMap.choroplethSeriesIndex].seriesID].description + '</em></div>';
 
 				//thisMap.map.fitBounds(e.target.getBounds());
@@ -496,13 +489,22 @@ visualizer.js
 		});
 
 		$("#toggle-cumulative-button").click(function() {
+			var i;
 			thisMap.displayCumulativeValues = !thisMap.displayCumulativeValues;
 
 			if(thisMap.displayCumulativeValues) {
 				$(this).addClass("btn-danger");
+
+				for(i = 0; i < thisMap.dataset.length; i++) {
+					thisMap.masterChart.series[i].setData(thisMap.dataset[i].seriesAggregate, true, false, false);
+				}
 			}
 			else {
 				$(this).removeClass("btn-danger");
+
+				for(i = 0; i < thisMap.dataset.length; i++) {
+					thisMap.masterChart.series[i].setData(thisMap.dataset[i].frameAggregate, true, false, false);
+				}
 			}
 
 			thisMap.playBuffer(thisMap.frame, thisMap.endFrame);
@@ -855,6 +857,7 @@ console.log("series " + k + ": " + id);
 				maxCumulativeChoroplethValue: 0,
 				standardDeviation: 0,
 				frameAggregate: [0],
+				seriesAggregate: [0],
 				frameOffset: 0
 			},
 			thisMap = this;
@@ -910,6 +913,7 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 							emptyDate = new Date(emptyDate.valueOf() + threshold);
 							currentDataset.timeGroup[frame].date = emptyDate;
 							currentDataset.frameAggregate[frame] = null;
+							currentDataset.seriesAggregate[frame] = currentDataset.seriesAggregate[frame - 1] || 0;
 
 							for(j in currentDataset.timeGroup[frame - 1].cumulativeValues) {
 								currentDataset.timeGroup[frame].cumulativeValues[j] = currentDataset.timeGroup[frame - 1].cumulativeValues[j];
@@ -938,7 +942,8 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 						}
 
 						currentDataset.frameAggregate[frame] += result.results[i].value;
-						
+						currentDataset.seriesAggregate[frame] += result.results[i].value;
+
 						if(currentDataset.maxOccurrenceValue < result.results[i].value) {
 							currentDataset.maxOccurrenceValue = result.results[i].value;
 							
@@ -1450,6 +1455,10 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 								MAGIC_MAP.choroplethSeriesIndex = event.currentTarget.index;
 								console.log(event.currentTarget.checkbox.checked);
 
+								for(i in MAGIC_MAP.choroplethValues.visible) {
+									MAGIC_MAP.choroplethValues.visible[i] = 0;
+								}
+
 								MAGIC_MAP.playBuffer(MAGIC_MAP.frame, MAGIC_MAP.endFrame);
 								MAGIC_MAP.frame--;
 								MAGIC_MAP.packHeat();
@@ -1589,14 +1598,12 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 			this.displaySet[i].secondValues.length = 0;
 		}
 
-		/*
+		/**/
 		for(i in this.choroplethValues.current) {
 			this.choroplethValues.current[i] = 0;
+			this.choroplethValues.visible[i] = 0;
 		}
-		for(i in this.choroplethValues.cumulative) {
-			this.choroplethValues.cumulative[i] = 0;
-		}
-		*/
+		/**/
 		
 		$("#playback-button").removeClass("disabled");
 		
@@ -1658,6 +1665,11 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 						if(this.choroplethSeriesIndex === setID) {
 							this.choroplethValues.current[this.dataset[setID].timeGroup[setFrame].point[i].alsId] =
 								this.dataset[setID].timeGroup[setFrame].point[i].value;
+
+							if(this.dataset[setID].timeGroup[setFrame].point[i].value > 0) {
+								this.choroplethValues.visible[this.dataset[setID].timeGroup[setFrame].point[i].alsId] =
+									this.dataset[setID].timeGroup[setFrame].point[i].value;
+							}
 						}
 					}
 				}
@@ -1675,6 +1687,7 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 
 				if(!dateString && ((this.frame % this.uiSettings.daysPerFrame) === 0)) {
 					this.masterChart.xAxis[0].removePlotLine('date-line');
+					this.detailChart.xAxis[0].removePlotLine('date-line');
 					
 					if(this.playBack) {
 						currentDate = this.dataset[setID].timeGroup[setFrame].date;
@@ -1685,6 +1698,13 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 					//console.log(dateString);
 						
 						this.masterChart.xAxis[0].addPlotLine({
+							value: currentDate.valueOf(),
+							color: 'red',
+							width: 2,
+							id: 'date-line'
+						});
+
+						this.detailChart.xAxis[0].addPlotLine({
 							value: currentDate.valueOf(),
 							color: 'red',
 							width: 2,
@@ -1756,9 +1776,6 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 		/*
 		for(i in this.choroplethValues.current) {
 			this.choroplethValues.current[i] = 0;
-		}
-		for(i in this.choroplethValues.cumulative) {
-			this.choroplethValues.cumulative[i] = 0;
 		}
 		*/
 		
