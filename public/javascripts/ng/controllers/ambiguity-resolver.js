@@ -330,8 +330,10 @@ app.controller('AmbiguityResolver', function($scope, $rootScope, api) {
 			if(ambiguitiesList[$scope.currentInputLabel].requeryResults) {
 				$scope.requeryResultList = ambiguitiesList[$scope.currentInputLabel].requeryResults.matches;
 				
-				for(i = 0; i < $scope.requeryResultList.length; i++) {
-					$scope.requeryResultTypes[$scope.requeryResultList[i].locationTypeName] = $scope.requeryResultList[i].locationTypeName;
+				if($scope.requeryResultList) {
+					for(i = 0; i < $scope.requeryResultList.length; i++) {
+						$scope.requeryResultTypes[$scope.requeryResultList[i].locationTypeName] = $scope.requeryResultList[i].locationTypeName;
+					}
 				}
 			}
 			

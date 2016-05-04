@@ -1419,7 +1419,8 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 				
 				if(!dateString && ((this.frame % this.uiSettings.daysPerFrame) === 0)) {
 					this.masterChart.xAxis[0].removePlotLine('date-line');
-					
+					this.detailChart.xAxis[0].removePlotLine('date-line');
+
 					if(this.playBack) {
 						currentDate = this.dataset[setID].timeGroup[setFrame].date;
 						dateString = (currentDate.getUTCMonth() + 1) + '/' + currentDate.getUTCDate() + '/' + currentDate.getUTCFullYear();
@@ -1429,6 +1430,12 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 					//console.log(dateString);
 						
 						this.masterChart.xAxis[0].addPlotLine({
+							value: currentDate.valueOf(),
+							color: 'red',
+							width: 2,
+							id: 'date-line'
+						});
+						this.detailChart.xAxis[0].addPlotLine({
 							value: currentDate.valueOf(),
 							color: 'red',
 							width: 2,
