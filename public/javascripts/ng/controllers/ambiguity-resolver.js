@@ -216,6 +216,12 @@ app.controller('AmbiguityResolver', function($scope, $rootScope, api) {
 					ambiguitiesList[$scope.currentInputLabel].selectedLocationLabel = ambiguitiesList[$scope.currentInputLabel].possibleMappings[0].label;
 				}
 			}
+			else {
+				$scope.showQueryInput = false;
+				$scope.editLocationQuery();
+				$scope.requeryInput.label = $scope.currentInputLabel;
+				$scope.requeryInputEvent();
+			}
 			
 			$scope.requeryResults = ambiguitiesList[$scope.currentInputLabel].requeryResults;
 			
