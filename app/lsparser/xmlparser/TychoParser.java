@@ -202,10 +202,23 @@ while(iterator.hasNext()){
 		public void consumeALSIDQueryInput(ALSIDQueryInput alsIDQueryInput) {
 			String locationType = alsIDQueryInput.details.get("locationType").toUpperCase();
 			name = alsIDQueryInput.locationName;
+			
+			if(locationTypesMap.get(locationType) != null) {
+				locationTypeIds.add(locationTypesMap.get("STATE"));
+				locationTypeIds.add(locationTypesMap.get("DISTRICT"));
+				locationTypeIds.add(locationTypesMap.get("COUNTRY"));
+			}
+			
+			/*
+			String locationType = alsIDQueryInput.details.get("locationType").toUpperCase();
+			
+			name = alsIDQueryInput.locationName;
+			
+			
 			if(locationTypesMap.get(locationType) != null) {
 				locationTypeIds.add(locationTypesMap.get(locationType));
 			}
-			
+			*/
 			//start = Date(alsIDQueryInput.details.get("startDate"));
 			//end = alsIDQueryInput.details.get("");
 			/*
