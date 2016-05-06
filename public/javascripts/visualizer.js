@@ -89,7 +89,7 @@ visualizer.js
 		$("#map-selector").change(function() {
 			sessionStorage.uiSettings = JSON.stringify(thisMap.uiSettings);
 			
-			return location.assign(CONTEXT + "?id=" + thisMap.vizID + "&map=" + $(this).val());
+			return location.assign(CONTEXT + "/visualizer?id=" + thisMap.vizID + "&map=" + $(this).val());
 		});
 		
 		
@@ -1271,6 +1271,7 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 		var extremesObject = event.xAxis[0],
 			min = extremesObject.min,
 			max = extremesObject.max,
+			detailStart = [],
 			detailSeries = [],
 			xAxis = this.masterChart.xAxis[0],
 			minDate = new Date(extremesObject.min),
@@ -1278,7 +1279,7 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 			startFrame,
 			endFrame,
 			i;
-		
+
 		this.zeroTime(minDate);
 		this.zeroTime(maxDate);
 		
@@ -1287,7 +1288,7 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 		console.log("min date: " + minDate);
 		console.log("max: " + max);
 		console.log("max date: " + maxDate);
-		
+
 		for(i = 0; i < this.masterChart.series.length; i++) {
 			detailSeries.push({detailData: []});
 			
