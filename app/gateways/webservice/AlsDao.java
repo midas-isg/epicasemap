@@ -24,6 +24,7 @@ import scala.collection.concurrent.Debug;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.sun.media.jfxmedia.logging.Logger;
 
 import controllers.Factory;
 
@@ -99,6 +100,13 @@ public class AlsDao {
 		List<NamedLocation> locations = new ArrayList<NamedLocation>();
 		JsonNode features = geoJSONResponse.get("features");
 		JsonNode currentFeature;
+		
+play.Logger.debug(geoJSONResponse.toString());
+Iterator<String> fieldNameIterator = geoJSONResponse.fieldNames();
+while(fieldNameIterator.hasNext()) {
+	play.Logger.debug(fieldNameIterator.next());
+}
+		
 		int featureCount = features.size();
 		NamedLocation location;
 		
