@@ -101,11 +101,13 @@ public class AlsDao {
 		JsonNode features = geoJSONResponse.get("features");
 		JsonNode currentFeature;
 		
+/*
 play.Logger.debug(geoJSONResponse.toString());
 Iterator<String> fieldNameIterator = geoJSONResponse.fieldNames();
 while(fieldNameIterator.hasNext()) {
 	play.Logger.debug(fieldNameIterator.next());
 }
+*/
 		
 		int featureCount = features.size();
 		NamedLocation location;
