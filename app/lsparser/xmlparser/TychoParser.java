@@ -160,7 +160,8 @@ while(iterator.hasNext()){
 	JsonNode next = iterator.next();
 	Logger.debug(next.toString());
 }
-
+*/
+/*
 Logger.debug("==========");
 for(int i = 0; i < alsIDQueryInputs.size(); i++) {
 	Logger.debug(alsIDQueryInputs.get(i).toString());
@@ -169,7 +170,6 @@ for(int i = 0; i < alsIDQueryInputs.size(); i++) {
 			
 			JsonNode response = clientRule.post(bulkRequestJSON).asJson();
 			Map<String, BulkLocationResult> locations = new HashMap<String, BulkLocationResult>();
-			String locationName;
 			
 			int i = 0;
 			Iterator<JsonNode> responseIterator = response.iterator();
