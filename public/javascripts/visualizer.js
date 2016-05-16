@@ -131,23 +131,25 @@ visualizer.js
 	
 	MagicMap.prototype.saveVisualization = function() {
 		if(DEBUG) { console.log("[DEBUG] called saveVisualization()"); }
+		var thisMap = MAGIC_MAP,
+			URL = CONTEXT + "/api/vizs/" + thisMap.vizID + "/ui-setting",
+			bounds = thisMap.map.getBounds();
 		
-		var URL = CONTEXT + "/api/vizs/" + this.vizID + "/ui-setting",
-			bounds = this.map.getBounds();
-		
-		if(this.vizID) {
-			this.uiSettings.bBox[0][0] = bounds.getSouth();
-			this.uiSettings.bBox[0][1] = bounds.getWest();
-			this.uiSettings.bBox[1][0] = bounds.getNorth();
-			this.uiSettings.bBox[1][1] = bounds.getEast();
+		if(thisMap.vizID) {
+			thisMap.uiSettings.bBox[0][0] = bounds.getSouth();
+			thisMap.uiSettings.bBox[0][1] = bounds.getWest();
+			thisMap.uiSettings.bBox[1][0] = bounds.getNorth();
+			thisMap.uiSettings.bBox[1][1] = bounds.getEast();
 
 			$.ajax({
 				url: URL,
 				type: "PUT",
-				data: JSON.stringify(this.uiSettings),
+				data: JSON.stringify(thisMap.uiSettings),
 				contentType: "application/json; charset=UTF-8",
 				success: function(result, status, xhr) {
 					alert("Save successful");
+					sessionStorage.removeItem("uiSettings");
+
 					return;
 				},
 				error: function(xhr, status, error) {
