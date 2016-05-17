@@ -528,6 +528,7 @@ console.log("series " + k + ": " + id);
 				
 				thisMap.seriesToLoad.push(id);
 				thisMap.load(thisMap.seriesToLoad[0], k);
+				thisMap.displaySet[k].hide = false;
 				
 				return;
 			});
@@ -981,7 +982,7 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 		}
 		
 			// create the detail chart
-		function createDetail(masterChart) {
+		function createDetailChart(masterChart) {
 			// prepare the detail chart
 			var detailSeries = [],
 				detailStart =  [],
@@ -1094,7 +1095,7 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 		}
 
 		// create the master chart
-		function createMaster() {
+		function createMasterChart() {
 			var i,
 				dataSeries = [];
 			
@@ -1246,7 +1247,7 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 				}
 			},
 			function (masterChart) {
-				createDetail(masterChart);
+				createDetailChart(masterChart);
 			}).highcharts(); // return chart instance
 		}
 
@@ -1254,7 +1255,7 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 		var $container = $('#container');
 		
 		// create master and in its callback, create the detail chart
-		createMaster();
+		createMasterChart();
 		
 		//BONUS: transfer mouse events from detail container to map for all browsers
 		//$('#detail-container').mousedown(function(event) { event.stopImmediatePropagation(); return $('.leaflet-layer').mousedown(); });
