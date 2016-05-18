@@ -87,6 +87,7 @@ visualizer.js
 		$("#map-selector").val(mapID);
 		
 		$("#map-selector").change(function() {
+			thisMap.uiSettings.mapUnderlay = $(this).val();
 			sessionStorage.uiSettings = JSON.stringify(thisMap.uiSettings);
 			
 			return location.assign(CONTEXT + "/visualizer?id=" + thisMap.vizID + "&map=" + $(this).val());
@@ -194,6 +195,11 @@ visualizer.js
 					}
 					else {
 						thisMap.uiSettings = JSON.parse(result.result.uiSetting);
+
+						if(thisMap.uiSettings.mapUnderlay) {
+							sessionStorage.uiSettings = JSON.stringify(thisMap.uiSettings);
+							return location.assign(CONTEXT + "/visualizer?id=" + thisMap.vizID + "&map=" + thisMap.uiSettings.mapUnderlay);
+						}
 						
 						thisMap.uiSettings.daysPerFrame = (thisMap.uiSettings.daysPerFrame | 1);
 						
