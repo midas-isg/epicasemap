@@ -99,6 +99,7 @@ app.controller('AmbiguityResolver', function($scope, $rootScope, api) {
 		$scope.showSubmitButton = false;
 		$scope.showRequeryText = false;
 		$scope.showQueryInput = false;
+		$scope.reviewButtonText = "Edit Mapping";
 		
 		$scope.closeDialog = function() { 
 			dom.$dialog.modal('hide');
@@ -515,6 +516,14 @@ app.controller('AmbiguityResolver', function($scope, $rootScope, api) {
 		
 		$scope.review = function(locationIndex) {
 			reviewing = !reviewing;
+
+			if(reviewing) {
+				$scope.reviewButtonText = "Edit Mapping";
+			}
+			else {
+				$scope.reviewButtonText = "View Summary";
+			}
+
 			switchIndex(locationIndex);
 			
 			return;
