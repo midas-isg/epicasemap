@@ -202,7 +202,7 @@ app.controller('SeriesData', function($scope, $rootScope, api) {
 		$scope.isWorking = true;
 		$rootScope.$emit('modalBusyDialog');
 		
-		if(!findParameterByName("apikey", $scope.url)) {
+		if(($scope.urlContentType === "Tycho") && (!findParameterByName("apikey", $scope.url))) {
 			$scope.url += "&apikey=9a4c75183895f07e7776";
 		}
 		
