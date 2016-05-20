@@ -67,7 +67,7 @@ visualizer.js
 		this.seriesDescriptions = {};
 		this.seriesToLoad = [];
 		
-		this.showControlPanel = false;
+		this.showDetailsGraph = false;
 		this.showSecondary = false;
 		this.showNumbers = false;
 		
@@ -87,9 +87,10 @@ visualizer.js
 		$("#map-selector").val(mapID);
 		
 		$("#map-selector").change(function() {
+			thisMap.uiSettings.mapUnderlay = $(this).val();
 			sessionStorage.uiSettings = JSON.stringify(thisMap.uiSettings);
 			
-			return location.assign(CONTEXT + "?id=" + thisMap.vizID + "&map=" + $(this).val());
+			return location.assign(CONTEXT + "/visualizer?id=" + thisMap.vizID + "&map=" + $(this).val());
 		});
 		
 		
@@ -235,7 +236,7 @@ visualizer.js
 
 				//popupText += '<div><var>(+' + thisMap.choroplethValues.current[layer.feature.properties.ALS_ID] + ' new cases)' + '</var></div>' +
 				popupText += '<div><var>(+' + thisMap.choroplethValues.visible[layer.feature.properties.ALS_ID] + ' latest cases)' + '</var></div>' +
-					'<div><em>' + thisMap.seriesDescriptions[thisMap.dataset[thisMap.choroplethSeriesIndex].seriesID].description + '</em></div>';
+					'<div><em>' + thisMap.seriesList[thisMap.choroplethSeriesIndex].title + '</em></div>';
 
 				//thisMap.map.fitBounds(e.target.getBounds());
 
@@ -290,23 +291,25 @@ visualizer.js
 	
 	MagicMap.prototype.saveVisualization = function() {
 		if(DEBUG) { console.log("[DEBUG] called saveVisualization()"); }
+		var thisMap = MAGIC_MAP,
+			URL = CONTEXT + "/api/vizs/" + thisMap.vizID + "/ui-setting",
+			bounds = thisMap.map.getBounds();
 		
-		var URL = CONTEXT + "/api/vizs/" + this.vizID + "/ui-setting",
-			bounds = this.map.getBounds();
-		
-		if(this.vizID) {
-			this.uiSettings.bBox[0][0] = bounds.getSouth();
-			this.uiSettings.bBox[0][1] = bounds.getWest();
-			this.uiSettings.bBox[1][0] = bounds.getNorth();
-			this.uiSettings.bBox[1][1] = bounds.getEast();
+		if(thisMap.vizID) {
+			thisMap.uiSettings.bBox[0][0] = bounds.getSouth();
+			thisMap.uiSettings.bBox[0][1] = bounds.getWest();
+			thisMap.uiSettings.bBox[1][0] = bounds.getNorth();
+			thisMap.uiSettings.bBox[1][1] = bounds.getEast();
 
 			$.ajax({
 				url: URL,
 				type: "PUT",
-				data: JSON.stringify(this.uiSettings),
+				data: JSON.stringify(thisMap.uiSettings),
 				contentType: "application/json; charset=UTF-8",
 				success: function(result, status, xhr) {
 					alert("Save successful");
+					sessionStorage.removeItem("uiSettings");
+
 					return;
 				},
 				error: function(xhr, status, error) {
@@ -351,6 +354,11 @@ visualizer.js
 					}
 					else {
 						thisMap.uiSettings = JSON.parse(result.result.uiSetting);
+
+						if(thisMap.uiSettings.mapUnderlay) {
+							sessionStorage.uiSettings = JSON.stringify(thisMap.uiSettings);
+							return location.assign(CONTEXT + "/visualizer?id=" + thisMap.vizID + "&map=" + thisMap.uiSettings.mapUnderlay);
+						}
 						
 						thisMap.uiSettings.daysPerFrame = (thisMap.uiSettings.daysPerFrame | 1);
 						
@@ -471,10 +479,11 @@ visualizer.js
 		
 		$("#toggle-details-button").click(function() {
 			var i;
-			
+
+			thisMap.showDetailsGraph = !thisMap.showDetailsGraph;
 			$("#detail-container *").toggle();
 			
-			if($("#detail-container").css("pointer-events") === "auto") {
+			if(thisMap.showDetailsGraph) {
 				$("#detail-container").css("pointer-events", "none");
 			}
 			else {
@@ -613,8 +622,7 @@ visualizer.js
 		});
 		$("#point-decay").val(thisMap.uiSettings.pointDecay);
 		$("#point-decay").change();
-		
-		
+
 		$("#data-gap-handler").change(function() {
 			var zeroSeries = [],
 				i,
@@ -636,8 +644,7 @@ visualizer.js
 			
 			return;
 		});
-		
-		
+
 		$("#save-button").click(function() {
 			thisMap.saveVisualization();
 			return;
@@ -711,6 +718,7 @@ console.log("series " + k + ": " + id);
 				
 				thisMap.seriesToLoad.push(id);
 				thisMap.load(thisMap.seriesToLoad[0], k);
+				thisMap.displaySet[k].hide = false;
 				
 				return;
 			});
@@ -1182,7 +1190,7 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 		}
 		
 			// create the detail chart
-		function createDetail(masterChart) {
+		function createDetailChart(masterChart) {
 			// prepare the detail chart
 			var detailSeries = [],
 				detailStart =  [],
@@ -1295,7 +1303,7 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 		}
 
 		// create the master chart
-		function createMaster() {
+		function createMasterChart() {
 			var i,
 				dataSeries = [];
 			
@@ -1475,7 +1483,7 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 				}
 			},
 			function (masterChart) {
-				createDetail(masterChart);
+				createDetailChart(masterChart);
 			}).highcharts(); // return chart instance
 		}
 
@@ -1483,7 +1491,7 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 		var $container = $('#container');
 		
 		// create master and in its callback, create the detail chart
-		createMaster();
+		createMasterChart();
 		
 		//BONUS: transfer mouse events from detail container to map for all browsers
 		//$('#detail-container').mousedown(function(event) { event.stopImmediatePropagation(); return $('.leaflet-layer').mousedown(); });
@@ -1502,6 +1510,7 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 		var extremesObject = event.xAxis[0],
 			min = extremesObject.min,
 			max = extremesObject.max,
+			detailStart = [],
 			detailSeries = [],
 			xAxis = this.masterChart.xAxis[0],
 			minDate = new Date(extremesObject.min),
@@ -1509,7 +1518,7 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 			startFrame,
 			endFrame,
 			i;
-		
+
 		this.zeroTime(minDate);
 		this.zeroTime(maxDate);
 		
@@ -1518,7 +1527,7 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 		console.log("min date: " + minDate);
 		console.log("max: " + max);
 		console.log("max date: " + maxDate);
-		
+
 		for(i = 0; i < this.masterChart.series.length; i++) {
 			detailSeries.push({detailData: []});
 			
@@ -1688,7 +1697,7 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 				if(!dateString && ((this.frame % this.uiSettings.daysPerFrame) === 0)) {
 					this.masterChart.xAxis[0].removePlotLine('date-line');
 					this.detailChart.xAxis[0].removePlotLine('date-line');
-					
+
 					if(this.playBack) {
 						currentDate = this.dataset[setID].timeGroup[setFrame].date;
 						dateString = (currentDate.getUTCMonth() + 1) + '/' + currentDate.getUTCDate() + '/' + currentDate.getUTCFullYear();
