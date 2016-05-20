@@ -482,7 +482,7 @@ visualizer.js
 
 			thisMap.showDetailsGraph = !thisMap.showDetailsGraph;
 			$("#detail-container *").toggle();
-			
+
 			if(thisMap.showDetailsGraph) {
 				$("#detail-container").css("pointer-events", "none");
 			}
@@ -713,13 +713,13 @@ visualizer.js
 				l,
 				k = $(this).attr("id").split("-")[1];
 console.log("series " + k + ": " + id);
-				
 				thisMap.uiSettings.series[k].index = id;
-				
+
 				thisMap.seriesToLoad.push(id);
 				thisMap.load(thisMap.seriesToLoad[0], k);
 				thisMap.displaySet[k].hide = false;
-				
+				thisMap.showDetailsGraph = false;
+
 				return;
 			});
 		}
