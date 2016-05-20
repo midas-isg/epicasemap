@@ -713,8 +713,9 @@ visualizer.js
 				l,
 				k = $(this).attr("id").split("-")[1];
 console.log("series " + k + ": " + id);
-				thisMap.uiSettings.series[k].index = id;
+				$("#toggle-cumulative-button").click();
 
+				thisMap.uiSettings.series[k].index = id;
 				thisMap.seriesToLoad.push(id);
 				thisMap.load(thisMap.seriesToLoad[0], k);
 				thisMap.displaySet[k].hide = false;
