@@ -742,6 +742,10 @@ console.log("series " + k + ": " + id);
 		this.masterChart.series[selectorID].remove();
 		this.dataset.splice(selectorID, 1);
 		this.displaySet.pop();
+
+		if(this.choroplethSeriesIndex >= this.dataset.length) {
+			this.setChoroplethSeriesIndex(this.dataset.length - 1);
+		}
 		
 		this.heat[(selectorID << 1)].setLatLngs([]);
 		this.heat[(selectorID << 1) + 1].setLatLngs([]);
@@ -1461,16 +1465,8 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 									}
 								}
 
-								MAGIC_MAP.choroplethSeriesIndex = event.currentTarget.index;
+								MAGIC_MAP.setChoroplethSeriesIndex(event.currentTarget.index);
 								console.log(event.currentTarget.checkbox.checked);
-
-								for(i in MAGIC_MAP.choroplethValues.visible) {
-									MAGIC_MAP.choroplethValues.visible[i] = 0;
-								}
-
-								MAGIC_MAP.playBuffer(MAGIC_MAP.frame, MAGIC_MAP.endFrame);
-								MAGIC_MAP.frame--;
-								MAGIC_MAP.packHeat();
 
 								return;
 							}
@@ -1624,7 +1620,6 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 		if(DEBUG) { console.log("[DEBUG] called playBuffer()"); }
 		
 		var i,
-			j,
 			setID,
 			setFrame,
 			currentDate,
@@ -1649,7 +1644,7 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 			}
 		}
 
-		for(setID = 0; setID < this.displaySet.length; setID++) {
+		for(setID = 0; setID < /*this.displaySet.length*/ this.dataset.length; setID++) {
 			setFrame = this.frame - this.dataset[setID].frameOffset;
 			adjustedStart = startFrame - this.dataset[setID].frameOffset;
 			adjustedEnd = endFrame - this.dataset[setID].frameOffset;
@@ -1706,20 +1701,6 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 						
 					//console.log(currentDate);
 					//console.log(dateString);
-						
-						this.masterChart.xAxis[0].addPlotLine({
-							value: currentDate.valueOf(),
-							color: 'red',
-							width: 2,
-							id: 'date-line'
-						});
-
-						this.detailChart.xAxis[0].addPlotLine({
-							value: currentDate.valueOf(),
-							color: 'red',
-							width: 2,
-							id: 'date-line'
-						});
 					}
 					else if(this.dataset[setID].timeGroup[adjustedStart] && this.dataset[setID].timeGroup[adjustedEnd]) {
 						currentDate = this.dataset[setID].timeGroup[adjustedStart].date;
@@ -1728,6 +1709,20 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 						dateString += (currentDate.getUTCMonth() + 1) + '/' + currentDate.getUTCDate() + '/' + currentDate.getUTCFullYear();
 						$("#current-date").text(dateString);
 					}
+
+					this.masterChart.xAxis[0].addPlotLine({
+						value: currentDate.valueOf(),
+						color: 'red',
+						width: 2,
+						id: 'date-line'
+					});
+
+					this.detailChart.xAxis[0].addPlotLine({
+						value: currentDate.valueOf(),
+						color: 'red',
+						width: 2,
+						id: 'date-line'
+					});
 				}
 			}
 			
@@ -1949,7 +1944,22 @@ console.log((endFrame - startFrame) + " frames");
 		
 		return dateTime;
 	}
-	
+
+	MagicMap.prototype.setChoroplethSeriesIndex = function(seriesIndex) {
+		var i;
+		this.choroplethSeriesIndex = seriesIndex;
+
+		for(i in this.choroplethValues.visible) {
+			this.choroplethValues.visible[i] = 0;
+		}
+
+		this.frame--;
+		this.playBuffer(this.frame, this.frame + 1);
+		this.packHeat();
+
+		return;
+	}
+
 	$(document).ready(function() {
 		window.MAGIC_MAP = new MagicMap();
 		MAGIC_MAP.initialize();
