@@ -16,18 +16,22 @@
 				@form.globalError.message
 			</p>
 		}
-		
-		<p>
-			<input type="text" name="name" placeholder="Name" value="@form("name").value">
-		</p>
-		<p>
-			<input type="email" name="email" placeholder="Email" value="@form("email").value">
-		</p>
-		<p>
-			<input type="password" name="password" placeholder="Password">
-		</p>
+
+        @input("name"){required type='text' placeholder='Name'}
+        @input("email"){required type='email' placeholder='Email'}
+        @input("password"){required type='password' placeholder='Password'}
+        @input("organization"){required type='text' placeholder='Organization'}
 		<p>
 			<button type="submit">Register</button>
 		</p>
 	}
+}
+
+@input(name:String)(atts:Html) = {
+    @for(error <- form(name).errors) {
+        <p>@error.message</p>
+    }
+    <p>
+        <input name="@name" value="@form(name).value" @atts>
+    </p>
 }
