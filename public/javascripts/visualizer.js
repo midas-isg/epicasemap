@@ -667,6 +667,8 @@ visualizer.js
 			thisMap = this;
 		
 		function appendColorSelector(selectorID) {
+			var i;
+
 			for(i = 0; i < thisMap.colors.length; i++) {
 				$("#color-selector-" + selectorID).append("<div id='color-" + i + "' class='ramp'></div>");
 				svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -689,6 +691,8 @@ visualizer.js
 		}
 		
 		function appendSeriesSelector(selectorID) {
+			var i;
+
 			if(selectorID >= thisMap.uiSettings.series.length) {
 				selectorID = thisMap.uiSettings.series.length;
 				thisMap.uiSettings.series.push({ color: 0, index: thisMap.seriesList[0].id });
@@ -710,10 +714,12 @@ visualizer.js
 			
 			$("#series-" + selectorID).change(function() {
 				var id = $(this).val(),
-				l,
 				k = $(this).attr("id").split("-")[1];
 console.log("series " + k + ": " + id);
-				$("#toggle-cumulative-button").click();
+
+				if(thisMap.displayCumulativeValues) {
+					$("#toggle-cumulative-button").click();
+				}
 
 				thisMap.uiSettings.series[k].index = id;
 				thisMap.seriesToLoad.push(id);
@@ -734,22 +740,27 @@ console.log("series " + k + ": " + id);
 	MagicMap.prototype.popSeries = function() {
 		if(DEBUG) { console.log("[DEBUG] called popSeries()"); }
 		
-		var selectorID = $("#series-options").children().last().index();
+		var thisMap = this,
+			selectorID = $("#series-options").children().last().index();
 		
 		$("#series-" + selectorID).parent().remove();
 		
 		this.detailChart.series[selectorID].remove();
 		this.masterChart.series[selectorID].remove();
-		this.dataset.splice(selectorID, 1);
+		this.dataset.pop();
 		this.displaySet.pop();
 
 		if(this.choroplethSeriesIndex >= this.dataset.length) {
 			this.setChoroplethSeriesIndex(this.dataset.length - 1);
 		}
-		
-		this.heat[(selectorID << 1)].setLatLngs([]);
-		this.heat[(selectorID << 1) + 1].setLatLngs([]);
-		
+
+		(function removeHeat(selectorIndex){
+			thisMap.heat[(selectorIndex << 1) + 1].onRemove(thisMap.map);
+			thisMap.heat[selectorIndex << 1].onRemove(thisMap.map);
+			thisMap.heat.splice((selectorIndex << 1) + 1, 1);
+			thisMap.heat.splice((selectorIndex << 1), 1);
+		})(selectorID);
+
 		this.uiSettings.series.pop();
 		
 		return;
@@ -1072,7 +1083,7 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 						}
 						
 						if(largestConcentration < temp) {
-							largestConcentration = temp
+							largestConcentration = temp;
 							thisMap.mostConcentratedFrame = i;
 						}
 					}
@@ -1466,7 +1477,7 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 								}
 
 								MAGIC_MAP.setChoroplethSeriesIndex(event.currentTarget.index);
-								console.log(event.currentTarget.checkbox.checked);
+								//console.log(event.currentTarget.checkbox.checked);
 
 								return;
 							}

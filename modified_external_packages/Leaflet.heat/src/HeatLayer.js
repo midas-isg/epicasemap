@@ -76,7 +76,8 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
     },
 
     onRemove: function (map) {
-        map.getPanes().overlayPane.removeChild(this._canvas);
+		//console.log(this._canvas);
+		document.getElementById("heat-layer-group").removeChild(this._canvas);
 
         map.off('moveend', this._reset, this);
 
