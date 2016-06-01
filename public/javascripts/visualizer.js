@@ -1463,19 +1463,13 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 								return;
 							},
 							checkboxClick: function(event) {
-								var parentElement = event.currentTarget.checkbox.parentElement,
-									i;
+								var i;
 
-								for(i = 1; i < parentElement.children.length; i++) {
-									if(parentElement.children[i] !== event.currentTarget.checkbox) {
-										parentElement.children[i].checked = false;
-									}
-									else {
-										//somehow this is overwritten after callback...
-										//parentElement.children[i].checked = true;
-									}
+								for(i = 0; i < MAGIC_MAP.masterChart.series.length; i++) {
+									MAGIC_MAP.masterChart.series[i].select(false);
 								}
 
+								MAGIC_MAP.masterChart.series[event.currentTarget.index].select(true);
 								MAGIC_MAP.setChoroplethSeriesIndex(event.currentTarget.index);
 								//console.log(event.currentTarget.checkbox.checked);
 
@@ -1865,8 +1859,9 @@ console.log((endFrame - startFrame) + " frames");
 					this.heat[(setID << 1) + 1].setLatLngs([], this.showNumbers);
 				}
 				else {
-					this.heat[setID << 1].setLatLngs(this.displaySet[setID].visiblePoints, this.showNumbers);
-					
+					this.heat[setID << 1].setLatLngs(this.displaySet[setID].visiblePoints,
+						(this.showNumbers && (setID !== this.choroplethSeriesIndex)));
+
 					if(this.showSecondary) {
 						this.heat[(setID << 1) + 1].setLatLngs(this.displaySet[setID].secondValues, this.showNumbers);
 					}
