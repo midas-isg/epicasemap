@@ -69,7 +69,6 @@ visualizer.js
 		
 		this.showDetailsGraph = false;
 		this.showSecondary = false;
-		this.showNumbers = false;
 		
 		this.playBack = false;
 		this.displaySet = [];
@@ -184,10 +183,20 @@ visualizer.js
 
 			function getStyle(feature) {
 				var seriesIndex = thisMap.choroplethSeriesIndex,
-					alsId = feature.properties.ALS_ID,
-					//choroplethValue = thisMap.choroplethValues.current[alsId],
-					choroplethValue = thisMap.choroplethValues.visible[alsId],
-					maxValue = thisMap.dataset[seriesIndex].maxOccurrenceValue;
+					alsId,
+					choroplethValue,
+					maxValue;
+
+				if(thisMap.choroplethSeriesIndex === -1) {
+					return {
+						opacity: 0.0,
+						fillOpacity: 0.0
+					};
+				}
+
+				alsId = feature.properties.ALS_ID;
+				choroplethValue = thisMap.choroplethValues.visible[alsId];
+				maxValue = thisMap.dataset[seriesIndex].maxOccurrenceValue;
 
 				if(thisMap.displayCumulativeValues) {
 					choroplethValue = thisMap.choroplethValues.cumulative[alsId];
@@ -530,13 +539,6 @@ visualizer.js
 			return;
 		});
 		
-		$("#toggle-numbers-button").click(function() {
-			thisMap.showNumbers = !thisMap.showNumbers;
-			thisMap.packHeat();
-			
-			return;
-		});
-		
 		$("#step-forward-button").click(function() {
 			thisMap.playBack = true;
 			thisMap.playBuffer(thisMap.startFrame, thisMap.endFrame);
@@ -554,7 +556,13 @@ visualizer.js
 			
 			return;
 		});
-		
+
+		$("#disable-choropleth").click(function() {
+			thisMap.setChoroplethSeriesIndex(-1);
+
+			return;
+		});
+
 		$("#remove-series-button").click(function() {
 			thisMap.popSeries();
 			
@@ -701,20 +709,45 @@ visualizer.js
 			thisMap.displaySet.push({visiblePoints: [], secondValues: [], hide: false});
 			
 			$("#series-options").append(
-				"<div style='clear: both;'>" +
+				"<div class='extra-bottom-space' style='clear: both;'>" +
 					"<h5 class='no-margin'>Select series " + String.fromCharCode(selectorID + 65) + "</h5>" +
 					"<select id='series-" + selectorID + "' style='max-width: 100%;'>" + "</select>" +
 					"<div id='color-selector-" + selectorID + "'></div>" +
+					"<div style='clear: both;'>" +
+						"<div style='display: inline-block;'>" +
+							"<input id='choropleth-series-" + selectorID + "' type='radio' name='choropleth-selection' value='" + selectorID + "'>" +
+							"<h5 class='no-margin' style='display: inline; margin-left: 5px;'>View choropleth</h5>" +
+						"</div>" +
+						"<div style='display: inline-block; float: right;'>" +
+							"<input id='display-numerical-" + selectorID + "' type='checkbox'>" +
+							"<h5 class='no-margin' style='display: inline; margin-left: 5px;'>Display <strong>#</strong>s</h5>" +
+						"</div>" +
+					"</div>" +
 				"</div>"
 			);
 			
 			for(i = 0; i < thisMap.seriesList.length; i++) {
 				$("#series-" + selectorID).append("<option value='" + thisMap.seriesList[i].id + "'>" + thisMap.seriesList[i].title +"</option>");
 			}
-			
+
+			$("#choropleth-series-" + selectorID).click(function() {
+				var id = parseInt($(this).val());
+
+				thisMap.setChoroplethSeriesIndex(id);
+
+				return;
+			});
+
+			$("#display-numerical-" + selectorID).change(function() {
+				thisMap.displaySet[selectorID].showNumbers = this.checked;
+				thisMap.packHeat();
+
+				return;
+			});
+
 			$("#series-" + selectorID).change(function() {
 				var id = $(this).val(),
-				k = $(this).attr("id").split("-")[1];
+					k = $(this).attr("id").split("-")[1];
 console.log("series " + k + ": " + id);
 
 				if(thisMap.displayCumulativeValues) {
@@ -1243,13 +1276,13 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 			// create a detail chart referenced by a variable
 			MAGIC_MAP.detailChart = $('#detail-container').highcharts({
 				chart: {
-					marginBottom: 110,//120,
-					reflow: false,
-					marginLeft: 50,
+					marginBottom: 110,
+					//marginLeft: 50,
 					//marginRight: 20,
+					reflow: false,
 					backgroundColor: "rgba(128, 128, 128, 0.1)", //null,
 					style: {
-						//position: 'absolute'
+						position: 'absolute'
 					}
 				},
 				colors: seriesColors, //MAGIC_MAP.colors,
@@ -1461,22 +1494,9 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 								MAGIC_MAP.packHeat();
 								
 								return;
-							},
-							checkboxClick: function(event) {
-								var i;
-
-								for(i = 0; i < MAGIC_MAP.masterChart.series.length; i++) {
-									MAGIC_MAP.masterChart.series[i].select(false);
-								}
-
-								MAGIC_MAP.masterChart.series[event.currentTarget.index].select(true);
-								MAGIC_MAP.setChoroplethSeriesIndex(event.currentTarget.index);
-								//console.log(event.currentTarget.checkbox.checked);
-
-								return;
 							}
 						},
-						showCheckbox: true
+						showCheckbox: false
 					}
 				},
 				series: dataSeries,
@@ -1855,18 +1875,18 @@ console.log((endFrame - startFrame) + " frames");
 			}
 			else {
 				if(this.displaySet[setID].hide) {
-					this.heat[(setID << 1)].setLatLngs([], this.showNumbers);
-					this.heat[(setID << 1) + 1].setLatLngs([], this.showNumbers);
+					this.heat[(setID << 1)].setLatLngs([], this.displaySet[setID].showNumbers);
+					this.heat[(setID << 1) + 1].setLatLngs([], this.displaySet[setID].showNumbers);
 				}
 				else {
 					this.heat[setID << 1].setLatLngs(this.displaySet[setID].visiblePoints,
-						(this.showNumbers && (setID !== this.choroplethSeriesIndex)));
+						(this.displaySet[setID].showNumbers && (setID !== this.choroplethSeriesIndex)));
 
 					if(this.showSecondary) {
-						this.heat[(setID << 1) + 1].setLatLngs(this.displaySet[setID].secondValues, this.showNumbers);
+						this.heat[(setID << 1) + 1].setLatLngs(this.displaySet[setID].secondValues, this.displaySet[setID].showNumbers);
 					}
 					else {
-						this.heat[(setID << 1) + 1].setLatLngs([], this.showNumbers);
+						this.heat[(setID << 1) + 1].setLatLngs([], this.displaySet[setID].showNumbers);
 					}
 				}
 			}
