@@ -1,4 +1,5 @@
-@import play.api.Play.current
+@import play.api.Play.current;
+@import play.api.Play
 
 <!DOCTYPE html>
 <html>
@@ -92,7 +93,7 @@
   <div class="swagger-ui-wrap">
     <a id="logo" href="http://swagger.io">API Documentation</a>
     <form id='api_selector'>
-      <div class='input'><input placeholder="http://example.com/api" id="input_baseUrl" name="baseUrl" type="text" hidden="true"/></div>
+      <div class='input'><input value='@Play.configuration.getString("swagger.api.basepath")' placeholder="http://example.com/api" id="input_baseUrl" name="baseUrl" type="text" hidden="true"/></div>
       <div class='input'><input placeholder="api_key" id="input_apiKey" name="apiKey" type="text" hidden="true"/></div>
       @*<div class='input' hidden="true"><a id="explore" href="#" >Explore</a></div>*@
     </form>

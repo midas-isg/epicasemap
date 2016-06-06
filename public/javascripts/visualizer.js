@@ -13,23 +13,23 @@ visualizer.js
 			svg,
 			thisMap = this,
 			mapID;
-		
+
 		this.mapTypes = [
 			"financialtimes.map-w7l4lfi8",
 			"mapbox.streets",
 			"mapbox.dark"
 		];
-		
+
 		mapID = getURLParameterByName("map");
-		if(!mapID) {
+		if (!mapID) {
 			mapID = 0;
 		}
 		temp = this.mapTypes[mapID];
-		
+
 		L.mapbox.accessToken = 'pk.eyJ1IjoidHBzMjMiLCJhIjoiVHEzc0tVWSJ9.0oYZqcggp29zNZlCcb2esA';
-		this.map = L.mapbox.map( 'map', temp,
-			{ worldCopyJump: true, bounceAtZoomLimits: false, zoom: 2, minZoom: 2, center: [0, 0] });
-		
+		this.map = L.mapbox.map('map', temp,
+			{worldCopyJump: true, bounceAtZoomLimits: false, zoom: 2, minZoom: 2, center: [0, 0]});
+
 		this.heat = []; //null;
 		this.paused = false;
 		this.frame;
@@ -61,15 +61,14 @@ visualizer.js
 			dataGapMethod: "bridge" //zero, show, bridge
 		};
 		
-		this.allContainedBox = [[], []];
-		
+		this.allContainedBox = [[90.0, 180.0], [-90.0, -180.0]];
+
 		this.seriesList = [];
 		this.seriesDescriptions = {};
 		this.seriesToLoad = [];
 		
-		this.showControlPanel = false;
+		this.showDetailsGraph = false;
 		this.showSecondary = false;
-		this.showNumbers = false;
 		
 		this.playBack = false;
 		this.displaySet = [];
@@ -87,9 +86,10 @@ visualizer.js
 		$("#map-selector").val(mapID);
 		
 		$("#map-selector").change(function() {
+			thisMap.uiSettings.mapUnderlay = $(this).val();
 			sessionStorage.uiSettings = JSON.stringify(thisMap.uiSettings);
 			
-			return location.assign(CONTEXT + "?id=" + thisMap.vizID + "&map=" + $(this).val());
+			return location.assign(CONTEXT + "/visualizer?id=" + thisMap.vizID + "&map=" + $(this).val());
 		});
 		
 		
@@ -104,6 +104,8 @@ visualizer.js
 		
 		this.uiSettings.colorPalette = 0;
 		this.colors = this.colorSet[this.uiSettings.colorPalette];
+		this.choroplethSeriesIndex = 0;
+		this.displayCumulativeValues = false;
 		
 		for(i = 0; i < this.colorSet.length; i++) {
 			svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -125,29 +127,198 @@ visualizer.js
 			}
 		}
 		$("#palette-0").addClass("selected");
+
+		(function addChoroplethLayers() {
+			var lsStatesURL = "http://betaweb.rods.pitt.edu/ls/api/locations/1216?maxExteriorRings=0",
+				encodedStatesURL = encodeURIComponent(lsStatesURL),
+				jsonRoute = CONTEXT + "/api/get-json/" + encodedStatesURL,
+				popup = new L.Popup({autoPan: false});
+
+			thisMap.choroplethValues = {current: {}, visible: {}, cumulative: {}};
+
+				$.ajax({
+				url: jsonRoute,
+				success: function(result, status, xhr) {
+					var i;
+
+					console.log(result);
+					console.log(status);
+					console.log(xhr);
+
+					for(i = 0; i < US_STATES.features.length; i++) {
+						thisMap.choroplethValues.current[US_STATES.features[i].properties.ALS_ID] = 0;
+						thisMap.choroplethValues.visible[US_STATES.features[i].properties.ALS_ID] = 0;
+						thisMap.choroplethValues.cumulative[US_STATES.features[i].properties.ALS_ID] = 0;
+					}
+
+					thisMap.choroplethLayer = L.geoJson(US_STATES, {
+						style: getStyle,
+						onEachFeature: onEachFeature
+					});
+					thisMap.choroplethLayer.addTo(thisMap.map);
+
+					thisMap.updateChoroplethLayer = function() {
+						thisMap.choroplethLayer.eachLayer(function(layer) {
+							layer.setStyle(getStyle(layer.feature));
+
+							return;
+						});
+
+						//TODO: set popup text content here
+
+						return;
+					};
+
+					return;
+				},
+				error: function(xhr, status, error) {
+					console.log(xhr);
+					console.log(status);
+					console.log(error);
+					alert(xhr + "\n" + status + "\n" + error);
+
+					return;
+				}
+			});
+
+			function getStyle(feature) {
+				var seriesIndex = thisMap.choroplethSeriesIndex,
+					alsId,
+					choroplethValue,
+					maxValue;
+
+				if(thisMap.choroplethSeriesIndex === -1) {
+					return {
+						opacity: 0.0,
+						fillOpacity: 0.0
+					};
+				}
+
+				alsId = feature.properties.ALS_ID;
+				choroplethValue = thisMap.choroplethValues.visible[alsId];
+				maxValue = thisMap.dataset[seriesIndex].maxOccurrenceValue;
+
+				if(thisMap.displayCumulativeValues) {
+					choroplethValue = thisMap.choroplethValues.cumulative[alsId];
+					maxValue = thisMap.dataset[seriesIndex].maxCumulativeChoroplethValue;
+				}
+
+				return {
+					weight: 2,
+					opacity: 0.4,
+					color: getBorderColor(),
+					fillOpacity: getOpacity(choroplethValue, maxValue),
+					fillColor: getFillColor()
+				};
+			}
+
+			function getOpacity(value, maxValue) {
+				return ((value === undefined ? 0: value) / maxValue * 0.6);
+			}
+
+			function getBorderColor() {
+				return thisMap.colors[thisMap.uiSettings.series[thisMap.choroplethSeriesIndex].color];
+			}
+
+			function getFillColor() {
+				return thisMap.colors[thisMap.uiSettings.series[thisMap.choroplethSeriesIndex].color];
+			}
+
+			function onEachFeature(feature, layer) {
+				layer.on({
+					//mousemove: mousemove,
+					//mouseout: mouseout,
+					click: click
+				});
+			}
+
+			function click(e) {
+				var layer = e.target,
+					popupText = '<div class="marker-title">' + layer.feature.properties.NAME + '</div>';
+
+				if(thisMap.choroplethValues.cumulative[layer.feature.properties.ALS_ID] == null) {
+					popupText += '<div>total cases beyond scope of data</div>';
+				}
+				else {
+					popupText += '<div>' + thisMap.choroplethValues.cumulative[layer.feature.properties.ALS_ID] + ' total cases' + '</div>';
+				}
+
+				//popupText += '<div><var>(+' + thisMap.choroplethValues.current[layer.feature.properties.ALS_ID] + ' new cases)' + '</var></div>' +
+				popupText += '<div><var>(+' + thisMap.choroplethValues.visible[layer.feature.properties.ALS_ID] + ' latest cases)' + '</var></div>' +
+					'<div><em>' + thisMap.seriesList[thisMap.choroplethSeriesIndex].title + '</em></div>';
+
+				//thisMap.map.fitBounds(e.target.getBounds());
+
+				popup.setLatLng(e.latlng);
+				popup.setContent(popupText);
+
+				if (!popup._map) {
+					popup.openOn(thisMap.map);
+				}
+
+				if(!L.Browser.ie && !L.Browser.opera) {
+					layer.bringToFront();
+				}
+
+				return;
+			}
+
+			function mousemove(e) {
+				var layer = e.target;
+
+				popup.setLatLng(e.latlng);
+				popup.setContent('<div class="marker-title">' + layer.feature.properties.NAME + '</div>' +
+					thisMap.choroplethValues.cumulative[layer.feature.properties.ALS_ID] + ' cases');
+
+				if (!popup._map) {
+					popup.openOn(thisMap.map);
+				}
+				//window.clearTimeout(closeTooltip);
+
+				// highlight feature
+				layer.setStyle({
+					weight: 3,
+					opacity: 0.3,
+					fillOpacity: 0.9
+				});
+
+				if(!L.Browser.ie && !L.Browser.opera) {
+					layer.bringToFront();
+				}
+			}
+
+			function mouseout(e) {
+				thisMap.choroplethLayer.resetStyle(e.target);
+				closeTooltip = window.setTimeout(function () {
+					thisMap.map.closePopup();
+				}, 100);
+			}
+		})();
 		
 		return this;
 	}
 	
 	MagicMap.prototype.saveVisualization = function() {
 		if(DEBUG) { console.log("[DEBUG] called saveVisualization()"); }
+		var thisMap = MAGIC_MAP,
+			URL = CONTEXT + "/api/vizs/" + thisMap.vizID + "/ui-setting",
+			bounds = thisMap.map.getBounds();
 		
-		var URL = CONTEXT + "/api/vizs/" + this.vizID + "/ui-setting",
-			bounds = this.map.getBounds();
-		
-		if(this.vizID) {
-			this.uiSettings.bBox[0][0] = bounds.getSouth();
-			this.uiSettings.bBox[0][1] = bounds.getWest();
-			this.uiSettings.bBox[1][0] = bounds.getNorth();
-			this.uiSettings.bBox[1][1] = bounds.getEast();
+		if(thisMap.vizID) {
+			thisMap.uiSettings.bBox[0][0] = bounds.getSouth();
+			thisMap.uiSettings.bBox[0][1] = bounds.getWest();
+			thisMap.uiSettings.bBox[1][0] = bounds.getNorth();
+			thisMap.uiSettings.bBox[1][1] = bounds.getEast();
 
 			$.ajax({
 				url: URL,
 				type: "PUT",
-				data: JSON.stringify(this.uiSettings),
+				data: JSON.stringify(thisMap.uiSettings),
 				contentType: "application/json; charset=UTF-8",
 				success: function(result, status, xhr) {
 					alert("Save successful");
+					sessionStorage.removeItem("uiSettings");
+
 					return;
 				},
 				error: function(xhr, status, error) {
@@ -192,6 +363,11 @@ visualizer.js
 					}
 					else {
 						thisMap.uiSettings = JSON.parse(result.result.uiSetting);
+
+						if(thisMap.uiSettings.mapUnderlay) {
+							sessionStorage.uiSettings = JSON.stringify(thisMap.uiSettings);
+							return location.assign(CONTEXT + "/visualizer?id=" + thisMap.vizID + "&map=" + thisMap.uiSettings.mapUnderlay);
+						}
 						
 						thisMap.uiSettings.daysPerFrame = (thisMap.uiSettings.daysPerFrame | 1);
 						
@@ -259,7 +435,7 @@ visualizer.js
 		if(DEBUG) { console.log("[DEBUG] called initialize()"); }
 		
 		var thisMap = this,
-		i;
+			i;
 		
 		document.getElementById('body').onkeyup = this.handleInput;
 		this.loopIntervalID = setInterval(this.loop, 0);
@@ -312,10 +488,11 @@ visualizer.js
 		
 		$("#toggle-details-button").click(function() {
 			var i;
-			
+
+			thisMap.showDetailsGraph = !thisMap.showDetailsGraph;
 			$("#detail-container *").toggle();
-			
-			if($("#detail-container").css("pointer-events") === "auto") {
+
+			if(thisMap.showDetailsGraph) {
 				$("#detail-container").css("pointer-events", "none");
 			}
 			else {
@@ -328,16 +505,35 @@ visualizer.js
 			
 			return;
 		});
-		
-		$("#toggle-secondary-button").click(function() {
-			thisMap.showSecondary = !thisMap.showSecondary;
+
+		$("#toggle-cumulative-button").click(function() {
+			var i;
+			thisMap.displayCumulativeValues = !thisMap.displayCumulativeValues;
+
+			if(thisMap.displayCumulativeValues) {
+				$(this).addClass("btn-danger");
+
+				for(i = 0; i < thisMap.dataset.length; i++) {
+					thisMap.masterChart.series[i].setData(thisMap.dataset[i].seriesAggregate, true, false, false);
+				}
+			}
+			else {
+				$(this).removeClass("btn-danger");
+
+				for(i = 0; i < thisMap.dataset.length; i++) {
+					thisMap.masterChart.series[i].setData(thisMap.dataset[i].frameAggregate, true, false, false);
+				}
+			}
+
+			thisMap.playBuffer(thisMap.frame, thisMap.endFrame);
+			thisMap.frame--;
 			thisMap.packHeat();
-			
+
 			return;
 		});
-		
-		$("#toggle-numbers-button").click(function() {
-			thisMap.showNumbers = !thisMap.showNumbers;
+
+		$("#toggle-secondary-button").click(function() {
+			thisMap.showSecondary = !thisMap.showSecondary;
 			thisMap.packHeat();
 			
 			return;
@@ -360,7 +556,13 @@ visualizer.js
 			
 			return;
 		});
-		
+
+		$("#disable-choropleth").click(function() {
+			thisMap.setChoroplethSeriesIndex(-1);
+
+			return;
+		});
+
 		$("#remove-series-button").click(function() {
 			thisMap.popSeries();
 			
@@ -394,11 +596,11 @@ visualizer.js
 		}
 		
 		$("#render-delay").change(function() {
-			if($(this).val() < 0) {
-				$(this).val(0);
+			if(parseInt(this.value) < parseInt(this.min)) {
+				this.value = this.min;
 			}
 			
-			thisMap.uiSettings.renderDelay = $(this).val();
+			thisMap.uiSettings.renderDelay = this.value;
 			
 			return;
 		});
@@ -428,8 +630,7 @@ visualizer.js
 		});
 		$("#point-decay").val(thisMap.uiSettings.pointDecay);
 		$("#point-decay").change();
-		
-		
+
 		$("#data-gap-handler").change(function() {
 			var zeroSeries = [],
 				i,
@@ -451,8 +652,7 @@ visualizer.js
 			
 			return;
 		});
-		
-		
+
 		$("#save-button").click(function() {
 			thisMap.saveVisualization();
 			return;
@@ -475,6 +675,8 @@ visualizer.js
 			thisMap = this;
 		
 		function appendColorSelector(selectorID) {
+			var i;
+
 			for(i = 0; i < thisMap.colors.length; i++) {
 				$("#color-selector-" + selectorID).append("<div id='color-" + i + "' class='ramp'></div>");
 				svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -497,6 +699,8 @@ visualizer.js
 		}
 		
 		function appendSeriesSelector(selectorID) {
+			var i;
+
 			if(selectorID >= thisMap.uiSettings.series.length) {
 				selectorID = thisMap.uiSettings.series.length;
 				thisMap.uiSettings.series.push({ color: 0, index: thisMap.seriesList[0].id });
@@ -505,28 +709,57 @@ visualizer.js
 			thisMap.displaySet.push({visiblePoints: [], secondValues: [], hide: false});
 			
 			$("#series-options").append(
-				"<div style='clear: both;'>" +
+				"<div class='extra-bottom-space' style='clear: both;'>" +
 					"<h5 class='no-margin'>Select series " + String.fromCharCode(selectorID + 65) + "</h5>" +
 					"<select id='series-" + selectorID + "' style='max-width: 100%;'>" + "</select>" +
 					"<div id='color-selector-" + selectorID + "'></div>" +
+					"<div style='clear: both;'>" +
+						"<div style='display: inline-block;'>" +
+							"<input id='choropleth-series-" + selectorID + "' type='radio' name='choropleth-selection' value='" + selectorID + "'>" +
+							"<h5 class='no-margin' style='display: inline; margin-left: 5px;'>View choropleth</h5>" +
+						"</div>" +
+						"<div style='display: inline-block; float: right;'>" +
+							"<input id='display-numerical-" + selectorID + "' type='checkbox'>" +
+							"<h5 class='no-margin' style='display: inline; margin-left: 5px;'>Display <strong>#</strong>s</h5>" +
+						"</div>" +
+					"</div>" +
 				"</div>"
 			);
 			
 			for(i = 0; i < thisMap.seriesList.length; i++) {
 				$("#series-" + selectorID).append("<option value='" + thisMap.seriesList[i].id + "'>" + thisMap.seriesList[i].title +"</option>");
 			}
-			
+
+			$("#choropleth-series-" + selectorID).click(function() {
+				var id = parseInt($(this).val());
+
+				thisMap.setChoroplethSeriesIndex(id);
+
+				return;
+			});
+
+			$("#display-numerical-" + selectorID).change(function() {
+				thisMap.displaySet[selectorID].showNumbers = this.checked;
+				thisMap.packHeat();
+
+				return;
+			});
+
 			$("#series-" + selectorID).change(function() {
 				var id = $(this).val(),
-				l,
-				k = $(this).attr("id").split("-")[1];
+					k = $(this).attr("id").split("-")[1];
 console.log("series " + k + ": " + id);
-				
+
+				if(thisMap.displayCumulativeValues) {
+					$("#toggle-cumulative-button").click();
+				}
+
 				thisMap.uiSettings.series[k].index = id;
-				
 				thisMap.seriesToLoad.push(id);
 				thisMap.load(thisMap.seriesToLoad[0], k);
-				
+				thisMap.displaySet[k].hide = false;
+				thisMap.showDetailsGraph = false;
+
 				return;
 			});
 		}
@@ -540,18 +773,27 @@ console.log("series " + k + ": " + id);
 	MagicMap.prototype.popSeries = function() {
 		if(DEBUG) { console.log("[DEBUG] called popSeries()"); }
 		
-		var selectorID = $("#series-options").children().last().index();
+		var thisMap = this,
+			selectorID = $("#series-options").children().last().index();
 		
 		$("#series-" + selectorID).parent().remove();
 		
 		this.detailChart.series[selectorID].remove();
 		this.masterChart.series[selectorID].remove();
-		this.dataset.splice(selectorID, 1);
+		this.dataset.pop();
 		this.displaySet.pop();
-		
-		this.heat[(selectorID << 1)].setLatLngs([]);
-		this.heat[(selectorID << 1) + 1].setLatLngs([]);
-		
+
+		if(this.choroplethSeriesIndex >= this.dataset.length) {
+			this.setChoroplethSeriesIndex(this.dataset.length - 1);
+		}
+
+		(function removeHeat(selectorIndex){
+			thisMap.heat[(selectorIndex << 1) + 1].onRemove(thisMap.map);
+			thisMap.heat[selectorIndex << 1].onRemove(thisMap.map);
+			thisMap.heat.splice((selectorIndex << 1) + 1, 1);
+			thisMap.heat.splice((selectorIndex << 1), 1);
+		})(selectorID);
+
 		this.uiSettings.series.pop();
 		
 		return;
@@ -619,14 +861,14 @@ console.log("series " + k + ": " + id);
 						minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.01, radius: 20,
 						gradient: this.setGradient[selectorID]
 					}
-				).addTo(this.map));
+				).addTo(this.map, true));
 				
 				this.heat.push(L.heatLayer(this.displaySet[selectorID].secondValues,
 					{
 						minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.01, radius: 30,
 						gradient: this.setGradient[selectorID] //this.debugColor
 					}
-				).addTo(this.map));
+				).addTo(this.map, true));
 			}
 			
 			this.setGradient[selectorID] = {0.0: this.colors[colorID]};
@@ -667,10 +909,12 @@ console.log("series " + k + ": " + id);
 			currentDataset = {
 				seriesID: seriesID,
 				title: "title",
-				timeGroup: [{point: [], date: null}],
-				maxValue: 0,
+				timeGroup: [{point: [], date: null, cumulativeValues: {}}],
+				maxOccurrenceValue: 0,
+				maxCumulativeChoroplethValue: 0,
 				standardDeviation: 0,
 				frameAggregate: [0],
+				seriesAggregate: [0],
 				frameOffset: 0
 			},
 			thisMap = this;
@@ -701,7 +945,8 @@ console.log("series " + k + ": " + id);
 					sumArray,
 					pointLifeSpan = Math.ceil(1 / thisMap.uiSettings.pointDecay),
 					datasetAverage = 0,
-					datasetVariance = 0;
+					datasetVariance = 0,
+					lastChoroplethValueFrame = {};
 				
 				thisMap.zeroTime(lastDate);
 				
@@ -719,28 +964,48 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 						deltaTime = inputDate.valueOf() - lastDate.valueOf();
 						
 						while(deltaTime >= threshold) {
-							currentDataset.timeGroup.push({point: [], date: null});
+							currentDataset.timeGroup.push({point: [], date: null, cumulativeValues: {}});
 							frame++;
 							filler++;
 							emptyDate = new Date(emptyDate.valueOf() + threshold);
 							currentDataset.timeGroup[frame].date = emptyDate;
 							currentDataset.frameAggregate[frame] = null;
-							
+							currentDataset.seriesAggregate[frame] = currentDataset.seriesAggregate[frame - 1] || 0;
+
+							for(j in currentDataset.timeGroup[frame - 1].cumulativeValues) {
+								currentDataset.timeGroup[frame].cumulativeValues[j] = currentDataset.timeGroup[frame - 1].cumulativeValues[j];
+							}
+
 							deltaTime -= threshold;
 						}
 						
 						datasetAverage += result.results[i].value;
 						
-						currentDataset.timeGroup[frame].point.push({latitude: result.results[i].latitude, longitude: result.results[i].longitude, value: result.results[i].value, secondValue: result.results[i].secondValue});
+						currentDataset.timeGroup[frame].point.push({latitude: result.results[i].latitude, longitude: result.results[i].longitude, value: result.results[i].value, secondValue: result.results[i].secondValue, alsId: result.results[i].alsId});
 						currentDataset.timeGroup[frame].date = inputDate;
-						
+
+						if(result.results[i].alsId != null) {
+							if(lastChoroplethValueFrame[result.results[i].alsId] != null) {
+								currentDataset.timeGroup[frame].cumulativeValues[result.results[i].alsId] = currentDataset.timeGroup[lastChoroplethValueFrame[result.results[i].alsId]].cumulativeValues[result.results[i].alsId];
+							}
+							else {
+								currentDataset.timeGroup[frame].cumulativeValues[result.results[i].alsId] = 0;
+							}
+							currentDataset.timeGroup[frame].cumulativeValues[result.results[i].alsId] += result.results[i].value;
+							lastChoroplethValueFrame[result.results[i].alsId] = frame;
+							if(currentDataset.maxCumulativeChoroplethValue < currentDataset.timeGroup[frame].cumulativeValues[result.results[i].alsId]) {
+								currentDataset.maxCumulativeChoroplethValue = currentDataset.timeGroup[frame].cumulativeValues[result.results[i].alsId];
+							}
+						}
+
 						currentDataset.frameAggregate[frame] += result.results[i].value;
-						
-						if(currentDataset.maxValue < result.results[i].value) {
-							currentDataset.maxValue = result.results[i].value;
+						currentDataset.seriesAggregate[frame] += result.results[i].value;
+
+						if(currentDataset.maxOccurrenceValue < result.results[i].value) {
+							currentDataset.maxOccurrenceValue = result.results[i].value;
 							
-							if(thisMap.absoluteMaxValue < currentDataset.maxValue) {
-								thisMap.absoluteMaxValue = currentDataset.maxValue;
+							if(thisMap.absoluteMaxValue < currentDataset.maxOccurrenceValue) {
+								thisMap.absoluteMaxValue = currentDataset.maxOccurrenceValue;
 							}
 						}
 						
@@ -750,7 +1015,7 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 						skipped++;
 					}
 				}
-				
+
 				console.log("Loaded " + (result.results.length - skipped) + " entries for " + currentDataset.title);
 				
 				if(skipped > 0) {
@@ -774,7 +1039,7 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 				}
 				datasetVariance /= result.results.length;
 				currentDataset.standardDeviation = Math.sqrt(datasetVariance);
-				
+
 				thisMap.seriesToLoad.shift();
 				if(thisMap.seriesToLoad.length === 0) {
 					thisMap.earliestDate = thisMap.dataset[0].timeGroup[0].date;
@@ -788,11 +1053,6 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 						if(thisMap.latestDate < thisMap.dataset[i].timeGroup[thisMap.dataset[i].timeGroup.length - 1].date) {
 							thisMap.latestDate = thisMap.dataset[i].timeGroup[thisMap.dataset[i].timeGroup.length - 1].date;
 						}
-						
-						thisMap.allContainedBox[0][0] = 90.0;
-						thisMap.allContainedBox[1][0] = -90.0;
-						thisMap.allContainedBox[0][1] = 180.0;
-						thisMap.allContainedBox[1][1] = -180.0;
 						
 						for(j = 0; j < thisMap.dataset[i].timeGroup.length; j++) {
 							for(k = 0; k < thisMap.dataset[i].timeGroup[j].point.length; k++) {
@@ -856,7 +1116,7 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 						}
 						
 						if(largestConcentration < temp) {
-							largestConcentration = temp
+							largestConcentration = temp;
 							thisMap.mostConcentratedFrame = i;
 						}
 					}
@@ -979,7 +1239,7 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 		}
 		
 			// create the detail chart
-		function createDetail(masterChart) {
+		function createDetailChart(masterChart) {
 			// prepare the detail chart
 			var detailSeries = [],
 				detailStart =  [],
@@ -1016,13 +1276,13 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 			// create a detail chart referenced by a variable
 			MAGIC_MAP.detailChart = $('#detail-container').highcharts({
 				chart: {
-					marginBottom: 110,//120,
-					reflow: false,
-					marginLeft: 50,
+					marginBottom: 110,
+					//marginLeft: 50,
 					//marginRight: 20,
+					reflow: false,
 					backgroundColor: "rgba(128, 128, 128, 0.1)", //null,
 					style: {
-						//position: 'absolute'
+						position: 'absolute'
 					}
 				},
 				colors: seriesColors, //MAGIC_MAP.colors,
@@ -1092,7 +1352,7 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 		}
 
 		// create the master chart
-		function createMaster() {
+		function createMasterChart() {
 			var i,
 				dataSeries = [];
 			
@@ -1105,12 +1365,12 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 									MAGIC_MAP.dataset[i].timeGroup[0].date.getUTCMonth(),
 									MAGIC_MAP.dataset[i].timeGroup[0].date.getUTCDate()),
 						connectNulls: true,
-						data: MAGIC_MAP.dataset[i].frameAggregate //y-value array
+						data: MAGIC_MAP.dataset[i].frameAggregate, //y-value array
+						selected: (i === 0)
 					}
 				);
 			}
 			
-			//TODO: hide/show displaySets that are toggled off/on via legend
 			MAGIC_MAP.masterChart = $('#master-container').highcharts({
 				chart: {
 					reflow: false,
@@ -1235,7 +1495,8 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 								
 								return;
 							}
-						}
+						},
+						showCheckbox: false
 					}
 				},
 				series: dataSeries,
@@ -1244,7 +1505,7 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 				}
 			},
 			function (masterChart) {
-				createDetail(masterChart);
+				createDetailChart(masterChart);
 			}).highcharts(); // return chart instance
 		}
 
@@ -1252,7 +1513,7 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 		var $container = $('#container');
 		
 		// create master and in its callback, create the detail chart
-		createMaster();
+		createMasterChart();
 		
 		//BONUS: transfer mouse events from detail container to map for all browsers
 		//$('#detail-container').mousedown(function(event) { event.stopImmediatePropagation(); return $('.leaflet-layer').mousedown(); });
@@ -1271,6 +1532,7 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 		var extremesObject = event.xAxis[0],
 			min = extremesObject.min,
 			max = extremesObject.max,
+			detailStart = [],
 			detailSeries = [],
 			xAxis = this.masterChart.xAxis[0],
 			minDate = new Date(extremesObject.min),
@@ -1278,7 +1540,7 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 			startFrame,
 			endFrame,
 			i;
-		
+
 		this.zeroTime(minDate);
 		this.zeroTime(maxDate);
 		
@@ -1287,7 +1549,7 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 		console.log("min date: " + minDate);
 		console.log("max: " + max);
 		console.log("max date: " + maxDate);
-		
+
 		for(i = 0; i < this.masterChart.series.length; i++) {
 			detailSeries.push({detailData: []});
 			
@@ -1366,6 +1628,13 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 			this.displaySet[i].visiblePoints.length = 0; //hopefully the old data is garbage collected!
 			this.displaySet[i].secondValues.length = 0;
 		}
+
+		/**/
+		for(i in this.choroplethValues.current) {
+			this.choroplethValues.current[i] = 0;
+			this.choroplethValues.visible[i] = 0;
+		}
+		/**/
 		
 		$("#playback-button").removeClass("disabled");
 		
@@ -1382,7 +1651,14 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 			dateString = null,
 			adjustedStart,
 			adjustedEnd;
-		
+
+		for(i in this.choroplethValues.current) {
+			this.choroplethValues.current[i] = 0;
+		}
+		for(i in this.choroplethValues.cumulative) {
+			this.choroplethValues.cumulative[i] = undefined;
+		}
+
 		if(this.reset) {
 			this.reset = false;
 			
@@ -1392,8 +1668,8 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 				this.displaySet[i].secondValues.length = 0;
 			}
 		}
-		
-		for(setID = 0; setID < this.displaySet.length; setID++) {
+
+		for(setID = 0; setID < /*this.displaySet.length*/ this.dataset.length; setID++) {
 			setFrame = this.frame - this.dataset[setID].frameOffset;
 			adjustedStart = startFrame - this.dataset[setID].frameOffset;
 			adjustedEnd = endFrame - this.dataset[setID].frameOffset;
@@ -1401,7 +1677,8 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 			if(this.dataset[setID].timeGroup[setFrame]) {
 				for(i = 0; i < this.dataset[setID].timeGroup[setFrame].point.length; i++) {
 					if((this.dataset[setID].timeGroup[setFrame].point[i].value > 0) &&
-					(this.dataset[setID].timeGroup[setFrame].point[i].latitude && this.dataset[setID].timeGroup[setFrame].point[i].longitude)) {
+						(this.dataset[setID].timeGroup[setFrame].point[i].latitude &&
+						this.dataset[setID].timeGroup[setFrame].point[i].longitude)) {
 						this.displaySet[setID].visiblePoints.push([this.dataset[setID].timeGroup[setFrame].point[i].latitude,
 							this.dataset[setID].timeGroup[setFrame].point[i].longitude,
 							0.7,
@@ -1414,12 +1691,34 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 							0.7,
 							-this.dataset[setID].timeGroup[setFrame].point[i].secondValue,
 							0]);
+
+						if(this.choroplethSeriesIndex === setID) {
+							this.choroplethValues.current[this.dataset[setID].timeGroup[setFrame].point[i].alsId] =
+								this.dataset[setID].timeGroup[setFrame].point[i].value;
+
+							if(this.dataset[setID].timeGroup[setFrame].point[i].value > 0) {
+								this.choroplethValues.visible[this.dataset[setID].timeGroup[setFrame].point[i].alsId] =
+									this.dataset[setID].timeGroup[setFrame].point[i].value;
+							}
+						}
 					}
 				}
-				
+
+				if(this.choroplethSeriesIndex === setID) {
+					for(i in this.choroplethValues.cumulative) {
+						if(!this.choroplethValues.cumulative[i]) {
+							this.choroplethValues.cumulative[i] = 0;
+						}
+					}
+					for(i in this.dataset[setID].timeGroup[setFrame].cumulativeValues) {
+						this.choroplethValues.cumulative[i] = this.dataset[setID].timeGroup[setFrame].cumulativeValues[i];
+					}
+				}
+
 				if(!dateString && ((this.frame % this.uiSettings.daysPerFrame) === 0)) {
 					this.masterChart.xAxis[0].removePlotLine('date-line');
-					
+					this.detailChart.xAxis[0].removePlotLine('date-line');
+
 					if(this.playBack) {
 						currentDate = this.dataset[setID].timeGroup[setFrame].date;
 						dateString = (currentDate.getUTCMonth() + 1) + '/' + currentDate.getUTCDate() + '/' + currentDate.getUTCFullYear();
@@ -1427,13 +1726,6 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 						
 					//console.log(currentDate);
 					//console.log(dateString);
-						
-						this.masterChart.xAxis[0].addPlotLine({
-							value: currentDate.valueOf(),
-							color: 'red',
-							width: 2,
-							id: 'date-line'
-						});
 					}
 					else if(this.dataset[setID].timeGroup[adjustedStart] && this.dataset[setID].timeGroup[adjustedEnd]) {
 						currentDate = this.dataset[setID].timeGroup[adjustedStart].date;
@@ -1442,6 +1734,20 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 						dateString += (currentDate.getUTCMonth() + 1) + '/' + currentDate.getUTCDate() + '/' + currentDate.getUTCFullYear();
 						$("#current-date").text(dateString);
 					}
+
+					this.masterChart.xAxis[0].addPlotLine({
+						value: currentDate.valueOf(),
+						color: 'red',
+						width: 2,
+						id: 'date-line'
+					});
+
+					this.detailChart.xAxis[0].addPlotLine({
+						value: currentDate.valueOf(),
+						color: 'red',
+						width: 2,
+						id: 'date-line'
+					});
 				}
 			}
 			
@@ -1496,6 +1802,12 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 			this.displaySet[i].visiblePoints.length = 0; //hopefully the old data is garbage collected!
 			this.displaySet[i].secondValues.length = 0;
 		}
+
+		/*
+		for(i in this.choroplethValues.current) {
+			this.choroplethValues.current[i] = 0;
+		}
+		*/
 		
 console.log((endFrame - startFrame) + " frames");
 		
@@ -1518,6 +1830,7 @@ console.log((endFrame - startFrame) + " frames");
 		var setID;
 		
 		for(setID = 0; setID < this.displaySet.length; setID++) {
+			//TODO: re-evaluate/refactor if logic here
 			if(!this.heat[setID << 1]) {
 				if(this.displaySet[setID].hide) {
 					this.heat.push(L.heatLayer([],
@@ -1525,14 +1838,14 @@ console.log((endFrame - startFrame) + " frames");
 							minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.01, radius: 20,
 							gradient: this.setGradient[setID]
 						}
-					).addTo(this.map));
+					).addTo(this.map, true));
 					
 					this.heat.push(L.heatLayer([],
 						{
 							minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.01, radius: 30,
 							gradient: this.setGradient[setID] //this.debugColor
 						}
-					).addTo(this.map));
+					).addTo(this.map, true));
 				}
 				else {
 					this.heat.push(L.heatLayer(this.displaySet[setID].visiblePoints,
@@ -1540,7 +1853,7 @@ console.log((endFrame - startFrame) + " frames");
 							minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.01, radius: 20,
 							gradient: this.setGradient[setID]
 						}
-					).addTo(this.map));
+					).addTo(this.map, true));
 					
 					if(this.showSecondary) {
 						this.heat.push(L.heatLayer(this.displaySet[setID].secondValues,
@@ -1548,7 +1861,7 @@ console.log((endFrame - startFrame) + " frames");
 								minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.01, radius: 30,
 								gradient: this.setGradient[setID] //this.debugColor
 							}
-						).addTo(this.map));
+						).addTo(this.map, true));
 					}
 					else {
 							this.heat.push(L.heatLayer([],
@@ -1556,28 +1869,31 @@ console.log((endFrame - startFrame) + " frames");
 								minOpacity: 0.0, maxZoom: 0, max: 1.0, blur: 0.01, radius: 30,
 								gradient: this.setGradient[setID] //this.debugColor
 							}
-						).addTo(this.map));
+						).addTo(this.map, true));
 					}
 				}
 			}
 			else {
 				if(this.displaySet[setID].hide) {
-					this.heat[(setID << 1)].setLatLngs([], this.showNumbers);
-					this.heat[(setID << 1) + 1].setLatLngs([], this.showNumbers);
+					this.heat[(setID << 1)].setLatLngs([], this.displaySet[setID].showNumbers);
+					this.heat[(setID << 1) + 1].setLatLngs([], this.displaySet[setID].showNumbers);
 				}
 				else {
-					this.heat[(setID << 1)].setLatLngs(this.displaySet[setID].visiblePoints, this.showNumbers);
-					
+					this.heat[setID << 1].setLatLngs(this.displaySet[setID].visiblePoints,
+						(this.displaySet[setID].showNumbers && (setID !== this.choroplethSeriesIndex)));
+
 					if(this.showSecondary) {
-						this.heat[(setID << 1) + 1].setLatLngs(this.displaySet[setID].secondValues, this.showNumbers);
+						this.heat[(setID << 1) + 1].setLatLngs(this.displaySet[setID].secondValues, this.displaySet[setID].showNumbers);
 					}
 					else {
-						this.heat[(setID << 1) + 1].setLatLngs([], this.showNumbers);
+						this.heat[(setID << 1) + 1].setLatLngs([], this.displaySet[setID].showNumbers);
 					}
 				}
 			}
 //console.log(this.heat[setID]._latlngs);
 		}
+
+		this.updateChoroplethLayer();
 		
 		return;
 	}
@@ -1654,7 +1970,22 @@ console.log((endFrame - startFrame) + " frames");
 		
 		return dateTime;
 	}
-	
+
+	MagicMap.prototype.setChoroplethSeriesIndex = function(seriesIndex) {
+		var i;
+		this.choroplethSeriesIndex = seriesIndex;
+
+		for(i in this.choroplethValues.visible) {
+			this.choroplethValues.visible[i] = 0;
+		}
+
+		this.frame--;
+		this.playBuffer(this.frame, this.frame + 1);
+		this.packHeat();
+
+		return;
+	}
+
 	$(document).ready(function() {
 		window.MAGIC_MAP = new MagicMap();
 		MAGIC_MAP.initialize();

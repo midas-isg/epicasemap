@@ -99,6 +99,7 @@ app.controller('AmbiguityResolver', function($scope, $rootScope, api) {
 		$scope.showSubmitButton = false;
 		$scope.showRequeryText = false;
 		$scope.showQueryInput = false;
+		$scope.reviewButtonText = "Edit Mapping";
 		
 		$scope.closeDialog = function() { 
 			dom.$dialog.modal('hide');
@@ -216,6 +217,12 @@ app.controller('AmbiguityResolver', function($scope, $rootScope, api) {
 					ambiguitiesList[$scope.currentInputLabel].selectedLocationLabel = ambiguitiesList[$scope.currentInputLabel].possibleMappings[0].label;
 				}
 			}
+			else {
+				$scope.showQueryInput = false;
+				$scope.editLocationQuery();
+				$scope.requeryInput.label = $scope.currentInputLabel;
+				$scope.requeryInputEvent();
+			}
 			
 			$scope.requeryResults = ambiguitiesList[$scope.currentInputLabel].requeryResults;
 			
@@ -324,8 +331,10 @@ app.controller('AmbiguityResolver', function($scope, $rootScope, api) {
 			if(ambiguitiesList[$scope.currentInputLabel].requeryResults) {
 				$scope.requeryResultList = ambiguitiesList[$scope.currentInputLabel].requeryResults.matches;
 				
-				for(i = 0; i < $scope.requeryResultList.length; i++) {
-					$scope.requeryResultTypes[$scope.requeryResultList[i].locationTypeName] = $scope.requeryResultList[i].locationTypeName;
+				if($scope.requeryResultList) {
+					for(i = 0; i < $scope.requeryResultList.length; i++) {
+						$scope.requeryResultTypes[$scope.requeryResultList[i].locationTypeName] = $scope.requeryResultList[i].locationTypeName;
+					}
 				}
 			}
 			
@@ -507,6 +516,14 @@ app.controller('AmbiguityResolver', function($scope, $rootScope, api) {
 		
 		$scope.review = function(locationIndex) {
 			reviewing = !reviewing;
+
+			if(reviewing) {
+				$scope.reviewButtonText = "Edit Mapping";
+			}
+			else {
+				$scope.reviewButtonText = "View Summary";
+			}
+
 			switchIndex(locationIndex);
 			
 			return;

@@ -2,8 +2,8 @@
 
 @ambiguityResolver() = {
 <div id="resolution-space" style="overflow: auto;">
-	<button id="review" title="Review selections" class='btn-large btn-primary' ng-click='review();'>
-		@bs_icon("check") Review
+	<button id="review" title="{{reviewButtonText}}" class='btn-large btn-primary' ng-click='review();'>
+		@bs_icon("check") <span>{{reviewButtonText}}</span>
 	</button>
 
 	<form id="resolver-form" class="/*form-horizontal*/" role="form" name="form" style="padding: 5px;" ng-show="showResolverForm">

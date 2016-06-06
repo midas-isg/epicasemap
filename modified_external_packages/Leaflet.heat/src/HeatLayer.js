@@ -5,7 +5,6 @@
 */
 
 L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
-
     // options: {
     //     minOpacity: 0.05,
     //     maxZoom: 18,
@@ -21,7 +20,7 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
 
     setLatLngs: function (latlngs, showNumbers) {
         this._latlngs = latlngs;
-		this._showNumbers = showNumbers;
+		this._heat._showNumbers = showNumbers;
 		
         return this.redraw();
     },
@@ -55,11 +54,21 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
             this._initCanvas();
         }
 
-        map._panes.overlayPane.appendChild(this._canvas);
+        /*BEGIN MOD*/
+        var heatLayerGroup = document.getElementById("heat-layer-group");
+        if(!heatLayerGroup) {
+            heatLayerGroup = document.createElement("div");
+            heatLayerGroup.setAttribute("id", "heat-layer-group");
+            map._panes.overlayPane.insertBefore(heatLayerGroup, map._panes.overlayPane.firstElementChild);
+        }
+
+        heatLayerGroup.appendChild(this._canvas);
+        //map._panes.overlayPane.appendChild(this._canvas);
+        /*END MOD*/
 
         map.on('moveend', this._reset, this);
 
-        if (map.options.zoomAnimation && L.Browser.any3d) {
+        if(map.options.zoomAnimation && L.Browser.any3d) {
             map.on('zoomanim', this._animateZoom, this);
         }
 
@@ -67,7 +76,8 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
     },
 
     onRemove: function (map) {
-        map.getPanes().overlayPane.removeChild(this._canvas);
+		//console.log(this._canvas);
+		document.getElementById("heat-layer-group").removeChild(this._canvas);
 
         map.off('moveend', this._reset, this);
 
@@ -86,10 +96,9 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
 			size,
 			animated,
 			radiusFactor = this.options.radius || this.defaultRadius;
-			optionsBlur = this.options.blur || 0,
-			thisHeat = this;
+			optionsBlur = this.options.blur || 0;
 		
-        canvas = this._canvas = L.DomUtil.create('canvas', 'leaflet-heatmap-layer leaflet-layer');
+		canvas = this._canvas = L.DomUtil.create('canvas', 'leaflet-heatmap-layer leaflet-layer');
 
         size = this._map.getSize();
         canvas.width  = size.x;
@@ -98,8 +107,8 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
         animated = this._map.options.zoomAnimation && L.Browser.any3d;
         L.DomUtil.addClass(canvas, 'leaflet-zoom-' + (animated ? 'animated' : 'hide'));
 
-        this._heat = simpleheat(canvas);
-		
+		this._heat = simpleheat(canvas);
+		this._heat._showNumbers = false;
 		
 		/* _heat Object Extension */
 		this._heat.drawValue = function(ctx, value, x, y) {
@@ -135,10 +144,10 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
 		
 		this._heat.draw2 = function(minOpacity) {
 			var ctx = this._ctx,
-			i,
-			colored,
-			p,
-			radius;
+				i,
+				colored,
+				p,
+				radius;
 			
 			if(!this._circle) {
 				this.radius(radiusFactor, optionsBlur); //this.radius(this.defaultRadius);
@@ -162,7 +171,7 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
 						ctx.globalAlpha = Math.max(p[2], minOpacity === undefined ? 0 : minOpacity);
 						ctx.drawImage(this._circle, p[0] - this._r, p[1] - this._r);
 						
-						if(p[4] && thisHeat._showNumbers) {
+						if(p[4] && this._showNumbers) {
 							this.drawValue(ctx, p[4], p[0], p[1] - (this._r + 1));
 						}
 					}

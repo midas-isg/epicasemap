@@ -19,6 +19,10 @@ a:hover {
 	margin-right: 5px;
 }
 
+.extra-top-space {
+	margin-top: 5px;
+}
+
 .extra-bottom-space {
 	margin-bottom: 5px;
 }

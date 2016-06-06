@@ -2,8 +2,12 @@
 @(title: String)
 
 @imports = {
+	<!--
 	<script src='https://api.tiles.mapbox.com/mapbox.js/v2.1.9/mapbox.js'></script>
 	<link href='https://api.tiles.mapbox.com/mapbox.js/v2.1.9/mapbox.css' rel='stylesheet' />
+	-->
+	<script src='https://api.mapbox.com/mapbox.js/v2.4.0/mapbox.js'></script>
+	<link href='https://api.mapbox.com/mapbox.js/v2.4.0/mapbox.css' rel='stylesheet' />
 
 	<script src='@routes.Assets.at("external_packages/Highcharts-4.1.5/js/highcharts.js")'></script>
 	<script src='@routes.Assets.at("external_packages/Highcharts-4.1.5/js/modules/exporting.js")'></script>
@@ -15,106 +19,112 @@
 	<link href='@routes.Assets.at("stylesheets/index.css")' rel='stylesheet' />
 	
 	<script src='@routes.Assets.at("javascripts/visualizer.js")'></script>
+
+	<script src='@routes.Assets.at("input/us_counties.js")'></script>
+	<script src='@routes.Assets.at("input/ls_states.js")'></script>
 }
 
 @main(title, imports) {
-	<div id='body' style="">
-		<div style="position: relative; z-index: 1;">
+	<div id='body' style="clear: both;">
+		<div style="">
 			<div style="">
-				<div style="">
-					<button id="toggle-controls-button" class="btn no-padding" style="float: right; position: relative; right: 16px;">
-						<span class="glyphicon glyphicon-indent-right" aria-hidden="true">
-					</button>
+				<button id="toggle-controls-button" class="btn no-padding" style="position: absolute; z-index: 3; right: 16px;">
+					<span class="glyphicon glyphicon-indent-right" aria-hidden="true"></span>
+				</button>
+			</div>
+
+			<div id="control-panel" style="background-color: rgba(240, 240, 240, 1.0); padding: 5px; min-height: 600px; width: 20%; float: right; position: relative; z-index: 2; display: none;">
+				<div class="extra-bottom-space" style="clear: both;">
+					<h5 class="no-margin">Select map:</h5>
+					<select id="map-selector" style="max-width: 100%;"></select>
 				</div>
-				
-				<div id="control-panel" style="background-color: rgba(128, 128, 128, 0.1); padding: 5px; height: 600px; width: 20%; float: right; display: none;">
-					<div class="extra-bottom-space" style="clear: both;">
-						<h5 class="no-margin">Select map:</h5>
-						<select id="map-selector" style="max-width: 100%;"></select>
+
+				<div id="series-options" style="clear: both;"></div>
+
+				<div>
+					<div style="clear: both; float: left;">
+						<input id="disable-choropleth" type="radio" name="choropleth-selection" value="-1">
+						<h5 class="no-margin" style="display: inline; margin-left: 5px;">Disable choropleth</h5>
 					</div>
-					
-					<div id="series-options" style="clear: both;"></div>
-					
+
 					<div style="clear: both; float: right;">
 						<button id="remove-series-button" class="btn no-padding" style="">
-							<span class="glyphicon glyphicon-minus" aria-hidden="true">
+							<span class="glyphicon glyphicon-minus" aria-hidden="true"></span>
 						</button>
-						
+
 						<button id="add-series-button" class="btn no-padding" style="">
-							<span class="glyphicon glyphicon-plus" aria-hidden="true">
+							<span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
 						</button>
 					</div>
-					
-					<div style="clear: both;">
-						<div id="color-palettes" style="">
-							<h5 class="vertical-spaced">Pick a color scheme:</h5>
-							<div id="ramps" style=""></div>
-						</div>
-						
-						<div class="vertical-spaced" style="clear: both;">
-							<h5 class="no-margin">Minimum render time (more time may smooth playback): </h5>
-							<input id="render-delay" style="max-width: 50%;" type="number" min="0" value="">
+				</div>
+
+				<div style="clear: both;">
+					<div id="color-palettes" style="">
+						<h5 class="vertical-spaced">Pick a color scheme:</h5>
+						<div id="ramps" style=""></div>
+					</div>
+
+					<div class="vertical-spaced" style="clear: both;">
+						<h5 class="no-margin">Minimum render time (more time may smooth playback): </h5>
+						<input id="render-delay" style="max-width: 50%;" type="number" min="20" value="">
+						<span style="width: 5%;">ms</span>
+
+						<div>
+							<span style="width: 85%;">Longest frame-render:</span>
+							<span id="suggested-delay" style="width: 10%;">0</span>
 							<span style="width: 5%;">ms</span>
-							
-							<div>
-								<span style="width: 85%;">Longest frame-render:</span>
-								<span id="suggested-delay" style="width: 10%;">0</span>
-								<span style="width: 5%;">ms</span>
-							</div>
 						</div>
-						
-						<div class="vertical-spaced" style="clear: both;">
-							<h5 class="no-margin">Redraw every: </h5>
-							<input id="days-per-frame" style="max-width: 60%;" type="number" min="1" value="">
-							<span style="width: 5%;">day(s)</span>
-						</div>
-						
-						<div class="vertical-spaced" style="clear: both;">
-							<h5 class="no-margin">Point decay: </h5>
-							<div style="clear: both;"><span style="float: left;">Slower</span> <span style="float: right;">Faster</span></div>
-							<input id="point-decay" style="max-width: 80%;" type="range" min="0.0001" value="" max="1" step="0.0001">
-						</div>
-						
-						<div class="vertical-spaced" style="clear: both;">
-							<form id="data-gap-handler">
-								<div><input type="radio" name="data-gap-option" value="show">Show data gaps</div>
-								<div><input type="radio" name="data-gap-option" value="bridge">Bridge data gaps</div>
-								<div><input type="radio" name="data-gap-option" value="zero">Fill data gaps with 0</div>
-							</form>
-						</div>
-						
-						<div class="vertical-spaced" style="clear: both;">
-							<button id="save-button">Save as default view</button>
-						</div>
+					</div>
+
+					<div class="vertical-spaced" style="clear: both;">
+						<h5 class="no-margin">Redraw every: </h5>
+						<input id="days-per-frame" style="max-width: 60%;" type="number" min="1" value="">
+						<span style="width: 5%;">day(s)</span>
+					</div>
+
+					<div class="vertical-spaced" style="clear: both;">
+						<h5 class="no-margin">Point decay: </h5>
+						<div style="clear: both;"><span style="float: left;">Slower</span> <span style="float: right;">Faster</span></div>
+						<input id="point-decay" style="max-width: 80%;" type="range" min="0.0001" value="" max="1" step="0.0001">
+					</div>
+
+					<div class="vertical-spaced" style="clear: both;">
+						<form id="data-gap-handler">
+							<div><input type="radio" name="data-gap-option" value="show">Show data gaps</div>
+							<div><input type="radio" name="data-gap-option" value="bridge">Bridge data gaps</div>
+							<div><input type="radio" name="data-gap-option" value="zero">Fill data gaps with 0</div>
+						</form>
+					</div>
+
+					<div class="vertical-spaced" style="clear: both;">
+						<button id="save-button">Save as default view</button>
 					</div>
 				</div>
 			</div>
 		</div>
-		
+
 		<div id="visualization" style="">
 			<div id='map' style="background-color: #808080;"></div>
-			
+
 			<div id="container" style="max-height: 300px; margin: 0px 0px 0px 0px; position: relative; bottom: 215px; pointer-events: none;">
 				<div style="position: relative; bottom: -180px; margin-left: 76px; z-index: 1;">
 					<button id="toggle-details-button" class="btn btn-sm" style="background-color: rgba(221, 221, 221, 0.6); pointer-events: auto;"><span class="glyphicon glyphicon-menu-hamburger" aria-hidden="true"></span></button>
+					<button id="toggle-cumulative-button" class="btn btn-sm" style="background-color: rgba(221, 221, 221, 0.6); pointer-events: auto;"><strong>&#931;</strong></button>
 					<button id="toggle-secondary-button" class="btn btn-sm" style="background-color: rgba(221, 221, 221, 0.6); pointer-events: auto;"><span class="glyphicon glyphicon-record" aria-hidden="true"></span></button>
-					<button id="toggle-numbers-button" class="btn btn-sm" style="background-color: rgba(221, 221, 221, 0.6); pointer-events: auto;"><strong>#</strong></button>
 					<button id="reset-button" class="btn btn-sm" style="background-color: rgba(221, 221, 221, 0.6); pointer-events: auto;"><span class="glyphicon glyphicon-step-backward" aria-hidden="true"></span></button>
 					<button id="backstep-button" class="btn btn-sm" style="background-color: rgba(221, 221, 221, 0.6); pointer-events: auto;"><span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span></button>
 					<button id="playback-button" class="btn btn-sm" style="background-color: rgba(221, 221, 221, 0.6); pointer-events: auto;"><span class="glyphicon glyphicon-play" aria-hidden="true"></span></button>
 					<button id="step-forward-button" class="btn btn-sm" style="background-color: rgba(221, 221, 221, 0.6); pointer-events: auto;"><span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span></button>
 					<span id="current-date" style="background-color: rgba(255, 255, 255, 0.6); float: right; clear: right;"></span>
 				</div>
-				
+
 				<div id="detail-container" style="height: 300px; pointer-events: auto;"></div>
 				<div id="master-container" style="position: relative; bottom: 115px; height: 125px; background-color: rgba(255, 255, 255, 0.1); pointer-events: auto;"></div>
-				
+
 				<div id="information-container" style="position: relative; bottom: 115px; background-color: #FFFFFF; border-style: ridge;" hidden>
 					<span id="series-description"></span>
 				</div>
 			</div>
 		</div>
-		
-		<div class="clearfix"></div>
 	</div>
 }

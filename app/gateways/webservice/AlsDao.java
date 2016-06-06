@@ -24,6 +24,7 @@ import scala.collection.concurrent.Debug;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.sun.media.jfxmedia.logging.Logger;
 
 import controllers.Factory;
 
@@ -42,7 +43,7 @@ public class AlsDao {
 		final ConfRule confRule = Factory.makeConfRule();
 		baseUrl = confRule.readString(AppKey.ALS_WS_URL.key());
 		locationsUrl = confRule.readString(AppKey.ALS_WS_URL.key()) + "/api/locations";
-		bulkLocationsUrl = baseUrl + "/api/find-bulk";
+		bulkLocationsUrl = baseUrl + "/api/locations/find-bulk"; //"/api/find-bulk";
 	}
 	
 	public Promise<List<NamedLocation>> getLocations(ALSIDQueryInput alsIDQueryInput) throws URISyntaxException, UnsupportedEncodingException {
@@ -99,6 +100,15 @@ public class AlsDao {
 		List<NamedLocation> locations = new ArrayList<NamedLocation>();
 		JsonNode features = geoJSONResponse.get("features");
 		JsonNode currentFeature;
+		
+/*
+play.Logger.debug(geoJSONResponse.toString());
+Iterator<String> fieldNameIterator = geoJSONResponse.fieldNames();
+while(fieldNameIterator.hasNext()) {
+	play.Logger.debug(fieldNameIterator.next());
+}
+*/
+		
 		int featureCount = features.size();
 		NamedLocation location;
 		
