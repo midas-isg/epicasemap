@@ -20,7 +20,59 @@ app.controller('SeriesData', function($scope, $rootScope, api) {
 		function showDialog(event, series) {
 			$scope.series = series;
 			$scope.seriesId = series.id;
-			
+
+			(function initialize() {
+				var currentYear = new Date().getFullYear(),
+				fetchServiceBaseURL = CONTEXT + "/api/series/tycho/json?type=";
+
+				$("#start-date").attr("max", currentYear);
+				$("#end-date").attr("max", currentYear);
+
+				api.gettingFromUrl(fetchServiceBaseURL + "cities").then(function success(response) {
+						$scope.tychoLocations = {locations: response.data};
+						$scope.tychoLocations.locations.push("[All]");
+						$scope.tychoQueryLoc = "[All]";
+
+						return;
+					},
+					function error() {
+						alert("Failed to connect to Tycho Server");
+
+						return;
+					}
+				);
+
+				api.gettingFromUrl(fetchServiceBaseURL + "states").then(function success(response){//result, status, xhr) {
+						$scope.tychoStates = {abbreviations: response.data};
+						$scope.tychoStates.abbreviations.push("[All]");
+						$scope.tychoQueryState = "[All]";
+
+						return;
+					},
+					function error() {
+						alert("Failed to connect to Tycho Server");
+
+						return;
+					}
+				);
+
+				api.gettingFromUrl(fetchServiceBaseURL + "diseases").then(function success(response) {
+						$scope.tychoDiseases = {names: response.data};
+						$scope.tychoDiseases.names.push("[All]");
+						$scope.tychoQueryDisease = "[All]";
+
+						return;
+					},
+					function error() {
+						alert("Failed to connect to Tycho Server");
+
+						return;
+					}
+				);
+
+				return;
+			})();
+
 			if($scope.series.seriesDataUrl != null){
 				$scope.url = $scope.series.seriesDataUrl.url;
 				$scope.radioIn = "url";
@@ -33,65 +85,7 @@ app.controller('SeriesData', function($scope, $rootScope, api) {
 		function focusFirstFormInput(event) {
 			dom.$form.find(':input:enabled:visible:first').focus();
 		}
-		
-		(function initialize() {
-			var currentYear = new Date().getFullYear(),
-				fetchServiceBaseURL = CONTEXT + "/api/series/tycho/json?type=";
-			
-			$("#start-date").attr("max", currentYear);
-			$("#end-date").attr("max", currentYear);
-			
-			$.ajax({
-				url: fetchServiceBaseURL + "cities",
-				success(result, status, xhr) {
-					$scope.tychoLocations = {locations: result};
-					$scope.tychoLocations.locations.push("[All]");
-					$scope.tychoQueryLoc = "[All]";
-					
-					return;
-				},
-				error(xhr, status, error) {
-					alert("Failed to connect to Tycho Server");
-					
-					return;
-				}
-			});
-			
-			$.ajax({
-				url: fetchServiceBaseURL + "states",
-				success(result, status, xhr) {
-					$scope.tychoStates = {abbreviations: result};
-					$scope.tychoStates.abbreviations.push("[All]");
-					$scope.tychoQueryState = "[All]";
-					
-					return;
-				},
-				error(xhr, status, error) {
-					alert("Failed to connect to Tycho Server");
-					
-					return;
-				}
-			});
-			
-			$.ajax({
-				url: fetchServiceBaseURL + "diseases",
-				success(result, status, xhr) {
-					$scope.tychoDiseases = {names: result};
-					$scope.tychoDiseases.names.push("[All]");
-					$scope.tychoQueryDisease = "[All]";
-					
-					return;
-				},
-				error(xhr, status, error) {
-					alert("Failed to connect to Tycho Server");
-					
-					return;
-				}
-			});
-			
-			return;
-		})();
-		
+
 		$scope.toggleTychoQueryWizard = function() {
 			$scope.showTychoQueryWizard = !$scope.showTychoQueryWizard;
 			$("#tycho-query-wizard-button").toggleClass("active");
@@ -148,7 +142,7 @@ app.controller('SeriesData', function($scope, $rootScope, api) {
 		$scope.radioIn= 'file';
 		$scope.url;
 		$scope.overWrite = false;
-		
+
 		$scope.urlContentTypes = [
 			"CSV",
 			"Tycho"
@@ -208,7 +202,7 @@ app.controller('SeriesData', function($scope, $rootScope, api) {
 		$scope.isWorking = true;
 		$rootScope.$emit('modalBusyDialog');
 		
-		if(!findParameterByName("apikey", $scope.url)) {
+		if(($scope.urlContentType === "Tycho") && (!findParameterByName("apikey", $scope.url))) {
 			$scope.url += "&apikey=9a4c75183895f07e7776";
 		}
 		
