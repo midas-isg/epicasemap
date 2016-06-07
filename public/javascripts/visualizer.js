@@ -128,15 +128,15 @@ visualizer.js
 		}
 		$("#palette-0").addClass("selected");
 
-		(function addChoroplethLayers() {
-			var lsStatesURL = "http://betaweb.rods.pitt.edu/ls/api/locations/1216?maxExteriorRings=0",
-				encodedStatesURL = encodeURIComponent(lsStatesURL),
+		(function addChoroplethLayers(choroplethSource, choroplethLayer, lsURL) {
+			var encodedStatesURL = encodeURIComponent(lsURL),
 				jsonRoute = CONTEXT + "/api/get-json/" + encodedStatesURL,
 				popup = new L.Popup({autoPan: false});
 
 			thisMap.choroplethValues = {current: {}, visible: {}, cumulative: {}};
 
-				$.ajax({
+			//TODO: evaluate whether AJAX is needed (depends on dynamic vs static gID association)
+			$.ajax({
 				url: jsonRoute,
 				success: function(result, status, xhr) {
 					var i;
@@ -145,16 +145,30 @@ visualizer.js
 					console.log(status);
 					console.log(xhr);
 
-					for(i = 0; i < US_STATES.features.length; i++) {
-						thisMap.choroplethValues.current[US_STATES.features[i].properties.ALS_ID] = 0;
-						thisMap.choroplethValues.visible[US_STATES.features[i].properties.ALS_ID] = 0;
-						thisMap.choroplethValues.cumulative[US_STATES.features[i].properties.ALS_ID] = 0;
+					/*
+					for(i = 0; i < choroplethLayer.features.length; i++) {
+						thisMap.choroplethValues.current[choroplethLayer.features[i].properties.ALS_ID] = 0;
+						thisMap.choroplethValues.visible[choroplethLayer.features[i].properties.ALS_ID] = 0;
+						thisMap.choroplethValues.cumulative[choroplethLayer.features[i].properties.ALS_ID] = 0;
 					}
 
-					thisMap.choroplethLayer = L.geoJson(US_STATES, {
+					thisMap.choroplethLayer = L.geoJson(choroplethLayer, {
 						style: getStyle,
 						onEachFeature: onEachFeature
 					});
+					*/
+
+					for(i = 0; i < choroplethLayer.geometries.length; i++) {
+						thisMap.choroplethValues.current[choroplethLayer.geometries[i].properties.gid] = 0;
+						thisMap.choroplethValues.visible[choroplethLayer.geometries[i].properties.gid] = 0;
+						thisMap.choroplethValues.cumulative[choroplethLayer.geometries[i].properties.gid] = 0;
+					}
+
+					thisMap.choroplethLayer = L.geoJson(omnivore.topojson.parse(choroplethSource), {
+						style: getStyle,
+						onEachFeature: onEachFeature
+					});
+
 					thisMap.choroplethLayer.addTo(thisMap.map);
 
 					thisMap.updateChoroplethLayer = function() {
@@ -183,7 +197,7 @@ visualizer.js
 
 			function getStyle(feature) {
 				var seriesIndex = thisMap.choroplethSeriesIndex,
-					alsId,
+					gId,
 					choroplethValue,
 					maxValue;
 
@@ -194,12 +208,12 @@ visualizer.js
 					};
 				}
 
-				alsId = feature.properties.ALS_ID;
-				choroplethValue = thisMap.choroplethValues.visible[alsId];
+				gId = feature.properties.gid;
+				choroplethValue = thisMap.choroplethValues.visible[gId];
 				maxValue = thisMap.dataset[seriesIndex].maxOccurrenceValue;
 
 				if(thisMap.displayCumulativeValues) {
-					choroplethValue = thisMap.choroplethValues.cumulative[alsId];
+					choroplethValue = thisMap.choroplethValues.cumulative[gId];
 					maxValue = thisMap.dataset[seriesIndex].maxCumulativeChoroplethValue;
 				}
 
@@ -234,17 +248,16 @@ visualizer.js
 
 			function click(e) {
 				var layer = e.target,
-					popupText = '<div class="marker-title">' + layer.feature.properties.NAME + '</div>';
+					popupText = '<div class="marker-title">' + layer.feature.properties.name + '</div>';
 
-				if(thisMap.choroplethValues.cumulative[layer.feature.properties.ALS_ID] == null) {
+				if(thisMap.choroplethValues.cumulative[layer.feature.properties.gid] == null) {
 					popupText += '<div>total cases beyond scope of data</div>';
 				}
 				else {
-					popupText += '<div>' + thisMap.choroplethValues.cumulative[layer.feature.properties.ALS_ID] + ' total cases' + '</div>';
+					popupText += '<div>' + thisMap.choroplethValues.cumulative[layer.feature.properties.gid] + ' total cases' + '</div>';
 				}
 
-				//popupText += '<div><var>(+' + thisMap.choroplethValues.current[layer.feature.properties.ALS_ID] + ' new cases)' + '</var></div>' +
-				popupText += '<div><var>(+' + thisMap.choroplethValues.visible[layer.feature.properties.ALS_ID] + ' latest cases)' + '</var></div>' +
+				popupText += '<div><var>(+' + thisMap.choroplethValues.visible[layer.feature.properties.gid] + ' latest cases)' + '</var></div>' +
 					'<div><em>' + thisMap.seriesList[thisMap.choroplethSeriesIndex].title + '</em></div>';
 
 				//thisMap.map.fitBounds(e.target.getBounds());
@@ -268,7 +281,7 @@ visualizer.js
 
 				popup.setLatLng(e.latlng);
 				popup.setContent('<div class="marker-title">' + layer.feature.properties.NAME + '</div>' +
-					thisMap.choroplethValues.cumulative[layer.feature.properties.ALS_ID] + ' cases');
+					thisMap.choroplethValues.cumulative[layer.feature.properties.gid] + ' cases');
 
 				if (!popup._map) {
 					popup.openOn(thisMap.map);
@@ -293,7 +306,7 @@ visualizer.js
 					thisMap.map.closePopup();
 				}, 100);
 			}
-		})();
+		})(US_STATES, US_STATES.objects.us_states, "http://betaweb.rods.pitt.edu/ls/api/locations/1216?maxExteriorRings=0");
 		
 		return this;
 	}
