@@ -87,8 +87,11 @@ public class AlsDao {
 
 	Location toLocation(JsonNode jsonNode) {
 		Location location = new Location();
-		Map<String, Double> center = centroid(getBbox(jsonNode));
-
+		//Map<String, Double> center = centroid(getBbox(jsonNode));
+		Map<String, Double> center = new HashMap<String, Double>();
+		center.put(LONGITUDE, jsonNode.get("repPoint").get(0).asDouble());
+		center.put(LATITUDE, jsonNode.get("repPoint").get(1).asDouble());
+		
 		location.setLabel(getName(jsonNode));
 		location.setLatitude(center.get(LATITUDE));
 		location.setLongitude(center.get(LONGITUDE));

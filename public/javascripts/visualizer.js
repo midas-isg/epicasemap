@@ -104,7 +104,7 @@ visualizer.js
 		
 		this.uiSettings.colorPalette = 0;
 		this.colors = this.colorSet[this.uiSettings.colorPalette];
-		this.choroplethSeriesIndex = 0;
+		this.choroplethSeriesIndex = -1;
 		this.displayCumulativeValues = false;
 		
 		for(i = 0; i < this.colorSet.length; i++) {
@@ -463,8 +463,10 @@ visualizer.js
 			for(i = 0; i < thisMap.heat.length; i++) {
 				thisMap.heat[i].redraw();
 			}
-			
+
 			thisMap.masterChart.xAxis[0].removePlotLine('date-line');
+			thisMap.updateDetailChart();
+
 			
 			return;
 		});
@@ -537,6 +539,8 @@ visualizer.js
 					thisMap.masterChart.series[i].setData(thisMap.dataset[i].frameAggregate, true, false, false);
 				}
 			}
+
+			thisMap.updateDetailChart();
 
 			thisMap.playBuffer(thisMap.frame, thisMap.endFrame);
 			thisMap.frame--;
@@ -918,7 +922,7 @@ console.log("series " + k + ": " + id);
 	MagicMap.prototype.load = function(seriesID, index) {
 		if(DEBUG) { console.log("[DEBUG] called load()"); }
 		
-		var URL = CONTEXT + "/api/series/" + seriesID + "/time-coordinate",
+		var URL = CONTEXT + "/api/series/" + seriesID + "/data",
 			currentDataset = {
 				seriesID: seriesID,
 				title: "title",
@@ -1534,7 +1538,39 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 		
 		return;
 	}
-	
+
+	MagicMap.prototype.updateDetailChart = function() {
+		var detailSeries = [],
+			min = this.masterChart.xAxis[0].min,
+			max = this.masterChart.xAxis[0].max,
+			data,
+			i,
+			j;
+
+			if(this.masterChart.xAxis[0].plotLinesAndBands[0] && this.masterChart.xAxis[0].plotLinesAndBands[1]){
+				min = this.masterChart.xAxis[0].plotLinesAndBands[0].options.to;
+				max = this.masterChart.xAxis[0].plotLinesAndBands[1].options.from;
+			}
+
+		for(i = 0; i < this.masterChart.series.length; i++) {
+			detailSeries.push({detailData: []});
+			// reverse engineer the last part of the data
+			data = this.masterChart.series[i].data;
+
+			for(j = 0; j < data.length; j++) {
+				if((data[j].x >= min) && (data[j].x <= max)) {
+					detailSeries[i].detailData.push([data[j].x, data[j].y]);
+				}
+			}
+		}
+
+		for(i = 0; i < this.detailChart.series.length; i++) {
+			this.detailChart.series[i].setData(detailSeries[i].detailData);
+		}
+
+		return;
+	}
+
 	MagicMap.prototype.doSelection = function(event) {
 		if(DEBUG) { console.log("[DEBUG] called doSelection()"); }
 		
@@ -1545,14 +1581,11 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 		var extremesObject = event.xAxis[0],
 			min = extremesObject.min,
 			max = extremesObject.max,
-			detailStart = [],
-			detailSeries = [],
 			xAxis = this.masterChart.xAxis[0],
 			minDate = new Date(extremesObject.min),
 			maxDate = new Date(extremesObject.max),
 			startFrame,
-			endFrame,
-			i;
+			endFrame;
 
 		this.zeroTime(minDate);
 		this.zeroTime(maxDate);
@@ -1563,18 +1596,9 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 		console.log("max: " + max);
 		console.log("max date: " + maxDate);
 
-		for(i = 0; i < this.masterChart.series.length; i++) {
-			detailSeries.push({detailData: []});
-			
-			// reverse engineer the last part of the data
-			$.each(this.masterChart.series[i].data, function() {
-				if((this.x >= min) && (this.x <= max)) {
-					detailSeries[i].detailData.push([this.x, this.y]);
-				}
-			});
-		}
-		
-		// move the plot bands to reflect the new detail span
+		// move the plot bands to reflect the new span
+		xAxis.removePlotLine('date-line');
+
 		xAxis.removePlotBand('mask-before');
 		xAxis.addPlotBand({
 			id: 'mask-before',
@@ -1594,11 +1618,9 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 				MAGIC_MAP.latestDate.getUTCDate()),
 			color: 'rgba(128, 128, 128, 0.2)'
 		});
-		
-		for(i = 0; i < MAGIC_MAP.detailChart.series.length; i++) {
-			MAGIC_MAP.detailChart.series[i].setData(detailSeries[i].detailData);
-		}
-		
+
+		this.updateDetailChart();
+
 		MAGIC_MAP.zeroTime(minDate);
 		MAGIC_MAP.zeroTime(maxDate);
 		
