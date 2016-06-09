@@ -227,7 +227,11 @@ visualizer.js
 			}
 
 			function getOpacity(value, maxValue) {
-				return ((value === undefined ? 0: value) / maxValue * 0.6);
+				if((value === undefined) || (value === 0)) {
+					return 0;
+				}
+
+				return (value / maxValue * 0.9) + 0.09;
 			}
 
 			function getBorderColor() {
