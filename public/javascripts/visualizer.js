@@ -1510,8 +1510,8 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 						enableMouseTracking: false,
 						events: {
 							legendItemClick: function(event) {
-								MAGIC_MAP.displaySet[event.currentTarget.index].hide = !MAGIC_MAP.displaySet[event.currentTarget.index].hide;
-								MAGIC_MAP.detailChart.series[this.index].setVisible(!this.visible);
+								MAGIC_MAP.displaySet[event.target.index].hide = !MAGIC_MAP.displaySet[event.target.index].hide;
+								MAGIC_MAP.detailChart.series[event.target.index].setVisible(!MAGIC_MAP.displaySet[event.target.index].hide);
 								MAGIC_MAP.packHeat();
 								
 								return;
