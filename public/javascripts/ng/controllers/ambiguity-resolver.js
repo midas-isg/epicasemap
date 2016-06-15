@@ -256,9 +256,15 @@ app.controller('AmbiguityResolver', function($scope, $rootScope, api) {
 							contentType: "application/json",
 							dataType: "json",
 							data: JSON.stringify(input),
+							beforeSend: function(xhr) {
+								$scope.requeryResults = {matches: [{label: "Searching...", alsId: 0}], selectedLocationID: 0};
+								$scope.$apply();
+
+								return;
+							},
 							success: function(result, status, xhr) {
 								console.log(result);
-								
+
 								return;
 							},
 							error: function(xhr, status, error) {
@@ -274,19 +280,19 @@ app.controller('AmbiguityResolver', function($scope, $rootScope, api) {
 											$scope.requeryResults = ambiguitiesList[$scope.currentInputLabel].requeryResults;
 											ambiguitiesList[$scope.currentInputLabel].requeryResults.selectedLocationLabel = $scope.requeryResults.matches[0].label;
 											ambiguitiesList[$scope.currentInputLabel].requeryInput = $scope.requeryInput;
-											
-											$scope.reloadResultTypes();
 										}
 										else {
-											$scope.requeryResults = {matches: [{label: "No results found"}], selectedLocationID: null};
+											$scope.requeryResults = {matches: [{label: "No results found", alsId: 0}], selectedLocationID: 0};
 											ambiguitiesList[$scope.currentInputLabel].requeryResults = {matches: null, selectedLocationID: null};
 											ambiguitiesList[$scope.currentInputLabel].requeryInput = null;
 										}
-										
+
+										$scope.reloadResultTypes();
+
 									break;
 									
 									default:
-										$scope.requeryResults = {matches: [{label: "Error"}], selectedLocationID: null};
+										$scope.requeryResults = {matches: [{label: "Error", alsId: 0}], selectedLocationID: 0};
 										console.log(xhr);
 										console.log(status);
 										console.log(error);
@@ -300,7 +306,7 @@ app.controller('AmbiguityResolver', function($scope, $rootScope, api) {
 						});
 					}
 					else {
-						$scope.requeryResults = {matches: [{label: "No results found"}], selectedLocationID: null};
+						$scope.requeryResults = {matches: [{label: "No results found", alsId: 0}], selectedLocationID: 0};
 						ambiguitiesList[$scope.currentInputLabel].requeryResults = {matches: null, selectedLocationID: null};
 						ambiguitiesList[$scope.currentInputLabel].requeryInput = null;
 						
