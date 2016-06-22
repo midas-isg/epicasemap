@@ -104,7 +104,7 @@ visualizer.js
 		
 		this.uiSettings.colorPalette = 0;
 		this.colors = this.colorSet[this.uiSettings.colorPalette];
-		this.choroplethSeriesIndex = 0;
+		this.choroplethSeriesIndex = -1;
 		this.displayCumulativeValues = false;
 		
 		for(i = 0; i < this.colorSet.length; i++) {
@@ -128,15 +128,15 @@ visualizer.js
 		}
 		$("#palette-0").addClass("selected");
 
-		(function addChoroplethLayers() {
-			var lsStatesURL = "http://betaweb.rods.pitt.edu/ls/api/locations/1216?maxExteriorRings=0",
-				encodedStatesURL = encodeURIComponent(lsStatesURL),
+		(function addChoroplethLayers(choroplethSource, choroplethLayer, lsURL) {
+			var encodedStatesURL = encodeURIComponent(lsURL),
 				jsonRoute = CONTEXT + "/api/get-json/" + encodedStatesURL,
 				popup = new L.Popup({autoPan: false});
 
 			thisMap.choroplethValues = {current: {}, visible: {}, cumulative: {}};
 
-				$.ajax({
+			//TODO: evaluate whether AJAX is needed (depends on dynamic vs static gID association)
+			$.ajax({
 				url: jsonRoute,
 				success: function(result, status, xhr) {
 					var i;
@@ -145,16 +145,30 @@ visualizer.js
 					console.log(status);
 					console.log(xhr);
 
-					for(i = 0; i < US_STATES.features.length; i++) {
-						thisMap.choroplethValues.current[US_STATES.features[i].properties.ALS_ID] = 0;
-						thisMap.choroplethValues.visible[US_STATES.features[i].properties.ALS_ID] = 0;
-						thisMap.choroplethValues.cumulative[US_STATES.features[i].properties.ALS_ID] = 0;
+					/*
+					for(i = 0; i < choroplethLayer.features.length; i++) {
+						thisMap.choroplethValues.current[choroplethLayer.features[i].properties.ALS_ID] = 0;
+						thisMap.choroplethValues.visible[choroplethLayer.features[i].properties.ALS_ID] = 0;
+						thisMap.choroplethValues.cumulative[choroplethLayer.features[i].properties.ALS_ID] = 0;
 					}
 
-					thisMap.choroplethLayer = L.geoJson(US_STATES, {
+					thisMap.choroplethLayer = L.geoJson(choroplethLayer, {
 						style: getStyle,
 						onEachFeature: onEachFeature
 					});
+					*/
+
+					for(i = 0; i < choroplethLayer.geometries.length; i++) {
+						thisMap.choroplethValues.current[choroplethLayer.geometries[i].properties.gid] = 0;
+						thisMap.choroplethValues.visible[choroplethLayer.geometries[i].properties.gid] = 0;
+						thisMap.choroplethValues.cumulative[choroplethLayer.geometries[i].properties.gid] = 0;
+					}
+
+					thisMap.choroplethLayer = L.geoJson(omnivore.topojson.parse(choroplethSource), {
+						style: getStyle,
+						onEachFeature: onEachFeature
+					});
+
 					thisMap.choroplethLayer.addTo(thisMap.map);
 
 					thisMap.updateChoroplethLayer = function() {
@@ -183,7 +197,7 @@ visualizer.js
 
 			function getStyle(feature) {
 				var seriesIndex = thisMap.choroplethSeriesIndex,
-					alsId,
+					gId,
 					choroplethValue,
 					maxValue;
 
@@ -194,12 +208,12 @@ visualizer.js
 					};
 				}
 
-				alsId = feature.properties.ALS_ID;
-				choroplethValue = thisMap.choroplethValues.visible[alsId];
+				gId = feature.properties.gid;
+				choroplethValue = thisMap.choroplethValues.visible[gId];
 				maxValue = thisMap.dataset[seriesIndex].maxOccurrenceValue;
 
 				if(thisMap.displayCumulativeValues) {
-					choroplethValue = thisMap.choroplethValues.cumulative[alsId];
+					choroplethValue = thisMap.choroplethValues.cumulative[gId];
 					maxValue = thisMap.dataset[seriesIndex].maxCumulativeChoroplethValue;
 				}
 
@@ -213,7 +227,11 @@ visualizer.js
 			}
 
 			function getOpacity(value, maxValue) {
-				return ((value === undefined ? 0: value) / maxValue * 0.6);
+				if((value === undefined) || (value === 0)) {
+					return 0;
+				}
+
+				return (value / maxValue * 0.9) + 0.09;
 			}
 
 			function getBorderColor() {
@@ -234,17 +252,16 @@ visualizer.js
 
 			function click(e) {
 				var layer = e.target,
-					popupText = '<div class="marker-title">' + layer.feature.properties.NAME + '</div>';
+					popupText = '<div class="marker-title">' + layer.feature.properties.name + '</div>';
 
-				if(thisMap.choroplethValues.cumulative[layer.feature.properties.ALS_ID] == null) {
+				if(thisMap.choroplethValues.cumulative[layer.feature.properties.gid] == null) {
 					popupText += '<div>total cases beyond scope of data</div>';
 				}
 				else {
-					popupText += '<div>' + thisMap.choroplethValues.cumulative[layer.feature.properties.ALS_ID] + ' total cases' + '</div>';
+					popupText += '<div>' + thisMap.choroplethValues.cumulative[layer.feature.properties.gid] + ' total cases' + '</div>';
 				}
 
-				//popupText += '<div><var>(+' + thisMap.choroplethValues.current[layer.feature.properties.ALS_ID] + ' new cases)' + '</var></div>' +
-				popupText += '<div><var>(+' + thisMap.choroplethValues.visible[layer.feature.properties.ALS_ID] + ' latest cases)' + '</var></div>' +
+				popupText += '<div><var>(+' + thisMap.choroplethValues.visible[layer.feature.properties.gid] + ' latest cases)' + '</var></div>' +
 					'<div><em>' + thisMap.seriesList[thisMap.choroplethSeriesIndex].title + '</em></div>';
 
 				//thisMap.map.fitBounds(e.target.getBounds());
@@ -268,7 +285,7 @@ visualizer.js
 
 				popup.setLatLng(e.latlng);
 				popup.setContent('<div class="marker-title">' + layer.feature.properties.NAME + '</div>' +
-					thisMap.choroplethValues.cumulative[layer.feature.properties.ALS_ID] + ' cases');
+					thisMap.choroplethValues.cumulative[layer.feature.properties.gid] + ' cases');
 
 				if (!popup._map) {
 					popup.openOn(thisMap.map);
@@ -293,7 +310,7 @@ visualizer.js
 					thisMap.map.closePopup();
 				}, 100);
 			}
-		})();
+		})(US_STATES, US_STATES.objects.us_states, "http://betaweb.rods.pitt.edu/ls/api/locations/1216?maxExteriorRings=0");
 		
 		return this;
 	}
@@ -450,8 +467,10 @@ visualizer.js
 			for(i = 0; i < thisMap.heat.length; i++) {
 				thisMap.heat[i].redraw();
 			}
-			
+
 			thisMap.masterChart.xAxis[0].removePlotLine('date-line');
+			thisMap.updateDetailChart();
+
 			
 			return;
 		});
@@ -524,6 +543,8 @@ visualizer.js
 					thisMap.masterChart.series[i].setData(thisMap.dataset[i].frameAggregate, true, false, false);
 				}
 			}
+
+			thisMap.updateDetailChart();
 
 			thisMap.playBuffer(thisMap.frame, thisMap.endFrame);
 			thisMap.frame--;
@@ -905,7 +926,7 @@ console.log("series " + k + ": " + id);
 	MagicMap.prototype.load = function(seriesID, index) {
 		if(DEBUG) { console.log("[DEBUG] called load()"); }
 		
-		var URL = CONTEXT + "/api/series/" + seriesID + "/time-coordinate",
+		var URL = CONTEXT + "/api/series/" + seriesID + "/data",
 			currentDataset = {
 				seriesID: seriesID,
 				title: "title",
@@ -1489,8 +1510,8 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 						enableMouseTracking: false,
 						events: {
 							legendItemClick: function(event) {
-								MAGIC_MAP.displaySet[event.currentTarget.index].hide = !MAGIC_MAP.displaySet[event.currentTarget.index].hide;
-								MAGIC_MAP.detailChart.series[this.index].setVisible(!this.visible);
+								MAGIC_MAP.displaySet[event.target.index].hide = !MAGIC_MAP.displaySet[event.target.index].hide;
+								MAGIC_MAP.detailChart.series[event.target.index].setVisible(!MAGIC_MAP.displaySet[event.target.index].hide);
 								MAGIC_MAP.packHeat();
 								
 								return;
@@ -1521,7 +1542,39 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 		
 		return;
 	}
-	
+
+	MagicMap.prototype.updateDetailChart = function() {
+		var detailSeries = [],
+			min = this.masterChart.xAxis[0].min,
+			max = this.masterChart.xAxis[0].max,
+			data,
+			i,
+			j;
+
+			if(this.masterChart.xAxis[0].plotLinesAndBands[0] && this.masterChart.xAxis[0].plotLinesAndBands[1]){
+				min = this.masterChart.xAxis[0].plotLinesAndBands[0].options.to;
+				max = this.masterChart.xAxis[0].plotLinesAndBands[1].options.from;
+			}
+
+		for(i = 0; i < this.masterChart.series.length; i++) {
+			detailSeries.push({detailData: []});
+			// reverse engineer the last part of the data
+			data = this.masterChart.series[i].data;
+
+			for(j = 0; j < data.length; j++) {
+				if((data[j].x >= min) && (data[j].x <= max)) {
+					detailSeries[i].detailData.push([data[j].x, data[j].y]);
+				}
+			}
+		}
+
+		for(i = 0; i < this.detailChart.series.length; i++) {
+			this.detailChart.series[i].setData(detailSeries[i].detailData);
+		}
+
+		return;
+	}
+
 	MagicMap.prototype.doSelection = function(event) {
 		if(DEBUG) { console.log("[DEBUG] called doSelection()"); }
 		
@@ -1532,14 +1585,11 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 		var extremesObject = event.xAxis[0],
 			min = extremesObject.min,
 			max = extremesObject.max,
-			detailStart = [],
-			detailSeries = [],
 			xAxis = this.masterChart.xAxis[0],
 			minDate = new Date(extremesObject.min),
 			maxDate = new Date(extremesObject.max),
 			startFrame,
-			endFrame,
-			i;
+			endFrame;
 
 		this.zeroTime(minDate);
 		this.zeroTime(maxDate);
@@ -1550,18 +1600,9 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 		console.log("max: " + max);
 		console.log("max date: " + maxDate);
 
-		for(i = 0; i < this.masterChart.series.length; i++) {
-			detailSeries.push({detailData: []});
-			
-			// reverse engineer the last part of the data
-			$.each(this.masterChart.series[i].data, function() {
-				if((this.x >= min) && (this.x <= max)) {
-					detailSeries[i].detailData.push([this.x, this.y]);
-				}
-			});
-		}
-		
-		// move the plot bands to reflect the new detail span
+		// move the plot bands to reflect the new span
+		xAxis.removePlotLine('date-line');
+
 		xAxis.removePlotBand('mask-before');
 		xAxis.addPlotBand({
 			id: 'mask-before',
@@ -1581,11 +1622,9 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 				MAGIC_MAP.latestDate.getUTCDate()),
 			color: 'rgba(128, 128, 128, 0.2)'
 		});
-		
-		for(i = 0; i < MAGIC_MAP.detailChart.series.length; i++) {
-			MAGIC_MAP.detailChart.series[i].setData(detailSeries[i].detailData);
-		}
-		
+
+		this.updateDetailChart();
+
 		MAGIC_MAP.zeroTime(minDate);
 		MAGIC_MAP.zeroTime(maxDate);
 		
