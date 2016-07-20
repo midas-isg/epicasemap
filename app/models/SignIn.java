@@ -1,7 +1,12 @@
 package models;
 
+import play.data.validation.Constraints;
+import play.data.validation.Constraints.Required;
+
 public  class SignIn {
+	@Required
 	private String email;
+	@Required
 	private String password;
 
 	public String getEmail() {
