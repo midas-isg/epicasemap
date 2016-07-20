@@ -48,6 +48,7 @@ public class AccountRule extends CrudRule<Account> {
 		account.setPassword(newPassword(input.getPassword()));
 		account.setEmail(input.getEmail());
 		account.setName(input.getName());
+		account.setOrganization(input.getOrganization());
 		return account;
 	}
 
