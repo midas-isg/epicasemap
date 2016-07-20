@@ -36,6 +36,7 @@ public class User extends Controller {
 	public static Result register() {
 		Form<Registration> form = form(Registration.class).bindFromRequest();
 		if (form.hasErrors()) {
+			flash("message", "Failed to register! There were/was " + form.errors().size() + " eror/s.");
 			return badRequest(views.html.register.render(form));
 		}
 		

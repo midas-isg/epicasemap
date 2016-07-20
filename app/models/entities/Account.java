@@ -16,6 +16,7 @@ public class Account implements models.entities.Entity {
 	@JsonIgnore
 	private Password password;
 	private String name;
+	private String organization;
 
 	@Override
 	@Id
@@ -54,4 +55,12 @@ public class Account implements models.entities.Entity {
 	public void setPassword(Password password) {
 		this.password = password;
 	}
+
+    public String getOrganization() {
+        return organization;
+    }
+
+    public void setOrganization(String organization) {
+        this.organization = organization;
+    }
 }
