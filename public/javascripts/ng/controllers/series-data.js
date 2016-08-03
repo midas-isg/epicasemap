@@ -23,7 +23,7 @@ app.controller('SeriesData', function($scope, $rootScope, api) {
 
 			(function initialize() {
 				var currentYear = new Date().getFullYear(),
-				fetchServiceBaseURL = CONTEXT + "/api/series/tycho/json?type=";
+					fetchServiceBaseURL = CONTEXT + "/api/series/tycho/json?type=";
 
 				$("#start-date").attr("max", currentYear);
 				$("#end-date").attr("max", currentYear);
@@ -178,9 +178,10 @@ app.controller('SeriesData', function($scope, $rootScope, api) {
 			emitDone();
 			$scope.closeDialog();
 			loadCoordinates($scope.seriesId);
-		}, function (reason) {
+		},
+		function (reason) {
 			emitDone();
-			api.alert(dom.$alertParent, reason.statusText + 
+			api.alert(dom.$alertParent, reason.statusText +
 					': ' + reason.data && reason.data.userMessage, 'alert-danger');
 		});
 		
@@ -192,10 +193,8 @@ app.controller('SeriesData', function($scope, $rootScope, api) {
 		function makePath() {
 			return 'series/' + $scope.seriesId + '/data';
 		}
-		
-		function loadCoordinates(seriesId) {
-			$rootScope.$emit('loadCoordinates', seriesId);
-		}
+
+		return;
 	}
 	
 	function uploadViaUrlThenClose() {
@@ -258,9 +257,13 @@ app.controller('SeriesData', function($scope, $rootScope, api) {
 			 
 			return 'series/' + $scope.seriesId + '/data-url' + '?overWrite=' + $scope.overWrite;
 		}
-		 
-		function loadCoordinates(seriesId) {
-		 	$rootScope.$emit('loadCoordinates', seriesId);
-	 	}
+
+		return;
 	}
+
+	function loadCoordinates(seriesId) {
+		$rootScope.$emit('loadCoordinates', seriesId);
+	}
+
+	return;
 });

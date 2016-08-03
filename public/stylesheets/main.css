@@ -60,16 +60,16 @@ a:hover {
 
 /* table scrollable content */
 table {
-    table-layout:fixed;
+	table-layout:fixed;
 }
 
 .table-header{
-    margin-bottom: 0px;
+	margin-bottom: 0px;
 }
 .table-content {
-  max-height: 300px;
-  overflow-y:scroll;
-  margin-bottom: 0px;
+	max-height: 300px;
+	overflow-y:scroll;
+	margin-bottom: 0px;
 }
 
 /* column width */
@@ -96,9 +96,9 @@ table {
 footer{margin-top: 10px;}
 
 .alert{
-    padding-top: 5px;
-    padding-bottom: 5px;
-    margin-bottom: 10px;
+	padding-top: 5px;
+	padding-bottom: 5px;
+	margin-bottom: 10px;
 }
 
 .expandable:hover{
