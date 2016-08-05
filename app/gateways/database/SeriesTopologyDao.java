@@ -21,7 +21,7 @@ public class SeriesTopologyDao extends DataAccessObject<SeriesTopology> {
 
         final List<SeriesTopology> list = super.query(filter);
         if (list.isEmpty())
-            throw new NotFound(SeriesTopology.class.getSimpleName() + ": not found where Series ID = " + id);
+            return null;
         return list.get(0);
     }
 }

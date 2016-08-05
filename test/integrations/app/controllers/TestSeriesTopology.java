@@ -19,10 +19,12 @@ import static org.fest.assertions.Assertions.assertThat;
 import static play.test.Helpers.contentAsString;
 
 public class TestSeriesTopology {
-	private static final long theSeriesId = 1L;
-	private static SeriesTopology theData;
+    private static final long theSeriesId = 1L;
+    private static final JsonNode validGidsJson = Json.parse("{\"gids\":[1, 2]}");
+    private static SeriesTopology theData;
+    private static final String RollBackText = "Intentionally rollback";
 
-	@BeforeClass
+    @BeforeClass
 	public static void populateDatabase() {
 		runWithTransaction(() -> theData = persistThenDetachNewSeries());
 	}
@@ -67,9 +69,8 @@ public class TestSeriesTopology {
     }
 
     private void testCreateViaApi() {
-        final JsonNode jsonNode = Json.parse("{\"gids\":[1, 2]}");
         final long seriesId = theSeriesId + 1;
-        final String create = ApiTopology.linkToSeries(seriesId, jsonNode);
+        final String create = ApiTopology.linkToSeries(seriesId, validGidsJson);
         assertTopoJson(create);
         final Result read = ApiTopology.read(seriesId);
         final String content = contentAsString(read);
@@ -79,6 +80,27 @@ public class TestSeriesTopology {
     private void assertTopoJson(String result) {
         final JsonNode parse = Json.parse(result);
         assertThat(parse.get("type").textValue()).isEqualTo("Topology");
+    }
+
+    @Test
+    public void updateViaApi() {
+        try {
+            runWithTransaction(() -> testUpdateViaApi());
+        } catch (RuntimeException re){
+            assertThat(re.getMessage()).isEqualToIgnoringCase(RollBackText);
+        }
+    }
+
+    private void testUpdateViaApi() {
+        final long seriesId = theSeriesId;
+        final String oldTopoJson = theData.getTopoJson();
+        final String update = ApiTopology.linkToSeries(seriesId, validGidsJson);
+        assertTopoJson(update);
+        final Result read = ApiTopology.read(seriesId);
+        final String content = contentAsString(read);
+        assertThat(content).isEqualTo(update);
+        assertThat(content).isNotEqualTo(oldTopoJson);
+        throw new RuntimeException(RollBackText);
     }
 
     private static void runWithTransaction(Callback0 callback) {

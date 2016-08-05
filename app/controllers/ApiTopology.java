@@ -7,6 +7,7 @@ import gateways.database.SeriesTopologyDao;
 import gateways.webservice.AlsDao;
 import interactors.ClientRule;
 import models.entities.SeriesTopology;
+import models.exceptions.NotFound;
 import play.db.jpa.JPA;
 import play.db.jpa.Transactional;
 import play.libs.ws.WSResponse;
@@ -32,14 +33,24 @@ public class ApiTopology extends Controller {
     }
 
     private static void save(long seriesId, String topoJson) {
-        final SeriesTopology data = new SeriesTopology();
-        data.setSeriesId(seriesId);
+        final SeriesTopology data = wireSeriesTopology(seriesId);
         data.setTopoJson(topoJson);
-        new SeriesTopologyDao(JPA.em()).create(data);
+        new SeriesTopologyDao(JPA.em()).update(data.getId(), data);
     }
 
-    private static String readBySeriesId(long seriesId) {
-        return new SeriesTopologyDao(JPA.em()).readBySeriesId(seriesId).getTopoJson();
+    private static SeriesTopology wireSeriesTopology(long seriesId) {
+        SeriesTopology data = readBySeriesId(seriesId);
+        if (data == null) {
+            data = new SeriesTopology();
+            data.setSeriesId(seriesId);
+            data.setTopoJson("");
+            new SeriesTopologyDao(JPA.em()).create(data);
+        }
+        return data;
+    }
+
+    private static SeriesTopology readBySeriesId(long seriesId) {
+        return new SeriesTopologyDao(JPA.em()).readBySeriesId(seriesId);
     }
 
     private static WSResponse toTopology(JsonNode json) {
@@ -57,7 +68,10 @@ public class ApiTopology extends Controller {
     @ApiResponses({ @ApiResponse(code = OK, message = "Success") })
     @Transactional
     public static Result read(long seriesId){
-        return ok(readBySeriesId(seriesId)).as(TopoJsonContentType);
+        final SeriesTopology seriesTopology = readBySeriesId(seriesId);
+        if (seriesTopology == null)
+            throw new NotFound(SeriesTopology.class.getSimpleName() + ": not found where Series ID = " + seriesId);
+        return ok(seriesTopology.getTopoJson()).as(TopoJsonContentType);
     }
 
      @ApiOperation(httpMethod = "POST", nickname = "link",
