@@ -1,5 +1,6 @@
 package gateways.webservice;
 
+import static java.net.URLEncoder.encode;
 import static play.mvc.Http.Status.OK;
 import gateways.configuration.AppKey;
 import interactors.ClientRule;
@@ -36,28 +37,27 @@ public class AlsDao {
 	private static final String LATITUDE = "latitude";
 
 	private static String locationsUrl;
+	private static final String topoJsonUrl;
 	public static final String bulkLocationsUrl;
 	public static final String baseUrl;
 
 	static {
 		final ConfRule confRule = Factory.makeConfRule();
 		baseUrl = confRule.readString(AppKey.ALS_WS_URL.key());
-		locationsUrl = confRule.readString(AppKey.ALS_WS_URL.key()) + "/api/locations";
-		bulkLocationsUrl = baseUrl + "/api/locations/find-bulk"; //"/api/find-bulk";
+		locationsUrl = baseUrl + "/api/locations";
+		bulkLocationsUrl = baseUrl + "/api/locations/find-bulk";
+		topoJsonUrl = baseUrl + "/api/topojson";
 	}
 	
-	public Promise<List<NamedLocation>> getLocations(ALSIDQueryInput alsIDQueryInput) throws URISyntaxException, UnsupportedEncodingException {
-		String urlQuery = "?q=" + (URLEncoder.encode(alsIDQueryInput.locationName, "UTF-8").replaceAll("\\++", "%20"));
+	public Promise<List<NamedLocation>> getLocations(ALSIDQueryInput alsIDQueryInput)
+            throws URISyntaxException, UnsupportedEncodingException {
+        final String encode = encode(alsIDQueryInput.locationName, "UTF-8");
+        String urlQuery = "?q=" + (encode.replaceAll("\\++", "%20"));
 		ClientRule clientRule = makeAlsClientRule();
 		Promise<WSResponse> promisedWSResponse = clientRule.getAsynchronouslyByQuery(urlQuery);
 		
-//System.out.println(urlQuery);
-		
 		return promisedWSResponse.map(wsResponse -> {
 			JsonNode jsonResponse = wsResponse.asJson().get("geoJSON");
-//System.out.println(wsResponse.getAllHeaders());
-//System.out.println(alsIDQueryInput.locationName);
-			
 			return toLocations(jsonResponse);
 		});
 	}
@@ -73,7 +73,11 @@ public class AlsDao {
 	public ClientRule makeAlsClientRule() {
 		return new ClientRule(locationsUrl);
 	}
-	
+
+	public ClientRule makeTopoJsonClient() {
+		return new ClientRule(topoJsonUrl);
+	}
+
 	public ClientRule makeAlsClientRule(String inputUrl) {
 		return new ClientRule(inputUrl);
 	}
@@ -87,7 +91,6 @@ public class AlsDao {
 
 	Location toLocation(JsonNode jsonNode) {
 		Location location = new Location();
-		//Map<String, Double> center = centroid(getBbox(jsonNode));
 		Map<String, Double> center = new HashMap<String, Double>();
 		center.put(LONGITUDE, jsonNode.get("repPoint").get(0).asDouble());
 		center.put(LATITUDE, jsonNode.get("repPoint").get(1).asDouble());
@@ -104,48 +107,18 @@ public class AlsDao {
 		JsonNode features = geoJSONResponse.get("features");
 		JsonNode currentFeature;
 		
-/*
-play.Logger.debug(geoJSONResponse.toString());
-Iterator<String> fieldNameIterator = geoJSONResponse.fieldNames();
-while(fieldNameIterator.hasNext()) {
-	play.Logger.debug(fieldNameIterator.next());
-}
-*/
-		
+
 		int featureCount = features.size();
 		NamedLocation location;
 		
 		for(int i = 0; i < featureCount; i++) {
 			currentFeature = features.get(i);
 			location = new NamedLocation();
-			//Map<String, Double> center = centroid(getBbox(geoJSONResponse));
-			//location.setLatitude(center.get(LATITUDE));
-			//location.setLongitude(center.get(LONGITUDE));
 			location.setLabel(getSpecificName(currentFeature));
 			location.setAlsId(getID(currentFeature));
 			location.setLocationTypeName(currentFeature.get("properties").get("locationTypeName").asText());
 			locations.add(location);
-			
-
-System.out.println("\n" + location.getLabel() + " " + location.getAlsId());
-JsonNode currentProperties = currentFeature.get("properties");
-Iterator<String> childrenNamesIterator = currentProperties.fieldNames();
-String field;
-while(childrenNamesIterator.hasNext()) {
-	field = childrenNamesIterator.next();
-System.out.println(field + ": " + currentProperties.get(field).asText());
-	
-	if(field.equals("lineage")) {
-		Iterator<JsonNode> lineageIterator = currentProperties.get(field).elements();
-		while(lineageIterator.hasNext()) {
-System.out.println("\t" + lineageIterator.next().asText());
 		}
-	}
-}
-		
-		}
-//System.out.println(locations.size() + " location(s)\n");
-		
 		return locations;
 	}
 
@@ -239,5 +212,4 @@ System.out.println("\t" + lineageIterator.next().asText());
 	private static double mid(Double a, Double b) {
 		return Math.min(a, b) + ((Math.abs(b - a)) / 2);
 	}
-
 }
