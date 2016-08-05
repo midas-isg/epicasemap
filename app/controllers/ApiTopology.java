@@ -1,17 +1,19 @@
 package controllers;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.annotations.VisibleForTesting;
 import com.wordnik.swagger.annotations.*;
+import gateways.database.SeriesTopologyDao;
 import gateways.webservice.AlsDao;
 import interactors.ClientRule;
-import models.exceptions.NotFound;
+import models.entities.SeriesTopology;
+import play.db.jpa.JPA;
+import play.db.jpa.Transactional;
 import play.libs.ws.WSResponse;
 import play.mvc.Controller;
 import play.mvc.Result;
 
 import javax.ws.rs.PathParam;
-import java.util.HashMap;
-import java.util.Map;
 
 import static controllers.ApiAid.toJsonNode;
 
@@ -20,12 +22,24 @@ import static controllers.ApiAid.toJsonNode;
 public class ApiTopology extends Controller {
     private static final String TopoJsonContentType = "application/geo+json";
 
-    private static Result linkToSeries(long seriesId, JsonNode bodyJson) {
+    @VisibleForTesting
+    public static String linkToSeries(long seriesId, JsonNode bodyJson) {
         final WSResponse response = toTopology(bodyJson);
         assureResponseIsValidJson(response);
         final String result = response.getBody();
-        new TopoJsonDao().save(seriesId, result);
-        return ok(result).as(TopoJsonContentType);
+        save(seriesId, result);
+        return result;
+    }
+
+    private static void save(long seriesId, String topoJson) {
+        final SeriesTopology data = new SeriesTopology();
+        data.setSeriesId(seriesId);
+        data.setTopoJson(topoJson);
+        new SeriesTopologyDao(JPA.em()).create(data);
+    }
+
+    private static String readBySeriesId(long seriesId) {
+        return new SeriesTopologyDao(JPA.em()).readBySeriesId(seriesId).getTopoJson();
     }
 
     private static WSResponse toTopology(JsonNode json) {
@@ -41,11 +55,12 @@ public class ApiTopology extends Controller {
     @ApiOperation(httpMethod = "GET", nickname = "read",
             value = "Returns the TopoJSON by Series ID")
     @ApiResponses({ @ApiResponse(code = OK, message = "Success") })
+    @Transactional
     public static Result read(long seriesId){
-        return ok(new TopoJsonDao().read(seriesId)).as(TopoJsonContentType);
+        return ok(readBySeriesId(seriesId)).as(TopoJsonContentType);
     }
 
-    @ApiOperation(httpMethod = "POST", nickname = "link",
+     @ApiOperation(httpMethod = "POST", nickname = "link",
             value = "Link the Series with TopoJSON",
             notes = "This endpoint links a Series to TopoJSON generated " +
                     "from submitted JSON object in body ")
@@ -56,24 +71,12 @@ public class ApiTopology extends Controller {
             @ApiImplicitParam(required = true, value = "{\"gids\":[1, 2]}",
                     paramType = "body")
     })
+    @Transactional
     public static Result postLinkToSeries(
             @ApiParam(value = "ID of the Series", required = true)
             @PathParam("id") long seriesId) {
         final JsonNode bodyJson = toJsonNode(request());
-        return linkToSeries(seriesId, bodyJson);
-    }
+        return ok(linkToSeries(seriesId, bodyJson)).as(TopoJsonContentType);
 
-    static class TopoJsonDao {
-        private static Map<Long, String> hackingMap = new HashMap<>();
-
-        public String read(long seriesId) {
-            final String json = hackingMap.get(seriesId);
-            if (json == null) throw new NotFound();
-            return json;
-        }
-
-        public void save(long seriesId, String json) {
-            hackingMap.put(seriesId, json);
-        }
     }
 }
