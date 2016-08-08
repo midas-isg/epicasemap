@@ -35,7 +35,7 @@ public class TestLocationRule {
 		catch(Exception e){
 			expected = e.getMessage();
 		}
-		assertThat(expected).isEqualTo("Internal Server Error");
+		assertThat(expected).isEqualTo("Not Found");
 		
 		loc = SeriesDataFileHelper.makeLocation();
 		double lat = 10.1;
