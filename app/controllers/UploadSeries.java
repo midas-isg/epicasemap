@@ -183,7 +183,8 @@ Logger.debug("connection available");
 		try {
 			lockSeries(seriesId, true);
 			result = save(seriesId, dataFile);
-		} finally {
+		}
+		finally {
 			lockSeries(seriesId, false);
 			JPA.bindForCurrentThread(emFromTransactionalAnnoation);
 			deleteTempFile(dataFile);
@@ -198,20 +199,23 @@ Logger.debug(result.toString());
 		try {
 			result = JPA.withTransaction(() -> {
 				Result innerResult = null;
-
 				EntityManager em = JPA.em();
 				Validator validator = Factory.makeValidator(dataFile);
 				Persister persister = Factory.makePersister(dataFile);
 				String errors = validate(validator, dataFile);
-				if (errors.equals("")) {
+				
+				if(errors.equals("")) {
 					int deletedDataSize = deleteExisitingSeriesData(em,
 							seriesId);
 					int createdDataSize = create(persister, seriesId);
+					
 					innerResult = created(makeMsg(deletedDataSize,
 							createdDataSize));
-				} else {
+				}
+				else {
 					innerResult = badRequest(errors);
 				}
+				
 				return innerResult;
 			});
 		} catch (Throwable e) {

@@ -3,8 +3,10 @@ package interactors;
 import gateways.database.LocationDao;
 import gateways.webservice.AlsDao;
 
+import java.util.Iterator;
 import java.util.List;
 
+import play.Logger;
 import models.entities.Location;
 import models.filters.LocationFilter;
 
@@ -50,8 +52,11 @@ public class LocationRule extends CrudRule<Location> {
 
 	public Location getLocationByAlsId(Long alsId) {
 		Location location = queryByAlsId(alsId);
-		if (location == null)
+		
+		if (location == null) {
 			location = getLocationFromAls(alsId);
+		}
+		
 		return location;
 	}
 
@@ -63,6 +68,7 @@ public class LocationRule extends CrudRule<Location> {
 
 	private Location queryByAlsId(Long alsId) {
 		LocationFilter filter = buildLocationFilter(alsId);
+		
 		return findOne(filter);
 	}
 
@@ -72,10 +78,12 @@ public class LocationRule extends CrudRule<Location> {
 
 	private Location findOne(LocationFilter filter) {
 		List<Location> LocList = query(filter);
-		if (!LocList.isEmpty())
+		
+		if (!LocList.isEmpty()) {
 			return LocList.get(0);
-		else
-			return null;
+		}
+		
+		return null;
 	}
 
 	private LocationFilter buildLocationFilter(Double latitude, Double longitude) {

@@ -11,6 +11,8 @@ import java.util.Set;
 
 import org.joda.time.DateTime;
 
+import play.Logger;
+
 public class Validator {
 
 	private LocationRule locationRule;
@@ -19,22 +21,26 @@ public class Validator {
 	private Map<Long, List<String>> errors = new HashMap<Long, List<String>>();
 
 	public Map<Long, List<String>> validateDataFile() {
-
 		List<String> errorList = new ArrayList<String>();
 		addErrorToList(errorList, parser.getParseError());
-		if (!errorList.isEmpty()) {
+		
+		if(!errorList.isEmpty()) {
 			errors.put(1L, errorList);
+			
 			return this.errors;
 		}
+		
 		if ((errorList = getFileConsistencyError()).isEmpty()) {
 			while (parser.hasNext()) {
 				if (!(errorList = getRecordErrors(parser.next())).isEmpty()) {
 					errors.put(parser.getCurrentLineNumber(), errorList);
 				}
 			}
-		} else {
+		}
+		else {
 			errors.put(parser.getCurrentLineNumber(), errorList);
 		}
+		
 		return errors;
 	}
 
@@ -78,13 +84,13 @@ public class Validator {
 	}
 
 	private List<String> getRecordErrors(DataPoint dataPoint) {
-
 		List<String> errors = new ArrayList<String>();
+		
 		addErrorToList(errors, getRecordSizeError(dataPoint));
 		addErrorToList(errors, getDateTimeError(dataPoint));
 		addErrorToList(errors, getValueError(dataPoint));
 		addErrorToList(errors, getLocationValueError(dataPoint));
-
+		
 		return errors;
 	}
 
@@ -108,53 +114,50 @@ public class Validator {
 	}
 
 	String getLocationValueError(DataPoint dataPoint) {
-
 		String errorMsg = "";
 		String header;
-
+		
 		switch (dataFile.getFileFormat()) {
-		case SeriesDataFile.ALS_ID_FORMAT:
+			case SeriesDataFile.ALS_ID_FORMAT:
+				header = dataFile
+						.stdHeaderToFileHeader(SeriesDataFile.ALS_ID_HEADER);
 
-			header = dataFile
-					.stdHeaderToFileHeader(SeriesDataFile.ALS_ID_HEADER);
+				if(!dataPoint.get(header).isEmpty()) {
+					if (!isNumber(dataPoint.get(header))) {
+						errorMsg = header + ": " + dataPoint.get(header)
+								+ " is not valid.";
+					} else if (!existInAls(dataPoint.get(header))) {
+						errorMsg = header + ": " + dataPoint.get(header)
+								+ " does not exist in ALS.";
+					}
+				}
+			break;
 
-			if(!dataPoint.get(header).isEmpty()) {
+			case SeriesDataFile.COORDINATE_FORMAT:
+				header = dataFile
+						.stdHeaderToFileHeader(SeriesDataFile.LATITUDE_HEADER);
+	
 				if (!isNumber(dataPoint.get(header))) {
 					errorMsg = header + ": " + dataPoint.get(header)
-							+ " is not valid.";
-				} else if (!existInAls(dataPoint.get(header))) {
-					errorMsg = header + ": " + dataPoint.get(header)
-							+ " does not exist in ALS.";
+							+ " is not valid. ";
 				}
-			}
-			
-			break;
-
-		case SeriesDataFile.COORDINATE_FORMAT:
-
-			header = dataFile
-					.stdHeaderToFileHeader(SeriesDataFile.LATITUDE_HEADER);
-
-			if (!isNumber(dataPoint.get(header))) {
-				errorMsg = header + ": " + dataPoint.get(header)
-						+ " is not valid. ";
-			}
-			header = dataFile
-					.stdHeaderToFileHeader(SeriesDataFile.LONGITUDE_HEADER);
-			if (!isNumber(dataPoint.get(header))) {
-				errorMsg += header + ": " + dataPoint.get(header)
-						+ " is not valid.";
-			}
-
+				header = dataFile
+						.stdHeaderToFileHeader(SeriesDataFile.LONGITUDE_HEADER);
+				if (!isNumber(dataPoint.get(header))) {
+					errorMsg += header + ": " + dataPoint.get(header)
+							+ " is not valid.";
+				}
 			break;
 		}
+		
 		return errorMsg;
 	}
 
 	private boolean existInAls(String alsId) {
 		try {
 			locationRule.getLocationByAlsId(Long.parseLong(alsId));
-		} catch (RuntimeException e) {
+		}
+		catch (RuntimeException e) {
 			return false;
 		}
 		return true;

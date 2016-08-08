@@ -5,6 +5,7 @@ import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 
+import play.Logger;
 import models.entities.Entity;
 import models.exceptions.NotFound;
 import models.filters.Filter;
@@ -20,12 +21,15 @@ public class JpaAdaptor {
 	public <T> List<T> query(Class<T> clazz, Filter filter) {
 		QueryMaker<T> querySupplier = new QueryMaker<T>(em, clazz);
 		TypedQuery<T> query = querySupplier.make(filter);
+		
 		return getResults(query, filter);
 	}
 
 	private <T> List<T> getResults(TypedQuery<T> query, Filter filter) {
-		if (filter != null && filter instanceof Pagination)
+		if(filter != null && filter instanceof Pagination) {
 			paginate(query, (Pagination)filter);
+		}
+		
 		return query.getResultList();
 	}
 	

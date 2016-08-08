@@ -23,3 +23,6 @@ libraryDependencies ++= Seq(
   javaJpa,
   "org.apache.commons" % "commons-csv" % "1.1"
 )
+
+
+fork in run := true

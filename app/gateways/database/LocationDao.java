@@ -8,6 +8,7 @@ import java.util.Map;
 
 import javax.persistence.EntityManager;
 
+import play.Logger;
 import models.entities.Location;
 import models.filters.LocationFilter;
 
@@ -24,6 +25,7 @@ public class LocationDao extends DataAccessObject<Location> {
 		populateEqualities(filter);
 		populateInOperators(filter);
 		populateOrder(filter);
+		
 		return super.query(filter);
 	}
 
@@ -32,13 +34,18 @@ public class LocationDao extends DataAccessObject<Location> {
 		equalityMap.put("alsId", filter.getAlsId());
 		equalityMap.put("latitude", filter.getLatitude());
 		equalityMap.put("longitude", filter.getLongitude());
+		
+		return;
 	}
 
 	private void populateInOperators(LocationFilter filter) {
 		Map<String, List<?>> inMap = filter.getInOperators();
 		inMap.put("id", filter.getIds());
+		
+		return;
 	}
 
 	private void populateOrder(LocationFilter filter) {
+		return;
 	}
 }
