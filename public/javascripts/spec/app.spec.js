@@ -1,7 +1,7 @@
 describe('Module: app: Security', () => {
 	'use strict'; `comment: use ES6`;
 	var my = {publicAccountId:1};
-	var seriesId2permissionId = {}
+	var seriesId2permissionId = {};
 	let testEmail = 'test@test.com';
 	
 	afterAll(() =>{
@@ -106,7 +106,7 @@ describe('Module: app: Security', () => {
 					done();
 				});
 			});
-			let errorMessage = 'Unauthorized'
+			let errorMessage = 'Unauthorized';
 			it(`should return error ${errorMessage}`,()=>{
 				expect(statusMessage).toBe(errorMessage);
 			});
@@ -141,7 +141,9 @@ describe('Module: app: Security', () => {
 		let body = {email:'test@test.com',password:'test'};
 		post('login', body, success, done);
 	}
+
 	function testSeriesAfterLoggedIn(){
+	    let gids = [1,2];
 		describe(`then creating new Series`, () => {
 			beforeEach(done => {
 				let path = toSeriesPath();
@@ -152,16 +154,48 @@ describe('Module: app: Security', () => {
 				}, done);
 			});
 			
-			it('should create a new Series with a positive ID',()=>{
-				expect(my.seriesIdSharingNone).toBeGreaterThan(0);
-			});
+			it('should create a new Series with a positive ID' +
+                ` and be able to link TopoJSON with gids = [${gids}]`,
+                (done)=>{
+				    expect(my.seriesIdSharingNone).toBeGreaterThan(0);
+                    testLinkTopoJson(done);
+                }
+            );
 		});
 		
 		testShareNewSeriesToId('testAccountId', 'seriesIdSharingToTest');
 		testShareNewSeriesToId('publicAccountId', 'seriesIdSharingToPublic');
-		
-		
-		function testShareNewSeriesToId(aKey, sKey){
+
+        function testLinkTopoJson(done) {
+            let sId = my.seriesIdSharingNone;
+            let path = `api/series/${sId}/topology`;
+            get(path,
+                () => {
+                    done.fail("expected error but was success!");
+                }, (jqXHR, textStatus, errorThrown) => {
+                    expect(errorThrown).toBe("Not Found");
+                    post(path, {gids},
+                        (topoJson1, textStatus, jqXHR) => {
+                            let contentType = jqXHR.getResponseHeader('Content-Type');
+                            expect(contentType).toBe('application/geo+json');
+                            expect(jqXHR.statusText).toBe('OK');
+                            expect(topoJson1.type).toBe('Topology');
+                            expect(topoJson1.arcs).toBeObject();
+                            get(path,
+                                (topoJson2) => {
+                                    expect(topoJson2).toEqual(topoJson1);
+                                    done();
+                                }
+                            );
+                        }, () => {
+                            done.fail(`linking series and TopoJSON fail!`);
+                        }
+                    );
+                }
+            );
+        }
+
+        function testShareNewSeriesToId(aKey, sKey){
 		describe(`then creating new Series sharing to Test`, () => {
 			var id = null;
 			var permission = null;
@@ -204,10 +238,13 @@ describe('Module: app: Security', () => {
 			beforeEach(done => {
 				let path = toVizPath();
 				my.publicVizId = null;
-				post(path, {seriesIds:[my.seriesIdSharingNone, my.seriesIdSharingToTest]}, (data, textStatus, rsp)=>{
-					my.publicVizId = toId(rsp, path); 
-					done();
-				}, done);
+				post(path, {seriesIds:[my.seriesIdSharingNone, my.seriesIdSharingToTest]},
+                    (data, textStatus, rsp)=>{
+					    my.publicVizId = toId(rsp, path);
+					    done();
+				    },
+                    done
+                );
 			});
 			
 			it('should create a new Viz with a positive ID',()=>{

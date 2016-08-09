@@ -41,7 +41,10 @@ GET     /api/series/:id/time-coordinate   controllers.ApiTimeCoordinateSeries.ge
 GET     /api/series/:id/data         controllers.ApiSeries.getData(id:Long, startInclusive?=null, endExclusive?=null, limit:java.lang.Integer?=null, offset:Int?=0)
 
 PUT		/api/series/:id/data         controllers.ApiSeries.uploadData(id:Long)
-PUT		/api/series/:id/data-url		controllers.ApiSeries.updateDataViaUrl(id:Long, overWrite: Boolean ?= false)
+PUT		/api/series/:id/data-url	 controllers.ApiSeries.updateDataViaUrl(id:Long, overWrite: Boolean ?= false)
+
+GET     /api/series/:id/topology     controllers.ApiTopology.read(id:Long)
+POST    /api/series/:id/topology     controllers.ApiTopology.postLinkToSeries(id:Long)
 
 PUT		/api/series/:id/data-tycho		controllers.APITychoSeries.updateDataViaUrl(id:Long, overWrite: Boolean ?= false)
 PUT		/api/series/:id/save-tycho		controllers.APITychoSeries.saveData(id:Long, overWrite: Boolean ?= false)
