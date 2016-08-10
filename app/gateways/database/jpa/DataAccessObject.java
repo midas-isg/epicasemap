@@ -1,14 +1,19 @@
 package gateways.database.jpa;
 
-import java.util.List;
-
 import models.entities.Entity;
 import models.filters.Filter;
+
+import javax.persistence.EntityManager;
+import java.util.List;
 
 public class DataAccessObject<T extends Entity> {
 	private Class<T> clazz;
 	private JpaAdaptor adaptor;
-	
+
+	public DataAccessObject(Class<T> clazz, EntityManager em){
+		this(clazz, new JpaAdaptor(em));
+	}
+
 	public DataAccessObject(Class<T> clazz, JpaAdaptor adaptor){
 		this.clazz = clazz;
 		this.adaptor = adaptor;

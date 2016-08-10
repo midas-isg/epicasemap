@@ -176,6 +176,7 @@ Logger.debug("File created: time to save");
 	private static Result uploadSeriesData(long seriesId, SeriesDataFile dataFile) {
 		Result result = null;
 		EntityManager emFromTransactionalAnnoation = JPA.em();
+		
 Logger.debug("checking for connection...");
 		checkConnectionAvailability(emFromTransactionalAnnoation);
 Logger.debug("connection available");

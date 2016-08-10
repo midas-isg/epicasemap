@@ -16,7 +16,7 @@ public class LandingPageTester {
     }
 
 	private String javaScriptContext(String context) {
-		String template = "var CONTEXT = '%s';";
+		String template = "var CONTEXT = '%s',";
 		String expected = String.format(template, context);
 		return expected;
 	}

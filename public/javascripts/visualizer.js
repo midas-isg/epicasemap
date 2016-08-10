@@ -4,7 +4,7 @@ visualizer.js
 
 (function() {
 	var DEBUG = false;
-	
+
 	function MagicMap() {
 		var i,
 			j,
@@ -91,8 +91,7 @@ visualizer.js
 			
 			return location.assign(CONTEXT + "/visualizer?id=" + thisMap.vizID + "&map=" + $(this).val());
 		});
-		
-		
+
 		this.setGradient = [];
 		this.colorSet = [
 			['#1b9e77', '#d95f02', '#7570b3', '#e7298a', '#66a61e'],
@@ -128,190 +127,6 @@ visualizer.js
 		}
 		$("#palette-0").addClass("selected");
 
-		(function addChoroplethLayers(choroplethSource, choroplethLayer, lsURL) {
-			var encodedStatesURL = encodeURIComponent(lsURL),
-				jsonRoute = CONTEXT + "/api/get-json/" + encodedStatesURL,
-				popup = new L.Popup({autoPan: false});
-
-			thisMap.choroplethValues = {current: {}, visible: {}, cumulative: {}};
-
-			//TODO: evaluate whether AJAX is needed (depends on dynamic vs static gID association)
-			$.ajax({
-				url: jsonRoute,
-				success: function(result, status, xhr) {
-					var i;
-
-					console.log(result);
-					console.log(status);
-					console.log(xhr);
-
-					/*
-					for(i = 0; i < choroplethLayer.features.length; i++) {
-						thisMap.choroplethValues.current[choroplethLayer.features[i].properties.ALS_ID] = 0;
-						thisMap.choroplethValues.visible[choroplethLayer.features[i].properties.ALS_ID] = 0;
-						thisMap.choroplethValues.cumulative[choroplethLayer.features[i].properties.ALS_ID] = 0;
-					}
-
-					thisMap.choroplethLayer = L.geoJson(choroplethLayer, {
-						style: getStyle,
-						onEachFeature: onEachFeature
-					});
-					*/
-
-					for(i = 0; i < choroplethLayer.geometries.length; i++) {
-						thisMap.choroplethValues.current[choroplethLayer.geometries[i].properties.gid] = 0;
-						thisMap.choroplethValues.visible[choroplethLayer.geometries[i].properties.gid] = 0;
-						thisMap.choroplethValues.cumulative[choroplethLayer.geometries[i].properties.gid] = 0;
-					}
-
-					thisMap.choroplethLayer = L.geoJson(omnivore.topojson.parse(choroplethSource), {
-						style: getStyle,
-						onEachFeature: onEachFeature
-					});
-
-					thisMap.choroplethLayer.addTo(thisMap.map);
-
-					thisMap.updateChoroplethLayer = function() {
-						thisMap.choroplethLayer.eachLayer(function(layer) {
-							layer.setStyle(getStyle(layer.feature));
-
-							return;
-						});
-
-						//TODO: set popup text content here
-
-						return;
-					};
-
-					return;
-				},
-				error: function(xhr, status, error) {
-					console.log(xhr);
-					console.log(status);
-					console.log(error);
-					alert(xhr + "\n" + status + "\n" + error);
-
-					return;
-				}
-			});
-
-			function getStyle(feature) {
-				var seriesIndex = thisMap.choroplethSeriesIndex,
-					gId,
-					choroplethValue,
-					maxValue;
-
-				if(thisMap.choroplethSeriesIndex === -1) {
-					return {
-						opacity: 0.0,
-						fillOpacity: 0.0
-					};
-				}
-
-				gId = feature.properties.gid;
-				choroplethValue = thisMap.choroplethValues.visible[gId];
-				maxValue = thisMap.dataset[seriesIndex].maxOccurrenceValue;
-
-				if(thisMap.displayCumulativeValues) {
-					choroplethValue = thisMap.choroplethValues.cumulative[gId];
-					maxValue = thisMap.dataset[seriesIndex].maxCumulativeChoroplethValue;
-				}
-
-				return {
-					weight: 2,
-					opacity: 0.4,
-					color: getBorderColor(),
-					fillOpacity: getOpacity(choroplethValue, maxValue),
-					fillColor: getFillColor()
-				};
-			}
-
-			function getOpacity(value, maxValue) {
-				if((value === undefined) || (value === 0)) {
-					return 0;
-				}
-
-				return (value / maxValue * 0.9) + 0.09;
-			}
-
-			function getBorderColor() {
-				return thisMap.colors[thisMap.uiSettings.series[thisMap.choroplethSeriesIndex].color];
-			}
-
-			function getFillColor() {
-				return thisMap.colors[thisMap.uiSettings.series[thisMap.choroplethSeriesIndex].color];
-			}
-
-			function onEachFeature(feature, layer) {
-				layer.on({
-					//mousemove: mousemove,
-					//mouseout: mouseout,
-					click: click
-				});
-			}
-
-			function click(e) {
-				var layer = e.target,
-					popupText = '<div class="marker-title">' + layer.feature.properties.name + '</div>';
-
-				if(thisMap.choroplethValues.cumulative[layer.feature.properties.gid] == null) {
-					popupText += '<div>total cases beyond scope of data</div>';
-				}
-				else {
-					popupText += '<div>' + thisMap.choroplethValues.cumulative[layer.feature.properties.gid] + ' total cases' + '</div>';
-				}
-
-				popupText += '<div><var>(+' + thisMap.choroplethValues.visible[layer.feature.properties.gid] + ' latest cases)' + '</var></div>' +
-					'<div><em>' + thisMap.seriesList[thisMap.choroplethSeriesIndex].title + '</em></div>';
-
-				//thisMap.map.fitBounds(e.target.getBounds());
-
-				popup.setLatLng(e.latlng);
-				popup.setContent(popupText);
-
-				if (!popup._map) {
-					popup.openOn(thisMap.map);
-				}
-
-				if(!L.Browser.ie && !L.Browser.opera) {
-					layer.bringToFront();
-				}
-
-				return;
-			}
-
-			function mousemove(e) {
-				var layer = e.target;
-
-				popup.setLatLng(e.latlng);
-				popup.setContent('<div class="marker-title">' + layer.feature.properties.NAME + '</div>' +
-					thisMap.choroplethValues.cumulative[layer.feature.properties.gid] + ' cases');
-
-				if (!popup._map) {
-					popup.openOn(thisMap.map);
-				}
-				//window.clearTimeout(closeTooltip);
-
-				// highlight feature
-				layer.setStyle({
-					weight: 3,
-					opacity: 0.3,
-					fillOpacity: 0.9
-				});
-
-				if(!L.Browser.ie && !L.Browser.opera) {
-					layer.bringToFront();
-				}
-			}
-
-			function mouseout(e) {
-				thisMap.choroplethLayer.resetStyle(e.target);
-				closeTooltip = window.setTimeout(function () {
-					thisMap.map.closePopup();
-				}, 100);
-			}
-		})(US_STATES, US_STATES.objects.us_states, "http://betaweb.rods.pitt.edu/ls/api/locations/1216?maxExteriorRings=0");
-		
 		return this;
 	}
 	
@@ -360,12 +175,210 @@ visualizer.js
 				var h,
 					i,
 					svg,
-					svgElement;
+					svgElement,
+					seriesIDs = [],
+					choroplethSources = [];
 				
 				$("#title").text(result.result.title);
 				
 				thisMap.seriesList = result.result.allSeries;
-				
+
+				//TODO: fetch choroplethSource(s) from series IDs and send to addChoroplethLayers
+				for(h = 0; h < thisMap.seriesList; h++) {
+					seriesIDs[h] = thisMap.seriesList[h].id;
+				}
+
+				(function getChoroplethSources(seriesIDs) {
+					var i;
+
+					for(i = 0; i < seriesIDs; i++) {
+						choroplethSources[i] = addSource(seriesIDs[i]);
+					}
+
+					function addSource(seriesID) {
+						var topojsonURL = CONTEXT + "/api/series/" + seriesID + "/topology";
+
+						$.ajax({
+							url: topojsonURL,
+							type: "GET",
+							success: function(result, status, xhr){
+								console.log(result);
+
+								return result;
+							},
+							error: function(xhr, status, error){
+								console.warn("Error: " + error);
+								return;
+							}
+						});
+					}
+
+					return;
+				})(seriesIDs);
+
+				function addChoroplethLayers(choroplethSource) {
+					var choroplethLayer,
+						popup = new L.Popup({autoPan: false}),
+						i;
+
+					for(i in choroplethSource.objects) {
+						if(choroplethSource.objects.hasOwnProperty(i)) {
+							choroplethLayer = choroplethSource.objects[i];
+							break;
+						}
+					}
+
+					thisMap.choroplethValues = {current: {}, visible: {}, cumulative: {}};
+
+					for(i = 0; i < choroplethLayer.geometries.length; i++) {
+						thisMap.choroplethValues.current[choroplethLayer.geometries[i].properties.gid] = 0;
+						thisMap.choroplethValues.visible[choroplethLayer.geometries[i].properties.gid] = 0;
+						thisMap.choroplethValues.cumulative[choroplethLayer.geometries[i].properties.gid] = 0;
+					}
+
+					thisMap.choroplethLayer = L.geoJson(omnivore.topojson.parse(choroplethSource), {
+						style: getStyle,
+						onEachFeature: onEachFeature
+					});
+
+					thisMap.choroplethLayer.addTo(thisMap.map);
+
+					thisMap.updateChoroplethLayer = function() {
+						thisMap.choroplethLayer.eachLayer(function(layer) {
+							layer.setStyle(getStyle(layer.feature));
+
+							return;
+						});
+
+						//TODO: set popup text content here
+
+						return;
+					};
+
+					function getStyle(feature) {
+						var seriesIndex = thisMap.choroplethSeriesIndex,
+							gId,
+							choroplethValue,
+							maxValue;
+
+						if(thisMap.choroplethSeriesIndex === -1) {
+							return {
+								opacity: 0.0,
+								fillOpacity: 0.0
+							};
+						}
+
+						gId = feature.properties.gid;
+						choroplethValue = thisMap.choroplethValues.visible[gId];
+						maxValue = thisMap.dataset[seriesIndex].maxOccurrenceValue;
+
+						if(thisMap.displayCumulativeValues) {
+							choroplethValue = thisMap.choroplethValues.cumulative[gId];
+							maxValue = thisMap.dataset[seriesIndex].maxCumulativeChoroplethValue;
+						}
+
+						return {
+							weight: 2,
+							opacity: 0.4,
+							color: getBorderColor(),
+							fillOpacity: getOpacity(choroplethValue, maxValue),
+							fillColor: getFillColor()
+						};
+					}
+
+					function getOpacity(value, maxValue) {
+						if((value === undefined) || (value === 0)) {
+							return 0;
+						}
+
+						return (value / maxValue * 0.9) + 0.09;
+					}
+
+					function getBorderColor() {
+						return thisMap.colors[thisMap.uiSettings.series[thisMap.choroplethSeriesIndex].color];
+					}
+
+					function getFillColor() {
+						return thisMap.colors[thisMap.uiSettings.series[thisMap.choroplethSeriesIndex].color];
+					}
+
+					function onEachFeature(feature, layer) {
+						layer.on({
+							//mousemove: mousemove,
+							//mouseout: mouseout,
+							click: click
+						});
+					}
+
+					function click(e) {
+						var layer = e.target,
+							popupText = '<div class="marker-title">' + layer.feature.properties.name + '</div>';
+
+						if(thisMap.choroplethValues.cumulative[layer.feature.properties.gid] == null) {
+							popupText += '<div>total cases beyond scope of data</div>';
+						}
+						else {
+							popupText += '<div>' + thisMap.choroplethValues.cumulative[layer.feature.properties.gid] + ' total cases' + '</div>';
+						}
+
+						popupText += '<div><var>(+' + thisMap.choroplethValues.visible[layer.feature.properties.gid] + ' latest cases)' + '</var></div>' +
+							'<div><em>' + thisMap.seriesList[thisMap.choroplethSeriesIndex].title + '</em></div>';
+
+						//thisMap.map.fitBounds(e.target.getBounds());
+
+						popup.setLatLng(e.latlng);
+						popup.setContent(popupText);
+
+						if (!popup._map) {
+							popup.openOn(thisMap.map);
+						}
+
+						if(!L.Browser.ie && !L.Browser.opera) {
+							layer.bringToFront();
+						}
+
+						return;
+					}
+
+					function mousemove(e) {
+						var layer = e.target;
+
+						popup.setLatLng(e.latlng);
+						popup.setContent('<div class="marker-title">' + layer.feature.properties.NAME + '</div>' +
+							thisMap.choroplethValues.cumulative[layer.feature.properties.gid] + ' cases');
+
+						if (!popup._map) {
+							popup.openOn(thisMap.map);
+						}
+						//window.clearTimeout(closeTooltip);
+
+						// highlight feature
+						layer.setStyle({
+							weight: 3,
+							opacity: 0.3,
+							fillOpacity: 0.9
+						});
+
+						if(!L.Browser.ie && !L.Browser.opera) {
+							layer.bringToFront();
+						}
+					}
+
+					function mouseout(e) {
+						thisMap.choroplethLayer.resetStyle(e.target);
+						closeTooltip = window.setTimeout(function () {
+							thisMap.map.closePopup();
+						}, 100);
+					}
+				}
+
+				addChoroplethLayers(US_STATES);
+				/*
+				for(h = 0; h < choroplethSources.length; h++) {
+					addChoroplethLayers(choroplethSources[h]);
+				}
+				*/
+
 				for(h = 0; h < thisMap.seriesList.length; h++) {
 					thisMap.seriesDescriptions[thisMap.seriesList[h].id] = {
 						title: thisMap.seriesList[h].title,
@@ -769,7 +782,6 @@ visualizer.js
 			$("#series-" + selectorID).change(function() {
 				var id = $(this).val(),
 					k = $(this).attr("id").split("-")[1];
-console.log("series " + k + ": " + id);
 
 				if(thisMap.displayCumulativeValues) {
 					$("#toggle-cumulative-button").click();
@@ -1037,19 +1049,19 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 					}
 				}
 
-				console.log("Loaded " + (result.results.length - skipped) + " entries for " + currentDataset.title);
+				console.info("Loaded " + (result.results.length - skipped) + " entries for " + currentDataset.title);
 				
 				if(skipped > 0) {
 					console.warn("Skipped " + skipped + " malformed entries");
 				}
 				else {
-					console.log("Skipped " + skipped + " malformed entries");
+					console.info("Skipped " + skipped + " malformed entries");
 				}
 				
-				console.log(filler + " days occurred without incidents in this timespan");
-				console.log("Total Frames: " + frame + 1);
-				console.log("Time Groups: " + currentDataset.timeGroup.length);
-				console.log("---");
+				console.info(filler + " days occurred without incidents in this timespan");
+				console.info("Total Frames: " + frame + 1);
+				console.info("Time Groups: " + currentDataset.timeGroup.length);
+				console.info("---");
 				
 				datasetAverage /= result.results.length;
 				
@@ -1097,8 +1109,8 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 							}
 						}
 					}
-					console.log("Beginning date: " + thisMap.earliestDate);
-					console.log("Ending date: " + thisMap.latestDate);
+					console.info("Beginning date: " + thisMap.earliestDate);
+					console.info("Ending date: " + thisMap.latestDate);
 					
 					thisMap.frameCount = Math.floor((thisMap.latestDate.valueOf() - thisMap.earliestDate.valueOf()) / threshold) + 1;
 					
@@ -1189,8 +1201,8 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 					$('input[value=' + thisMap.uiSettings.dataGapMethod + ']', '#data-gap-handler').attr("checked", true);
 					$("#data-gap-handler").change();
 					
-					console.log("Finished loading. Unpause to begin.");
-					console.log("===");
+					console.info("Finished loading. Unpause to begin.");
+					console.info("===");
 				}
 				
 				return;
@@ -1593,12 +1605,14 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 
 		this.zeroTime(minDate);
 		this.zeroTime(maxDate);
-		
-		console.log("***");
-		console.log("min: " + min);
-		console.log("min date: " + minDate);
-		console.log("max: " + max);
-		console.log("max date: " + maxDate);
+
+		if(DEBUG) {
+			console.log("***");
+			console.log("min: " + min);
+			console.log("min date: " + minDate);
+			console.log("max: " + max);
+			console.log("max date: " + maxDate);
+		}
 
 		// move the plot bands to reflect the new span
 		xAxis.removePlotLine('date-line');
@@ -1638,11 +1652,13 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 		if(endFrame > (MAGIC_MAP.frameCount - 1)) {
 			endFrame = (MAGIC_MAP.frameCount - 1);
 		}
-		
-		console.log("Selection: " + startFrame + "->" + endFrame);
-		console.log("***");
+
+		if(DEBUG) {
+			console.log("Selection: " + startFrame + "->" + endFrame);
+			console.log("***");
+		}
+
 		MAGIC_MAP.playSection(startFrame, endFrame);
-		
 		MAGIC_MAP.uiSettings.timeSelectionEvent = {xAxis: []};
 		MAGIC_MAP.uiSettings.timeSelectionEvent.xAxis.push({min: event.xAxis[0].min, max: event.xAxis[0].max});
 		
@@ -1757,6 +1773,7 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 				if(!dateString && ((this.frame % this.uiSettings.daysPerFrame) === 0)) {
 					this.masterChart.xAxis[0].removePlotLine('date-line');
 					this.detailChart.xAxis[0].removePlotLine('date-line');
+					currentDate = this.dataset[setID].timeGroup[0].date;
 
 					if(this.playBack) {
 						currentDate = this.dataset[setID].timeGroup[setFrame].date;
@@ -1847,8 +1864,10 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 			this.choroplethValues.current[i] = 0;
 		}
 		*/
-		
-console.log((endFrame - startFrame) + " frames");
+
+		if(DEBUG) {
+			console.log((endFrame - startFrame) + " frames");
+		}
 		
 		for(i = startFrame; i <= endFrame; i++) {
 			this.playBuffer(startFrame, endFrame);
