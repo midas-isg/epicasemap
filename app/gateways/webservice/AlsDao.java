@@ -10,6 +10,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
@@ -17,10 +18,13 @@ import java.util.StringJoiner;
 import lsparser.xmlparser.ALSIDQueryInput;
 import models.entities.Location;
 import models.entities.NamedLocation;
+import play.Logger;
 import play.libs.F.Promise;
 import play.libs.ws.WSResponse;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+
 import controllers.Factory;
 
 public class AlsDao {
@@ -103,6 +107,7 @@ public class AlsDao {
 
     public List<NamedLocation> toLocations(JsonNode geoJSONResponse) {
         List<NamedLocation> locations = new ArrayList<NamedLocation>();
+        
         JsonNode features = geoJSONResponse.get("features");
         JsonNode currentFeature;
         int featureCount = features.size();

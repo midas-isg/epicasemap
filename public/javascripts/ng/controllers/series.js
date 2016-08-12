@@ -36,6 +36,7 @@ app.controller('Series', function($scope, $rootScope, api) {
 	$rootScope.$on('refreshSeriesEditor', function(event, seriesId) {
 		refreshSeriesEditor(seriesId);
 	});
+	$rootScope.$on('error', error);
 
 	$scope.submit = function(callback) {
 		if ($scope.form.$dirty) {
@@ -111,9 +112,13 @@ app.controller('Series', function($scope, $rootScope, api) {
 	}
 
 	function loadCoordinates(seriesId){
-		if (! seriesId)
+		var path;
+
+		if (!seriesId) {
 			return;
-		var path = 'series/' + seriesId + '/data';
+		}
+
+		path = 'series/' + seriesId + '/data';
 		api.finding(path).then(success, fail);
 		
 		function success(rsp) {
@@ -124,6 +129,8 @@ app.controller('Series', function($scope, $rootScope, api) {
 		function fail(err){
 			error('Failed to load the time-coordinate data!', err);
 		}
+
+		return;
 	}
 
 	function close(){

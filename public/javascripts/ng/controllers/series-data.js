@@ -1,7 +1,8 @@
 "use strict";
 
 app.controller('SeriesData', function($scope, $rootScope, api) {
-	var dom = cacheDom();
+	var dom = cacheDom(),
+		thisController = this;
 	populateScope();
 	bindEvents();
 	
@@ -15,6 +16,8 @@ app.controller('SeriesData', function($scope, $rootScope, api) {
 	
 	function bindEvents() {
 		$rootScope.$on('uploadNewSeriesData', showDialog);
+		$rootScope.$on('createTopoJSON', createTopoJSON);
+
 		dom.$dialog.on('shown.bs.modal', focusFirstFormInput);
 
 		function showDialog(event, series) {
@@ -227,7 +230,8 @@ app.controller('SeriesData', function($scope, $rootScope, api) {
 				
 				if(reason.status === 409) {
 					isOK = confirm("It seems URL content already exists. \nOK = Overwrite existing series data");
-					if (isOK) {
+
+					if(isOK) {
 						$scope.overWrite=true;
 						uploadViaUrlThenClose();
 					}
@@ -238,9 +242,10 @@ app.controller('SeriesData', function($scope, $rootScope, api) {
 					$scope.closeDialog();
 				}
 				else {
-					api.alert(dom.$alertParent, reason.statusText + 
-						': ' + reason.data && reason.data.userMessage, 'alert-danger');
+					api.alert(dom.$alertParent, reason.statusText + ': ' + reason.data && reason.data.userMessage, 'alert-danger');
 				}
+
+				return;
 			}
 		);
 		
@@ -317,7 +322,7 @@ app.controller('SeriesData', function($scope, $rootScope, api) {
 		}
 
 		function fail(err){
-			error('Failed to load the time-coordinate data!', err);
+			$rootScope.$emit('Failed to load the time-coordinate data!', err);
 
 			return;
 		}

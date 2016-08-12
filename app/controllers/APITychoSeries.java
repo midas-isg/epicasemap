@@ -78,7 +78,7 @@ public class APITychoSeries extends ApiSeries {
 		if(input.get("date") != null) {
 			alsIDQueryInput.date = new Date(input.get("date").asLong());
 		}
-	
+		
 		Iterator<String> fieldNames = input.fieldNames();
 		String field;
 		while(fieldNames.hasNext()) {

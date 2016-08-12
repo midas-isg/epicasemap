@@ -104,6 +104,7 @@ visualizer.js
 		this.uiSettings.colorPalette = 0;
 		this.colors = this.colorSet[this.uiSettings.colorPalette];
 		this.choroplethSeriesIndex = -1;
+		this.choroplethLayers = [];
 		this.displayCumulativeValues = false;
 		
 		for(i = 0; i < this.colorSet.length; i++) {
@@ -183,16 +184,19 @@ visualizer.js
 				
 				thisMap.seriesList = result.result.allSeries;
 
-				//TODO: fetch choroplethSource(s) from series IDs and send to addChoroplethLayers
-				for(h = 0; h < thisMap.seriesList; h++) {
+				for(h = 0; h < thisMap.seriesList.length; h++) {
 					seriesIDs[h] = thisMap.seriesList[h].id;
 				}
 
+				//TODO: Fix issue with clicking on disabled choropleths (should have no effect)
 				(function getChoroplethSources(seriesIDs) {
-					var i;
+					var i,
+						popup = new L.Popup({autoPan: false});
 
-					for(i = 0; i < seriesIDs; i++) {
-						choroplethSources[i] = addSource(seriesIDs[i]);
+					thisMap.choroplethValues = {current: {}, visible: {}, cumulative: {}};
+
+					for(i = 0; i < seriesIDs.length; i++) {
+						addSource(seriesIDs[i]);
 					}
 
 					function addSource(seriesID) {
@@ -201,55 +205,29 @@ visualizer.js
 						$.ajax({
 							url: topojsonURL,
 							type: "GET",
-							success: function(result, status, xhr){
+							success: function(result, status, xhr) {
 								console.log(result);
+								addChoroplethLayers(result);
 
-								return result;
+								return;
 							},
-							error: function(xhr, status, error){
+							error: function(xhr, status, error) {
 								console.warn("Error: " + error);
 								return;
 							}
 						});
 					}
 
-					return;
-				})(seriesIDs);
-
-				function addChoroplethLayers(choroplethSource) {
-					var choroplethLayer,
-						popup = new L.Popup({autoPan: false}),
-						i;
-
-					for(i in choroplethSource.objects) {
-						if(choroplethSource.objects.hasOwnProperty(i)) {
-							choroplethLayer = choroplethSource.objects[i];
-							break;
-						}
-					}
-
-					thisMap.choroplethValues = {current: {}, visible: {}, cumulative: {}};
-
-					for(i = 0; i < choroplethLayer.geometries.length; i++) {
-						thisMap.choroplethValues.current[choroplethLayer.geometries[i].properties.gid] = 0;
-						thisMap.choroplethValues.visible[choroplethLayer.geometries[i].properties.gid] = 0;
-						thisMap.choroplethValues.cumulative[choroplethLayer.geometries[i].properties.gid] = 0;
-					}
-
-					thisMap.choroplethLayer = L.geoJson(omnivore.topojson.parse(choroplethSource), {
-						style: getStyle,
-						onEachFeature: onEachFeature
-					});
-
-					thisMap.choroplethLayer.addTo(thisMap.map);
-
 					thisMap.updateChoroplethLayer = function() {
-						thisMap.choroplethLayer.eachLayer(function(layer) {
-							layer.setStyle(getStyle(layer.feature));
+						var i;
 
-							return;
-						});
+						for(i = 0; i < thisMap.choroplethLayers.length; i++) {
+							thisMap.choroplethLayers[i].eachLayer(function(layer) {
+								layer.setStyle(getStyle(layer.feature));
 
+								return;
+							});
+						}
 						//TODO: set popup text content here
 
 						return;
@@ -365,19 +343,47 @@ visualizer.js
 					}
 
 					function mouseout(e) {
-						thisMap.choroplethLayer.resetStyle(e.target);
-						closeTooltip = window.setTimeout(function () {
-							thisMap.map.closePopup();
-						}, 100);
-					}
-				}
+						var i;
 
-				addChoroplethLayers(US_STATES);
-				/*
-				for(h = 0; h < choroplethSources.length; h++) {
-					addChoroplethLayers(choroplethSources[h]);
-				}
-				*/
+						for(i = 0; i < thisMap.choroplethLayers.length; i++) {
+							thisMap.choroplethLayers[i].resetStyle(e.target);
+							closeTooltip = window.setTimeout(function () {
+								thisMap.map.closePopup();
+							}, 100);
+						}
+					}
+
+					function addChoroplethLayers(topojsonSource) {
+						var choroplethObjects,
+							choroplethLayer,
+							i;
+
+						for(i in topojsonSource.objects) {
+							if(topojsonSource.objects.hasOwnProperty(i)) {
+								choroplethObjects = topojsonSource.objects[i];
+								break;
+							}
+						}
+
+						for(i = 0; i < choroplethObjects.geometries.length; i++) {
+							thisMap.choroplethValues.current[choroplethObjects.geometries[i].properties.gid] = 0;
+							thisMap.choroplethValues.visible[choroplethObjects.geometries[i].properties.gid] = 0;
+							thisMap.choroplethValues.cumulative[choroplethObjects.geometries[i].properties.gid] = 0;
+						}
+
+						choroplethLayer = L.geoJson(omnivore.topojson.parse(topojsonSource), {
+							style: getStyle,
+							onEachFeature: onEachFeature
+						});
+
+						choroplethLayer.addTo(thisMap.map);
+						thisMap.choroplethLayers.push(choroplethLayer);
+
+						return;
+					}
+
+					return;
+				})(seriesIDs);
 
 				for(h = 0; h < thisMap.seriesList.length; h++) {
 					thisMap.seriesDescriptions[thisMap.seriesList[h].id] = {
@@ -440,7 +446,7 @@ visualizer.js
 					$("#series-" + h).val(thisMap.uiSettings.series[h].index);
 					$("#color-selector-" + h + " #color-" + thisMap.uiSettings.series[h].color).addClass("selected");
 				}
-				
+
 				$("#render-delay").val(thisMap.uiSettings.renderDelay);
 				$("#render-delay").change();
 				
