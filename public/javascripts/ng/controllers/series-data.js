@@ -16,7 +16,6 @@ app.controller('SeriesData', function($scope, $rootScope, api) {
 	
 	function bindEvents() {
 		$rootScope.$on('uploadNewSeriesData', showDialog);
-		$rootScope.$on('createTopoJSON', createTopoJSON);
 
 		dom.$dialog.on('shown.bs.modal', focusFirstFormInput);
 
@@ -178,7 +177,7 @@ app.controller('SeriesData', function($scope, $rootScope, api) {
 		$scope.isWorking = true;
 		$rootScope.$emit('modalBusyDialog');
 		api.uploading(makePath(), $scope.dataFile).then(function(rsp) {
-			createTopoJSON($scope.seriesId);
+			api.createTopoJSON($scope.seriesId);
 			emitDone();
 			$scope.closeDialog();
 			loadCoordinates($scope.seriesId);
@@ -268,66 +267,6 @@ app.controller('SeriesData', function($scope, $rootScope, api) {
 
 	function loadCoordinates(seriesId) {
 		$rootScope.$emit('loadCoordinates', seriesId);
-	}
-
-	function createTopoJSON(seriesId){
-		var path;
-
-		if(!seriesId) {
-			console.warn("No series ID");
-			return;
-		}
-
-		path = 'series/' + seriesId + '/data';
-		api.finding(path).then(success, fail);
-
-		function success(rsp) {
-			var lsIDs = {},
-				payload = {"gids": []},
-				i,
-				endpoint = CONTEXT + '/api/series/' + seriesId + '/topology';
-
-			for(i = 0; i < rsp.data.results.length; i++) {
-				lsIDs[rsp.data.results[i].alsId] = rsp.data.results[i].alsId;
-			}
-
-			for(i in lsIDs) {
-				if(lsIDs.hasOwnProperty(i)) {
-					payload.gids.push(i);
-				}
-			}
-
-			console.log("Sending:");
-			console.log(payload);
-
-			$.ajax({
-				url: endpoint,
-				data: JSON.stringify(payload),
-				contentType: "application/json",
-				type: "POST",
-				success: function(result, status, xhr) {
-					return;
-				},
-				error: function(xhr, status, error) {
-					console.warn("Error: " + error);
-
-					return;
-				},
-				complete: function(xhr, status) {
-					return;
-				}
-			});
-
-			return;
-		}
-
-		function fail(err){
-			$rootScope.$emit('Failed to load the time-coordinate data!', err);
-
-			return;
-		}
-
-		return;
 	}
 
 	return;

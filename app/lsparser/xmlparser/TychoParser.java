@@ -144,7 +144,7 @@ public class TychoParser {
 			String urlQuery = "?queryTerm=" + (URLEncoder.encode(alsIDQueryInput.locationName, "UTF-8").replaceAll("\\++", "%20") + "&limit=0");
 			ClientRule clientRule = alsDAO.makeAlsClientRule();
 			
-			return alsDAO.toLocations(clientRule.getByQuery(urlQuery).asJson().get("geoJSON"));
+			return alsDAO.toLocations(clientRule.getByQuery(urlQuery).asJson());
 		}
 		
 		public Map<String, BulkLocationResult> sendBulkRequest(List<TychoLocationQuery> bulkRequest, List<ALSIDQueryInput> alsIDQueryInputs) throws UnsupportedEncodingException, URISyntaxException {

@@ -176,4 +176,61 @@ app.service("api", function($http, $q, $location) {
 			return number > 9 ? text : '0' + text;
 		}
 	}
+
+	this.createTopoJSON = function(seriesID){
+		var path;
+
+		if(!seriesID) {
+			console.warn("No series ID");
+			return;
+		}
+
+		path = 'series/' + seriesID + '/data';
+		this.finding(path).then(success, fail);
+
+		function success(rsp) {
+			var lsIDs = {},
+				payload = {"gids": []},
+				i,
+				endpoint = CONTEXT + '/api/series/' + seriesID + '/topology';
+
+			for(i = 0; i < rsp.data.results.length; i++) {
+				lsIDs[rsp.data.results[i].alsId] = rsp.data.results[i].alsId;
+			}
+
+			for(i in lsIDs) {
+				if(lsIDs.hasOwnProperty(i)) {
+					payload.gids.push(i);
+				}
+			}
+
+			$.ajax({
+				url: endpoint,
+				data: JSON.stringify(payload),
+				contentType: "application/json",
+				type: "POST",
+				success: function(result, status, xhr) {
+					return;
+				},
+				error: function(xhr, status, error) {
+					console.warn("Error: " + error);
+
+					return;
+				},
+				complete: function(xhr, status) {
+					return;
+				}
+			});
+
+			return;
+		}
+
+		function fail(err){
+			$rootScope.$emit('Failed to load the time-coordinate data!', err);
+
+			return;
+		}
+
+		return;
+	}
 });
