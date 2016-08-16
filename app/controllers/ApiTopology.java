@@ -3,10 +3,10 @@ package controllers;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.annotations.VisibleForTesting;
 import com.wordnik.swagger.annotations.*;
-import gateways.database.SeriesTopologyDao;
+import gateways.database.VizTopologyDao;
 import gateways.webservice.AlsDao;
 import interactors.ClientRule;
-import models.entities.SeriesTopology;
+import models.entities.VizTopology;
 import models.exceptions.NotFound;
 import play.db.jpa.JPA;
 import play.db.jpa.Transactional;
@@ -18,39 +18,39 @@ import javax.ws.rs.PathParam;
 
 import static controllers.ApiAid.toJsonNode;
 
-@Api(value = "/series/topojson",
-        description = "Endpoints for TopoJSON linking to Series")
+@Api(value = "/vizs/topojson",
+        description = "Endpoints for TopoJSON linking to Visualization")
 public class ApiTopology extends Controller {
     private static final String TopoJsonContentType = "application/geo+json";
 
     @VisibleForTesting
-    public static String linkToSeries(long seriesId, JsonNode bodyJson) {
+    public static String linkToViz(long vizId, JsonNode bodyJson) {
         final WSResponse response = toTopology(bodyJson);
         assureResponseIsValidJson(response);
         final String result = response.getBody();
-        save(seriesId, result);
+        save(vizId, result);
         return result;
     }
 
-    private static void save(long seriesId, String topoJson) {
-        final SeriesTopology data = wireSeriesTopology(seriesId);
+    private static void save(long vizId, String topoJson) {
+        final VizTopology data = wireVizTopology(vizId);
         data.setTopoJson(topoJson);
-        new SeriesTopologyDao(JPA.em()).update(data.getId(), data);
+        new VizTopologyDao(JPA.em()).update(data.getId(), data);
     }
 
-    private static SeriesTopology wireSeriesTopology(long seriesId) {
-        SeriesTopology data = readBySeriesId(seriesId);
+    private static VizTopology wireVizTopology(long vizId) {
+        VizTopology data = readByVizId(vizId);
         if (data == null) {
-            data = new SeriesTopology();
-            data.setSeriesId(seriesId);
+            data = new VizTopology();
+            data.setVizId(vizId);
             data.setTopoJson("");
-            new SeriesTopologyDao(JPA.em()).create(data);
+            new VizTopologyDao(JPA.em()).create(data);
         }
         return data;
     }
 
-    private static SeriesTopology readBySeriesId(long seriesId) {
-        return new SeriesTopologyDao(JPA.em()).readBySeriesId(seriesId);
+    private static VizTopology readByVizId(long vizId) {
+        return new VizTopologyDao(JPA.em()).readByVizId(vizId);
     }
 
     private static WSResponse toTopology(JsonNode json) {
@@ -64,19 +64,19 @@ public class ApiTopology extends Controller {
     }
 
     @ApiOperation(httpMethod = "GET", nickname = "read",
-            value = "Returns the TopoJSON by Series ID")
+            value = "Returns the TopoJSON by Visualization ID")
     @ApiResponses({ @ApiResponse(code = OK, message = "Success") })
     @Transactional
-    public static Result read(long seriesId){
-        final SeriesTopology seriesTopology = readBySeriesId(seriesId);
-        if (seriesTopology == null)
-            throw new NotFound(SeriesTopology.class.getSimpleName() + ": not found where Series ID = " + seriesId);
-        return ok(seriesTopology.getTopoJson()).as(TopoJsonContentType);
+    public static Result read(long vizId){
+        final VizTopology vizTopology = readByVizId(vizId);
+        if (vizTopology == null)
+            throw new NotFound(VizTopology.class.getSimpleName() + ": not found where Visualization ID = " + vizId);
+        return ok(vizTopology.getTopoJson()).as(TopoJsonContentType);
     }
 
      @ApiOperation(httpMethod = "POST", nickname = "link",
-            value = "Link the Series with TopoJSON",
-            notes = "This endpoint links a Series to TopoJSON generated " +
+            value = "Link the Visualization with TopoJSON",
+            notes = "This endpoint links a Visualization to TopoJSON generated " +
                     "from submitted JSON object in body ")
     @ApiResponses({
             @ApiResponse(code = OK, message = "Success")
@@ -86,11 +86,11 @@ public class ApiTopology extends Controller {
                     paramType = "body")
     })
     @Transactional
-    public static Result postLinkToSeries(
-            @ApiParam(value = "ID of the Series", required = true)
-            @PathParam("id") long seriesId) {
+    public static Result postLinkToViz(
+            @ApiParam(value = "ID of the Visualization", required = true)
+            @PathParam("id") long vizId) {
         final JsonNode bodyJson = toJsonNode(request());
-        return ok(linkToSeries(seriesId, bodyJson)).as(TopoJsonContentType);
+        return ok(linkToViz(vizId, bodyJson)).as(TopoJsonContentType);
 
     }
 }

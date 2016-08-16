@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import controllers.ApiTopology;
 import gateways.database.SeriesTopologyDao;
 import integrations.app.App;
-import models.entities.SeriesTopology;
+import models.entities.VizTopology;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -21,7 +21,7 @@ import static play.test.Helpers.contentAsString;
 public class TestSeriesTopology {
     private static final long theSeriesId = 1L;
     private static final JsonNode validGidsJson = Json.parse("{\"gids\":[1, 2]}");
-    private static SeriesTopology theData;
+    private static VizTopology theData;
     private static final String RollBackText = "Intentionally rollback";
 
     @BeforeClass
@@ -29,10 +29,10 @@ public class TestSeriesTopology {
 		runWithTransaction(() -> theData = persistThenDetachNewSeries());
 	}
 
-	static SeriesTopology persistThenDetachNewSeries() {
+	static VizTopology persistThenDetachNewSeries() {
 		EntityManager em = JPA.em();
-		final SeriesTopology data = new SeriesTopology();
-		data.setSeriesId(theSeriesId);
+		final VizTopology data = new VizTopology();
+		data.setVizId(theSeriesId);
 		data.setTopoJson("{}");
 		em.persist(data);
 		em.detach(data);
@@ -44,10 +44,10 @@ public class TestSeriesTopology {
 		runWithTransaction(() -> testReadViaDao(theData));
 	}
 
-	private void testReadViaDao(SeriesTopology expected) {
+	private void testReadViaDao(VizTopology expected) {
 		long id = expected.getId();
         EntityManager em = JPA.em();
-        final SeriesTopology data = new SeriesTopologyDao(em).read(id);
+        final VizTopology data = new SeriesTopologyDao(em).read(id);
 		assertThat(data).isEqualTo(expected);
 	}
 
@@ -56,7 +56,7 @@ public class TestSeriesTopology {
         runWithTransaction(() -> testReadViaApi(theData));
     }
 
-    private void testReadViaApi(SeriesTopology expected) {
+    private void testReadViaApi(VizTopology expected) {
         long id = expected.getId();
 		final Result response = ApiTopology.read(theSeriesId);
         final String content = contentAsString(response);
@@ -70,7 +70,7 @@ public class TestSeriesTopology {
 
     private void testCreateViaApi() {
         final long seriesId = theSeriesId + 1;
-        final String create = ApiTopology.linkToSeries(seriesId, validGidsJson);
+        final String create = ApiTopology.linkToViz(seriesId, validGidsJson);
         assertTopoJson(create);
         final Result read = ApiTopology.read(seriesId);
         final String content = contentAsString(read);
@@ -94,7 +94,7 @@ public class TestSeriesTopology {
     private void testUpdateViaApi() {
         final long seriesId = theSeriesId;
         final String oldTopoJson = theData.getTopoJson();
-        final String update = ApiTopology.linkToSeries(seriesId, validGidsJson);
+        final String update = ApiTopology.linkToViz(seriesId, validGidsJson);
         assertTopoJson(update);
         final Result read = ApiTopology.read(seriesId);
         final String content = contentAsString(read);

@@ -1,7 +1,7 @@
 package gateways.database;
 
 import gateways.database.jpa.DataAccessObject;
-import models.entities.SeriesTopology;
+import models.entities.VizTopology;
 import models.exceptions.NotFound;
 import models.filters.GenericFilter;
 
@@ -9,17 +9,17 @@ import javax.persistence.EntityManager;
 import java.util.List;
 import java.util.Map;
 
-public class SeriesTopologyDao extends DataAccessObject<SeriesTopology> {
-	public SeriesTopologyDao(EntityManager em){
-		super(SeriesTopology.class, em);
+public class VizTopologyDao extends DataAccessObject<VizTopology> {
+	public VizTopologyDao(EntityManager em){
+		super(VizTopology.class, em);
 	}
 
-    public SeriesTopology readBySeriesId(long id) {
+    public VizTopology readByVizId(long id) {
         GenericFilter filter = new GenericFilter();
         Map<String, Object> equalityMap = filter.getEqualities();
-        equalityMap.put("seriesId", id);
+        equalityMap.put("vizId", id);
 
-        final List<SeriesTopology> list = super.query(filter);
+        final List<VizTopology> list = super.query(filter);
         if (list.isEmpty())
             return null;
         return list.get(0);

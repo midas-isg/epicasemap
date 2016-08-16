@@ -5,10 +5,10 @@ import javax.persistence.Entity;
 import java.util.Objects;
 
 @Entity
-@Table(name = "series_topology")
-public class SeriesTopology implements models.entities.Entity {
+@Table(name = "viz_topology")
+public class VizTopology implements models.entities.Entity {
 	private Long id;
-    private Long seriesId;
+    private Long vizId;
     private String topoJson;
 
     @Override
@@ -24,12 +24,12 @@ public class SeriesTopology implements models.entities.Entity {
     }
 
     @Column(unique = true, nullable = false)
-    public Long getSeriesId() {
-        return seriesId;
+    public Long getVizId() {
+        return vizId;
     }
 
-    public void setSeriesId(Long seriesId) {
-        this.seriesId = seriesId;
+    public void setVizId(Long vizId) {
+        this.vizId = vizId;
     }
 
     @Column(length = 10_485_760, nullable = false)
@@ -45,14 +45,14 @@ public class SeriesTopology implements models.entities.Entity {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        SeriesTopology that = (SeriesTopology) o;
+        VizTopology that = (VizTopology) o;
         return Objects.equals(id, that.id) &&
-                Objects.equals(seriesId, that.seriesId) &&
+                Objects.equals(vizId, that.vizId) &&
                 Objects.equals(topoJson, that.topoJson);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, seriesId, topoJson);
+        return Objects.hash(id, vizId, topoJson);
     }
 }
