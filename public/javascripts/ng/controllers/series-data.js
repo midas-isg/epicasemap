@@ -177,7 +177,6 @@ app.controller('SeriesData', function($scope, $rootScope, api) {
 		$scope.isWorking = true;
 		$rootScope.$emit('modalBusyDialog');
 		api.uploading(makePath(), $scope.dataFile).then(function(rsp) {
-			api.createTopoJSON($scope.seriesId);
 			emitDone();
 			$scope.closeDialog();
 			loadCoordinates($scope.seriesId);

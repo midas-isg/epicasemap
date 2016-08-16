@@ -177,22 +177,22 @@ app.service("api", function($http, $q, $location) {
 		}
 	}
 
-	this.createTopoJSON = function(seriesID){
+	this.createTopoJSON = function(visualizationID){
 		var path;
 
-		if(!seriesID) {
-			console.warn("No series ID");
+		if(!visualizationID) {
+			console.warn("No visualization ID");
 			return;
 		}
 
-		path = 'series/' + seriesID + '/data';
+		path = 'vizs/' + visualizationID + '/data';
 		this.finding(path).then(success, fail);
 
 		function success(rsp) {
 			var lsIDs = {},
 				payload = {"gids": []},
 				i,
-				endpoint = CONTEXT + '/api/series/' + seriesID + '/topology';
+				endpoint = CONTEXT + '/api/vizs/' + visualizationID + '/topology';
 
 			for(i = 0; i < rsp.data.results.length; i++) {
 				lsIDs[rsp.data.results[i].alsId] = rsp.data.results[i].alsId;

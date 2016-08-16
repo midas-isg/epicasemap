@@ -512,9 +512,6 @@ app.controller('AmbiguityResolver', function($scope, $rootScope, api) {
 					return;
 				},
 				complete: function(xhr, status) {
-					console.log("Creating TopoJSON using seriesID:" + seriesID);
-					api.createTopoJSON($scope.seriesID);
-
 					$scope.isWorking = false;
 					$scope.$emit('hideBusyDialog');
 
