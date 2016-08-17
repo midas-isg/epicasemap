@@ -202,19 +202,107 @@ app.controller('Viz', function($scope, $rootScope, api) {
 	}
 	
 	function save(callback){
-		var body = buildBody($scope.model);
-		var id = $scope.model.id;
-		var doing = api.saving(my.apiPath, body);
-		if (! callback){
-			callback = function(location){
+		var body = buildBody($scope.model),
+			vizId = $scope.model.id,
+			doing = api.saving(my.apiPath, body);
+
+		if(!callback) {
+			callback = function(location) {
 				api.gettingFromUrl(location).then(function(rsp) {
 					$scope.model = rsp.data.result;
-				}, function(err){
+
+					createTopoJSON(body.seriesIds, vizId);
+
+					return;
+				},
+				function(err) {
 					my.alertError(err, "Failed to read the Visualization!");
 				});
 			};
 		}
+
 		doThen(doing, callback, "save the Visualization");
+
+		return;
+	}
+
+	function createTopoJSON(seriesIDs, vizID) {
+		var i,
+			lsIDs = {},
+			toGo = seriesIDs.length;
+
+		for(i = 0; i < seriesIDs.length; i++) {
+			compileLocationIDs(seriesIDs[i]);
+		}
+
+		function compileLocationIDs(seriesID) {
+			var seriesURL = CONTEXT + '/api/series/' + seriesID + '/time-coordinate';
+
+			$.ajax({
+				url:seriesURL,
+				success: function(result, status, xhr){
+					//loop through and save lsIDs to lsIDs
+					var i,
+						results = result.results;
+
+					for(i = 0; i < results.length; i++) {
+						lsIDs[results[i].alsId] = results[i].alsId;
+					}
+
+					return;
+				},
+				error: function(xhr, status, error){
+					console.error("Error: " + error);
+
+					return;
+				},
+				complete: function(xhr, status) {
+					toGo--;
+
+					if(toGo == 0) {
+						saveTopoJSON(lsIDs);
+					}
+				}
+			});
+
+			return;
+		}
+
+		function saveTopoJSON(lsIDs) {
+			var createTopojsonURL = CONTEXT + '/api/vizs/' + vizID + '/topology',
+				payload = {"gids": []},
+				i;
+
+			for(i in lsIDs) {
+				if(lsIDs.hasOwnProperty(i)) {
+					payload.gids.push(i);
+				}
+			}
+
+			$.ajax({
+				url: createTopojsonURL,
+				data: JSON.stringify(payload),
+				contentType: "application/json",
+				type: "POST",
+				success: function(result, status, xhr) {
+					console.log("TopoJSON was successfully created");
+
+					return;
+				},
+				error: function(xhr, status, error) {
+					console.warn("Error: " + error);
+
+					return;
+				},
+				complete: function(xhr, status) {
+					return;
+				}
+			});
+
+			return;
+		}
+
+		return;
 	}
 	
 	function removeThenClose() {

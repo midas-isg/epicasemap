@@ -3,7 +3,12 @@ visualizer.js
 */
 
 (function() {
-	var DEBUG = false;
+	var DEBUG = false,
+		MAP_ID = getURLParameterByName("map"),
+		VIZ_ID = getURLParameterByName("id"),
+		TOPOJSON_URL = CONTEXT + "/api/vizs/" + VIZ_ID + "/topology",
+		SAVE_VIZ_URL = CONTEXT + "/api/vizs/" + VIZ_ID + "/ui-setting",
+		LOAD_VIZ_URL = CONTEXT + "/api/vizs/" + VIZ_ID;
 
 	function MagicMap() {
 		var i,
@@ -11,8 +16,7 @@ visualizer.js
 			temp,
 			svgElement,
 			svg,
-			thisMap = this,
-			mapID;
+			thisMap = this;
 
 		this.mapTypes = [
 			"financialtimes.map-w7l4lfi8",
@@ -20,11 +24,10 @@ visualizer.js
 			"mapbox.dark"
 		];
 
-		mapID = getURLParameterByName("map");
-		if (!mapID) {
-			mapID = 0;
+		if (!MAP_ID) {
+			MAP_ID = 0;
 		}
-		temp = this.mapTypes[mapID];
+		temp = this.mapTypes[MAP_ID];
 
 		L.mapbox.accessToken = 'pk.eyJ1IjoidHBzMjMiLCJhIjoiVHEzc0tVWSJ9.0oYZqcggp29zNZlCcb2esA';
 		this.map = L.mapbox.map('map', temp,
@@ -44,9 +47,6 @@ visualizer.js
 		this.earliestDate = null;
 		this.latestDate = null;
 		this.loopIntervalID;
-		
-		this.vizID = getURLParameterByName("id");
-		
 		this.suggestedDelay = 50;
 		this.mostConcentratedFrame = 0;
 		
@@ -73,8 +73,8 @@ visualizer.js
 		this.playBack = false;
 		this.displaySet = [];
 		
-		if(this.vizID) {
-			this.loadVisualization(this.vizID);
+		if(VIZ_ID) {
+			this.loadVisualization(VIZ_ID);
 		}
 		else {
 			location.assign(CONTEXT + "/manage/vizs");
@@ -83,13 +83,13 @@ visualizer.js
 		for(i = 0; i < this.mapTypes.length; i++) {
 			$("#map-selector").append("<option value='" + i + "'>" + this.mapTypes[i] + "</option>");
 		}
-		$("#map-selector").val(mapID);
+		$("#map-selector").val(MAP_ID);
 		
 		$("#map-selector").change(function() {
 			thisMap.uiSettings.mapUnderlay = $(this).val();
 			sessionStorage.uiSettings = JSON.stringify(thisMap.uiSettings);
 			
-			return location.assign(CONTEXT + "/visualizer?id=" + thisMap.vizID + "&map=" + $(this).val());
+			return location.assign(CONTEXT + "/visualizer?id=" + VIZ_ID + "&map=" + $(this).val());
 		});
 
 		this.setGradient = [];
@@ -134,17 +134,16 @@ visualizer.js
 	MagicMap.prototype.saveVisualization = function() {
 		if(DEBUG) { console.log("[DEBUG] called saveVisualization()"); }
 		var thisMap = MAGIC_MAP,
-			URL = CONTEXT + "/api/vizs/" + thisMap.vizID + "/ui-setting",
 			bounds = thisMap.map.getBounds();
 		
-		if(thisMap.vizID) {
+		if(VIZ_ID) {
 			thisMap.uiSettings.bBox[0][0] = bounds.getSouth();
 			thisMap.uiSettings.bBox[0][1] = bounds.getWest();
 			thisMap.uiSettings.bBox[1][0] = bounds.getNorth();
 			thisMap.uiSettings.bBox[1][1] = bounds.getEast();
 
 			$.ajax({
-				url: URL,
+				url: SAVE_VIZ_URL,
 				type: "PUT",
 				data: JSON.stringify(thisMap.uiSettings),
 				contentType: "application/json; charset=UTF-8",
@@ -167,18 +166,16 @@ visualizer.js
 	MagicMap.prototype.loadVisualization = function(vizID) {
 		if(DEBUG) { console.log("[DEBUG] called loadVisualization()"); }
 		
-		var URL = CONTEXT + "/api/vizs/" + vizID,
-			thisMap = this;
+		var thisMap = this;
 		
 		$.ajax({
-			url: URL,
+			url: LOAD_VIZ_URL,
 			success: function(result) {
 				var h,
 					i,
 					svg,
 					svgElement,
-					seriesIDs = [],
-					choroplethSources = [];
+					seriesIDs = [];
 				
 				$("#title").text(result.result.title);
 				
@@ -189,34 +186,12 @@ visualizer.js
 				}
 
 				//TODO: Fix issue with clicking on disabled choropleths (should have no effect)
-				(function getChoroplethSources(seriesIDs) {
-					var i,
-						popup = new L.Popup({autoPan: false});
+				(function getChoroplethSources() {
+					var popup = new L.Popup({autoPan: false});
 
 					thisMap.choroplethValues = {current: {}, visible: {}, cumulative: {}};
 
-					for(i = 0; i < seriesIDs.length; i++) {
-						addSource(seriesIDs[i]);
-					}
-
-					function addSource(seriesID) {
-						var topojsonURL = CONTEXT + "/api/series/" + seriesID + "/topology";
-
-						$.ajax({
-							url: topojsonURL,
-							type: "GET",
-							success: function(result, status, xhr) {
-								console.log(result);
-								addChoroplethLayers(result);
-
-								return;
-							},
-							error: function(xhr, status, error) {
-								console.warn("Error: " + error);
-								return;
-							}
-						});
-					}
+					addTopojsonSource();
 
 					thisMap.updateChoroplethLayer = function() {
 						var i;
@@ -353,6 +328,23 @@ visualizer.js
 						}
 					}
 
+					function addTopojsonSource() {
+						$.ajax({
+							url: TOPOJSON_URL,
+							type: "GET",
+							success: function(result, status, xhr) {
+								console.log(result);
+								addChoroplethLayers(result);
+
+								return;
+							},
+							error: function(xhr, status, error) {
+								console.warn("Error: " + error);
+								return;
+							}
+						});
+					}
+
 					function addChoroplethLayers(topojsonSource) {
 						var choroplethObjects,
 							choroplethLayer,
@@ -402,7 +394,7 @@ visualizer.js
 
 						if(thisMap.uiSettings.mapUnderlay) {
 							sessionStorage.uiSettings = JSON.stringify(thisMap.uiSettings);
-							return location.assign(CONTEXT + "/visualizer?id=" + thisMap.vizID + "&map=" + thisMap.uiSettings.mapUnderlay);
+							return location.assign(CONTEXT + "/visualizer?id=" + VIZ_ID + "&map=" + thisMap.uiSettings.mapUnderlay);
 						}
 						
 						thisMap.uiSettings.daysPerFrame = (thisMap.uiSettings.daysPerFrame | 1);
