@@ -178,7 +178,7 @@ visualizer.js
 					svg,
 					svgElement,
 					seriesIDs = [],
-					choroplethSources = [];
+					choroplethSources = {};
 				
 				$("#title").text(result.result.title);
 				
@@ -206,8 +206,13 @@ visualizer.js
 							url: topojsonURL,
 							type: "GET",
 							success: function(result, status, xhr) {
-								console.log(result);
-								addChoroplethLayers(result);
+								if(DEBUG){
+									console.log("Loaded TopoJson: ");
+									console.log(result);
+								}
+
+								choroplethSources[seriesID] = result;
+								setChoroplethLayer(choroplethSources[seriesID]);
 
 								return;
 							},
@@ -218,6 +223,7 @@ visualizer.js
 						});
 					}
 
+					//TODO: change this so that only one choropleth layer is used that switches between TopoJSONs
 					thisMap.updateChoroplethLayer = function() {
 						var i;
 
@@ -353,7 +359,7 @@ visualizer.js
 						}
 					}
 
-					function addChoroplethLayers(topojsonSource) {
+					function setChoroplethLayer(topojsonSource) {
 						var choroplethObjects,
 							choroplethLayer,
 							i;
