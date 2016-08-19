@@ -70,7 +70,7 @@ public class VizEndpointTester {
 		final WSResponse read = assertStatusOfGet(url, OK);
 		assertJsonString(read.getBody(), input);
 		assertStatusOfGet(urlWithId(0) + subpath, NOT_FOUND);
-		WS.url(url).put(input).get(timeout);
+		WS.url(url).put(json).get(timeout);
 		testDelete(id);
 	}
 
@@ -136,7 +136,8 @@ public class VizEndpointTester {
 	}
 
 	private WSRequestHolder wsUrlWithAccountId1(final String url) {
-		return WS.url(url).setHeader("Cookie", "PLAY_SESSION=6a4327b69f21a0cf5294901581c1aa4d289046c3-name=Public+User&id=1");
+		//return WS.url(url).setHeader("Cookie", "PLAY_SESSION=6a4327b69f21a0cf5294901581c1aa4d289046c3-name=Public+User&id=1");
+		return WS.url(url).setHeader("Cookie", Server.toCookieValue());
 	}
 
 	private void toFile(final String filePath, final String content) {

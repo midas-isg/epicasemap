@@ -1,7 +1,5 @@
 package controllers;
 
-import interactors.ClientRule;
-
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -11,22 +9,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import gateways.webservice.AlsDao;
-
 import javax.ws.rs.PathParam;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
-
-import lsparser.xmlparser.ALSIDQueryInput;
-import lsparser.xmlparser.TychoParser;
-import models.entities.NamedLocation;
-import models.exceptions.Unauthorized;
-import play.db.jpa.Transactional;
-import play.libs.Json;
-import play.mvc.*;
-import play.mvc.Http.*;
-import play.Logger;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.wordnik.swagger.annotations.ApiParam;
@@ -34,6 +20,17 @@ import com.wordnik.swagger.annotations.ApiParam;
 import controllers.security.AuthorizationKit;
 import controllers.security.Restricted;
 import controllers.security.Restricted.Access;
+import gateways.webservice.AlsDao;
+import interactors.ClientRule;
+import lsparser.xmlparser.ALSIDQueryInput;
+import lsparser.xmlparser.TychoParser;
+import models.entities.NamedLocation;
+import models.exceptions.Unauthorized;
+import play.db.jpa.Transactional;
+import play.libs.Json;
+import play.mvc.BodyParser;
+import play.mvc.Result;
+import play.mvc.Results;
 
 public class APITychoSeries extends ApiSeries {
 	@Transactional

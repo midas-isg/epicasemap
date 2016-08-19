@@ -3,47 +3,13 @@ package controllers;
 import static controllers.ResponseHelper.okAsWrappedJsonObject;
 import static controllers.ResponseHelper.setResponseLocationFromRequest;
 import static controllers.security.AuthorizationKit.findPermittedSeriesIds;
-import gateways.database.AccountDao;
-import gateways.database.PermissionDao;
-import gateways.database.jpa.DataAccessObject;
-import gateways.database.jpa.JpaAdaptor;
-import interactors.Authorizer;
-import interactors.VizAuthorizer;
-import interactors.VizRule;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import javax.persistence.EntityManager;
 import javax.ws.rs.PathParam;
-
-import lsparser.xmlparser.TychoParser.Request;
-import models.entities.Account;
-import models.entities.Mode;
-import models.entities.Series;
-import models.entities.Visualization;
-import models.entities.VizPermission;
-import models.exceptions.NotFound;
-import models.exceptions.Unauthorized;
-import models.filters.AccountFilter;
-import models.filters.Filter;
-import models.filters.MetaFilter;
-import models.filters.Restriction;
-import models.view.ModeWithAccountId;
-import models.view.VizInput;
-import play.Logger;
-import play.data.Form;
-import play.db.jpa.JPA;
-import play.db.jpa.Transactional;
-import play.mvc.Controller;
-import play.mvc.Http;
-import play.mvc.Http.RequestBody;
-import play.mvc.Result;
-import play.mvc.Security;
-import play.libs.mailer.Email;
-import play.libs.mailer.MailerPlugin;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.wordnik.swagger.annotations.Api;
@@ -58,6 +24,30 @@ import controllers.security.Authentication;
 import controllers.security.AuthorizationKit;
 import controllers.security.Restricted;
 import controllers.security.Restricted.Access;
+import gateways.database.AccountDao;
+import gateways.database.PermissionDao;
+import interactors.VizAuthorizer;
+import interactors.VizRule;
+import models.entities.Account;
+import models.entities.Mode;
+import models.entities.Series;
+import models.entities.Visualization;
+import models.entities.VizPermission;
+import models.exceptions.NotFound;
+import models.exceptions.Unauthorized;
+import models.filters.Filter;
+import models.filters.MetaFilter;
+import models.filters.Restriction;
+import models.view.ModeWithAccountId;
+import models.view.VizInput;
+import play.data.Form;
+import play.db.jpa.JPA;
+import play.db.jpa.Transactional;
+import play.mvc.Controller;
+import play.mvc.Http;
+import play.mvc.Http.RequestBody;
+import play.mvc.Result;
+import play.mvc.Security;
 
 @Api(value = "/vizs", description = "Endpoints for Vizs", hidden = false)
 public class ApiViz extends Controller {
@@ -302,8 +292,6 @@ public class ApiViz extends Controller {
 			permissionID = authorizer.permit(accountId, data, vizId);
 		
 		if(email != 0) {
-			long userID = accountIds.get(0);
-			Account account = new AccountDao(JPA.em()).read(userID);
 			String senderName = "Do not reply";
 			String senderEmail = "bot_admin@epicasemap.org";
 			ArrayList<String> recipients = new ArrayList<String>();
@@ -374,8 +362,6 @@ public class ApiViz extends Controller {
 		setResponseLocationFromRequest();
 		
 		if(email != 0) {
-			long userID = AuthorizationKit.readAccountId();
-			Account account = new AccountDao(JPA.em()).read(userID);
 			String senderName = "Do not reply";
 			String senderEmail = "bot_admin@epicasemap.org";
 			ArrayList<String> recipients = new ArrayList<String>();
