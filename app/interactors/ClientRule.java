@@ -17,7 +17,7 @@ public class ClientRule {
 	}
 
 	public WSResponse getById(Long id){
-		String url = append(baseUrl,id+"");
+		String url = append(baseUrl, id + "");
 		return get(url);
 	}
 

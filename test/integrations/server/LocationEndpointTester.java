@@ -39,8 +39,9 @@ public class LocationEndpointTester {
 		final String lat = "latitude";
 		final String lon = "longitude";
 		final String geojsonKey = "geojson";
-
-		assertThat(fields).containsOnly(id, label, alsId, lat, lon, geojsonKey);
+		final String labelOrEmpty = "labelOrEmpty";
+		
+		assertThat(fields).containsOnly(id, label, alsId, lat, lon, geojsonKey, labelOrEmpty);
 		
 		assertThat(node.get(id).asLong()).isPositive();
 		assertNodeType(node.get(label), STRING);

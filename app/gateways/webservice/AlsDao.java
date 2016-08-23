@@ -2,32 +2,27 @@ package gateways.webservice;
 
 import static java.net.URLEncoder.encode;
 import static play.mvc.Http.Status.OK;
-import gateways.configuration.AppKey;
-import interactors.ClientRule;
-import interactors.ConfRule;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
-import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+
+import controllers.Factory;
+import gateways.configuration.AppKey;
+import interactors.ClientRule;
+import interactors.ConfRule;
 import lsparser.xmlparser.ALSIDQueryInput;
 import models.entities.Location;
 import models.entities.NamedLocation;
 import play.libs.F.Promise;
 import play.libs.ws.WSResponse;
-import scala.collection.concurrent.Debug;
-
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.sun.media.jfxmedia.logging.Logger;
-
-import controllers.Factory;
 
 public class AlsDao {
 
@@ -91,16 +86,41 @@ public class AlsDao {
 
     Location toLocation(JsonNode jsonNode) {
         Location location = new Location();
-        Map<String, Double> center = new HashMap<String, Double>();
-        center.put(LONGITUDE, jsonNode.get("repPoint").get(0).asDouble());
-        center.put(LATITUDE, jsonNode.get("repPoint").get(1).asDouble());
-
+        Map<String, Double> center = toCentroid(jsonNode);
+        if(center != null){
+        	location.setLatitude(center.get(LATITUDE));
+        	location.setLongitude(center.get(LONGITUDE));
+        }
         location.setLabel(getName(jsonNode));
-        location.setLatitude(center.get(LATITUDE));
-        location.setLongitude(center.get(LONGITUDE));
-
         return location;
     }
+
+	private Map<String, Double> toCentroid(JsonNode jsonNode) {
+        Map<String, Double> centroid = new HashMap<>();  
+        JsonNode repPoint = getRepPoint(jsonNode);
+        if (repPoint != null){
+        	centroid.put(LONGITUDE, repPoint.get(0).asDouble());
+        	centroid.put(LATITUDE, repPoint.get(1).asDouble());
+        }
+        else
+        	centroid = toCentroid(getBbox(jsonNode));
+        return centroid;
+
+	}
+
+	private JsonNode getRepPoint(JsonNode jsonNode) {
+		JsonNode feature = getFeature(jsonNode);
+		if(feature == null)
+			return null;
+		return feature.get("repPoint");
+	}
+
+	private JsonNode getFeature(JsonNode jsonNode) {
+		JsonNode features = jsonNode.get("features");
+		if(features == null)
+			return null;
+		return features.get(0);
+	}
 
     public List<NamedLocation> toLocations(JsonNode geoJSONResponse) {
         List<NamedLocation> locations = new ArrayList<NamedLocation>();
@@ -123,7 +143,10 @@ public class AlsDao {
     }
 
     private ArrayNode getBbox(JsonNode jsonNode) {
-        return (ArrayNode) jsonNode.get(BBOX);
+    	JsonNode feature = getFeature(jsonNode);
+    	if(feature == null)
+    		return null;
+        return (ArrayNode) feature.get(BBOX);
     }
 
     private Long getID(JsonNode jsonNode) {
@@ -165,28 +188,37 @@ public class AlsDao {
     private ArrayList<String> getParentsNames(JsonNode jsonNode) {
         ArrayList<String> names = new ArrayList<>();
         ArrayNode parents = getParents(jsonNode);
-        for (int i = parents.size() - 1; i >= 0; i--) {
-            System.out.println();
-            names.add(parents.get(i).get("name").asText());
-        }
+        if(parents != null)
+        	for (int i = parents.size() - 1; i >= 0; i--)
+        		names.add(parents.get(i).get("name").asText());
         return names;
     }
 
     private ArrayNode getParents(JsonNode jsonNode) {
-        return (ArrayNode) getProperties(jsonNode).get("lineage");
+        JsonNode properties = getProperties(jsonNode);
+        if(properties == null)
+        	return null;
+		return (ArrayNode) properties.get("lineage");
     }
 
     private String getLocationName(JsonNode jsonNode) {
-        return getProperties(jsonNode).get(NAME).asText();
+        JsonNode properties = getProperties(jsonNode);
+        if (properties == null)
+        	return null;
+		return properties.get(NAME).asText();
     }
 
     private static JsonNode getProperties(JsonNode jsonNode) {
-        return jsonNode.get("features").get(0).get("properties");
+        JsonNode features = jsonNode.get("features");
+        if (features == null)
+        	return null;
+		return features.get(0).get("properties");
     }
 
-    private static Map<String, Double> centroid(ArrayNode bBox) {
+    private static Map<String, Double> toCentroid(ArrayNode bBox) {
+    	if(bBox == null)
+    		return null;
         Map<String, Double> center = new HashMap<>();
-
         center.put(LONGITUDE, centerX(bBox));
         center.put(LATITUDE, centerY(bBox));
 

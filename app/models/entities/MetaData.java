@@ -5,8 +5,6 @@ import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.MappedSuperclass;
 
-//@Entity  
-//@Table(name = "meta_data")  
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 @MappedSuperclass
 public abstract class MetaData implements models.entities.Entity{
@@ -19,13 +17,6 @@ public abstract class MetaData implements models.entities.Entity{
 	private String version;
 	private String isVersionOf;
 
-	// @Id //@GeneratedValue//(strategy = GenerationType.IDENTITY)
-	// public Long getId() {
-	// return id;
-	// }
-	// public void setId(Long id) {
-	// this.id = id;
-	// }
 	public String getTitle() {
 		return title;
 	}
