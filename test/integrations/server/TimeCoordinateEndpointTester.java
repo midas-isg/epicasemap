@@ -71,8 +71,9 @@ public class TimeCoordinateEndpointTester {
 		final String lat = "latitude";
 		final String lon = "longitude";
 		final String lid = "locationId";
+		final String alsId = "alsId";
 
-		assertThat(fields).containsOnly(id, sid, val, ts, lat, lon, lid);
+		assertThat(fields).containsOnly(id, sid, val, ts, lat, lon, lid, alsId);
 		assertThat(node.get(id).asLong()).isPositive();
 		assertThat(node.get(sid).asLong()).isPositive();
 		assertThat(node.get(val).asDouble()).isGreaterThanOrEqualTo(0.0);

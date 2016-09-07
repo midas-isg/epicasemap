@@ -1,27 +1,26 @@
 package integrations.server;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class TestRoutes {
-    @Ignore("TODO(fix broken test case)") @Test // @Ignore("to run test faster")
-    public void allRoutes() {
-    	Runnable[] tests = {
-    		VizEndpointTester.test(),
+	@Test
+	public void allRoutes() {
+		Runnable[] tests = {
+				VizEndpointTester.test(),
 
-			LocationEndpointTester.read(),
+				LocationEndpointTester.read(),
 
-            SeriesEndpointTester.read(),
-            SeriesEndpointTester.defaultParameters(),
+				SeriesEndpointTester.read(),
+				SeriesEndpointTester.defaultParameters(),
 
-            TimeCoordinateEndpointTester.dateRange(),
-            TimeCoordinateEndpointTester.pagination(),
-            TimeCoordinateEndpointTester.defaultParameters(),
-    		
-    		LandingPageTester.containsConextForJavaScript(),/**/
-    		
-    		//UploadSeriesEndpointTester.test()
-    	};
+				TimeCoordinateEndpointTester.dateRange(),
+				TimeCoordinateEndpointTester.pagination(),
+				TimeCoordinateEndpointTester.defaultParameters(),
+				
+				LandingPageTester.containsConextForJavaScript(),
+
+				UploadSeriesEndpointTester.test()
+		};
 		Server.run(tests);
-    }
+	}
 }
