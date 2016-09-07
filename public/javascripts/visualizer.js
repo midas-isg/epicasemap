@@ -184,238 +184,9 @@ visualizer.js
 				for(h = 0; h < thisMap.seriesList.length; h++) {
 					seriesIDs[h] = thisMap.seriesList[h].id;
 				}
-
-				(function getChoroplethSources(seriesIDs) {
-					var i,
-						popup = new L.Popup({autoPan: false}),
-						choroplethLayers = [],
-						choroplethLocationIDs = {},
-						currentChoroplethLayer;
-
-					thisMap.choroplethValues = {current: {}, visible: {}, cumulative: {}};
-
-					for(i = 0; i < seriesIDs.length; i++) {
-						addChoroplethSource(seriesIDs[i]);
-					}
-
-					function addChoroplethSource(seriesID) {
-						var topojsonURL = CONTEXT + "/api/series/" + seriesID + "/topology";
-
-						$.ajax({
-							url: topojsonURL,
-							type: "GET",
-							success: function(result, status, xhr) {
-								if(DEBUG){
-									console.log("Loaded TopoJson: ");
-									console.log(result);
-								}
-
-								makeChoroplethLayer(result, seriesID);
-
-								return;
-							},
-							error: function(xhr, status, error) {
-								console.warn("Error: " + error);
-								return;
-							}
-						});
-					}
-
-					function makeChoroplethLayer(topojsonSource, seriesID) {
-						var choroplethObjectContainer,
-							choroplethLayer,
-							i;
-
-						//TODO: find better methodology for determining choroplethObjectContainer (always only child?)
-						for(i in topojsonSource.objects) {
-							if(topojsonSource.objects.hasOwnProperty(i)) {
-								choroplethObjectContainer = topojsonSource.objects[i];
-								break;
-							}
-						}
-
-						//hash unique location IDs (for overlapping choropleths which use same locations)
-						for(i = 0; i < choroplethObjectContainer.geometries.length; i++) {
-							choroplethLocationIDs[choroplethObjectContainer.geometries[i].properties.gid] = choroplethObjectContainer.geometries[i].properties.gid;
-						}
-
-						choroplethLayer = L.geoJson(omnivore.topojson.parse(topojsonSource), {
-							style: getStyle,
-							onEachFeature: onEachFeature
-						});
-
-						choroplethLayers[seriesID] = choroplethLayer;
-
-						return;
-					}
-
-					function switchChoroplethLayer(choroplethLayer) {
-						if(currentChoroplethLayer) {
-							thisMap.map.removeLayer(currentChoroplethLayer);
-						}
-						
-						if(choroplethLayer) {
-							thisMap.map.addLayer(choroplethLayer);
-						}
-						currentChoroplethLayer = choroplethLayer;
-						
-						//initialize choropleth values to 0
-						for(i = 0; i < choroplethLocationIDs.length; i++) {
-							thisMap.choroplethValues.current[choroplethLocationIDs[i]] = 0;
-							thisMap.choroplethValues.visible[choroplethLocationIDs[i]] = 0;
-							thisMap.choroplethValues.cumulative[choroplethLocationIDs[i]] = 0;
-						}
-
-						return;
-					}
-
-					thisMap.updateChoroplethLayer = function(choroplethSeriesID) {
-						var incomingLayer = choroplethLayers[choroplethSeriesID];
-						
-						if((incomingLayer < 0) || (incomingLayer !== currentChoroplethLayer)) {
-							switchChoroplethLayer(incomingLayer);
-						}
-
-						if(currentChoroplethLayer){
-							currentChoroplethLayer.eachLayer(function(layer) {
-								if(layer.setStyle) {
-									layer.setStyle(getStyle(layer.feature));
-								}
-								
-								return;
-							});
-						}
-
-						//Consider setting popup text content here
-
-						return;
-					};
-
-					function getStyle(feature) {
-						var seriesIndex = thisMap.choroplethSeriesIndex,
-							gId,
-							choroplethValue,
-							maxValue;
-						
-						if(thisMap.choroplethSeriesIndex === -1) {
-							return {
-								opacity: 0.0,
-								fillOpacity: 0.0
-							};
-						}
-
-						gId = feature.properties.gid;
-						choroplethValue = thisMap.choroplethValues.visible[gId];
-						maxValue = thisMap.dataset[seriesIndex].maxOccurrenceValue;
-
-						if(thisMap.displayCumulativeValues) {
-							choroplethValue = thisMap.choroplethValues.cumulative[gId];
-							maxValue = thisMap.dataset[seriesIndex].maxCumulativeChoroplethValue;
-						}
-
-						return {
-							weight: 2,
-							opacity: 0.4,
-							color: getBorderColor(),
-							fillOpacity: getOpacity(choroplethValue, maxValue),
-							fillColor: getFillColor()
-						};
-					}
-
-					function getOpacity(value, maxValue) {
-						if((value === undefined) || (value === 0)) {
-							return 0;
-						}
-
-						return (value / maxValue * 0.9) + 0.09;
-					}
-
-					function getBorderColor() {
-						return thisMap.colors[thisMap.uiSettings.series[thisMap.choroplethSeriesIndex].color];
-					}
-
-					function getFillColor() {
-						return thisMap.colors[thisMap.uiSettings.series[thisMap.choroplethSeriesIndex].color];
-					}
-
-					function onEachFeature(feature, layer) {
-						layer.on({
-							//mousemove: mousemove,
-							//mouseout: mouseout,
-							click: click
-						});
-					}
-
-					function click(e) {
-						var layer = e.target,
-							popupText = '<div class="marker-title">' + layer.feature.properties.name + '</div>';
-
-						if(thisMap.choroplethValues.cumulative[layer.feature.properties.gid] == null) {
-							popupText += '<div>total cases beyond scope of data</div>';
-						}
-						else {
-							popupText += '<div>' + thisMap.choroplethValues.cumulative[layer.feature.properties.gid] + ' total cases' + '</div>';
-						}
-
-						popupText += '<div><var>(+' + thisMap.choroplethValues.visible[layer.feature.properties.gid] + ' latest cases)' + '</var></div>' +
-							'<div><em>' + thisMap.seriesList[thisMap.choroplethSeriesIndex].title + '</em></div>';
-
-						//thisMap.map.fitBounds(e.target.getBounds());
-
-						popup.setLatLng(e.latlng);
-						popup.setContent(popupText);
-
-						if (!popup._map) {
-							popup.openOn(thisMap.map);
-						}
-
-						if(!L.Browser.ie && !L.Browser.opera) {
-							if(layer.bringToFront) {
-								layer.bringToFront();
-							}
-						}
-
-						return;
-					}
-
-					function mousemove(e) {
-						var layer = e.target;
-
-						popup.setLatLng(e.latlng);
-						popup.setContent('<div class="marker-title">' + layer.feature.properties.NAME + '</div>' +
-							thisMap.choroplethValues.cumulative[layer.feature.properties.gid] + ' cases');
-
-						if (!popup._map) {
-							popup.openOn(thisMap.map);
-						}
-						//window.clearTimeout(closeTooltip);
-
-						// highlight feature
-						layer.setStyle({
-							weight: 3,
-							opacity: 0.3,
-							fillOpacity: 0.9
-						});
-
-						if(!L.Browser.ie && !L.Browser.opera) {
-							layer.bringToFront();
-						}
-					}
-
-					function mouseout(e) {
-						if(thisMap.currentChoroplethLayer){
-							thisMap.currentChoroplethLayer.resetStyle(e.target);
-							closeTooltip = window.setTimeout(function () {
-								thisMap.map.closePopup();
-							}, 100);
-						}
-
-						return;
-					}
-
-					return;
-				})(seriesIDs);
-
+				
+				thisMap.makeChoroplethLayers(seriesIDs);
+				
 				for(h = 0; h < thisMap.seriesList.length; h++) {
 					thisMap.seriesDescriptions[thisMap.seriesList[h].id] = {
 						title: thisMap.seriesList[h].title,
@@ -2085,7 +1856,239 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 
 		return;
 	}
-
+	
+	MagicMap.prototype.makeChoroplethLayers = function(seriesIDs) {
+		var i,
+			popup = new L.Popup({autoPan: false}),
+			choroplethLayers = [],
+			choroplethLocationIDs = {},
+			currentChoroplethLayer,
+			thisMap = this;
+		
+		this.choroplethValues = {current: {}, visible: {}, cumulative: {}};
+		
+		for(i = 0; i < seriesIDs.length; i++) {
+			addChoroplethSource(seriesIDs[i]);
+		}
+		
+		function addChoroplethSource(seriesID) {
+			var topojsonURL = CONTEXT + "/api/series/" + seriesID + "/topology";
+			
+			$.ajax({
+				url: topojsonURL,
+				type: "GET",
+				success: function(result, status, xhr) {
+					if(DEBUG){
+						console.log("Loaded TopoJson: ");
+						console.log(result);
+					}
+					
+					makeChoroplethLayer(result, seriesID);
+					
+					return;
+				},
+				error: function(xhr, status, error) {
+					console.warn("Error: " + error);
+					return;
+				}
+			});
+		}
+		
+		function makeChoroplethLayer(topojsonSource, seriesID) {
+			var choroplethObjectContainer,
+				choroplethLayer,
+				i;
+			
+			//TODO: find better methodology for determining choroplethObjectContainer (always only child?)
+			for(i in topojsonSource.objects) {
+				if(topojsonSource.objects.hasOwnProperty(i)) {
+					choroplethObjectContainer = topojsonSource.objects[i];
+					break;
+				}
+			}
+			
+			//hash unique location IDs (for overlapping choropleths which use same locations)
+			for(i = 0; i < choroplethObjectContainer.geometries.length; i++) {
+				choroplethLocationIDs[choroplethObjectContainer.geometries[i].properties.gid] = choroplethObjectContainer.geometries[i].properties.gid;
+			}
+			
+			choroplethLayer = L.geoJson(omnivore.topojson.parse(topojsonSource), {
+				style: getStyle,
+				onEachFeature: onEachFeature
+			});
+			
+			choroplethLayers[seriesID] = choroplethLayer;
+			
+			return;
+		}
+		
+		function switchChoroplethLayer(choroplethLayer) {
+			if(currentChoroplethLayer) {
+				thisMap.map.removeLayer(currentChoroplethLayer);
+			}
+			
+			if(choroplethLayer) {
+				thisMap.map.addLayer(choroplethLayer);
+			}
+			currentChoroplethLayer = choroplethLayer;
+			
+			//initialize choropleth values to 0
+			for(i = 0; i < choroplethLocationIDs.length; i++) {
+				thisMap.choroplethValues.current[choroplethLocationIDs[i]] = 0;
+				thisMap.choroplethValues.visible[choroplethLocationIDs[i]] = 0;
+				thisMap.choroplethValues.cumulative[choroplethLocationIDs[i]] = 0;
+			}
+			
+			return;
+		}
+		
+		this.updateChoroplethLayer = function(choroplethSeriesID) {
+			var incomingLayer = choroplethLayers[choroplethSeriesID];
+			
+			if((incomingLayer < 0) || (incomingLayer !== currentChoroplethLayer)) {
+				switchChoroplethLayer(incomingLayer);
+			}
+			
+			if(currentChoroplethLayer){
+				currentChoroplethLayer.eachLayer(function(layer) {
+					if(layer.setStyle) {
+						layer.setStyle(getStyle(layer.feature));
+					}
+					
+					return;
+				});
+			}
+			
+			//Consider setting popup text content here
+			
+			return;
+		};
+		
+		function getStyle(feature) {
+			var seriesIndex = thisMap.choroplethSeriesIndex,
+				gId,
+				choroplethValue,
+				maxValue;
+			
+			if(thisMap.choroplethSeriesIndex === -1) {
+				return {
+					opacity: 0.0,
+					fillOpacity: 0.0
+				};
+			}
+			
+			gId = feature.properties.gid;
+			choroplethValue = thisMap.choroplethValues.visible[gId];
+			maxValue = thisMap.dataset[seriesIndex].maxOccurrenceValue;
+			
+			if(thisMap.displayCumulativeValues) {
+				choroplethValue = thisMap.choroplethValues.cumulative[gId];
+				maxValue = thisMap.dataset[seriesIndex].maxCumulativeChoroplethValue;
+			}
+			
+			return {
+				weight: 2,
+				opacity: 0.4,
+				color: getBorderColor(),
+				fillOpacity: getOpacity(choroplethValue, maxValue),
+				fillColor: getFillColor()
+			};
+		}
+		
+		function getOpacity(value, maxValue) {
+			if((value === undefined) || (value === 0)) {
+				return 0;
+			}
+			
+			return (value / maxValue * 0.9) + 0.09;
+		}
+		
+		function getBorderColor() {
+			return thisMap.colors[thisMap.uiSettings.series[thisMap.choroplethSeriesIndex].color];
+		}
+		
+		function getFillColor() {
+			return thisMap.colors[thisMap.uiSettings.series[thisMap.choroplethSeriesIndex].color];
+		}
+		
+		function onEachFeature(feature, layer) {
+			layer.on({
+				//mousemove: mousemove,
+				//mouseout: mouseout,
+				click: click
+			});
+		}
+		
+		function click(e) {
+			var layer = e.target,
+				popupText = '<div class="marker-title">' + layer.feature.properties.name + '</div>';
+			
+			if(thisMap.choroplethValues.cumulative[layer.feature.properties.gid] == null) {
+				popupText += '<div>total cases beyond scope of data</div>';
+			}
+			else {
+				popupText += '<div>' + thisMap.choroplethValues.cumulative[layer.feature.properties.gid] + ' total cases' + '</div>';
+			}
+			
+			popupText += '<div><var>(+' + thisMap.choroplethValues.visible[layer.feature.properties.gid] + ' latest cases)' + '</var></div>' +
+				'<div><em>' + thisMap.seriesList[thisMap.choroplethSeriesIndex].title + '</em></div>';
+			
+			//this.map.fitBounds(e.target.getBounds());
+			
+			popup.setLatLng(e.latlng);
+			popup.setContent(popupText);
+			
+			if (!popup._map) {
+				popup.openOn(thisMap.map);
+			}
+			
+			if(!L.Browser.ie && !L.Browser.opera) {
+				if(layer.bringToFront) {
+					layer.bringToFront();
+				}
+			}
+			
+			return;
+		}
+		
+		function mousemove(e) {
+			var layer = e.target;
+			
+			popup.setLatLng(e.latlng);
+			popup.setContent('<div class="marker-title">' + layer.feature.properties.NAME + '</div>' +
+				thisMap.choroplethValues.cumulative[layer.feature.properties.gid] + ' cases');
+			
+			if (!popup._map) {
+				popup.openOn(thisMap.map);
+			}
+			//window.clearTimeout(closeTooltip);
+			
+			// highlight feature
+			layer.setStyle({
+				weight: 3,
+				opacity: 0.3,
+				fillOpacity: 0.9
+			});
+			
+			if(!L.Browser.ie && !L.Browser.opera) {
+				layer.bringToFront();
+			}
+		}
+		
+		function mouseout(e) {
+			if(thisMap.currentChoroplethLayer){
+				thisMap.currentChoroplethLayer.resetStyle(e.target);
+				closeTooltip = window.setTimeout(function () {
+					thisMap.map.closePopup();
+				}, 100);
+			}
+			
+			return;
+		}
+		
+		return;
+	}
+	
 	$(document).ready(function() {
 		window.MAGIC_MAP = new MagicMap();
 		MAGIC_MAP.initialize();
