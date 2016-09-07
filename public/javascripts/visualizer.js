@@ -60,7 +60,6 @@ visualizer.js
 			pointDecay: 0.0231,
 			dataGapMethod: "bridge" //zero, show, bridge
 		};
-		
 		this.allContainedBox = [[90.0, 180.0], [-90.0, -180.0]];
 
 		this.seriesList = [];
@@ -104,7 +103,8 @@ visualizer.js
 		this.uiSettings.colorPalette = 0;
 		this.colors = this.colorSet[this.uiSettings.colorPalette];
 		this.choroplethSeriesIndex = -1;
-		this.choroplethLayers = [];
+		this.choroplethValues = {};
+
 		this.displayCumulativeValues = false;
 		
 		for(i = 0; i < this.colorSet.length; i++) {
@@ -175,10 +175,7 @@ visualizer.js
 			success: function(result) {
 				var h,
 					i,
-					svg,
-					svgElement,
-					seriesIDs = [],
-					choroplethSources = {};
+					seriesIDs = [];
 				
 				$("#title").text(result.result.title);
 				
@@ -188,18 +185,20 @@ visualizer.js
 					seriesIDs[h] = thisMap.seriesList[h].id;
 				}
 
-				//TODO: Fix issue with clicking on disabled choropleths (should have no effect)
 				(function getChoroplethSources(seriesIDs) {
 					var i,
-						popup = new L.Popup({autoPan: false});
+						popup = new L.Popup({autoPan: false}),
+						choroplethLayers = [],
+						choroplethLocationIDs = {},
+						currentChoroplethLayer;
 
 					thisMap.choroplethValues = {current: {}, visible: {}, cumulative: {}};
 
 					for(i = 0; i < seriesIDs.length; i++) {
-						addSource(seriesIDs[i]);
+						addChoroplethSource(seriesIDs[i]);
 					}
 
-					function addSource(seriesID) {
+					function addChoroplethSource(seriesID) {
 						var topojsonURL = CONTEXT + "/api/series/" + seriesID + "/topology";
 
 						$.ajax({
@@ -211,8 +210,7 @@ visualizer.js
 									console.log(result);
 								}
 
-								choroplethSources[seriesID] = result;
-								setChoroplethLayer(choroplethSources[seriesID]);
+								makeChoroplethLayer(result, seriesID);
 
 								return;
 							},
@@ -223,18 +221,72 @@ visualizer.js
 						});
 					}
 
-					//TODO: change this so that only one choropleth layer is used that switches between TopoJSONs
-					thisMap.updateChoroplethLayer = function() {
-						var i;
+					function makeChoroplethLayer(topojsonSource, seriesID) {
+						var choroplethObjectContainer,
+							choroplethLayer,
+							i;
 
-						for(i = 0; i < thisMap.choroplethLayers.length; i++) {
-							thisMap.choroplethLayers[i].eachLayer(function(layer) {
-								layer.setStyle(getStyle(layer.feature));
+						//TODO: find better methodology for determining choroplethObjectContainer (always only child?)
+						for(i in topojsonSource.objects) {
+							if(topojsonSource.objects.hasOwnProperty(i)) {
+								choroplethObjectContainer = topojsonSource.objects[i];
+								break;
+							}
+						}
 
+						//hash unique location IDs (for overlapping choropleths which use same locations)
+						for(i = 0; i < choroplethObjectContainer.geometries.length; i++) {
+							choroplethLocationIDs[choroplethObjectContainer.geometries[i].properties.gid] = choroplethObjectContainer.geometries[i].properties.gid;
+						}
+
+						choroplethLayer = L.geoJson(omnivore.topojson.parse(topojsonSource), {
+							style: getStyle,
+							onEachFeature: onEachFeature
+						});
+
+						choroplethLayers[seriesID] = choroplethLayer;
+
+						return;
+					}
+
+					function switchChoroplethLayer(choroplethLayer) {
+						if(currentChoroplethLayer) {
+							thisMap.map.removeLayer(currentChoroplethLayer);
+						}
+						
+						if(choroplethLayer) {
+							thisMap.map.addLayer(choroplethLayer);
+						}
+						currentChoroplethLayer = choroplethLayer;
+						
+						//initialize choropleth values to 0
+						for(i = 0; i < choroplethLocationIDs.length; i++) {
+							thisMap.choroplethValues.current[choroplethLocationIDs[i]] = 0;
+							thisMap.choroplethValues.visible[choroplethLocationIDs[i]] = 0;
+							thisMap.choroplethValues.cumulative[choroplethLocationIDs[i]] = 0;
+						}
+
+						return;
+					}
+
+					thisMap.updateChoroplethLayer = function(choroplethSeriesID) {
+						var incomingLayer = choroplethLayers[choroplethSeriesID];
+						
+						if((incomingLayer < 0) || (incomingLayer !== currentChoroplethLayer)) {
+							switchChoroplethLayer(incomingLayer);
+						}
+
+						if(currentChoroplethLayer){
+							currentChoroplethLayer.eachLayer(function(layer) {
+								if(layer.setStyle) {
+									layer.setStyle(getStyle(layer.feature));
+								}
+								
 								return;
 							});
 						}
-						//TODO: set popup text content here
+
+						//Consider setting popup text content here
 
 						return;
 					};
@@ -244,7 +296,7 @@ visualizer.js
 							gId,
 							choroplethValue,
 							maxValue;
-
+						
 						if(thisMap.choroplethSeriesIndex === -1) {
 							return {
 								opacity: 0.0,
@@ -318,7 +370,9 @@ visualizer.js
 						}
 
 						if(!L.Browser.ie && !L.Browser.opera) {
-							layer.bringToFront();
+							if(layer.bringToFront) {
+								layer.bringToFront();
+							}
 						}
 
 						return;
@@ -349,41 +403,12 @@ visualizer.js
 					}
 
 					function mouseout(e) {
-						var i;
-
-						for(i = 0; i < thisMap.choroplethLayers.length; i++) {
-							thisMap.choroplethLayers[i].resetStyle(e.target);
+						if(thisMap.currentChoroplethLayer){
+							thisMap.currentChoroplethLayer.resetStyle(e.target);
 							closeTooltip = window.setTimeout(function () {
 								thisMap.map.closePopup();
 							}, 100);
 						}
-					}
-
-					function setChoroplethLayer(topojsonSource) {
-						var choroplethObjects,
-							choroplethLayer,
-							i;
-
-						for(i in topojsonSource.objects) {
-							if(topojsonSource.objects.hasOwnProperty(i)) {
-								choroplethObjects = topojsonSource.objects[i];
-								break;
-							}
-						}
-
-						for(i = 0; i < choroplethObjects.geometries.length; i++) {
-							thisMap.choroplethValues.current[choroplethObjects.geometries[i].properties.gid] = 0;
-							thisMap.choroplethValues.visible[choroplethObjects.geometries[i].properties.gid] = 0;
-							thisMap.choroplethValues.cumulative[choroplethObjects.geometries[i].properties.gid] = 0;
-						}
-
-						choroplethLayer = L.geoJson(omnivore.topojson.parse(topojsonSource), {
-							style: getStyle,
-							onEachFeature: onEachFeature
-						});
-
-						choroplethLayer.addTo(thisMap.map);
-						thisMap.choroplethLayers.push(choroplethLayer);
 
 						return;
 					}
@@ -1963,7 +1988,12 @@ result.results[i].secondValue = ((i % 5) * 0.25) + 0.5;
 //console.log(this.heat[setID]._latlngs);
 		}
 
-		this.updateChoroplethLayer();
+		if(this.choroplethSeriesIndex >= 0) {
+			this.updateChoroplethLayer(this.seriesList[this.choroplethSeriesIndex].id);
+		}
+		else {
+			this.updateChoroplethLayer(-1);
+		}
 		
 		return;
 	}
