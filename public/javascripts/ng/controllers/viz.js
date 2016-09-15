@@ -204,24 +204,27 @@ app.controller('Viz', function($scope, $rootScope, api) {
 	function save(callback){
 		var body = buildBody($scope.model),
 			vizId = $scope.model.id,
-			doing = api.saving(my.apiPath, body);
-
-		if(!callback) {
-			callback = function(location) {
+			doing = api.saving(my.apiPath, body),
+			callback2 = function(location) {
 				api.gettingFromUrl(location).then(function(rsp) {
 					$scope.model = rsp.data.result;
 
 					createTopoJSON(body.seriesIds, vizId);
-
+					
+					//TODO: invoke this on success
+					if(callback) {
+						callback();
+					}
+					
 					return;
 				},
 				function(err) {
 					my.alertError(err, "Failed to read the Visualization!");
 				});
 			};
-		}
-
-		doThen(doing, callback, "save the Visualization");
+			
+		
+		doThen(doing, callback2, "save the Visualization");
 
 		return;
 	}

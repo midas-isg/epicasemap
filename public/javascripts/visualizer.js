@@ -198,7 +198,9 @@ visualizer.js
 
 						for(i = 0; i < thisMap.choroplethLayers.length; i++) {
 							thisMap.choroplethLayers[i].eachLayer(function(layer) {
-								layer.setStyle(getStyle(layer.feature));
+								if(layer.setStyle) {
+									layer.setStyle(getStyle(layer.feature));
+								}
 
 								return;
 							});
@@ -286,7 +288,7 @@ visualizer.js
 							popup.openOn(thisMap.map);
 						}
 
-						if(!L.Browser.ie && !L.Browser.opera) {
+						if((!L.Browser.ie) && (!L.Browser.opera) && (layer.bringToFront)) {
 							layer.bringToFront();
 						}
 
