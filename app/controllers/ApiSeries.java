@@ -1,35 +1,11 @@
 package controllers;
 
 import static controllers.ResponseHelper.setResponseLocationFromRequest;
-import gateways.database.AccountDao;
-import gateways.database.PermissionDao;
-import interactors.SeriesAuthorizer;
-import interactors.SeriesRule;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.ws.rs.PathParam;
-
-import models.entities.Account;
-import models.entities.Mode;
-import models.entities.Series;
-import models.entities.SeriesDataUrl;
-import models.entities.SeriesPermission;
-import models.entities.VizPermission;
-import models.exceptions.Unauthorized;
-import models.filters.Filter;
-import models.filters.MetaFilter;
-import models.filters.Restriction;
-import models.view.ModeWithAccountId;
-import models.view.SeriesInput;
-import play.data.Form;
-import play.db.jpa.JPA;
-import play.db.jpa.Transactional;
-import play.mvc.Controller;
-import play.mvc.Http;
-import play.mvc.Result;
-import play.mvc.Security;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.wordnik.swagger.annotations.Api;
@@ -44,6 +20,28 @@ import controllers.security.Authentication;
 import controllers.security.AuthorizationKit;
 import controllers.security.Restricted;
 import controllers.security.Restricted.Access;
+import gateways.database.AccountDao;
+import gateways.database.PermissionDao;
+import interactors.SeriesAuthorizer;
+import interactors.SeriesRule;
+import models.entities.Account;
+import models.entities.Mode;
+import models.entities.Series;
+import models.entities.SeriesDataUrl;
+import models.entities.SeriesPermission;
+import models.exceptions.Unauthorized;
+import models.filters.Filter;
+import models.filters.MetaFilter;
+import models.filters.Restriction;
+import models.view.ModeWithAccountId;
+import models.view.SeriesInput;
+import play.data.Form;
+import play.db.jpa.JPA;
+import play.db.jpa.Transactional;
+import play.mvc.Controller;
+import play.mvc.Http;
+import play.mvc.Result;
+import play.mvc.Security;
 
 @Api(value = "/series", description = "Endpoints for Series")
 public class ApiSeries extends Controller {
@@ -270,8 +268,6 @@ public class ApiSeries extends Controller {
 			permissionID = authorizer.permit(accountId, data, seriesId);
 		
 		if(email != 0) {
-			long userID = accountIds.get(0);
-			Account account = new AccountDao(JPA.em()).read(userID);
 			String senderName = "Do not reply";
 			String senderEmail = "bot_admin@epicasemap.org";
 			ArrayList<String> recipients = new ArrayList<String>();
@@ -342,8 +338,6 @@ public class ApiSeries extends Controller {
 		setResponseLocationFromRequest();
 		
 		if(email != 0) {
-			long userID = AuthorizationKit.readAccountId();
-			Account account = new AccountDao(JPA.em()).read(userID);
 			String senderName = "Do not reply";
 			String senderEmail = "bot_admin@epicasemap.org";
 			ArrayList<String> recipients = new ArrayList<String>();

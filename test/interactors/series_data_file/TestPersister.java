@@ -1,22 +1,21 @@
 package interactors.series_data_file;
 
 import static org.fest.assertions.Assertions.assertThat;
+
+import org.joda.time.DateTime;
+import org.junit.BeforeClass;
+import org.junit.Test;
+
+import controllers.Factory;
 import integrations.app.App;
 import interactors.SeriesRule;
 import interactors.series_data_file.Parser.DataPoint;
 import models.entities.Location;
 import models.entities.Series;
 import models.entities.SeriesData;
-
-import org.joda.time.DateTime;
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Test;
-
 import play.db.jpa.JPA;
 import play.libs.F.Callback0;
 import suites.SeriesDataFileHelper;
-import controllers.Factory;
 
 public class TestPersister {
 	
@@ -31,7 +30,7 @@ public class TestPersister {
 		});
 	}
 
-	@Ignore("TODO(fix broken test case)") @Test
+	@Test
 	public void testPersistSeriesDataFile() {
 		runWithTransaction(() -> testPersistSeriesData());
 	}
@@ -75,7 +74,7 @@ public class TestPersister {
 
 	}
 
-	@Ignore("TODO(fix broken test case)") @Test
+	@Test
 	public void testCSVRecordToSeriesDataEntityObject() {
 		runWithTransaction(() -> csvRecordToSeriesDataEntityObject());
 	}

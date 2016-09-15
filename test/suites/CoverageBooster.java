@@ -2,18 +2,8 @@ package suites;
 
 import static java.util.Arrays.asList;
 import static suites.Helper.assertArrayNode;
-import gateways.configuration.AppKey;
-import gateways.database.jpa.JpaAdaptor;
-import integrations.app.App;
-import integrations.server.Server;
-import interactors.security.password.HashKit;
-import interactors.security.password.HashedPassword;
-import interactors.security.password.PasswordFactory;
 
-import org.junit.Ignore;
 import org.junit.Test;
-
-import play.libs.Json;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -21,13 +11,20 @@ import controllers.ApiLocation;
 import controllers.ApiSeries;
 import controllers.ApiTimeCoordinateSeries;
 import controllers.ApiViz;
-import controllers.Application;
 import controllers.Factory;
 import controllers.ResponseHelper;
 import controllers.security.AuthorizationKit;
+import gateways.configuration.AppKey;
+import gateways.database.jpa.JpaAdaptor;
+import integrations.app.App;
+import integrations.server.Server;
+import interactors.security.password.HashKit;
+import interactors.security.password.HashedPassword;
+import interactors.security.password.PasswordFactory;
+import play.libs.Json;
 
 public class CoverageBooster extends TestCase {
-	@Ignore("TODO(fix broken test case)") @Test
+	@Test
 	public void makeup() throws Exception {
 		ignoreAppKeyEnum();
 		ignoreDefaultConstructors();
@@ -39,7 +36,6 @@ public class CoverageBooster extends TestCase {
 				PasswordFactory.class,
 				HashKit.class
 		);
-		Application.swagger();
 		testHelper();
 	}
 
@@ -76,7 +72,6 @@ public class CoverageBooster extends TestCase {
 	}
 
 	private void ignoreDefaultConstructorsForControllers() {
-		new Application();
 		new ApiSeries();
 		new ApiLocation();
 		new ApiTimeCoordinateSeries();

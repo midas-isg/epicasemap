@@ -1,17 +1,10 @@
 package controllers;
 
 import static gateways.configuration.AppKey.APP_NAME_IN_DB;
-import interactors.ConfRule;
-import interactors.SeriesRule;
-import interactors.series_data_file.Persister;
-import interactors.series_data_file.SeriesDataFile;
-import interactors.series_data_file.Validator;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -25,12 +18,15 @@ import java.util.StringJoiner;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
-import javax.xml.bind.JAXBException;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import interactors.ConfRule;
+import interactors.SeriesRule;
+import interactors.series_data_file.Persister;
+import interactors.series_data_file.SeriesDataFile;
+import interactors.series_data_file.Validator;
 import lsparser.xmlparser.TychoParser;
-import models.entities.NamedLocation;
 import models.entities.Series;
 import models.entities.SeriesDataUrl;
 import models.exceptions.NoConnectionAvailable;
@@ -41,7 +37,6 @@ import play.mvc.Controller;
 import play.mvc.Http.Request;
 import play.mvc.Result;
 import play.mvc.Results;
-import scala.util.parsing.json.JSON;
 
 class UploadSeries extends Controller {
 

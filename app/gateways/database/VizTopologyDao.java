@@ -2,7 +2,6 @@ package gateways.database;
 
 import gateways.database.jpa.DataAccessObject;
 import models.entities.VizTopology;
-import models.exceptions.NotFound;
 import models.filters.GenericFilter;
 
 import javax.persistence.EntityManager;
