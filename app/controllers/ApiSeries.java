@@ -48,6 +48,11 @@ public class ApiSeries extends Controller {
 	private static final String ex = "series.json";
 	private static final String exBody = "See an example of body at "
 			+ "<a href='assets/examples/api/" + ex + "'>" + ex + "</a> ";
+	private static final String exLSidFile = "test_alsId_format.txt";
+	private static final String exCoordinatesFile = "test_coordinate_format.txt";
+	private static final String exUpload = "See example files at:</br>"
+			+ "<a href='assets/input/series-data/examples/" + exLSidFile + "' target='_blank'>LS-ID format</a></br>"
+			+ "<a href='assets/input/series-data/examples/" + exCoordinatesFile + "' target='_blank'>coordinates format</a></br>";
 	public static final String inputType = "models.entities.Series";
 	
 	public static Form<SeriesInput> seriesForm = Form.form(SeriesInput.class);
@@ -159,16 +164,17 @@ public class ApiSeries extends Controller {
 			notes = "This endpoint uploads data for the given Series idientified by 'id' "
 					+ "and returns the upload status in response header. "
 					+ "(returns more information in response body.)")
-			@ApiResponses({ 
-					@ApiResponse(code = CREATED, message = "Success"),
-					@ApiResponse(code = NOT_FOUND, message = "Not found"),
-					@ApiResponse(code = UNAUTHORIZED, message = "Access denied") })
+	@ApiResponses({ 
+			@ApiResponse(code = CREATED, message = "Success"),
+			@ApiResponse(code = NOT_FOUND, message = "Not found"),
+			@ApiResponse(code = UNAUTHORIZED, message = "Access denied") })
+	@ApiImplicitParams({ 
+	@ApiImplicitParam(required = true, value = exUpload, dataType = "file", paramType = "body")})
 	@Transactional
 	@Restricted({Access.CHANGE})
 	public static Result uploadData(
-			@ApiParam(value = "ID of the Series", required = true) 
-			@PathParam("id") 
-				long id) {
+		@ApiParam(value = "ID of the Series", required = true) @PathParam("id") 
+			long id) {
 		checkSeriesPermission(id, "upload data to");
 		return UploadSeries.upload(id);
 	}
